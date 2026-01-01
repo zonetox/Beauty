@@ -21,6 +21,7 @@ interface PublicDataContextType {
   updateBusiness: (updatedBusiness: Business) => Promise<void>;
   deleteBusiness: (businessId: number) => Promise<void>;
   getBusinessBySlug: (slug: string) => Business | undefined;
+  fetchBusinessBySlug: (slug: string) => Promise<Business | null>; // NEW: On-demand detailed fetch
   incrementBusinessViewCount: (businessId: number) => Promise<void>;
   // Service Data
   addService: (newServiceData: Omit<Service, 'id' | 'position'>) => Promise<void>;
@@ -127,8 +128,9 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
     setBusinessLoading(true);
     setBlogLoading(true);
 
+    // OPTIMIZED: Remove heavy relations from initial fetch
     const [bizRes, blogRes, catRes, pkgRes] = await Promise.all([
-      supabase.from('business').select(`*, services!services_business_id_fkey(*), media_items!media_items_business_id_fkey(*), team_members(*), deals(*), reviews(*)`).order('position', { foreignTable: 'services', ascending: true }).order('position', { foreignTable: 'media_items', ascending: true }).order('id', { ascending: true }),
+      supabase.from('business').select('*').order('is_featured', { ascending: false }).order('id', { ascending: true }),
       supabase.from('blog_posts').select('*').order('date', { ascending: false }),
       supabase.from('blog_categories').select('*').order('name'),
       supabase.from('membership_packages').select('*').order('price')
@@ -140,14 +142,10 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
     let fetchedPackages: MembershipPackage[] = [];
 
     if (bizRes.error) {
-        console.error('Error fetching businesses with relations:', bizRes.error.message);
+        console.error('Error fetching businesses:', bizRes.error.message);
     } else if (bizRes.data) {
-        const formattedData = bizRes.data.map(business => ({
-            ...business,
-            gallery: business.media_items, // Rename to match type
-            team: business.team_members,
-        }));
-        fetchedBusinesses = formattedData as Business[];
+        // No formatting needed for relations since we aren't fetching them yet
+        fetchedBusinesses = bizRes.data.map(b => ({ ...b, services: [], gallery: [], team: [], deals: [], reviews: [] })) as Business[];
     }
     setBusinessLoading(false);
     
@@ -215,7 +213,49 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot delete business."); return; }
     /* ... implementation unchanged ... */ 
   };
+  
+  // Existing synchronous getter (from loaded list)
   const getBusinessBySlug = (slug: string) => businesses.find(b => b.slug === slug);
+
+  // NEW: Async detailed getter
+  const fetchBusinessBySlug = useCallback(async (slug: string): Promise<Business | null> => {
+      if (!isSupabaseConfigured) return businesses.find(b => b.slug === slug) || null;
+
+      // 1. Fetch the main business record
+      const { data: businessData, error: businessError } = await supabase
+          .from('business')
+          .select('*')
+          .eq('slug', slug)
+          .single();
+
+      if (businessError || !businessData) {
+          console.error("Error fetching business details:", businessError?.message);
+          return null;
+      }
+
+      // 2. Parallel fetch for relations
+      const businessId = businessData.id;
+      const [servicesRes, mediaRes, teamRes, dealsRes, reviewsRes] = await Promise.all([
+          supabase.from('services').select('*').eq('business_id', businessId).order('position', { ascending: true }),
+          supabase.from('media_items').select('*').eq('business_id', businessId).order('position', { ascending: true }),
+          supabase.from('team_members').select('*').eq('business_id', businessId),
+          supabase.from('deals').select('*').eq('business_id', businessId),
+          supabase.from('reviews').select('*').eq('business_id', businessId)
+      ]);
+
+      // 3. Assemble full object
+      const fullBusiness: Business = {
+          ...businessData,
+          services: servicesRes.data || [],
+          gallery: mediaRes.data || [], // Map to 'gallery'
+          team: teamRes.data || [],
+          deals: dealsRes.data || [],
+          reviews: reviewsRes.data || []
+      };
+
+      return fullBusiness;
+  }, [businesses]); // Depend on businesses if we want fallback, but mainly standalone
+
   const incrementBusinessViewCount = async (businessId: number) => {
     if (!isSupabaseConfigured) return; // Silent fail in preview
     const { error } = await supabase.rpc('increment_view_count', { p_business_id: businessId });
@@ -404,7 +444,7 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
 
   // --- COMBINED VALUE ---
   const value = {
-    businesses, businessLoading, addBusiness, updateBusiness, deleteBusiness, getBusinessBySlug, incrementBusinessViewCount,
+    businesses, businessLoading, addBusiness, updateBusiness, deleteBusiness, getBusinessBySlug, fetchBusinessBySlug, incrementBusinessViewCount,
     addService, updateService, deleteService, updateServicesOrder,
     addMediaItem, updateMediaItem, deleteMediaItem, updateMediaOrder,
     addTeamMember, updateTeamMember, deleteTeamMember,
@@ -428,8 +468,8 @@ const usePublicData = () => {
 };
 
 export const useBusinessData = () => {
-    const { businesses, businessLoading, addBusiness, updateBusiness, deleteBusiness, getBusinessBySlug, incrementBusinessViewCount, addService, updateService, deleteService, updateServicesOrder, addMediaItem, updateMediaItem, deleteMediaItem, updateMediaOrder, addTeamMember, updateTeamMember, deleteTeamMember, addDeal, updateDeal, deleteDeal } = usePublicData();
-    return { businesses, loading: businessLoading, addBusiness, updateBusiness, deleteBusiness, getBusinessBySlug, incrementBusinessViewCount, addService, updateService, deleteService, updateServicesOrder, addMediaItem, updateMediaItem, deleteMediaItem, updateMediaOrder, addTeamMember, updateTeamMember, deleteTeamMember, addDeal, updateDeal, deleteDeal };
+    const { businesses, businessLoading, addBusiness, updateBusiness, deleteBusiness, getBusinessBySlug, fetchBusinessBySlug, incrementBusinessViewCount, addService, updateService, deleteService, updateServicesOrder, addMediaItem, updateMediaItem, deleteMediaItem, updateMediaOrder, addTeamMember, updateTeamMember, deleteTeamMember, addDeal, updateDeal, deleteDeal } = usePublicData();
+    return { businesses, loading: businessLoading, addBusiness, updateBusiness, deleteBusiness, getBusinessBySlug, fetchBusinessBySlug, incrementBusinessViewCount, addService, updateService, deleteService, updateServicesOrder, addMediaItem, updateMediaItem, deleteMediaItem, updateMediaOrder, addTeamMember, updateTeamMember, deleteTeamMember, addDeal, updateDeal, deleteDeal };
 };
 
 export const useBlogData = () => {

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useBusinessData } from '../contexts/BusinessDataContext.tsx';
+import { Business } from '../types.ts';
 import NotFoundPage from './NotFoundPage.tsx';
 
 // Import new Landing Page Section Components
@@ -21,9 +22,26 @@ import ReviewsSection from '../components/business-landing/ReviewsSection.tsx';
 
 const BusinessDetailPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
-    const { getBusinessBySlug, incrementBusinessViewCount } = useBusinessData();
-    const business = getBusinessBySlug(slug || '');
+    const { fetchBusinessBySlug, incrementBusinessViewCount } = useBusinessData(); // Use the async fetcher
+    const [business, setBusiness] = useState<Business | null>(null);
+    const [loading, setLoading] = useState(true);
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+
+    useEffect(() => {
+        const loadBusiness = async () => {
+            if (!slug) return;
+            setLoading(true);
+            try {
+                const data = await fetchBusinessBySlug(slug);
+                setBusiness(data);
+            } catch (error) {
+                console.error("Failed to load business details:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadBusiness();
+    }, [slug, fetchBusinessBySlug]);
 
     useEffect(() => {
         if (business) {
@@ -33,7 +51,7 @@ const BusinessDetailPage: React.FC = () => {
                 incrementBusinessViewCount(business.id);
                 sessionStorage.setItem(incrementedKey, 'true');
             }
-            
+
             // Logic to add to recently viewed list
             const MAX_RECENTLY_VIEWED = 4;
             try {
@@ -51,6 +69,14 @@ const BusinessDetailPage: React.FC = () => {
             document.title = business.seo?.title || `${business.name} | BeautyDir`;
         }
     }, [business, incrementBusinessViewCount]);
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-white">
+                <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        );
+    }
 
     if (!business) {
         return <NotFoundPage />;
@@ -80,7 +106,7 @@ const BusinessDetailPage: React.FC = () => {
             </main>
             <BusinessFooter business={business} />
             {isBookingModalOpen && (
-                <BookingModal 
+                <BookingModal
                     isOpen={isBookingModalOpen}
                     onClose={() => setIsBookingModalOpen(false)}
                     business={business}
