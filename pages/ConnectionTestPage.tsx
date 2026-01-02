@@ -9,7 +9,7 @@ const ConnectionTestPage: React.FC = () => {
     useEffect(() => {
         const runTest = async () => {
             try {
-                // 1. Check Env Vars (safe expose)
+                // 1. Check Env Vars
                 const url = import.meta.env.VITE_SUPABASE_URL;
                 const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
@@ -26,17 +26,50 @@ const ConnectionTestPage: React.FC = () => {
                     return;
                 }
 
-                setStatus('Connecting to Supabase...');
+                setStatus('Connecting to Supabase (SDK)...');
 
-                // 2. Simple Table Read
-                const { data, error } = await supabase.from('businesses').select('count', { count: 'exact', head: true });
+                // 2. Simple Table Read (SDK) with Fail-safe Timeout
+                const sdkPromise = supabase.from('businesses').select('count', { count: 'exact', head: true });
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('SDK_TIMEOUT')), 5000));
 
-                if (error) {
-                    setStatus(`FAILED: Database connection error. ${error.message}`);
-                    setDbResult(error);
-                } else {
-                    setStatus('SUCCESS: Connected to Database');
-                    setDbResult({ count: data, message: 'Read successful' });
+                try {
+                    await Promise.race([sdkPromise, timeoutPromise]);
+                    const { data, error } = await sdkPromise;
+
+                    if (error) {
+                        setStatus(`FAILED: Database connection error. ${error.message}`);
+                        setDbResult(error);
+                    } else {
+                        setStatus('SUCCESS: Connected to Database (SDK)');
+                        setDbResult({ count: data, message: 'Read successful' });
+                    }
+                } catch (err: any) {
+                    if (err.message === 'SDK_TIMEOUT') {
+                        setStatus('SDK Timed out. Trying Raw Fetch...');
+                        try {
+                            const rawUrl = `${url}/rest/v1/businesses?select=count&limit=1`;
+                            const res = await fetch(rawUrl, {
+                                method: 'GET',
+                                headers: {
+                                    'apikey': key,
+                                    'Authorization': `Bearer ${key}`
+                                }
+                            });
+
+                            if (res.ok) {
+                                const data = await res.json();
+                                setStatus('SUCCESS: Raw Fetch Worked! (SDK issue)');
+                                setDbResult({ sdk: 'Timeout', rawFetch: 'Success', data });
+                            } else {
+                                setStatus(`FAILED: Raw Fetch ${res.status}`);
+                                setDbResult({ sdk: 'Timeout', rawFetch: 'Error', status: res.status });
+                            }
+                        } catch (fetchErr: any) {
+                            setStatus(`CRITICAL: Raw Fetch Failed. ${fetchErr.message}`);
+                        }
+                    } else {
+                        throw err;
+                    }
                 }
 
             } catch (err: any) {
