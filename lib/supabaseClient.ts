@@ -30,4 +30,13 @@ const supabaseAnonKey = isSupabaseConfigured ? supabaseAnonKeyFromEnv : 'dummy-k
 
 // The client is created. The app's entry point (`App.tsx`) uses `isSupabaseConfigured`
 // to prevent any real API calls from being made with the dummy client.
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+    },
+    global: {
+        // Explicitly bind the global fetch to ensure it works in all environments (especially Vite/Edge)
+        fetch: (...args) => fetch(...args)
+    }
+});
