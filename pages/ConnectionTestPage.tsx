@@ -45,7 +45,39 @@ const ConnectionTestPage: React.FC = () => {
                     }
                 } catch (err: any) {
                     if (err.message === 'SDK_TIMEOUT') {
-                        setStatus('SDK Timed out. Trying Raw Fetch...');
+                        setStatus('SDK Timed out. Testing Clean Client...');
+
+                        // 3. Try Clean Client (No Auth Persistence)
+                        try {
+                            const { createClient } = await import('@supabase/supabase-js');
+                            const cleanClient = createClient(url, key, {
+                                auth: {
+                                    persistSession: false,
+                                    autoRefreshToken: false,
+                                    detectSessionInUrl: false
+                                }
+                            });
+
+                            const cleanSdkPromise = cleanClient.from('businesses').select('count', { count: 'exact', head: true });
+                            const cleanTimeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('CLEAN_SDK_TIMEOUT')), 5000));
+
+                            await Promise.race([cleanSdkPromise, cleanTimeoutPromise]);
+                            const { data: cleanData, error: cleanError } = await cleanSdkPromise;
+
+                            if (cleanError) {
+                                setStatus(`FAILED: Clean Client Error. ${cleanError.message}`);
+                            } else {
+                                setStatus('SUCCESS: Clean Client Worked! (Local Storage/Auth Issue)');
+                                setDbResult({ sdk: 'Timeout', cleanClient: 'Success', rawFetch: 'Pending', data: cleanData });
+                                // If clean client works, we probably don't need to try raw fetch to know it connects, 
+                                // but let's keep raw fetch as a fallback or just show this success.
+                                return;
+                            }
+                        } catch (cleanErr: any) {
+                            setStatus(`Clean Client Failed: ${cleanErr.message}. Trying Raw Fetch...`);
+                        }
+
+                        // Fallback to Raw Fetch
                         try {
                             const rawUrl = `${url}/rest/v1/businesses?select=count&limit=1`;
                             const res = await fetch(rawUrl, {
@@ -58,11 +90,11 @@ const ConnectionTestPage: React.FC = () => {
 
                             if (res.ok) {
                                 const data = await res.json();
-                                setStatus('SUCCESS: Raw Fetch Worked! (SDK issue)');
-                                setDbResult({ sdk: 'Timeout', rawFetch: 'Success', data });
+                                setStatus('SUCCESS: Raw Fetch Worked! (SDK Deep Issue)');
+                                setDbResult((prev: any) => ({ ...prev, rawFetch: 'Success', data }));
                             } else {
                                 setStatus(`FAILED: Raw Fetch ${res.status}`);
-                                setDbResult({ sdk: 'Timeout', rawFetch: 'Error', status: res.status });
+                                setDbResult((prev: any) => ({ ...prev, rawFetch: 'Error', status: res.status }));
                             }
                         } catch (fetchErr: any) {
                             setStatus(`CRITICAL: Raw Fetch Failed. ${fetchErr.message}`);
