@@ -1,7 +1,7 @@
 // supabase/functions/send-templated-email/index.ts
 declare const Deno: any;
 
-import { Resend } from "https://esm.sh/resend@3.2.0";
+import { Resend } from "resend";
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 const resend = new Resend(RESEND_API_KEY);

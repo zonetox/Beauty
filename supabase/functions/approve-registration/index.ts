@@ -1,5 +1,5 @@
 // supabase/functions/approve-registration/index.ts
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from '@supabase/supabase-js';
 
 // Fix: Declare the Deno global object to satisfy TypeScript in environments where Deno types are not globally available.
 declare const Deno: any;

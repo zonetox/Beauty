@@ -279,7 +279,7 @@ const AdminPage: React.FC = () => {
         <div className="space-y-6">
           <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-xl font-semibold mb-4">Bulk Import Businesses</h2>
-            <BulkImportTool />
+            <BusinessBulkImporter />
           </div>
           <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-xl font-semibold mb-4">API Health Check</h2>
