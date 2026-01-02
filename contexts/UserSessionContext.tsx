@@ -14,6 +14,7 @@ interface UserSessionContextType {
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (newPass: string) => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
+  refreshProfile: () => Promise<void>;
   isFavorite: (businessId: number) => boolean;
   toggleFavorite: (businessId: number) => Promise<void>;
 }
@@ -33,7 +34,7 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
         .select('*')
         .eq('id', user.id)
         .single();
-      
+
       if (error && error.code === 'PGRST116') { // Profile doesn't exist, create it
         const { data: newProfile, error: insertError } = await supabase
           .from('profiles')
@@ -49,32 +50,32 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
     };
 
     const handleAuthChange = async (_event: AuthChangeEvent, session: Session | null) => {
-        setLoading(true);
-        setSession(session);
-        const user = session?.user ?? null;
-        setCurrentUser(user);
+      setLoading(true);
+      setSession(session);
+      const user = session?.user ?? null;
+      setCurrentUser(user);
 
-        if (user) {
-            await fetchProfile(user);
-        } else {
-            setProfile(null);
-        }
-        setLoading(false);
+      if (user) {
+        await fetchProfile(user);
+      } else {
+        setProfile(null);
+      }
+      setLoading(false);
     };
-    
+
     // Get initial session
     if (isSupabaseConfigured) {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            handleAuthChange('INITIAL_SESSION', session);
-        });
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        handleAuthChange('INITIAL_SESSION', session);
+      });
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
 
-        return () => {
-          subscription?.unsubscribe();
-        };
+      return () => {
+        subscription?.unsubscribe();
+      };
     } else {
-        setLoading(false);
+      setLoading(false);
     }
   }, []);
 
@@ -86,34 +87,34 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
 
   const logout = async () => {
     if (!isSupabaseConfigured) {
-        setCurrentUser(null);
-        setProfile(null);
-        setSession(null);
-        return;
+      setCurrentUser(null);
+      setProfile(null);
+      setSession(null);
+      return;
     }
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   };
-  
+
   const requestPasswordReset = async (email: string): Promise<void> => {
     if (!isSupabaseConfigured) {
-        toast.success("(Preview) A password reset link would be sent in a real environment.");
-        return;
+      toast.success("(Preview) A password reset link would be sent in a real environment.");
+      return;
     }
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${window.location.origin}/reset-password`,
     });
     if (error) console.error("Supabase password reset request error:", error.message);
   };
 
   const resetPassword = async (newPass: string): Promise<void> => {
-      if (!isSupabaseConfigured) {
-          toast.error("Preview Mode: Cannot reset password.");
-          throw new Error("Preview Mode");
-      }
-      const { error } = await supabase.auth.updateUser({ password: newPass });
-      if (error) throw error;
-      await supabase.auth.signOut();
+    if (!isSupabaseConfigured) {
+      toast.error("Preview Mode: Cannot reset password.");
+      throw new Error("Preview Mode");
+    }
+    const { error } = await supabase.auth.updateUser({ password: newPass });
+    if (error) throw error;
+    await supabase.auth.signOut();
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
@@ -123,7 +124,15 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
     if (error) console.error("Error updating profile:", error.message);
     else setProfile(data as Profile);
   };
-  
+
+  const refreshProfile = async () => {
+    if (currentUser) {
+      // Manually trigger the fetch logic again
+      const { data } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single();
+      if (data) setProfile(data as Profile);
+    }
+  };
+
   const isFavorite = (businessId: number): boolean => profile?.favorites?.includes(businessId) ?? false;
 
   const toggleFavorite = async (businessId: number) => {
@@ -135,11 +144,11 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
       : [...currentFavorites, businessId];
     await updateProfile({ favorites: newFavorites });
   };
-  
+
   const value = {
-      session, currentUser, profile, loading,
-      login, logout, requestPasswordReset, resetPassword,
-      updateProfile, isFavorite, toggleFavorite
+    session, currentUser, profile, loading,
+    login, logout, requestPasswordReset, resetPassword,
+    updateProfile, isFavorite, toggleFavorite, refreshProfile
   };
 
   return (

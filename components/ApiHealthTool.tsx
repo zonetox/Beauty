@@ -14,9 +14,9 @@ const XCircleIcon: React.FC = () => (
   </svg>
 );
 const ClockIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
 );
 const LoadingSpinner: React.FC = () => (
   <svg className="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -68,7 +68,7 @@ const ApiHealthTool: React.FC = () => {
     await new Promise(r => setTimeout(r, 200));
 
     // Check 2: API & DB
-    const { error: dbError } = await supabase.from('business').select('id', { count: 'exact', head: true });
+    const { error: dbError } = await supabase.from('businesses').select('id', { count: 'exact', head: true });
     if (dbError) {
       updateCheckStatus('api', 'error', `Failed to query database: ${dbError.message}`);
       allSystemsGo = false;
@@ -90,23 +90,23 @@ const ApiHealthTool: React.FC = () => {
     // Check 4: Storage
     const { error: storageError } = await supabase.storage.from('business-assets').list('', { limit: 1 });
     if (storageError) {
-        updateCheckStatus('storage', 'error', `Storage error: ${storageError.message}. Ensure 'business-assets' bucket exists and has correct policies.`);
-        allSystemsGo = false;
+      updateCheckStatus('storage', 'error', `Storage error: ${storageError.message}. Ensure 'business-assets' bucket exists and has correct policies.`);
+      allSystemsGo = false;
     } else {
-        updateCheckStatus('storage', 'success', 'Storage service is responsive.');
+      updateCheckStatus('storage', 'success', 'Storage service is responsive.');
     }
     await new Promise(r => setTimeout(r, 200));
 
     // Check 5: Functions
     const { error: functionError } = await supabase.functions.invoke('send-email');
     if (functionError && functionError.message.includes('Missing required fields')) {
-        updateCheckStatus('functions', 'success', 'Edge Functions are invokable. Received expected parameter error.');
+      updateCheckStatus('functions', 'success', 'Edge Functions are invokable. Received expected parameter error.');
     } else if (functionError) {
-        updateCheckStatus('functions', 'error', `Invocation failed unexpectedly: ${functionError.message}`);
-        allSystemsGo = false;
+      updateCheckStatus('functions', 'error', `Invocation failed unexpectedly: ${functionError.message}`);
+      allSystemsGo = false;
     } else {
-        updateCheckStatus('functions', 'error', 'Invocation did not return an expected error, which is unusual.');
-        allSystemsGo = false;
+      updateCheckStatus('functions', 'error', 'Invocation did not return an expected error, which is unusual.');
+      allSystemsGo = false;
     }
 
     setIsLoading(false);
@@ -114,18 +114,18 @@ const ApiHealthTool: React.FC = () => {
   };
 
   const statusIcons: { [key in Status]: React.ReactNode } = {
-      idle: <ClockIcon />,
-      pending: <LoadingSpinner />,
-      success: <CheckCircleIcon />,
-      error: <XCircleIcon />,
+    idle: <ClockIcon />,
+    pending: <LoadingSpinner />,
+    success: <CheckCircleIcon />,
+    error: <XCircleIcon />,
   };
 
   return (
     <div>
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-            <h3 className="text-md font-semibold text-neutral-dark">Supabase API Health Status</h3>
-            <p className="text-sm text-gray-500">Run these checks to diagnose connection issues with Supabase services.</p>
+          <h3 className="text-md font-semibold text-neutral-dark">Supabase API Health Status</h3>
+          <p className="text-sm text-gray-500">Run these checks to diagnose connection issues with Supabase services.</p>
         </div>
         <button
           onClick={runChecks}
@@ -152,11 +152,11 @@ const ApiHealthTool: React.FC = () => {
         ))}
       </div>
 
-       {overallStatus !== 'idle' && !isLoading && (
-            <div className={`mt-4 p-3 rounded-md text-sm font-semibold text-center ${overallStatus === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                {overallStatus === 'success' ? 'All systems operational.' : 'Some issues were detected.'}
-            </div>
-       )}
+      {overallStatus !== 'idle' && !isLoading && (
+        <div className={`mt-4 p-3 rounded-md text-sm font-semibold text-center ${overallStatus === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+          {overallStatus === 'success' ? 'All systems operational.' : 'Some issues were detected.'}
+        </div>
+      )}
     </div>
   );
 };

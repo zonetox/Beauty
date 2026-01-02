@@ -94,16 +94,16 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
   // --- DATA FETCHING ---
   const fetchAllPublicData = useCallback(async () => {
     if (!isSupabaseConfigured) {
-        console.warn("Supabase is not configured. Serving empty data for preview purposes. All write operations will fail.");
-        setBusinessLoading(false);
-        setBlogLoading(false);
-        setBusinesses([]);
-        setBlogPosts([]);
-        setBlogCategories([]);
-        setPackages([]);
-        return;
+      console.warn("Supabase is not configured. Serving empty data for preview purposes. All write operations will fail.");
+      setBusinessLoading(false);
+      setBlogLoading(false);
+      setBusinesses([]);
+      setBlogPosts([]);
+      setBlogCategories([]);
+      setPackages([]);
+      return;
     }
-    
+
     // 1. Try to load from cache
     try {
       const cachedDataJSON = localStorage.getItem(PUBLIC_DATA_CACHE_KEY);
@@ -130,7 +130,7 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
 
     // OPTIMIZED: Remove heavy relations from initial fetch
     const [bizRes, blogRes, catRes, pkgRes] = await Promise.all([
-      supabase.from('business').select('*').order('is_featured', { ascending: false }).order('id', { ascending: true }),
+      supabase.from('businesses').select('*').order('is_featured', { ascending: false }).order('id', { ascending: true }),
       supabase.from('blog_posts').select('*').order('date', { ascending: false }),
       supabase.from('blog_categories').select('*').order('name'),
       supabase.from('membership_packages').select('*').order('price')
@@ -142,13 +142,13 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
     let fetchedPackages: MembershipPackage[] = [];
 
     if (bizRes.error) {
-        console.error('Error fetching businesses:', bizRes.error.message);
+      console.error('Error fetching businesses:', bizRes.error.message);
     } else if (bizRes.data) {
-        // No formatting needed for relations since we aren't fetching them yet
-        fetchedBusinesses = bizRes.data.map(b => ({ ...b, services: [], gallery: [], team: [], deals: [], reviews: [] })) as Business[];
+      // No formatting needed for relations since we aren't fetching them yet
+      fetchedBusinesses = bizRes.data.map(b => ({ ...b, services: [], gallery: [], team: [], deals: [], reviews: [] })) as Business[];
     }
     setBusinessLoading(false);
-    
+
     if (blogRes.error) console.error("Error fetching blog posts:", blogRes.error.message);
     else if (blogRes.data) fetchedBlogPosts = blogRes.data as BlogPost[];
     setBlogLoading(false);
@@ -172,27 +172,27 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
     setBlogPosts(fetchedBlogPosts);
     setBlogCategories(fetchedCategories);
     setPackages(fetchedPackages);
-    
+
     // 3. Save new data to cache
     try {
-        const cachePayload = {
-            timestamp: Date.now(),
-            data: {
-                businesses: fetchedBusinesses,
-                blogPosts: fetchedBlogPosts,
-                blogCategories: fetchedCategories,
-                packages: fetchedPackages,
-            },
-        };
-        localStorage.setItem(PUBLIC_DATA_CACHE_KEY, JSON.stringify(cachePayload));
-        console.log("Public data fetched from Supabase and cached.");
+      const cachePayload = {
+        timestamp: Date.now(),
+        data: {
+          businesses: fetchedBusinesses,
+          blogPosts: fetchedBlogPosts,
+          blogCategories: fetchedCategories,
+          packages: fetchedPackages,
+        },
+      };
+      localStorage.setItem(PUBLIC_DATA_CACHE_KEY, JSON.stringify(cachePayload));
+      console.log("Public data fetched from Supabase and cached.");
     } catch (e) {
-        console.error("Failed to write to cache:", e);
+      console.error("Failed to write to cache:", e);
     }
   }, []);
 
   useEffect(() => { fetchAllPublicData(); }, [fetchAllPublicData]);
-  
+
   // --- BUSINESS LOGIC ---
   const addBusiness = async (newBusiness: Business): Promise<Business | null> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add business."); return null; }
@@ -209,51 +209,51 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
     const { error } = await supabase.from('business').update(toSnakeCase(businessToUpdate)).eq('id', id);
     if (error) { console.error('Error updating business:', error.message); } else { await fetchAllPublicData(); }
   };
-  const deleteBusiness = async (businessId: number) => { 
+  const deleteBusiness = async (businessId: number) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot delete business."); return; }
-    /* ... implementation unchanged ... */ 
+    /* ... implementation unchanged ... */
   };
-  
+
   // Existing synchronous getter (from loaded list)
   const getBusinessBySlug = (slug: string) => businesses.find(b => b.slug === slug);
 
   // NEW: Async detailed getter
   const fetchBusinessBySlug = useCallback(async (slug: string): Promise<Business | null> => {
-      if (!isSupabaseConfigured) return businesses.find(b => b.slug === slug) || null;
+    if (!isSupabaseConfigured) return businesses.find(b => b.slug === slug) || null;
 
-      // 1. Fetch the main business record
-      const { data: businessData, error: businessError } = await supabase
-          .from('business')
-          .select('*')
-          .eq('slug', slug)
-          .single();
+    // 1. Fetch the main business record
+    const { data: businessData, error: businessError } = await supabase
+      .from('businesses')
+      .select('*')
+      .eq('slug', slug)
+      .single();
 
-      if (businessError || !businessData) {
-          console.error("Error fetching business details:", businessError?.message);
-          return null;
-      }
+    if (businessError || !businessData) {
+      console.error("Error fetching business details:", businessError?.message);
+      return null;
+    }
 
-      // 2. Parallel fetch for relations
-      const businessId = businessData.id;
-      const [servicesRes, mediaRes, teamRes, dealsRes, reviewsRes] = await Promise.all([
-          supabase.from('services').select('*').eq('business_id', businessId).order('position', { ascending: true }),
-          supabase.from('media_items').select('*').eq('business_id', businessId).order('position', { ascending: true }),
-          supabase.from('team_members').select('*').eq('business_id', businessId),
-          supabase.from('deals').select('*').eq('business_id', businessId),
-          supabase.from('reviews').select('*').eq('business_id', businessId)
-      ]);
+    // 2. Parallel fetch for relations
+    const businessId = businessData.id;
+    const [servicesRes, mediaRes, teamRes, dealsRes, reviewsRes] = await Promise.all([
+      supabase.from('services').select('*').eq('business_id', businessId).order('position', { ascending: true }),
+      supabase.from('media_items').select('*').eq('business_id', businessId).order('position', { ascending: true }),
+      supabase.from('team_members').select('*').eq('business_id', businessId),
+      supabase.from('deals').select('*').eq('business_id', businessId),
+      supabase.from('reviews').select('*').eq('business_id', businessId)
+    ]);
 
-      // 3. Assemble full object
-      const fullBusiness: Business = {
-          ...businessData,
-          services: servicesRes.data || [],
-          gallery: mediaRes.data || [], // Map to 'gallery'
-          team: teamRes.data || [],
-          deals: dealsRes.data || [],
-          reviews: reviewsRes.data || []
-      };
+    // 3. Assemble full object
+    const fullBusiness: Business = {
+      ...businessData,
+      services: servicesRes.data || [],
+      gallery: mediaRes.data || [], // Map to 'gallery'
+      team: teamRes.data || [],
+      deals: dealsRes.data || [],
+      reviews: reviewsRes.data || []
+    };
 
-      return fullBusiness;
+    return fullBusiness;
   }, [businesses]); // Depend on businesses if we want fallback, but mainly standalone
 
   const incrementBusinessViewCount = async (businessId: number) => {
@@ -286,12 +286,12 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
     else await fetchAllPublicData();
   };
   const updateServicesOrder = async (orderedServices: Service[]) => {
-      if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot reorder services."); return; }
-      const updates = orderedServices.map((service, index) => ({ id: service.id, position: index + 1 }));
-      const { error } = await supabase.from('services').upsert(updates);
-      if (error) toast.error("Could not save new service order.");
+    if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot reorder services."); return; }
+    const updates = orderedServices.map((service, index) => ({ id: service.id, position: index + 1 }));
+    const { error } = await supabase.from('services').upsert(updates);
+    if (error) toast.error("Could not save new service order.");
   };
-  
+
   // --- MEDIA/GALLERY LOGIC ---
   const addMediaItem = async (file: File, businessId: number) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot upload media."); return; }
@@ -319,10 +319,10 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
     else await fetchAllPublicData();
   };
   const updateMediaOrder = async (orderedMedia: MediaItem[]) => {
-      if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot reorder media."); return; }
-      const updates = orderedMedia.map((item, index) => ({ id: item.id, position: index + 1, }));
-      const { error } = await supabase.from('media_items').upsert(updates);
-      if (error) toast.error("Could not save new media order.");
+    if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot reorder media."); return; }
+    const updates = orderedMedia.map((item, index) => ({ id: item.id, position: index + 1, }));
+    const { error } = await supabase.from('media_items').upsert(updates);
+    if (error) toast.error("Could not save new media order.");
   };
 
   // --- TEAM LOGIC ---
@@ -373,7 +373,7 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
       const savedCommentsJSON = localStorage.getItem(COMMENTS_LOCAL_STORAGE_KEY);
       setComments(savedCommentsJSON ? JSON.parse(savedCommentsJSON) : []);
     } catch (e) { console.error(e) }
-   }, []);
+  }, []);
 
   const addBlogPost = async (newPostData: Omit<BlogPost, 'id' | 'slug' | 'date' | 'viewCount'>) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add blog post."); return; }
@@ -406,7 +406,7 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add category."); return; }
     if (name.trim() === '' || blogCategories.some(c => c.name.toLowerCase() === name.toLowerCase())) { return toast.error("Category name cannot be empty or duplicate."); }
     const { error } = await supabase.from('blog_categories').insert({ name });
-    if (!error) { await fetchAllPublicData(); toast.success("Category added."); } 
+    if (!error) { await fetchAllPublicData(); toast.success("Category added."); }
     else { toast.error(`Failed to add category: ${error.message}`); }
   };
   const updateBlogCategory = async (id: string, name: string) => {
@@ -462,22 +462,22 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
 
 // --- CUSTOM HOOKS ---
 const usePublicData = () => {
-    const context = useContext(PublicDataContext);
-    if (!context) throw new Error('usePublicData must be used within a PublicDataProvider');
-    return context;
+  const context = useContext(PublicDataContext);
+  if (!context) throw new Error('usePublicData must be used within a PublicDataProvider');
+  return context;
 };
 
 export const useBusinessData = () => {
-    const { businesses, businessLoading, addBusiness, updateBusiness, deleteBusiness, getBusinessBySlug, fetchBusinessBySlug, incrementBusinessViewCount, addService, updateService, deleteService, updateServicesOrder, addMediaItem, updateMediaItem, deleteMediaItem, updateMediaOrder, addTeamMember, updateTeamMember, deleteTeamMember, addDeal, updateDeal, deleteDeal } = usePublicData();
-    return { businesses, loading: businessLoading, addBusiness, updateBusiness, deleteBusiness, getBusinessBySlug, fetchBusinessBySlug, incrementBusinessViewCount, addService, updateService, deleteService, updateServicesOrder, addMediaItem, updateMediaItem, deleteMediaItem, updateMediaOrder, addTeamMember, updateTeamMember, deleteTeamMember, addDeal, updateDeal, deleteDeal };
+  const { businesses, businessLoading, addBusiness, updateBusiness, deleteBusiness, getBusinessBySlug, fetchBusinessBySlug, incrementBusinessViewCount, addService, updateService, deleteService, updateServicesOrder, addMediaItem, updateMediaItem, deleteMediaItem, updateMediaOrder, addTeamMember, updateTeamMember, deleteTeamMember, addDeal, updateDeal, deleteDeal } = usePublicData();
+  return { businesses, loading: businessLoading, addBusiness, updateBusiness, deleteBusiness, getBusinessBySlug, fetchBusinessBySlug, incrementBusinessViewCount, addService, updateService, deleteService, updateServicesOrder, addMediaItem, updateMediaItem, deleteMediaItem, updateMediaOrder, addTeamMember, updateTeamMember, deleteTeamMember, addDeal, updateDeal, deleteDeal };
 };
 
 export const useBlogData = () => {
-    const { blogPosts, blogLoading, addBlogPost, updateBlogPost, deleteBlogPost, getPostBySlug, incrementBlogViewCount, comments, getCommentsByPostId, addComment, blogCategories, addBlogCategory, updateBlogCategory, deleteBlogCategory } = usePublicData();
-    return { blogPosts, loading: blogLoading, addBlogPost, updateBlogPost, deleteBlogPost, getPostBySlug, incrementViewCount: incrementBlogViewCount, comments, getCommentsByPostId, addComment, blogCategories, addBlogCategory, updateBlogCategory, deleteBlogCategory };
+  const { blogPosts, blogLoading, addBlogPost, updateBlogPost, deleteBlogPost, getPostBySlug, incrementBlogViewCount, comments, getCommentsByPostId, addComment, blogCategories, addBlogCategory, updateBlogCategory, deleteBlogCategory } = usePublicData();
+  return { blogPosts, loading: blogLoading, addBlogPost, updateBlogPost, deleteBlogPost, getPostBySlug, incrementViewCount: incrementBlogViewCount, comments, getCommentsByPostId, addComment, blogCategories, addBlogCategory, updateBlogCategory, deleteBlogCategory };
 };
 
 export const useMembershipPackageData = () => {
-    const { packages, addPackage, updatePackage, deletePackage } = usePublicData();
-    return { packages, addPackage, updatePackage, deletePackage };
+  const { packages, addPackage, updatePackage, deletePackage } = usePublicData();
+  return { packages, addPackage, updatePackage, deletePackage };
 };

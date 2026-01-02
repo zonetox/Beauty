@@ -45,16 +45,16 @@ Deno.serve(async (req: Request) => {
     }
 
     if (request.status === 'Approved') {
-        return new Response(JSON.stringify({ message: "Request already approved." }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200,
-        });
+      return new Response(JSON.stringify({ message: "Request already approved." }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      });
     }
 
     // 2. Create a new business record based on the request.
     const slug = request.business_name.toLowerCase().replace(/\s+/g, '-') + `-${Date.now()}`;
     const { data: newBusiness, error: businessError } = await supabaseAdmin
-      .from('business')
+      .from('businesses')
       .insert({
         name: request.business_name,
         email: request.email,
@@ -81,24 +81,24 @@ Deno.serve(async (req: Request) => {
 
     // 3. Invite the user to get the invitation link.
     const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
-        request.email,
-        {
-            data: {
-                full_name: request.business_name,
-            },
-        }
+      request.email,
+      {
+        data: {
+          full_name: request.business_name,
+        },
+      }
     );
-    
+
     if (inviteError || !inviteData || !inviteData.user) {
-        await supabaseAdmin.from('business').delete().eq('id', newBusiness.id);
-        throw new Error(`Failed to invite user: ${inviteError?.message}`);
+      await supabaseAdmin.from('businesses').delete().eq('id', newBusiness.id);
+      throw new Error(`Failed to invite user: ${inviteError?.message}`);
     }
-    
+
     const invitationLink = inviteData.user.action_link;
     if (!invitationLink) {
-        throw new Error("Could not retrieve invitation link.");
+      throw new Error("Could not retrieve invitation link.");
     }
-    
+
     // 3.5 Send the templated email with the invitation link
     const { error: emailError } = await supabaseAdmin.functions.invoke('send-templated-email', {
       body: {
@@ -113,7 +113,7 @@ Deno.serve(async (req: Request) => {
 
     if (emailError) {
       // Rollback if email fails
-      await supabaseAdmin.from('business').delete().eq('id', newBusiness.id);
+      await supabaseAdmin.from('businesses').delete().eq('id', newBusiness.id);
       await supabaseAdmin.auth.admin.deleteUser(inviteData.user.id);
       throw new Error(`Failed to send templated email: ${emailError.message}`);
     }
@@ -131,10 +131,10 @@ Deno.serve(async (req: Request) => {
       });
 
     if (profileError) {
-        // Roll back previous steps if profile creation fails
-        await supabaseAdmin.from('business').delete().eq('id', newBusiness.id);
-        await supabaseAdmin.auth.admin.deleteUser(newUserId);
-        throw new Error(`Failed to create user profile: ${profileError.message}`);
+      // Roll back previous steps if profile creation fails
+      await supabaseAdmin.from('businesses').delete().eq('id', newBusiness.id);
+      await supabaseAdmin.auth.admin.deleteUser(newUserId);
+      throw new Error(`Failed to create user profile: ${profileError.message}`);
     }
 
     // 5. Update the registration request status to 'Approved'.

@@ -31,6 +31,7 @@ const RegisterPage = lazy(() => import('./pages/RegisterPage.tsx'));
 const AdminPage = lazy(() => import('./pages/AdminPage.tsx'));
 const AdminLoginPage = lazy(() => import('./pages/AdminLoginPage.tsx'));
 const AdminProtectedRoute = lazy(() => import('./components/AdminProtectedRoute.tsx'));
+const PartnerRegistrationPage = lazy(() => import('./pages/PartnerRegistrationPage.tsx'));
 const UserBusinessDashboardPage = lazy(() => import('./pages/UserBusinessDashboardPage.tsx'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.tsx'));
 const LoginPage = lazy(() => import('./pages/LoginPage.tsx'));
@@ -55,8 +56,8 @@ const AppLayout: React.FC = () => {
         <div className="flex flex-col min-h-screen font-sans text-neutral-dark bg-background">
             <Header />
             <main className="flex-grow">
-                 {!isHomepage && <Breadcrumbs />}
-                 <Outlet /> {/* Child routes will render here */}
+                {!isHomepage && <Breadcrumbs />}
+                <Outlet /> {/* Child routes will render here */}
             </main>
             <Footer />
             <BackToTopButton />
@@ -79,7 +80,7 @@ const AccountPageRouter: React.FC = () => {
             </div>
         );
     }
-    
+
     // If a user has a business, route to the business dashboard. This is the only valid path for a logged-in user.
     if (profile?.business_id) {
         return <UserBusinessDashboardPage />;
@@ -99,62 +100,64 @@ const AccountPageRouter: React.FC = () => {
 
 
 const App: React.FC = () => {
-  // The check for Supabase configuration has been removed to avoid showing the error
-  // page in preview environments where environment variables are not present.
-  // The app will now attempt to connect directly. The 'API Status' button in the
-  // header can be used for diagnostics.
+    // The check for Supabase configuration has been removed to avoid showing the error
+    // page in preview environments where environment variables are not present.
+    // The app will now attempt to connect directly. The 'API Status' button in the
+    // header can be used for diagnostics.
 
-  return (
-    <Router>
-      <Toaster position="top-center" reverseOrder={false} />
-      <ThemeProvider>
-        <UserSessionProvider>
-          <AdminProvider>
-              <PublicDataProvider>
-                  <HomepageDataProvider>
-                      <BusinessProvider>
-                        <Suspense fallback={<LoadingSpinner />}>
-                            <Routes>
-                                {/* Routes WITH standard layout (Header, Footer, etc.) */}
-                                <Route element={<AppLayout />}>
-                                    <Route index element={<HomePage />} />
-                                    <Route path="directory" element={<DirectoryPage />} />
-                                    <Route path="blog" element={<BlogListPage />} />
-                                    <Route path="blog/:slug" element={<BlogPostPage />} />
-                                    <Route path="about" element={<AboutPage />} />
-                                    <Route path="contact" element={<ContactPage />} />
-                                    <Route path="register" element={<RegisterPage />} />
-                                    <Route path="login" element={<LoginPage />} />
-                                    <Route path="reset-password" element={<ResetPasswordPage />} />
-                                      <Route path="account" element={
-                                        <ProtectedRoute>
-                                            <AccountPageRouter />
-                                        </ProtectedRoute>
-                                    } />
-                                </Route>
+    return (
+        <Router>
+            <Toaster position="top-center" reverseOrder={false} />
+            <ThemeProvider>
+                <UserSessionProvider>
+                    <AdminProvider>
+                        <PublicDataProvider>
+                            <HomepageDataProvider>
+                                <BusinessProvider>
+                                    <Suspense fallback={<LoadingSpinner />}>
+                                        <Routes>
+                                            {/* Routes WITH standard layout (Header, Footer, etc.) */}
+                                            <Route element={<AppLayout />}>
+                                                <Route index element={<HomePage />} />
+                                                <Route path="directory" element={<DirectoryPage />} />
+                                                <Route path="blog" element={<BlogListPage />} />
+                                                <Route path="blog/:slug" element={<BlogPostPage />} />
+                                                <Route path="about" element={<AboutPage />} />
+                                                <Route path="contact" element={<ContactPage />} />
+                                                <Route path="register" element={<RegisterPage />} />
+                                                {/* <Route path="/register-business" element={<RegisterBusinessPage />} /> */}
+                                                <Route path="/partner-registration" element={<PartnerRegistrationPage />} />
+                                                <Route path="login" element={<LoginPage />} />
+                                                <Route path="reset-password" element={<ResetPasswordPage />} />
+                                                <Route path="account" element={
+                                                    <ProtectedRoute>
+                                                        <AccountPageRouter />
+                                                    </ProtectedRoute>
+                                                } />
+                                            </Route>
 
-                                {/* Routes WITHOUT standard layout */}
-                                <Route path="/admin" element={
-                                    <AdminProtectedRoute>
-                                        <AdminPage />
-                                    </AdminProtectedRoute>
-                                } />
-                                <Route path="/admin/login" element={<AdminLoginPage />} />
-                                <Route path="business/:slug" element={<BusinessDetailPage />} />
-                                <Route path="business/:businessSlug/post/:postSlug" element={<BusinessPostPage />} />
+                                            {/* Routes WITHOUT standard layout */}
+                                            <Route path="/admin" element={
+                                                <AdminProtectedRoute>
+                                                    <AdminPage />
+                                                </AdminProtectedRoute>
+                                            } />
+                                            <Route path="/admin/login" element={<AdminLoginPage />} />
+                                            <Route path="business/:slug" element={<BusinessDetailPage />} />
+                                            <Route path="business/:businessSlug/post/:postSlug" element={<BusinessPostPage />} />
 
-                                {/* Catch-all route must be at the top level */}
-                                <Route path="*" element={<NotFoundPage />} />
-                            </Routes>
-                        </Suspense>
-                      </BusinessProvider>
-                  </HomepageDataProvider>
-              </PublicDataProvider>
-          </AdminProvider>
-        </UserSessionProvider>
-      </ThemeProvider>
-    </Router>
-  );
+                                            {/* Catch-all route must be at the top level */}
+                                            <Route path="*" element={<NotFoundPage />} />
+                                        </Routes>
+                                    </Suspense>
+                                </BusinessProvider>
+                            </HomepageDataProvider>
+                        </PublicDataProvider>
+                    </AdminProvider>
+                </UserSessionProvider>
+            </ThemeProvider>
+        </Router>
+    );
 };
 
 export default App;

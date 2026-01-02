@@ -18,17 +18,17 @@ import BusinessSupportCenter from '../components/BusinessSupportCenter.tsx';
 
 export type ActiveTab = 'dashboard' | 'profile' | 'services' | 'billing' | 'blog' | 'gallery' | 'reviews' | 'stats' | 'settings' | 'bookings' | 'support' | 'deals';
 
+import BusinessOnboardingWizard from '../components/BusinessOnboardingWizard.tsx';
+
+// ... imports
+
 const UserBusinessDashboardPage: React.FC = () => {
     const { currentBusiness } = useBusinessAuth();
     const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
 
+    // If logged in but no business => ONBOARDING
     if (!currentBusiness) {
-        return (
-            <div className="container mx-auto px-4 py-16 text-center">
-                <h1 className="text-2xl font-bold">Loading business data...</h1>
-                <p className="text-gray-600 mt-2">If you are a business owner, please log in.</p>
-            </div>
-        );
+        return <BusinessOnboardingWizard />;
     }
 
     const renderContent = () => {
@@ -52,9 +52,9 @@ const UserBusinessDashboardPage: React.FC = () => {
             case 'reviews':
                 return <ReviewsManager />;
             case 'stats':
-                 return <AnalyticsDashboard />;
+                return <AnalyticsDashboard />;
             case 'settings':
-                 return <AccountSettings />;
+                return <AccountSettings />;
             case 'support':
                 return <BusinessSupportCenter />;
             default:
