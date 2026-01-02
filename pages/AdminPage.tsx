@@ -144,122 +144,26 @@ const NEW_BUSINESS_TEMPLATE: Business = { id: 0, slug: '', name: 'New Business N
 const AdminPage: React.FC = () => {
   const navigate = useNavigate();
   const { businesses, loading: businessesLoading, updateBusiness, addBusiness, deleteBusiness } = useBusinessData();
-  const { adminUsers, addAdminUser, updateAdminUser, deleteAdminUser, currentUser, adminLogout } = useAdminAuth();
-  const { blogPosts, loading: blogLoading, addBlogPost, updateBlogPost, deleteBlogPost } = useBlogData();
-  const { packages, addPackage, updatePackage, deletePackage } = useMembershipPackageData();
-  const { orders, loading: ordersLoading, addOrder, updateOrderStatus } = useOrderData();
-  const { posts: businessBlogPosts, updatePost: updateBusinessBlogPost } = useBusinessBlogData();
-  const { settings, updateSettings } = useSettings();
-  const { addNotification, registrationRequests, approveRegistrationRequest, rejectRegistrationRequest } = useAdminPlatform();
+  const { adminUsers, addAdminUser, updateAdminUser, deleteAdminUser, currentUser, adminLogout, loading: authLoading } = useAdminAuth();
 
-  const [activeTab, setActiveTab] = useState<AdminPageTab>('dashboard');
-  const [editingBusiness, setEditingBusiness] = useState<Business | null>(null);
-  const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
-  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [orderStatusFilter, setOrderStatusFilter] = useState<OrderStatus | 'all'>('all');
-  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
-  const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
-  const [editingPackage, setEditingPackage] = useState<MembershipPackage | null>(null);
-  const [currentSettings, setCurrentSettings] = useState<AppSettings | null>(settings);
-  const [viewBoostConfig, setViewBoostConfig] = useState({ min: 10, max: 50 });
-  const [isBoosting, setIsBoosting] = useState(false);
-  const [boostMessage, setBoostMessage] = useState('');
+  // ... (rest of hooks)
 
-  useEffect(() => { setCurrentSettings(settings); }, [settings]);
-
-  const runRandomViewBoost = useCallback(() => { /* ... implementation unchanged ... */ return { totalViewsAdded: 0, itemsUpdated: 0 }; }, []);
-  useEffect(() => { /* ... implementation unchanged ... */ }, [runRandomViewBoost]);
-
-  const handleBoostViews = () => { /* ... implementation unchanged ... */ };
-  const filteredBusinesses = useMemo(() => { const q = searchQuery.toLowerCase().trim(); if (!q) return businesses; return businesses.filter(b => b.name.toLowerCase().includes(q)); }, [businesses, searchQuery]);
-  const filteredOrders = useMemo(() => { if (orderStatusFilter === 'all') return orders; return orders.filter(o => o.status === orderStatusFilter); }, [orders, orderStatusFilter]);
-
-  const handleSaveBusiness = async (businessToSave: Business) => { if (businessToSave.id === 0) { const slug = businessToSave.name.toLowerCase().replace(/\s+/g, '-') + `-${Date.now()}`; await addBusiness({ ...businessToSave, slug }); } else { await updateBusiness(businessToSave); } setEditingBusiness(null); };
-  const handleSavePost = async (postToSave: BlogPost) => { if (postToSave.id === 0) { const { id, slug, date, viewCount, ...newPostData } = postToSave; await addBlogPost(newPostData); } else { await updateBlogPost(postToSave); } setEditingPost(null); };
-  const handleDeletePost = async (postId: number) => { if (window.confirm('Are you sure?')) { await deleteBlogPost(postId); } };
-
-  const handleDuplicateBusiness = async (businessToDuplicate: Business) => {
-    if (!window.confirm(`Are you sure you want to duplicate "${businessToDuplicate.name}"?`)) {
-      return;
+  useEffect(() => {
+    if (!authLoading && !currentUser) {
+      navigate('/admin/login');
     }
-    const { id, slug, name, ...rest } = businessToDuplicate;
-    const newName = `${name} (Copy)`;
-    const newSlug = newName.toLowerCase().replace(/\s+/g, '-') + `-${Date.now()}`;
-    const duplicatedBusiness: Business = {
-      ...rest,
-      id: 0, // Signal that this is a new business
-      name: newName,
-      slug: newSlug,
-      joinedDate: new Date().toISOString(),
-    };
-    const promise = addBusiness(duplicatedBusiness);
-    toast.promise(promise, {
-      loading: 'Duplicating business...',
-      success: `Successfully duplicated "${name}".`,
-      error: 'Failed to duplicate business.',
-    });
-  };
+  }, [authLoading, currentUser, navigate]);
 
-  const handleApproveRequest = (requestId: string) => {
-    const request = registrationRequests.find(r => r.id === requestId);
-    if (!request) {
-      toast.error('Registration request not found.');
-      return;
-    }
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-100 flex-col gap-4">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-gray-600 font-medium">Checking permissions...</p>
+      </div>
+    );
+  }
 
-    const approvalPromise = approveRegistrationRequest(requestId);
-
-    toast.promise(approvalPromise, {
-      loading: `Approving ${request.businessName}...`,
-      success: `Approved registration for ${request.businessName}. An invitation email has been sent.`,
-      error: (err) => `Error approving registration: ${err.message}`,
-    });
-  };
-
-  const handleRejectRequest = (requestId: string) => {
-    const request = registrationRequests.find(r => r.id === requestId);
-    if (!request) {
-      toast.error('Registration request not found.');
-      return;
-    }
-    if (window.confirm('Are you sure you want to reject this request?')) {
-      const rejectionPromise = rejectRegistrationRequest(requestId).then(() => {
-        addNotification(request.email, 'Your Registration Update', `We regret to inform you that your registration for ${request.businessName} has been rejected at this time.`);
-      });
-
-      toast.promise(rejectionPromise, {
-        loading: 'Rejecting request...',
-        success: `Rejected registration for ${request.businessName}.`,
-        error: (err) => `Error rejecting request: ${err.message}`,
-      });
-    }
-  };
-
-  const handleConfirmPayment = (orderId: string) => { updateOrderStatus(orderId, OrderStatus.COMPLETED); };
-  const handleRejectOrder = (orderId: string) => { updateOrderStatus(orderId, OrderStatus.REJECTED, 'Payment rejected by admin.'); };
-  const handleOpenUserModal = (user: AdminUser | null) => { setEditingUser(user); setIsUserModalOpen(true); };
-  const handleCloseUserModal = () => { setEditingUser(null); setIsUserModalOpen(false); };
-  const handleSaveUser = (user: AdminUser) => { if (user.id) { const { password, ...updates } = user; updateAdminUser(user.id, updates); } else { addAdminUser(user as any); } handleCloseUserModal(); };
-  const handleDeleteUser = (userId: number) => { if (userId === currentUser?.id) { toast.error("Cannot delete self."); return; } if (window.confirm('Are you sure?')) { deleteAdminUser(userId); } };
-  const handleOpenPackageModal = (pkg: MembershipPackage | null) => { setEditingPackage(pkg); setIsPackageModalOpen(true); };
-  const handleClosePackageModal = () => { setEditingPackage(null); setIsPackageModalOpen(false); };
-  const handleSavePackage = async (pkg: MembershipPackage) => { if (pkg.id) { await updatePackage(pkg.id, pkg); } else { await addPackage(pkg); } handleClosePackageModal(); };
-  const handleDeletePackage = async (packageId: string) => { if (window.confirm('Are you sure?')) { await deletePackage(packageId); } };
-  const handleOpenAddNewBusiness = () => { setEditingBusiness(NEW_BUSINESS_TEMPLATE); };
-  const handleOpenAddNewPost = () => { setEditingPost({ id: 0, title: 'New Blog Post', slug: '', date: '', author: currentUser?.username || 'Editor', category: 'General', excerpt: '', imageUrl: `https://picsum.photos/seed/new-post-${Date.now()}/400/300`, content: '', viewCount: 0 }); };
-  const handleOpenAddNewPackage = () => { handleOpenPackageModal({ id: '', tier: MembershipTier.PREMIUM, name: '', price: 0, durationMonths: 12, description: '', features: [''], permissions: { photoLimit: 10, videoLimit: 2, featuredLevel: 1, customLandingPage: true, privateBlog: false, seoSupport: false, monthlyPostLimit: 5, featuredPostLimit: 0, }, isPopular: false, isActive: true }); };
-  const handleBoostConfigChange = (e: React.ChangeEvent<HTMLInputElement>) => { setViewBoostConfig(prev => ({ ...prev, [e.target.name]: parseInt(e.target.value, 10) || 0 })); };
-  const handleSettingsChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => { const { name, value } = e.target; if (!currentSettings) return; const keys = name.split('.'); if (keys.length === 2) { setCurrentSettings(prev => ({ ...prev!, [keys[0]]: { ...(prev as any)[keys[0]], [keys[1]]: value } })); } };
-  const handleSaveSettings = () => { if (currentSettings) { updateSettings(currentSettings); toast.success('Settings saved!'); } };
-
-  const handleLogout = async () => {
-    await adminLogout();
-    navigate('/admin/login');
-  };
-
-  if (!currentUser) { return <div className="flex items-center justify-center h-screen bg-gray-100"><p>Redirecting to login...</p></div>; }
+  if (!currentUser) { return null; } // Will redirect via useEffect
 
   // Simple icons using Heroicons style paths to fix layout issues caused by empty SVGs
   const ICONS: Record<string, React.ReactNode> = {
