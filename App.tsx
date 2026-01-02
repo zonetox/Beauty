@@ -1,7 +1,7 @@
 
 
 import React, { lazy, Suspense } from 'react';
-import { HashRouter as Router, Routes, Route, useLocation, Outlet } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Outlet } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
 import Header from './components/Header.tsx';
@@ -17,6 +17,8 @@ import { PublicDataProvider } from './contexts/BusinessDataContext.tsx';
 import { HomepageDataProvider } from './contexts/HomepageDataContext.tsx';
 import { BusinessProvider } from './contexts/BusinessContext.tsx';
 import { ThemeProvider } from './contexts/ThemeContext.tsx';
+import { BusinessDashboardProvider } from './contexts/BusinessBlogDataContext.tsx';
+import { AdminPlatformProvider } from './contexts/AdminPlatformContext.tsx';
 
 // Lazy load all page components for performance
 const HomePage = lazy(() => import('./pages/HomePage.tsx'));
@@ -131,7 +133,9 @@ const App: React.FC = () => {
                                                 <Route path="reset-password" element={<ResetPasswordPage />} />
                                                 <Route path="account" element={
                                                     <ProtectedRoute>
-                                                        <AccountPageRouter />
+                                                        <BusinessDashboardProvider>
+                                                            <AccountPageRouter />
+                                                        </BusinessDashboardProvider>
                                                     </ProtectedRoute>
                                                 } />
                                             </Route>
@@ -139,7 +143,11 @@ const App: React.FC = () => {
                                             {/* Routes WITHOUT standard layout */}
                                             <Route path="/admin" element={
                                                 <AdminProtectedRoute>
-                                                    <AdminPage />
+                                                    <AdminPlatformProvider>
+                                                        <BusinessDashboardProvider>
+                                                            <AdminPage />
+                                                        </BusinessDashboardProvider>
+                                                    </AdminPlatformProvider>
                                                 </AdminProtectedRoute>
                                             } />
                                             <Route path="/admin/login" element={<AdminLoginPage />} />

@@ -2,9 +2,7 @@ import React, { createContext, useState, useEffect, useContext, ReactNode, useCa
 import { BusinessBlogPost, Review, ReviewStatus, BusinessAnalytics, Appointment, AppointmentStatus, Order, OrderStatus, Profile, BusinessBlogPostStatus, MembershipTier } from '../types.ts';
 import { supabase } from '../lib/supabaseClient.ts';
 import toast from 'react-hot-toast';
-import { useAdminPlatform } from './AdminPlatformContext.tsx';
-import { useAdminAuth } from './AuthContext.tsx';
-import { useUserData } from './UserDataContext.tsx';
+
 
 // --- CONTEXT TYPE DEFINITION ---
 interface BusinessDashboardContextType {
@@ -66,8 +64,7 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
 
-  const { logAdminAction } = useAdminPlatform();
-  const { currentUser: currentAdmin } = useAdminAuth();
+
 
   // --- DATA LOADING & SAVING ---
   const fetchAllData = useCallback(async () => {
