@@ -4,6 +4,8 @@ import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 
+import { snakeToCamel } from '../lib/utils.ts';
+
 interface UserSessionContextType {
   session: Session | null;
   currentUser: User | null;
@@ -41,11 +43,11 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
           .insert({ id: user.id, full_name: user.user_metadata.full_name, email: user.email })
           .select().single();
         if (insertError) console.error('Error creating profile:', insertError.message);
-        else setProfile(newProfile as Profile);
+        else setProfile(snakeToCamel(newProfile) as Profile);
       } else if (error) {
         console.error('Error fetching profile:', error.message);
       } else {
-        setProfile(data as Profile);
+        setProfile(snakeToCamel(data) as Profile);
       }
     };
 

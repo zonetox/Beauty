@@ -84,7 +84,7 @@ const AccountPageRouter: React.FC = () => {
     }
 
     // If a user has a business, route to the business dashboard. This is the only valid path for a logged-in user.
-    if (profile?.business_id) {
+    if (profile?.businessId) {
         return <UserBusinessDashboardPage />;
     }
 

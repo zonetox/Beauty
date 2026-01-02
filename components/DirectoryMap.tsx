@@ -42,7 +42,7 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusi
         const iconColor = isHighlighted ? '#4A4A4A' : '#BFA16A'; // secondary vs primary
         const size = isHighlighted ? 40 : 32;
         const animationClass = isHighlighted ? 'animate-bounce' : '';
-        
+
         const pinPath = `M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.1.4-.27.6-.503.214-.249.4-.555.515-.874.114-.319.18-.684.188-1.085l.002-.18.001-.206v-.008a6 6 0 00-12 0v.008l.001.206.002.18c.008.401.074.766.188 1.085.115.319.3.625.515.874.2.233.415.403.6.503.095.054.192.103.281.14l.018.008.006.003z`;
 
         const html = `
@@ -88,13 +88,29 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusi
             mapRef.current.on('moveend', () => {
                 onBoundsChange(mapRef.current.getBounds());
             });
+
+            // Ensure map fills container correctly (fixes "Gray Area" issue)
+            setTimeout(() => {
+                if (mapRef.current) {
+                    mapRef.current.invalidateSize();
+                }
+            }, 100);
+
+            const handleResize = () => {
+                if (mapRef.current) {
+                    mapRef.current.invalidateSize();
+                }
+            };
+
+            window.addEventListener('resize', handleResize);
+            return () => window.removeEventListener('resize', handleResize);
         }
     }, [onBoundsChange]);
 
     // --- Update Markers when businesses change ---
     useEffect(() => {
         if (!mapRef.current) return;
-        
+
         // Clear old markers
         Object.values(markersRef.current).forEach((marker: any) => marker.remove());
         markersRef.current = {};
@@ -104,7 +120,7 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusi
         validBusinesses.forEach(business => {
             const popupContent = ReactDOMServer.renderToString(<MapBusinessCard business={business} />);
             const icon = getIcon(business.categories[0], false);
-            
+
             const marker = L.marker([business.latitude!, business.longitude!], { icon })
                 .addTo(mapRef.current)
                 .bindPopup(popupContent)
@@ -131,7 +147,7 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusi
         }
 
     }, [businesses, shouldFitBounds, onMarkerClick, onPopupClose, onMarkerMouseEnter, onMarkerMouseLeave]);
-    
+
     // --- Handle Selection (Click) ---
     useEffect(() => {
         if (!mapRef.current) return;
@@ -141,7 +157,7 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusi
             if (!selectedMarker.isPopupOpen()) {
                 selectedMarker.openPopup();
             }
-             // Pan smoothly to the marker
+            // Pan smoothly to the marker
             mapRef.current.flyTo(selectedMarker.getLatLng(), mapRef.current.getZoom());
         }
     }, [selectedBusinessId]);
@@ -149,7 +165,7 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusi
     // --- Handle Highlighting (Hover or Selection) ---
     useEffect(() => {
         if (!mapRef.current) return;
-        
+
         Object.keys(markersRef.current).forEach(idStr => {
             const id = Number(idStr);
             const business = businesses.find(b => b.id === id);

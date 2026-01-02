@@ -6,6 +6,7 @@ import { Business, BlogPost, BlogComment, BlogCategory, MembershipPackage, Servi
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { useAdmin, useAdminAuth } from './AdminContext.tsx';
 import { uploadFile, deleteFileByUrl } from '../lib/storage.ts';
+import { snakeToCamel } from '../lib/utils.ts';
 
 // --- CACHE CONSTANTS ---
 const PUBLIC_DATA_CACHE_KEY = 'publicDataCache';
@@ -16,12 +17,16 @@ const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 interface PublicDataContextType {
   // Business Data
   businesses: Business[];
+  businessMarkers: { id: number, name: string, latitude: number, longitude: number, categories: string[], isActive: boolean }[];
   businessLoading: boolean;
+  totalBusinesses: number;
+  currentPage: number;
+  fetchBusinesses: (page?: number, options?: { search?: string, location?: string, district?: string, category?: string }) => Promise<void>;
   addBusiness: (newBusiness: Business) => Promise<Business | null>;
   updateBusiness: (updatedBusiness: Business) => Promise<void>;
   deleteBusiness: (businessId: number) => Promise<void>;
   getBusinessBySlug: (slug: string) => Business | undefined;
-  fetchBusinessBySlug: (slug: string) => Promise<Business | null>; // NEW: On-demand detailed fetch
+  fetchBusinessBySlug: (slug: string) => Promise<Business | null>;
   incrementBusinessViewCount: (businessId: number) => Promise<void>;
   // Service Data
   addService: (newServiceData: Omit<Service, 'id' | 'position'>) => Promise<void>;
@@ -81,7 +86,12 @@ const toSnakeCase = (obj: any): any => {
 export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // --- STATES ---
   const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [businessMarkers, setBusinessMarkers] = useState<{ id: number, name: string, latitude: number, longitude: number, categories: string[], isActive: boolean }[]>([]);
   const [businessLoading, setBusinessLoading] = useState(true);
+  const [totalBusinesses, setTotalBusinesses] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 20;
+
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [blogLoading, setBlogLoading] = useState(true);
   const [comments, setComments] = useState<BlogComment[]>([]);
@@ -92,104 +102,87 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
   const { currentUser: currentAdmin } = useAdminAuth();
 
   // --- DATA FETCHING ---
+  const fetchBusinesses = useCallback(async (page: number = 1, options: {
+    search?: string,
+    location?: string,
+    district?: string,
+    category?: string
+  } = {}) => {
+    if (!isSupabaseConfigured) return;
+
+    setBusinessLoading(true);
+    const from = (page - 1) * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+
+    let query = supabase.from('businesses')
+      .select('*', { count: 'exact' });
+
+    // Apply filters if any
+    if (options.location) query = query.eq('city', options.location);
+    if (options.district) query = query.eq('district', options.district);
+    if (options.category) query = query.contains('categories', [options.category]);
+    if (options.search) query = query.ilike('name', `%${options.search}%`);
+
+    const { data, count, error } = await query
+      .order('is_featured', { ascending: false })
+      .order('id', { ascending: true })
+      .range(from, to);
+
+    if (error) {
+      console.error('Error fetching businesses:', error.message);
+      toast.error('Failed to load businesses');
+    } else if (data) {
+      const mapped = snakeToCamel(data).map((b: any) => ({
+        ...b,
+        services: [],
+        gallery: [],
+        team: [],
+        deals: [],
+        reviews: []
+      })) as Business[];
+
+      setBusinesses(mapped);
+      if (count !== null) setTotalBusinesses(count);
+      setCurrentPage(page);
+    }
+    setBusinessLoading(false);
+  }, []);
+
   const fetchAllPublicData = useCallback(async () => {
     if (!isSupabaseConfigured) {
-      console.warn("Supabase is not configured. Serving empty data for preview purposes. All write operations will fail.");
       setBusinessLoading(false);
       setBlogLoading(false);
-      setBusinesses([]);
-      setBlogPosts([]);
-      setBlogCategories([]);
-      setPackages([]);
       return;
     }
 
-    // 1. Try to load from cache
-    try {
-      const cachedDataJSON = localStorage.getItem(PUBLIC_DATA_CACHE_KEY);
-      if (cachedDataJSON) {
-        const { timestamp, data } = JSON.parse(cachedDataJSON);
-        if (Date.now() - timestamp < CACHE_DURATION_MS && data) {
-          console.log("Loading public data from cache.");
-          setBusinesses(data.businesses || []);
-          setBlogPosts(data.blogPosts || []);
-          setBlogCategories(data.blogCategories || []);
-          setPackages(data.packages || []);
-          setBusinessLoading(false);
-          setBlogLoading(false);
-          return; // Exit if cache is valid
-        }
-      }
-    } catch (e) {
-      console.error("Failed to read cache:", e);
+    // Load initial page of businesses
+    await fetchBusinesses(1);
+
+    // Fetch lightweight markers for the map to support 5000+ scale
+    const { data: markerData } = await supabase.from('businesses')
+      .select('id, name, latitude, longitude, categories, is_active');
+
+    if (markerData) {
+      setBusinessMarkers(snakeToCamel(markerData));
     }
 
-    // 2. If cache is invalid or missing, fetch from Supabase
-    setBusinessLoading(true);
-    setBlogLoading(true);
-
-    // OPTIMIZED: Remove heavy relations from initial fetch
-    const [bizRes, blogRes, catRes, pkgRes] = await Promise.all([
-      supabase.from('businesses').select('*').order('is_featured', { ascending: false }).order('id', { ascending: true }),
+    // Fetch other data
+    const [blogRes, catRes, pkgRes] = await Promise.all([
       supabase.from('blog_posts').select('*').order('date', { ascending: false }),
       supabase.from('blog_categories').select('*').order('name'),
       supabase.from('membership_packages').select('*').order('price')
     ]);
 
-    let fetchedBusinesses: Business[] = [];
-    let fetchedBlogPosts: BlogPost[] = [];
-    let fetchedCategories: BlogCategory[] = [];
-    let fetchedPackages: MembershipPackage[] = [];
-
-    if (bizRes.error) {
-      console.error('Error fetching businesses:', bizRes.error.message);
-    } else if (bizRes.data) {
-      // No formatting needed for relations since we aren't fetching them yet
-      fetchedBusinesses = bizRes.data.map(b => ({ ...b, services: [], gallery: [], team: [], deals: [], reviews: [] })) as Business[];
-    }
-    setBusinessLoading(false);
-
     if (blogRes.error) console.error("Error fetching blog posts:", blogRes.error.message);
-    else if (blogRes.data) fetchedBlogPosts = blogRes.data as BlogPost[];
+    else if (blogRes.data) setBlogPosts(snakeToCamel(blogRes.data) as BlogPost[]);
     setBlogLoading(false);
 
-    if (catRes.error) {
-      console.error("Error fetching blog categories:", catRes.error.message);
-      toast.error(`Could not load blog categories: ${catRes.error.message}`);
-    } else if (catRes.data) {
-      fetchedCategories = catRes.data as BlogCategory[];
-    }
+    if (catRes.error) console.error("Error fetching blog categories:", catRes.error.message);
+    else if (catRes.data) setBlogCategories(snakeToCamel(catRes.data) as BlogCategory[]);
 
-    if (pkgRes.error) {
-      console.error("Error fetching packages:", pkgRes.error.message);
-      toast.error(`Could not load membership packages: ${pkgRes.error.message}`);
-    } else if (pkgRes.data) {
-      fetchedPackages = pkgRes.data as MembershipPackage[];
-    }
-
-    // Update state with fetched data
-    setBusinesses(fetchedBusinesses);
-    setBlogPosts(fetchedBlogPosts);
-    setBlogCategories(fetchedCategories);
-    setPackages(fetchedPackages);
-
-    // 3. Save new data to cache
-    try {
-      const cachePayload = {
-        timestamp: Date.now(),
-        data: {
-          businesses: fetchedBusinesses,
-          blogPosts: fetchedBlogPosts,
-          blogCategories: fetchedCategories,
-          packages: fetchedPackages,
-        },
-      };
-      localStorage.setItem(PUBLIC_DATA_CACHE_KEY, JSON.stringify(cachePayload));
-      console.log("Public data fetched from Supabase and cached.");
-    } catch (e) {
-      console.error("Failed to write to cache:", e);
-    }
-  }, []);
+    if (pkgRes.error) console.error("Error fetching packages:", pkgRes.error.message);
+    else if (pkgRes.data) setPackages(snakeToCamel(pkgRes.data) as MembershipPackage[]);
+  }, [fetchBusinesses]);
 
   useEffect(() => { fetchAllPublicData(); }, [fetchAllPublicData]);
 
@@ -197,18 +190,24 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
   const addBusiness = async (newBusiness: Business): Promise<Business | null> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add business."); return null; }
     const { id, services, gallery, team, deals, reviews, ...businessData } = newBusiness;
-    const { data, error } = await supabase.from('business').insert(toSnakeCase(businessData)).select().single();
+    const { data, error } = await supabase.from('businesses').insert(toSnakeCase(businessData)).select().single();
     if (error) { console.error('Error adding business:', error.message); return null; }
-    if (data) { await fetchAllPublicData(); if (currentAdmin) logAdminAction(currentAdmin.username, 'Add Business', `Added new business: ${data.name} (ID: ${data.id}).`); return data as Business; }
+    if (data) {
+      const mappedData = snakeToCamel(data);
+      await fetchAllPublicData();
+      if (currentAdmin) logAdminAction(currentAdmin.username, 'Add Business', `Added new business: ${mappedData.name} (ID: ${mappedData.id}).`);
+      return mappedData as Business;
+    }
     return null;
   };
 
   const updateBusiness = async (updatedBusiness: Business) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update business."); return; }
     const { id, services, gallery, team, deals, reviews, ...businessToUpdate } = updatedBusiness;
-    const { error } = await supabase.from('business').update(toSnakeCase(businessToUpdate)).eq('id', id);
+    const { error } = await supabase.from('businesses').update(toSnakeCase(businessToUpdate)).eq('id', id);
     if (error) { console.error('Error updating business:', error.message); } else { await fetchAllPublicData(); }
   };
+
   const deleteBusiness = async (businessId: number) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot delete business."); return; }
     /* ... implementation unchanged ... */
@@ -444,12 +443,14 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
 
   // --- COMBINED VALUE ---
   const value = {
-    businesses, businessLoading, addBusiness, updateBusiness, deleteBusiness, getBusinessBySlug, fetchBusinessBySlug, incrementBusinessViewCount,
+    businesses, businessMarkers, businessLoading, totalBusinesses, currentPage, fetchBusinesses,
+    addBusiness, updateBusiness, deleteBusiness, getBusinessBySlug, fetchBusinessBySlug, incrementBusinessViewCount,
     addService, updateService, deleteService, updateServicesOrder,
     addMediaItem, updateMediaItem, deleteMediaItem, updateMediaOrder,
     addTeamMember, updateTeamMember, deleteTeamMember,
     addDeal, updateDeal, deleteDeal,
-    blogPosts, blogLoading, addBlogPost, updateBlogPost, deleteBlogPost, getPostBySlug, incrementBlogViewCount, comments, getCommentsByPostId, addComment, blogCategories, addBlogCategory, updateBlogCategory, deleteBlogCategory,
+    blogPosts, blogLoading, addBlogPost, updateBlogPost, deleteBlogPost, getPostBySlug, incrementBlogViewCount,
+    comments, getCommentsByPostId, addComment, blogCategories, addBlogCategory, updateBlogCategory, deleteBlogCategory,
     packages, addPackage, updatePackage, deletePackage,
   };
 
@@ -468,8 +469,23 @@ const usePublicData = () => {
 };
 
 export const useBusinessData = () => {
-  const { businesses, businessLoading, addBusiness, updateBusiness, deleteBusiness, getBusinessBySlug, fetchBusinessBySlug, incrementBusinessViewCount, addService, updateService, deleteService, updateServicesOrder, addMediaItem, updateMediaItem, deleteMediaItem, updateMediaOrder, addTeamMember, updateTeamMember, deleteTeamMember, addDeal, updateDeal, deleteDeal } = usePublicData();
-  return { businesses, loading: businessLoading, addBusiness, updateBusiness, deleteBusiness, getBusinessBySlug, fetchBusinessBySlug, incrementBusinessViewCount, addService, updateService, deleteService, updateServicesOrder, addMediaItem, updateMediaItem, deleteMediaItem, updateMediaOrder, addTeamMember, updateTeamMember, deleteTeamMember, addDeal, updateDeal, deleteDeal };
+  const {
+    businesses, businessMarkers, businessLoading, totalBusinesses, currentPage, fetchBusinesses,
+    addBusiness, updateBusiness, deleteBusiness, getBusinessBySlug,
+    fetchBusinessBySlug, incrementBusinessViewCount, addService, updateService,
+    deleteService, updateServicesOrder, addMediaItem, updateMediaItem,
+    deleteMediaItem, updateMediaOrder, addTeamMember, updateTeamMember, deleteTeamMember,
+    addDeal, updateDeal, deleteDeal
+  } = usePublicData();
+
+  return {
+    businesses, businessMarkers, loading: businessLoading, totalBusinesses, currentPage, fetchBusinesses,
+    addBusiness, updateBusiness, deleteBusiness, getBusinessBySlug,
+    fetchBusinessBySlug, incrementBusinessViewCount, addService, updateService,
+    deleteService, updateServicesOrder, addMediaItem, updateMediaItem,
+    deleteMediaItem, updateMediaOrder, addTeamMember, updateTeamMember, deleteTeamMember,
+    addDeal, updateDeal, deleteDeal
+  };
 };
 
 export const useBlogData = () => {
