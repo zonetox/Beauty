@@ -169,12 +169,17 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         };
 
         const initialize = async () => {
-            const allAdmins = await fetchAdminUsers();
-            if (isSupabaseConfigured) {
-                const { data: { session } } = await supabase.auth.getSession();
-                await handleAuthChange(allAdmins, session?.user ?? null);
-            } else {
-                await handleAuthChange(allAdmins, null);
+            try {
+                const allAdmins = await fetchAdminUsers();
+                if (isSupabaseConfigured) {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    await handleAuthChange(allAdmins, session?.user ?? null);
+                } else {
+                    await handleAuthChange(allAdmins, null);
+                }
+            } catch (err) {
+                console.error("Critical error during Admin initialization:", err);
+                setLoading(false);
             }
         };
 
@@ -183,9 +188,15 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (isSupabaseConfigured) {
             const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
                 setLoading(true);
-                // Re-fetch users to get latest permissions/lock status
-                const allAdmins = await fetchAdminUsers();
-                await handleAuthChange(allAdmins, session?.user ?? null);
+                try {
+                    // Re-fetch users to get latest permissions/lock status
+                    const allAdmins = await fetchAdminUsers();
+                    await handleAuthChange(allAdmins, session?.user ?? null);
+                } catch (err) {
+                    console.error("Auth change error in AdminContext:", err);
+                } finally {
+                    setLoading(false);
+                }
             });
             return () => subscription.unsubscribe();
         }

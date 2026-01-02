@@ -31,38 +31,50 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
 
   useEffect(() => {
     const fetchProfile = async (user: User) => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (error && error.code === 'PGRST116') { // Profile doesn't exist, create it
-        const { data: newProfile, error: insertError } = await supabase
+      try {
+        const { data, error } = await supabase
           .from('profiles')
-          .insert({ id: user.id, full_name: user.user_metadata.full_name, email: user.email })
-          .select().single();
-        if (insertError) console.error('Error creating profile:', insertError.message);
-        else setProfile(snakeToCamel(newProfile) as Profile);
-      } else if (error) {
-        console.error('Error fetching profile:', error.message);
-      } else {
-        setProfile(snakeToCamel(data) as Profile);
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (error && error.code === 'PGRST116') { // Profile doesn't exist, create it
+          const { data: newProfile, error: insertError } = await supabase
+            .from('profiles')
+            .insert({ id: user.id, full_name: user.user_metadata.full_name, email: user.email })
+            .select().single();
+          if (insertError) {
+            console.error('Error creating profile:', insertError.message);
+          } else if (newProfile) {
+            setProfile(snakeToCamel(newProfile) as Profile);
+          }
+        } else if (error) {
+          console.error('Error fetching profile:', error.message);
+        } else if (data) {
+          setProfile(snakeToCamel(data) as Profile);
+        }
+      } catch (err) {
+        console.error('Unexpected error in fetchProfile:', err);
       }
     };
 
     const handleAuthChange = async (_event: AuthChangeEvent, session: Session | null) => {
       setLoading(true);
-      setSession(session);
-      const user = session?.user ?? null;
-      setCurrentUser(user);
+      try {
+        setSession(session);
+        const user = session?.user ?? null;
+        setCurrentUser(user);
 
-      if (user) {
-        await fetchProfile(user);
-      } else {
-        setProfile(null);
+        if (user) {
+          await fetchProfile(user);
+        } else {
+          setProfile(null);
+        }
+      } catch (err) {
+        console.error('Auth change error:', err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     // Get initial session
@@ -129,9 +141,10 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
 
   const refreshProfile = async () => {
     if (currentUser) {
-      // Manually trigger the fetch logic again
-      const { data } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single();
-      if (data) setProfile(data as Profile);
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single();
+      if (!error && data) {
+        setProfile(snakeToCamel(data) as Profile);
+      }
     }
   };
 

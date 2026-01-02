@@ -51,8 +51,8 @@ export enum ReviewStatus {
 }
 
 export enum StaffMemberRole {
-    ADMIN = 'Admin',
-    EDITOR = 'Editor',
+  ADMIN = 'Admin',
+  EDITOR = 'Editor',
 }
 
 export enum AppointmentStatus {
@@ -86,7 +86,7 @@ export interface Service {
   business_id: number;
   name: string;
   price: string;
-  description:string;
+  description: string;
   image_url: string; // Match database column
   duration_minutes?: number;
   position: number; // For drag-and-drop ordering
@@ -126,31 +126,31 @@ export interface MediaItem {
 }
 
 export interface Review {
-    id: string;
-    user_id?: string;
-    business_id: number;
-    user_name: string;
-    user_avatar_url: string;
-    rating: number; // 1 to 5
-    comment: string;
-    submitted_date: string; // ISO
-    status: ReviewStatus;
-    reply?: {
-        content: string;
-        replied_date: string; // ISO
-    };
+  id: string;
+  user_id?: string;
+  business_id: number;
+  user_name: string;
+  user_avatar_url: string;
+  rating: number; // 1 to 5
+  comment: string;
+  submitted_date: string; // ISO
+  status: ReviewStatus;
+  reply?: {
+    content: string;
+    replied_date: string; // ISO
+  };
 }
 
 export interface StaffMember {
-    id: string;
-    name: string;
-    email: string;
-    role: StaffMemberRole;
+  id: string;
+  name: string;
+  email: string;
+  role: StaffMemberRole;
 }
 
 export interface NotificationSettings {
-    reviewAlerts: boolean;
-    bookingRequests: boolean;
+  reviewAlerts: boolean;
+  bookingRequests: boolean;
   platformNews: boolean;
 }
 
@@ -258,20 +258,20 @@ export interface RegistrationRequest {
 }
 
 export interface AdminPermissions {
-    canViewAnalytics: boolean;
-    canManageBusinesses: boolean;
-    canManageRegistrations: boolean;
-    canManageOrders: boolean;
-    canManagePlatformBlog: boolean;
-    canManageUsers: boolean;
-    canManagePackages: boolean;
-    canManageAnnouncements: boolean;
-    canManageSupportTickets: boolean;
-    canManageSiteContent: boolean;
-    canManageSystemSettings: boolean;
-    canUseAdminTools: boolean;
-    canViewActivityLog: boolean;
-    canViewEmailLog: boolean;
+  canViewAnalytics: boolean;
+  canManageBusinesses: boolean;
+  canManageRegistrations: boolean;
+  canManageOrders: boolean;
+  canManagePlatformBlog: boolean;
+  canManageUsers: boolean;
+  canManagePackages: boolean;
+  canManageAnnouncements: boolean;
+  canManageSupportTickets: boolean;
+  canManageSiteContent: boolean;
+  canManageSystemSettings: boolean;
+  canUseAdminTools: boolean;
+  canViewActivityLog: boolean;
+  canViewEmailLog: boolean;
 }
 
 export interface AdminUser {
@@ -287,11 +287,11 @@ export interface AdminUser {
 
 export interface Profile {
   id: string; // Corresponds to auth.users.id
-  updated_at?: string;
-  full_name?: string;
-  avatar_url?: string;
+  updatedAt?: string;
+  fullName?: string;
+  avatarUrl?: string;
   email?: string;
-  business_id?: number; // Link to the business this user owns/manages
+  businessId?: number; // Link to the business this user owns/manages
   favorites?: number[]; // Array of business IDs
 }
 
@@ -375,42 +375,42 @@ export interface ChartDataPoint {
 
 // Admin specific types that are not in database
 export interface AdminLogEntry {
-    id: string;
-    timestamp: string; // ISO
-    adminUsername: string;
-    action: string;
-    details: string;
+  id: string;
+  timestamp: string; // ISO
+  adminUsername: string;
+  action: string;
+  details: string;
 }
 
 export interface Notification {
-    id: string;
-    recipientEmail: string;
-    subject: string;
-    body: string;
-    sentAt: string; // ISO
-    read: boolean;
+  id: string;
+  recipientEmail: string;
+  subject: string;
+  body: string;
+  sentAt: string; // ISO
+  read: boolean;
 }
 
 export type AdminPageTab = 'dashboard' | 'analytics' | 'businesses' | 'registrations' | 'orders' | 'blog' | 'users' | 'packages' | 'content' | 'homepage' | 'settings' | 'tools' | 'activity' | 'notifications' | 'announcements' | 'support' | 'theme';
 
 // FIX: Correct HeroSlideItem to HeroSlide
 export interface HeroSlide {
-    title: string;
-    subtitle: string;
-    imageUrl: string;
+  title: string;
+  subtitle: string;
+  imageUrl: string;
 }
 
 export interface HomepageSection {
-    id: string;
-    type: 'featuredBusinesses' | 'featuredDeals' | 'featuredBlog' | 'exploreByLocation';
-    title: string;
-    subtitle: string;
-    visible: boolean;
+  id: string;
+  type: 'featuredBusinesses' | 'featuredDeals' | 'featuredBlog' | 'exploreByLocation';
+  title: string;
+  subtitle: string;
+  visible: boolean;
 }
 
 export interface HomepageData {
-    heroSlides: HeroSlide[];
-    sections: HomepageSection[];
+  heroSlides: HeroSlide[];
+  sections: HomepageSection[];
 }
 
 // FIX: Add missing type definitions.

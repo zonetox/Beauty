@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, useContext, ReactNode, useCa
 import { BusinessBlogPost, Review, ReviewStatus, BusinessAnalytics, Appointment, AppointmentStatus, Order, OrderStatus, Profile, BusinessBlogPostStatus, MembershipTier } from '../types.ts';
 import { supabase } from '../lib/supabaseClient.ts';
 import toast from 'react-hot-toast';
+import { snakeToCamel } from '../lib/utils.ts';
 
 
 // --- CONTEXT TYPE DEFINITION ---
@@ -78,13 +79,13 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
       supabase.from('orders').select('*').order('submitted_at', { ascending: false })
     ]);
 
-    if (postsRes.data) setPosts(postsRes.data.map(p => ({ ...p, businessId: p.business_id })) as BusinessBlogPost[]);
+    if (postsRes.data) setPosts(snakeToCamel(postsRes.data) as BusinessBlogPost[]);
     if (postsRes.error) console.error("Error fetching business blog posts:", postsRes.error);
 
-    if (reviewsRes.data) setReviews(reviewsRes.data as Review[]);
+    if (reviewsRes.data) setReviews(snakeToCamel(reviewsRes.data) as Review[]);
     if (reviewsRes.error) console.error("Error fetching reviews:", reviewsRes.error);
 
-    if (ordersRes.data) setOrders(ordersRes.data as Order[]);
+    if (ordersRes.data) setOrders(snakeToCamel(ordersRes.data) as Order[]);
     if (ordersRes.error) console.error("Error fetching orders:", ordersRes.error);
 
     setBlogLoading(false);
@@ -142,8 +143,8 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
     const newReview = {
       ...rest,
       user_id: userProfile.id,
-      user_name: userProfile.full_name || 'Anonymous',
-      user_avatar_url: userProfile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.full_name || 'A')}&background=random`,
+      user_name: userProfile.fullName || 'Anonymous',
+      user_avatar_url: userProfile.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.fullName || 'A')}&background=random`,
       status: ReviewStatus.VISIBLE,
     };
     const { error } = await supabase.from('reviews').insert(newReview);

@@ -7,6 +7,7 @@ import { useUserSession } from './UserSessionContext.tsx';
 import { useBusinessData, useMembershipPackageData } from './BusinessDataContext.tsx';
 import { useAdmin } from './AdminContext.tsx';
 import toast from 'react-hot-toast';
+import { snakeToCamel } from '../lib/utils.ts';
 
 // --- TYPE DEFINITION ---
 interface BusinessContextType {
@@ -63,7 +64,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
   const { businesses, updateBusiness, addDeal, updateDeal, deleteDeal } = useBusinessData();
   const { packages } = useMembershipPackageData();
   const { addNotification } = useAdmin();
-  
+
   // --- STATES ---
   const [currentBusiness, setCurrentBusiness] = useState<Business | null>(null);
   const [posts, setPosts] = useState<BusinessBlogPost[]>([]);
@@ -74,11 +75,11 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
-  
+
   // --- IDENTIFY CURRENT BUSINESS ---
   useEffect(() => {
-    if (profile && profile.business_id && businesses.length > 0) {
-      const userBusiness = businesses.find(b => b.id === profile.business_id);
+    if (profile && profile.businessId && businesses.length > 0) {
+      const userBusiness = businesses.find(b => b.id === profile.businessId);
       setCurrentBusiness(userBusiness || null);
     } else {
       setCurrentBusiness(null);
@@ -88,54 +89,39 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
   // --- DATA FETCHING (from old BusinessBlogDataContext) ---
   const fetchAllData = useCallback(async () => {
     if (!isSupabaseConfigured) {
-        console.warn("Supabase is not configured. Serving empty data for preview purposes.");
-        setBlogLoading(false);
-        setReviewsLoading(false);
-        setOrdersLoading(false);
-        setPosts([]);
-        setReviews([]);
-        setOrders([]);
-        setAppointments([]);
-        return;
+      console.warn("Supabase is not configured. Serving empty data for preview purposes.");
+      setBlogLoading(false);
+      setReviewsLoading(false);
+      setOrdersLoading(false);
+      setPosts([]);
+      setReviews([]);
+      setOrders([]);
+      setAppointments([]);
+      return;
     }
 
     setBlogLoading(true);
     setReviewsLoading(true);
     setOrdersLoading(true);
-    
+
     const [postsRes, reviewsRes, ordersRes, appointmentsRes] = await Promise.all([
-        supabase.from('business_blog_posts').select('*').order('created_date', { ascending: false }),
-        supabase.from('reviews').select('*').order('submitted_date', { ascending: false }),
-        supabase.from('orders').select('*').order('submitted_at', { ascending: false }),
-        supabase.from('appointments').select('*').order('created_at', { ascending: false })
+      supabase.from('business_blog_posts').select('*').order('created_date', { ascending: false }),
+      supabase.from('reviews').select('*').order('submitted_date', { ascending: false }),
+      supabase.from('orders').select('*').order('submitted_at', { ascending: false }),
+      supabase.from('appointments').select('*').order('created_at', { ascending: false })
     ]);
 
-    if (postsRes.data) setPosts(postsRes.data.map(p => ({ ...p, businessId: p.business_id })) as BusinessBlogPost[]);
+    if (postsRes.data) setPosts(snakeToCamel(postsRes.data) as BusinessBlogPost[]);
     if (postsRes.error) console.error("Error fetching business blog posts:", postsRes.error.message);
-    
-    if (reviewsRes.data) setReviews(reviewsRes.data as Review[]);
+
+    if (reviewsRes.data) setReviews(snakeToCamel(reviewsRes.data) as Review[]);
     if (reviewsRes.error) console.error("Error fetching reviews:", reviewsRes.error.message);
 
-    if (ordersRes.data) setOrders(ordersRes.data as Order[]);
+    if (ordersRes.data) setOrders(snakeToCamel(ordersRes.data) as Order[]);
     if (ordersRes.error) console.error("Error fetching orders:", ordersRes.error.message);
-    
+
     if (appointmentsRes.data) {
-        const formattedAppointments = appointmentsRes.data.map(a => ({
-            id: a.id,
-            businessId: a.business_id,
-            serviceId: a.service_id,
-            serviceName: a.service_name,
-            staffMemberId: a.staff_member_id,
-            customerName: a.customer_name,
-            customerEmail: a.customer_email,
-            customerPhone: a.customer_phone,
-            date: a.date,
-            timeSlot: a.time_slot,
-            status: a.status,
-            notes: a.notes,
-            createdAt: a.created_at,
-        }));
-        setAppointments(formattedAppointments as Appointment[]);
+      setAppointments(snakeToCamel(appointmentsRes.data) as Appointment[]);
     }
     if (appointmentsRes.error) console.error("Error fetching appointments:", appointmentsRes.error.message);
 
@@ -144,7 +130,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
     setReviewsLoading(false);
     setOrdersLoading(false);
   }, []);
-  
+
   useEffect(() => { fetchAllData(); }, [fetchAllData]);
 
   // --- LOGIC (copied from old BusinessBlogDataContext) ---
@@ -152,52 +138,52 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add post."); return; }
     const slug = newPostData.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-') + `-${Date.now()}`;
     const postToAdd = {
-        ...toSnakeCase(newPostData),
-        slug: slug,
-        view_count: 0,
+      ...toSnakeCase(newPostData),
+      slug: slug,
+      view_count: 0,
     };
     const { error } = await supabase.from('business_blog_posts').insert(postToAdd);
     if (error) console.error("Error adding business post:", error.message);
     else await fetchAllData();
   };
   const updatePost = async (updatedPost: BusinessBlogPost) => {
-      if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update post."); return; }
-      const { id, ...postToUpdate } = updatedPost;
-      const { error } = await supabase.from('business_blog_posts').update(toSnakeCase(postToUpdate)).eq('id', id);
-      if (error) console.error("Error updating business post:", error.message);
-      else await fetchAllData();
+    if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update post."); return; }
+    const { id, ...postToUpdate } = updatedPost;
+    const { error } = await supabase.from('business_blog_posts').update(toSnakeCase(postToUpdate)).eq('id', id);
+    if (error) console.error("Error updating business post:", error.message);
+    else await fetchAllData();
   };
   const deletePost = async (postId: string) => {
-      if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot delete post."); return; }
-      const { error } = await supabase.from('business_blog_posts').delete().eq('id', postId);
-      if (error) console.error("Error deleting business post:", error.message);
-      else await fetchAllData();
+    if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot delete post."); return; }
+    const { error } = await supabase.from('business_blog_posts').delete().eq('id', postId);
+    if (error) console.error("Error deleting business post:", error.message);
+    else await fetchAllData();
   };
   const getPostBySlug = (slug: string) => posts.find(p => p.slug === slug);
   const getPostsByBusinessId = (businessId: number) => posts.filter(p => p.businessId === businessId);
-  const incrementViewCount = async (postId: string) => { 
+  const incrementViewCount = async (postId: string) => {
     if (!isSupabaseConfigured) return;
-    /* ... implementation unchanged ... */ 
+    /* ... implementation unchanged ... */
   };
   const addReview = async (reviewData: { business_id: number; rating: number; comment: string; userProfile: Profile }) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add review."); throw new Error("Preview Mode"); }
     const { userProfile, ...rest } = reviewData;
     if (!userProfile?.id) {
-        throw new Error("User must be logged in to post a review.");
+      throw new Error("User must be logged in to post a review.");
     }
     const newReview = {
-        ...rest,
-        user_id: userProfile.id,
-        user_name: userProfile.full_name || 'Anonymous',
-        user_avatar_url: userProfile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.full_name || 'A')}&background=random`,
-        status: 'Visible',
+      ...rest,
+      user_id: userProfile.id,
+      user_name: userProfile.fullName || 'Anonymous',
+      user_avatar_url: userProfile.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.fullName || 'A')}&background=random`,
+      status: 'Visible',
     };
     const { error } = await supabase.from('reviews').insert(newReview);
     if (error) {
-        console.error("Error adding review:", error.message);
-        throw error;
+      console.error("Error adding review:", error.message);
+      throw error;
     } else {
-        await fetchAllData();
+      await fetchAllData();
     }
   };
   const addReply = async (reviewId: string, replyContent: string) => {
@@ -205,10 +191,10 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
     const reply = { content: replyContent, replied_date: new Date().toISOString() };
     const { error } = await supabase.from('reviews').update({ reply }).eq('id', reviewId);
     if (error) {
-        console.error("Error adding reply:", error.message);
-        throw error;
+      console.error("Error adding reply:", error.message);
+      throw error;
     } else {
-        await fetchAllData();
+      await fetchAllData();
     }
   };
   const toggleReviewVisibility = async (reviewId: string) => {
@@ -218,46 +204,46 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
     const newStatus = review.status === 'Visible' ? 'Hidden' : 'Visible';
     const { error } = await supabase.from('reviews').update({ status: newStatus }).eq('id', reviewId);
     if (error) {
-        console.error("Error toggling review visibility:", error.message);
-        throw error;
+      console.error("Error toggling review visibility:", error.message);
+      throw error;
     } else {
-        await fetchAllData();
+      await fetchAllData();
     }
   };
   const getReviewsByBusinessId = (businessId: number) => reviews.filter(r => r.business_id === businessId);
   const getAnalyticsByBusinessId = (businessId: number) => analyticsData.find(data => data.businessId === businessId);
-  
+
   const addAppointment = async (newAppointmentData: Omit<Appointment, 'id' | 'createdAt'>) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add appointment."); throw new Error("Preview Mode"); }
     const appointmentToAdd = toSnakeCase(newAppointmentData);
     const { error } = await supabase.from('appointments').insert(appointmentToAdd);
     if (error) {
-        console.error("Error adding appointment:", error.message);
-        throw error;
+      console.error("Error adding appointment:", error.message);
+      throw error;
     } else {
-        await fetchAllData();
+      await fetchAllData();
     }
   };
-  
+
   const updateAppointmentStatus = async (appointmentId: string, status: AppointmentStatus) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update appointment status."); return; }
     const { error } = await supabase.from('appointments').update({ status }).eq('id', appointmentId);
     if (error) {
-        console.error("Error updating appointment status:", error.message);
-        throw error;
+      console.error("Error updating appointment status:", error.message);
+      throw error;
     } else {
-        await fetchAllData();
+      await fetchAllData();
     }
   };
-  
+
   const getAppointmentsForBusiness = (businessId: number) => appointments.filter(appt => appt.businessId === businessId);
-  
+
   const addOrder = async (newOrderData: Omit<Order, 'id'>): Promise<Order> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add order."); throw new Error("Preview Mode"); }
     const { data, error } = await supabase.from('orders').insert(toSnakeCase(newOrderData)).select().single();
     if (error || !data) {
-        console.error("Error adding order:", error);
-        throw new Error("Failed to create order.");
+      console.error("Error adding order:", error);
+      throw new Error("Failed to create order.");
     }
     await fetchAllData();
     return data as Order;
@@ -267,43 +253,43 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update order status."); return; }
     const orderToUpdate = orders.find(o => o.id === orderId);
     if (!orderToUpdate) return;
-    
+
     const updates = {
-        status: newStatus,
-        confirmed_at: newStatus === OrderStatus.COMPLETED ? new Date().toISOString() : orderToUpdate.confirmedAt,
-        notes: notes || orderToUpdate.notes,
+      status: newStatus,
+      confirmed_at: newStatus === OrderStatus.COMPLETED ? new Date().toISOString() : orderToUpdate.confirmedAt,
+      notes: notes || orderToUpdate.notes,
     };
-    
+
     const { data, error } = await supabase.from('orders').update(updates).eq('id', orderId).select().single();
 
     if (!error && data) {
-        if (newStatus === OrderStatus.COMPLETED) {
-            const order = data as Order;
-            const businessToUpdate = businesses.find(b => b.id === order.businessId);
-            const packagePurchased = packages.find(p => p.id === order.packageId);
+      if (newStatus === OrderStatus.COMPLETED) {
+        const order = data as Order;
+        const businessToUpdate = businesses.find(b => b.id === order.businessId);
+        const packagePurchased = packages.find(p => p.id === order.packageId);
 
-            if (businessToUpdate && packagePurchased) {
-                const expiryDate = new Date();
-                expiryDate.setMonth(expiryDate.getMonth() + packagePurchased.durationMonths);
-                
-                await updateBusiness({ 
-                    ...businessToUpdate, 
-                    membershipTier: packagePurchased.tier, 
-                    membershipExpiryDate: expiryDate.toISOString(),
-                    isActive: true, // Activate the business!
-                });
-                localStorage.removeItem(`expiry_notification_sent_${businessToUpdate.id}`);
+        if (businessToUpdate && packagePurchased) {
+          const expiryDate = new Date();
+          expiryDate.setMonth(expiryDate.getMonth() + packagePurchased.durationMonths);
 
-                await addNotification(
-                    businessToUpdate.email || '',
-                    `Your ${packagePurchased.name} Plan is Active!`,
-                    `Hello ${businessToUpdate.name},\n\nYour payment has been confirmed and your ${packagePurchased.name} membership plan is now active. Your business is now public on our directory! It will be valid until ${expiryDate.toLocaleDateString('vi-VN')}.\n\nThank you for partnering with us!\nThe BeautyDir Team`
-                );
-            }
+          await updateBusiness({
+            ...businessToUpdate,
+            membershipTier: packagePurchased.tier,
+            membershipExpiryDate: expiryDate.toISOString(),
+            isActive: true, // Activate the business!
+          });
+          localStorage.removeItem(`expiry_notification_sent_${businessToUpdate.id}`);
+
+          await addNotification(
+            businessToUpdate.email || '',
+            `Your ${packagePurchased.name} Plan is Active!`,
+            `Hello ${businessToUpdate.name},\n\nYour payment has been confirmed and your ${packagePurchased.name} membership plan is now active. Your business is now public on our directory! It will be valid until ${expiryDate.toLocaleDateString('vi-VN')}.\n\nThank you for partnering with us!\nThe BeautyDir Team`
+          );
         }
-        await fetchAllData(); // Refetch all data to ensure UI is consistent
+      }
+      await fetchAllData(); // Refetch all data to ensure UI is consistent
     } else {
-        console.error("Error updating order status:", error?.message);
+      console.error("Error updating order status:", error?.message);
     }
   };
 
@@ -335,8 +321,8 @@ export const useBusinessBlogData = () => {
   return { posts, loading: blogLoading, getPostBySlug, addPost, updatePost, deletePost, incrementViewCount, getPostsByBusinessId };
 };
 export const useDealsData = () => {
-    const { addDeal, updateDeal, deleteDeal } = useBusiness();
-    return { addDeal, updateDeal, deleteDeal };
+  const { addDeal, updateDeal, deleteDeal } = useBusiness();
+  return { addDeal, updateDeal, deleteDeal };
 };
 export const useReviewsData = () => {
   const { reviews, reviewsLoading, getReviewsByBusinessId, addReview, addReply, toggleReviewVisibility } = useBusiness();
