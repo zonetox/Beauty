@@ -124,6 +124,32 @@ const ConnectionTestPage: React.FC = () => {
 
             <h3>Database Test Result</h3>
             <pre>{JSON.stringify(dbResult, null, 2)}</pre>
+
+            <div style={{ marginTop: '30px', borderTop: '2px solid #333', paddingTop: '20px' }}>
+                <h3>🛠️ Công cụ sửa lỗi (Troubleshooting)</h3>
+                <p>Nếu bạn thấy "Clean Client Worked" nhưng SDK chính bị lỗi, hãy bấm nút dưới đây để xóa bộ nhớ đệm bị lỗi.</p>
+                <button
+                    onClick={() => {
+                        console.log('Clearing storage...');
+                        localStorage.clear();
+                        sessionStorage.clear();
+                        alert('Đã xóa dữ liệu đệm! Trang sẽ tự tải lại.');
+                        window.location.reload();
+                    }}
+                    style={{
+                        padding: '10px 20px',
+                        backgroundColor: '#e11d48',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '5px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        fontSize: '16px'
+                    }}
+                >
+                    🧹 Xóa dữ liệu cũ & Thử lại (Clear Storage)
+                </button>
+            </div>
         </div>
     );
 };
