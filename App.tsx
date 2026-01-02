@@ -39,6 +39,7 @@ const NotFoundPage = lazy(() => import('./pages/NotFoundPage.tsx'));
 const LoginPage = lazy(() => import('./pages/LoginPage.tsx'));
 const ProtectedRoute = lazy(() => import('./components/ProtectedRoute.tsx'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage.tsx'));
+const ConnectionTestPage = lazy(() => import('./pages/ConnectionTestPage.tsx'));
 
 // Loading component for Suspense fallback
 const LoadingSpinner: React.FC = () => (
@@ -152,7 +153,9 @@ const App: React.FC = () => {
                                             } />
                                             <Route path="/admin/login" element={<AdminLoginPage />} />
                                             <Route path="business/:slug" element={<BusinessDetailPage />} />
+                                            <Route path="business/:slug" element={<BusinessDetailPage />} />
                                             <Route path="business/:businessSlug/post/:postSlug" element={<BusinessPostPage />} />
+                                            <Route path="/connection-test" element={<ConnectionTestPage />} />
 
                                             {/* Catch-all route must be at the top level */}
                                             <Route path="*" element={<NotFoundPage />} />
