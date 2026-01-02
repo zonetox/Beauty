@@ -137,7 +137,18 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }, []);
 
     useEffect(() => {
+        let mounted = true;
+
+        // Safety timeout: logic must resolve within 5 seconds or we force loading=false
+        const safetyTimeout = setTimeout(() => {
+            if (mounted && loading) {
+                console.warn('AdminContext: Auth check timed out after 5s. Forcing loading=false.');
+                setLoading(false);
+            }
+        }, 5000);
+
         const handleAuthChange = async (allAdmins: AdminUser[], user: User | null) => {
+            if (!mounted) return;
             const devLoginId = localStorage.getItem(DEV_LOGIN_KEY);
 
             // Priority 1: Check for active developer login
@@ -145,8 +156,10 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 const devUser = allAdmins.find(u => u.id === parseInt(devLoginId, 10));
                 if (devUser) {
                     const fakeAuthUser: User = { id: `dev-${devUser.id}`, email: devUser.email, app_metadata: {}, user_metadata: { username: devUser.username }, aud: 'authenticated', created_at: new Date().toISOString() };
-                    setCurrentUser({ ...devUser, authUser: fakeAuthUser });
-                    setLoading(false);
+                    if (mounted) {
+                        setCurrentUser({ ...devUser, authUser: fakeAuthUser });
+                        setLoading(false);
+                    }
                     return;
                 } else {
                     localStorage.removeItem(DEV_LOGIN_KEY);
@@ -157,36 +170,40 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             if (user) {
                 const adminProfile = allAdmins.find(au => au.email === user.email);
                 if (adminProfile && !adminProfile.isLocked) {
-                    setCurrentUser({ ...adminProfile, authUser: user });
+                    if (mounted) setCurrentUser({ ...adminProfile, authUser: user });
                 } else {
-                    setCurrentUser(null);
-                    if (isSupabaseConfigured) await supabase.auth.signOut();
+                    if (mounted) setCurrentUser(null);
+                    // Do NOT sign out automatically here as it might disrupt the user session context
+                    // if (isSupabaseConfigured) await supabase.auth.signOut();
                 }
             } else {
-                setCurrentUser(null);
+                if (mounted) setCurrentUser(null);
             }
-            setLoading(false);
+            if (mounted) setLoading(false);
         };
 
         const initialize = async () => {
             try {
                 const allAdmins = await fetchAdminUsers();
                 if (isSupabaseConfigured) {
-                    const { data: { session } } = await supabase.auth.getSession();
+                    const { data: { session }, error } = await supabase.auth.getSession();
+                    if (error) console.error("Error getting admin session:", error);
                     await handleAuthChange(allAdmins, session?.user ?? null);
                 } else {
                     await handleAuthChange(allAdmins, null);
                 }
             } catch (err) {
                 console.error("Critical error during Admin initialization:", err);
-                setLoading(false);
+                if (mounted) setLoading(false);
             }
         };
 
         initialize();
 
+        let authListener: { subscription: { unsubscribe: () => void } } | null = null;
         if (isSupabaseConfigured) {
-            const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+            const { data } = supabase.auth.onAuthStateChange(async (_event, session) => {
+                if (!mounted) return;
                 setLoading(true);
                 try {
                     // Re-fetch users to get latest permissions/lock status
@@ -194,12 +211,17 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                     await handleAuthChange(allAdmins, session?.user ?? null);
                 } catch (err) {
                     console.error("Auth change error in AdminContext:", err);
-                } finally {
-                    setLoading(false);
+                    if (mounted) setLoading(false);
                 }
             });
-            return () => subscription.unsubscribe();
+            authListener = data;
         }
+
+        return () => {
+            mounted = false;
+            clearTimeout(safetyTimeout);
+            authListener?.subscription.unsubscribe();
+        };
     }, [fetchAdminUsers]); // Removed adminUsers from dependencies to break loop
 
 

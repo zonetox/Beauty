@@ -30,6 +30,16 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
+    // Safety timeout: logic must resolve within 5 seconds or we force loading=false
+    const safetyTimeout = setTimeout(() => {
+      if (mounted && loading) {
+        console.warn('UserSessionContext: Auth check timed out after 5s. Forcing loading=false.');
+        setLoading(false);
+      }
+    }, 5000);
+
     const fetchProfile = async (user: User) => {
       try {
         const { data, error } = await supabase
@@ -45,12 +55,12 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
             .select().single();
           if (insertError) {
             console.error('Error creating profile:', insertError.message);
-          } else if (newProfile) {
+          } else if (newProfile && mounted) {
             setProfile(snakeToCamel(newProfile) as Profile);
           }
         } else if (error) {
           console.error('Error fetching profile:', error.message);
-        } else if (data) {
+        } else if (data && mounted) {
           setProfile(snakeToCamel(data) as Profile);
         }
       } catch (err) {
@@ -59,6 +69,7 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
     };
 
     const handleAuthChange = async (_event: AuthChangeEvent, session: Session | null) => {
+      if (!mounted) return;
       setLoading(true);
       try {
         setSession(session);
@@ -73,7 +84,7 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
       } catch (err) {
         console.error('Auth change error:', err);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
@@ -81,15 +92,21 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
     if (isSupabaseConfigured) {
       supabase.auth.getSession().then(({ data: { session } }) => {
         handleAuthChange('INITIAL_SESSION', session);
+      }).catch(err => {
+        console.error('Error getting initial session:', err);
+        if (mounted) setLoading(false);
       });
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
 
       return () => {
+        mounted = false;
+        clearTimeout(safetyTimeout);
         subscription?.unsubscribe();
       };
     } else {
-      setLoading(false);
+      if (mounted) setLoading(false);
+      return () => { mounted = false; clearTimeout(safetyTimeout); };
     }
   }, []);
 
