@@ -102,6 +102,20 @@ const AdminContext = createContext<AdminContextType | undefined>(undefined);
 const ANNOUNCEMENT_READ_KEY = 'read_announcements_by_business';
 const DEV_LOGIN_KEY = 'dev_login_user_id';
 
+// Check if running in development mode (production-safe)
+const isDevelopmentMode = (): boolean => {
+    // Check Vite environment variable first
+    if (typeof import.meta !== 'undefined' && import.meta.env) {
+        return import.meta.env.MODE === 'development' || import.meta.env.DEV === true;
+    }
+    // Fallback to Node.js environment variable
+    if (typeof process !== 'undefined' && process.env) {
+        return process.env.NODE_ENV === 'development';
+    }
+    // Default to false (production-safe)
+    return false;
+};
+
 export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     // --- AUTH STATES ---
     const [currentUser, setCurrentUser] = useState<AuthenticatedAdmin | null>(null);
@@ -149,10 +163,13 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
         const handleAuthChange = async (allAdmins: AdminUser[], user: User | null) => {
             if (!mounted) return;
-            const devLoginId = localStorage.getItem(DEV_LOGIN_KEY);
+            
+            // D1.1 FIX: Only allow dev quick login in development mode (production-safe)
+            const isDev = isDevelopmentMode();
+            const devLoginId = isDev ? localStorage.getItem(DEV_LOGIN_KEY) : null;
 
-            // Priority 1: Check for active developer login
-            if (devLoginId) {
+            // Priority 1: Check for active developer login (ONLY in development mode)
+            if (devLoginId && isDev) {
                 const devUser = allAdmins.find(u => u.id === parseInt(devLoginId, 10));
                 if (devUser) {
                     const fakeAuthUser: User = { id: `dev-${devUser.id}`, email: devUser.email, app_metadata: {}, user_metadata: { username: devUser.username }, aud: 'authenticated', created_at: new Date().toISOString() };
@@ -164,6 +181,9 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 } else {
                     localStorage.removeItem(DEV_LOGIN_KEY);
                 }
+            } else if (devLoginId && !isDev) {
+                // Production mode: Remove dev login key if it exists
+                localStorage.removeItem(DEV_LOGIN_KEY);
             }
 
             // Priority 2: Check for a real Supabase session
@@ -232,7 +252,10 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
 
     const adminLogout = async () => {
-        localStorage.removeItem(DEV_LOGIN_KEY);
+        // D1.1 FIX: Only remove dev login key in development mode
+        if (isDevelopmentMode()) {
+            localStorage.removeItem(DEV_LOGIN_KEY);
+        }
         if (isSupabaseConfigured) {
             await supabase.auth.signOut();
         }
@@ -240,6 +263,11 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
 
     const loginAs = (userId: number): boolean => {
+        // D1.1 FIX: Only allow dev quick login in development mode (production-safe)
+        if (!isDevelopmentMode()) {
+            console.warn('Dev quick login is disabled in production mode.');
+            return false;
+        }
         const userToLogin = adminUsers.find(u => u.id === userId);
         if (userToLogin) {
             const fakeAuthUser: User = { id: `dev-${userId}`, email: userToLogin.email, app_metadata: {}, user_metadata: { username: userToLogin.username }, aud: 'authenticated', created_at: new Date().toISOString() };

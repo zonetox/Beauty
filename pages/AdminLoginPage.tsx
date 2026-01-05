@@ -55,8 +55,19 @@ const AdminLoginPage: React.FC = () => {
         return <Navigate to="/admin" replace />;
     }
 
-    // Safely check for development mode
-    const isDev = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.MODE === 'development';
+    // D1.1 FIX: Safely check for development mode (production-safe)
+    const isDev = (() => {
+        // Check Vite environment variable first
+        if (typeof import.meta !== 'undefined' && import.meta.env) {
+            return import.meta.env.MODE === 'development' || import.meta.env.DEV === true;
+        }
+        // Fallback to Node.js environment variable
+        if (typeof process !== 'undefined' && process.env) {
+            return process.env.NODE_ENV === 'development';
+        }
+        // Default to false (production-safe)
+        return false;
+    })();
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-100">

@@ -69,7 +69,10 @@ Deno.serve(async (req: Request) => {
         rating: 0,
         review_count: 0,
         view_count: 0,
-        image_url: `https://picsum.photos/seed/${slug}/400/300`, // Placeholder image
+        // image_url is required (NOT NULL in schema)
+        // Business owner can upload logo via business dashboard after first login
+        // Using a default business placeholder image URL that can be replaced later
+        image_url: `https://via.placeholder.com/400x300/E6A4B4/FFFFFF?text=${encodeURIComponent(request.business_name.substring(0, 20))}`,
         joined_date: new Date().toISOString(),
       })
       .select('id')
@@ -120,7 +123,20 @@ Deno.serve(async (req: Request) => {
 
     const newUserId = inviteData.user.id;
 
-    // 4. Create a corresponding profile in the public.profiles table.
+    // 4. Update business.owner_id to link ownership
+    const { error: ownerUpdateError } = await supabaseAdmin
+      .from('businesses')
+      .update({ owner_id: newUserId })
+      .eq('id', newBusiness.id);
+
+    if (ownerUpdateError) {
+      // Roll back previous steps if owner update fails
+      await supabaseAdmin.from('businesses').delete().eq('id', newBusiness.id);
+      await supabaseAdmin.auth.admin.deleteUser(newUserId);
+      throw new Error(`Failed to set business ownership: ${ownerUpdateError.message}`);
+    }
+
+    // 5. Create a corresponding profile in the public.profiles table.
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .insert({
@@ -137,7 +153,7 @@ Deno.serve(async (req: Request) => {
       throw new Error(`Failed to create user profile: ${profileError.message}`);
     }
 
-    // 5. Update the registration request status to 'Approved'.
+    // 6. Update the registration request status to 'Approved'.
     const { error: updateRequestError } = await supabaseAdmin
       .from('registration_requests')
       .update({ status: 'Approved' })

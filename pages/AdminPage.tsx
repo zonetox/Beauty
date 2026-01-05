@@ -349,13 +349,79 @@ const AdminPage: React.FC = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard': return <AdminDashboardOverview businesses={businesses} orders={orders} registrationRequests={registrationRequests} onNavigate={(tab) => setActiveTab(tab as AdminPageTab)} />;
-      case 'analytics': return currentUser.permissions.canViewAnalytics ? <AdminAnalyticsDashboard businesses={businesses} orders={orders} registrationRequests={registrationRequests} /> : <AccessDenied requiredRole="View Analytics" />;
-      case 'businesses': return currentUser.permissions.canManageBusinesses ? <div className="bg-white p-6 rounded-lg shadow"><div className="flex justify-between items-center mb-4"><h2 className="text-xl font-semibold">Business Management</h2><button onClick={handleOpenAddNewBusiness} className="bg-primary text-white px-4 py-2 rounded-md text-sm">+ Add New Business</button></div><input type="text" placeholder="Search by name..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full sm:w-1/3 px-3 py-2 border rounded-md mb-4" />{businessesLoading ? <p>Loading businesses...</p> : <BusinessManagementTable businesses={filteredBusinesses} onEdit={setEditingBusiness} onUpdate={updateBusiness} onDelete={deleteBusiness} onDuplicate={handleDuplicateBusiness} />}</div> : <AccessDenied requiredRole="Manage Businesses" />;
-      case 'registrations': return currentUser.permissions.canManageRegistrations ? <RegistrationRequestsTable requests={registrationRequests} onApprove={handleApproveRequest} onReject={handleRejectRequest} /> : <AccessDenied requiredRole="Manage Registrations" />;
-      case 'orders': return currentUser.permissions.canManageOrders ? <div className="bg-white p-6 rounded-lg shadow"><h2 className="text-xl font-semibold mb-4">Order Management</h2><div className="flex items-center gap-4 mb-4"><label>Filter:</label><select value={orderStatusFilter} onChange={e => setOrderStatusFilter(e.target.value as any)} className="p-2 border rounded-md"><option value="all">All</option>{Object.values(OrderStatus).map(s => <option key={s} value={s}>{s}</option>)}</select></div>{ordersLoading ? <p>Loading orders...</p> : <OrderManagementTable orders={filteredOrders} onConfirm={handleConfirmPayment} onReject={handleRejectOrder} />}</div> : <AccessDenied requiredRole="Manage Orders" />;
-      case 'blog': return currentUser.permissions.canManagePlatformBlog ? <div className="bg-white p-6 rounded-lg shadow"><div className="flex justify-between items-center mb-4"><h2 className="text-xl font-semibold">Blog Management</h2><button onClick={handleOpenAddNewPost} className="bg-primary text-white px-4 py-2 rounded-md text-sm">+ Add New Post</button></div>{blogLoading ? <p>Loading posts...</p> : <BlogManagementTable posts={blogPosts} onEdit={setEditingPost} onDelete={handleDeletePost} onUpdate={updateBlogPost} />}<AIBlogIdeaGenerator /><BlogCategoryManager /></div> : <AccessDenied requiredRole="Manage Platform Blog" />;
-      case 'users': return currentUser.permissions.canManageUsers ? <div className="bg-white p-6 rounded-lg shadow"><div className="flex justify-between items-center mb-4"><h2 className="text-xl font-semibold">User Management</h2><button onClick={() => handleOpenUserModal(null)} className="bg-primary text-white px-4 py-2 rounded-md text-sm">+ Add New User</button></div><UserManagementTable users={adminUsers} onUpdateUser={updateAdminUser} onEditUser={handleOpenUserModal} onDeleteUser={handleDeleteUser} /></div> : <AccessDenied requiredRole="Manage Users" />;
-      case 'packages': return currentUser.permissions.canManagePackages ? <div className="bg-white p-6 rounded-lg shadow"><div className="flex justify-between items-center mb-4"><h2 className="text-xl font-semibold">Membership Packages</h2><button onClick={handleOpenAddNewPackage} className="bg-primary text-white px-4 py-2 rounded-md text-sm">+ Add New Package</button></div><PackageManagementTable packages={packages} onEdit={handleOpenPackageModal} onDelete={handleDeletePackage} onUpdate={updatePackage} /></div> : <AccessDenied requiredRole="Manage Packages" />;
+      // D3.3 FIX: Use PermissionGuard instead of inline permission checks
+      case 'analytics': return (
+        <PermissionGuard permission="canViewAnalytics">
+          <AdminAnalyticsDashboard businesses={businesses} orders={orders} registrationRequests={registrationRequests} />
+        </PermissionGuard>
+      );
+      case 'businesses': return (
+        <PermissionGuard permission="canManageBusinesses">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Business Management</h2>
+              <button onClick={handleOpenAddNewBusiness} className="bg-primary text-white px-4 py-2 rounded-md text-sm">+ Add New Business</button>
+            </div>
+            <input type="text" placeholder="Search by name..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full sm:w-1/3 px-3 py-2 border rounded-md mb-4" />
+            {businessesLoading ? <p>Loading businesses...</p> : <BusinessManagementTable businesses={filteredBusinesses} onEdit={setEditingBusiness} onUpdate={updateBusiness} onDelete={deleteBusiness} onDuplicate={handleDuplicateBusiness} />}
+          </div>
+        </PermissionGuard>
+      );
+      case 'registrations': return (
+        <PermissionGuard permission="canManageRegistrations">
+          <RegistrationRequestsTable requests={registrationRequests} onApprove={handleApproveRequest} onReject={handleRejectRequest} />
+        </PermissionGuard>
+      );
+      case 'orders': return (
+        <PermissionGuard permission="canManageOrders">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">Order Management</h2>
+            <div className="flex items-center gap-4 mb-4">
+              <label>Filter:</label>
+              <select value={orderStatusFilter} onChange={e => setOrderStatusFilter(e.target.value as any)} className="p-2 border rounded-md">
+                <option value="all">All</option>
+                {Object.values(OrderStatus).map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            {ordersLoading ? <p>Loading orders...</p> : <OrderManagementTable orders={filteredOrders} onConfirm={handleConfirmPayment} onReject={handleRejectOrder} />}
+          </div>
+        </PermissionGuard>
+      );
+      case 'blog': return (
+        <PermissionGuard permission="canManagePlatformBlog">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Blog Management</h2>
+              <button onClick={handleOpenAddNewPost} className="bg-primary text-white px-4 py-2 rounded-md text-sm">+ Add New Post</button>
+            </div>
+            {blogLoading ? <p>Loading posts...</p> : <BlogManagementTable posts={blogPosts} onEdit={setEditingPost} onDelete={handleDeletePost} onUpdate={updateBlogPost} />}
+            <AIBlogIdeaGenerator />
+            <BlogCategoryManager />
+          </div>
+        </PermissionGuard>
+      );
+      case 'users': return (
+        <PermissionGuard permission="canManageUsers">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">User Management</h2>
+              <button onClick={() => handleOpenUserModal(null)} className="bg-primary text-white px-4 py-2 rounded-md text-sm">+ Add New User</button>
+            </div>
+            <UserManagementTable users={adminUsers} onUpdateUser={updateAdminUser} onEditUser={handleOpenUserModal} onDeleteUser={handleDeleteUser} />
+          </div>
+        </PermissionGuard>
+      );
+      case 'packages': return (
+        <PermissionGuard permission="canManagePackages">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Membership Packages</h2>
+              <button onClick={handleOpenAddNewPackage} className="bg-primary text-white px-4 py-2 rounded-md text-sm">+ Add New Package</button>
+            </div>
+            <PackageManagementTable packages={packages} onEdit={handleOpenPackageModal} onDelete={handleDeletePackage} onUpdate={updatePackage} />
+          </div>
+        </PermissionGuard>
+      );
       case 'settings': return currentUser.permissions.canManageSystemSettings ? <div className="bg-white p-6 rounded-lg shadow"><h2 className="text-xl font-semibold mb-4">System Settings</h2>{currentSettings && <div className="space-y-4 max-w-2xl"><h3 className="font-semibold">Bank Transfer Info</h3><div><label>Bank Name</label><input name="bankDetails.bankName" value={currentSettings.bankDetails.bankName} onChange={handleSettingsChange} className="mt-1 w-full p-2 border rounded" /></div><div><label>Account Name</label><input name="bankDetails.accountName" value={currentSettings.bankDetails.accountName} onChange={handleSettingsChange} className="mt-1 w-full p-2 border rounded" /></div><div><label>Account Number</label><input name="bankDetails.accountNumber" value={currentSettings.bankDetails.accountNumber} onChange={handleSettingsChange} className="mt-1 w-full p-2 border rounded" /></div><div><label>Transfer Note</label><textarea name="bankDetails.transferNote" value={currentSettings.bankDetails.transferNote} onChange={handleSettingsChange} rows={3} className="mt-1 w-full p-2 border rounded" /><p className="text-xs text-gray-500">Use [Tên doanh nghiệp] and [Mã đơn hàng]</p></div><button type="button" onClick={handleSaveSettings} className="px-4 py-2 bg-secondary text-white rounded-md text-sm">Save</button></div>}</div> : <AccessDenied requiredRole="Manage System Settings" />;
       case 'tools': return currentUser.permissions.canUseAdminTools ? (
         <div className="space-y-6">

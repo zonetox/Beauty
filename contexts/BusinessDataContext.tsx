@@ -255,11 +255,16 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
     return fullBusiness;
   }, [businesses]); // Depend on businesses if we want fallback, but mainly standalone
 
+  // D2.2 FIX: Use safe RPC function for view count increment
   const incrementBusinessViewCount = async (businessId: number) => {
     if (!isSupabaseConfigured) return; // Silent fail in preview
-    const { error } = await supabase.rpc('increment_view_count', { p_business_id: businessId });
-    if (error) console.error('Error incrementing view count:', error.message);
-    else setBusinesses(prev => prev.map(b => b.id === businessId ? { ...b, viewCount: (b.viewCount || 0) + 1 } : b));
+    const { error } = await supabase.rpc('increment_business_view_count', { p_business_id: businessId });
+    if (error) {
+      console.error('Error incrementing business view count:', error.message);
+    } else {
+      // Optimistically update UI
+      setBusinesses(prev => prev.map(b => b.id === businessId ? { ...b, viewCount: (b.viewCount || 0) + 1 } : b));
+    }
   };
 
   // --- SERVICES LOGIC ---
@@ -367,12 +372,68 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
   };
 
   // --- BLOG LOGIC ---
-  useEffect(() => {
+  // D2.1 FIX: Fetch comments from database instead of localStorage
+  const fetchComments = useCallback(async () => {
+    if (!isSupabaseConfigured) {
+      // Fallback to localStorage if Supabase not configured
+      try {
+        const savedCommentsJSON = localStorage.getItem(COMMENTS_LOCAL_STORAGE_KEY);
+        setComments(savedCommentsJSON ? JSON.parse(savedCommentsJSON) : []);
+      } catch (e) {
+        console.error('Error loading comments from localStorage:', e);
+        setComments([]);
+      }
+      return;
+    }
+
     try {
-      const savedCommentsJSON = localStorage.getItem(COMMENTS_LOCAL_STORAGE_KEY);
-      setComments(savedCommentsJSON ? JSON.parse(savedCommentsJSON) : []);
-    } catch (e) { console.error(e) }
+      const { data, error } = await supabase
+        .from('blog_comments')
+        .select('*')
+        .order('date', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching comments:', error);
+        // Fallback to localStorage
+        try {
+          const savedCommentsJSON = localStorage.getItem(COMMENTS_LOCAL_STORAGE_KEY);
+          setComments(savedCommentsJSON ? JSON.parse(savedCommentsJSON) : []);
+        } catch (e) {
+          setComments([]);
+        }
+      } else {
+        // Convert database format to BlogComment format
+        const formattedComments: BlogComment[] = (data || []).map((comment: any) => ({
+          id: comment.id,
+          postId: comment.post_id,
+          authorName: comment.author_name,
+          authorAvatarUrl: '', // Not stored in DB, can be added later
+          content: comment.content,
+          date: comment.date || comment.created_at,
+        }));
+        setComments(formattedComments);
+        // Cache in localStorage for offline/fallback
+        try {
+          localStorage.setItem(COMMENTS_LOCAL_STORAGE_KEY, JSON.stringify(formattedComments));
+        } catch (e) {
+          console.warn('Failed to cache comments:', e);
+        }
+      }
+    } catch (error) {
+      console.error('Error in fetchComments:', error);
+      // Fallback to localStorage
+      try {
+        const savedCommentsJSON = localStorage.getItem(COMMENTS_LOCAL_STORAGE_KEY);
+        setComments(savedCommentsJSON ? JSON.parse(savedCommentsJSON) : []);
+      } catch (e) {
+        setComments([]);
+      }
+    }
   }, []);
+
+  useEffect(() => {
+    fetchComments();
+  }, [fetchComments]);
 
   const addBlogPost = async (newPostData: Omit<BlogPost, 'id' | 'slug' | 'date' | 'viewCount'>) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add blog post."); return; }
@@ -393,13 +454,109 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
     if (!error) await fetchAllPublicData();
   };
   const getPostBySlug = (slug: string) => blogPosts.find(p => p.slug === slug);
+  // D2.2 FIX: Use safe RPC function for view count increment (already using RPC, just ensure consistency)
   const incrementBlogViewCount = async (postId: number) => {
     if (!isSupabaseConfigured) return;
     const { error } = await supabase.rpc('increment_blog_view_count', { p_post_id: postId });
-    if (!error) setBlogPosts(prev => prev.map(p => p.id === postId ? { ...p, viewCount: p.viewCount + 1 } : p));
+    if (error) {
+      console.error('Error incrementing blog view count:', error.message);
+    } else {
+      // Optimistically update UI
+      setBlogPosts(prev => prev.map(p => p.id === postId ? { ...p, viewCount: (p.viewCount || 0) + 1 } : p));
+    }
   };
-  const getCommentsByPostId = (postId: number) => comments.filter(c => c.postId === postId);
-  const addComment = (postId: number, authorName: string, content: string) => { /* ... */ };
+  const getCommentsByPostId = (postId: number) => comments.filter(c => c.postId === postId).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  
+  // D2.1 FIX: Save comments to database instead of localStorage
+  const addComment = async (postId: number, authorName: string, content: string) => {
+    if (!isSupabaseConfigured) {
+      // Fallback to localStorage if Supabase not configured
+      const newComment: BlogComment = {
+        id: crypto.randomUUID(),
+        postId,
+        authorName,
+        authorAvatarUrl: '',
+        content,
+        date: new Date().toISOString(),
+      };
+      const updatedComments = [newComment, ...comments];
+      setComments(updatedComments);
+      try {
+        localStorage.setItem(COMMENTS_LOCAL_STORAGE_KEY, JSON.stringify(updatedComments));
+      } catch (e) {
+        console.error('Failed to save comment to localStorage:', e);
+      }
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('blog_comments')
+        .insert({
+          post_id: postId,
+          author_name: authorName,
+          content: content,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error adding comment:', error);
+        // Fallback to localStorage
+        const newComment: BlogComment = {
+          id: crypto.randomUUID(),
+          postId,
+          authorName,
+          authorAvatarUrl: '',
+          content,
+          date: new Date().toISOString(),
+        };
+        const updatedComments = [newComment, ...comments];
+        setComments(updatedComments);
+        try {
+          localStorage.setItem(COMMENTS_LOCAL_STORAGE_KEY, JSON.stringify(updatedComments));
+        } catch (e) {
+          console.error('Failed to save comment to localStorage:', e);
+        }
+      } else if (data) {
+        // Convert database format to BlogComment format
+        const newComment: BlogComment = {
+          id: data.id,
+          postId: data.post_id,
+          authorName: data.author_name,
+          authorAvatarUrl: '',
+          content: data.content,
+          date: data.date || data.created_at,
+        };
+        const updatedComments = [newComment, ...comments];
+        setComments(updatedComments);
+        // Cache in localStorage for offline/fallback
+        try {
+          localStorage.setItem(COMMENTS_LOCAL_STORAGE_KEY, JSON.stringify(updatedComments));
+        } catch (e) {
+          console.warn('Failed to cache comments:', e);
+        }
+      }
+    } catch (error) {
+      console.error('Error in addComment:', error);
+      // Fallback to localStorage
+      const newComment: BlogComment = {
+        id: crypto.randomUUID(),
+        postId,
+        authorName,
+        authorAvatarUrl: '',
+        content,
+        date: new Date().toISOString(),
+      };
+      const updatedComments = [newComment, ...comments];
+      setComments(updatedComments);
+      try {
+        localStorage.setItem(COMMENTS_LOCAL_STORAGE_KEY, JSON.stringify(updatedComments));
+      } catch (e) {
+        console.error('Failed to save comment to localStorage:', e);
+      }
+    }
+  };
 
   const addBlogCategory = async (name: string) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add category."); return; }

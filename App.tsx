@@ -9,6 +9,7 @@ import Footer from './components/Footer.tsx';
 import Breadcrumbs from './components/Breadcrumbs.tsx';
 import Chatbot from './components/Chatbot.tsx';
 import BackToTopButton from './components/BackToTopButton.tsx';
+import ErrorBoundary from './components/ErrorBoundary.tsx';
 
 // Import new consolidated providers
 import { UserSessionProvider, useUserSession } from './contexts/UserSessionContext.tsx';
@@ -109,16 +110,17 @@ const App: React.FC = () => {
     // header can be used for diagnostics.
 
     return (
-        <Router>
-            <Toaster position="top-center" reverseOrder={false} />
-            <ThemeProvider>
-                <UserSessionProvider>
-                    <AdminProvider>
-                        <PublicDataProvider>
-                            <HomepageDataProvider>
-                                <BusinessProvider>
-                                    <Suspense fallback={<LoadingSpinner />}>
-                                        <Routes>
+        <ErrorBoundary>
+            <Router>
+                <Toaster position="top-center" reverseOrder={false} />
+                <ThemeProvider>
+                    <UserSessionProvider>
+                        <AdminProvider>
+                            <PublicDataProvider>
+                                <HomepageDataProvider>
+                                    <BusinessProvider>
+                                        <Suspense fallback={<LoadingSpinner />}>
+                                            <Routes>
                                             {/* Routes WITH standard layout (Header, Footer, etc.) */}
                                             <Route element={<AppLayout />}>
                                                 <Route index element={<HomePage />} />
@@ -153,21 +155,21 @@ const App: React.FC = () => {
                                             } />
                                             <Route path="/admin/login" element={<AdminLoginPage />} />
                                             <Route path="business/:slug" element={<BusinessDetailPage />} />
-                                            <Route path="business/:slug" element={<BusinessDetailPage />} />
                                             <Route path="business/:businessSlug/post/:postSlug" element={<BusinessPostPage />} />
                                             <Route path="/connection-test" element={<ConnectionTestPage />} />
 
                                             {/* Catch-all route must be at the top level */}
                                             <Route path="*" element={<NotFoundPage />} />
                                         </Routes>
-                                    </Suspense>
-                                </BusinessProvider>
-                            </HomepageDataProvider>
-                        </PublicDataProvider>
-                    </AdminProvider>
-                </UserSessionProvider>
-            </ThemeProvider>
-        </Router>
+                                            </Suspense>
+                                        </BusinessProvider>
+                                    </HomepageDataProvider>
+                                </PublicDataProvider>
+                            </AdminProvider>
+                        </UserSessionProvider>
+                    </ThemeProvider>
+                </Router>
+            </ErrorBoundary>
     );
 };
 

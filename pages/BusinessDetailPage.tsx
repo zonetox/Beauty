@@ -70,12 +70,9 @@ const BusinessDetailPage: React.FC = () => {
         }
     }, [business, incrementBusinessViewCount]);
 
+    // D2.3 FIX: Use standardized loading state
     if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen bg-white">
-                <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-            </div>
-        );
+        return <LoadingState message="Loading business details..." fullScreen={true} />;
     }
 
     if (!business) {

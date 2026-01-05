@@ -5,11 +5,13 @@ import { supabase } from '../lib/supabaseClient.ts';
 import { useUserSession } from '../contexts/UserSessionContext.tsx';
 import { BusinessCategory, MembershipTier } from '../types.ts';
 
+// D3.1 FIX: Fix onboarding wizard edge cases - validation, error handling, user feedback
 const BusinessOnboardingWizard: React.FC = () => {
     const { currentUser, refreshProfile } = useUserSession();
     const navigate = useNavigate();
     const [step, setStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
     // Form State
     const [formData, setFormData] = useState({
@@ -24,6 +26,38 @@ const BusinessOnboardingWizard: React.FC = () => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+        // Clear error when user starts typing
+        if (errors[name]) {
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[name];
+                return newErrors;
+            });
+        }
+    };
+
+    // D3.1 FIX: Add validation
+    const validateForm = (): boolean => {
+        const newErrors: { [key: string]: string } = {};
+
+        if (!formData.name || formData.name.trim().length < 2) {
+            newErrors.name = 'Business name must be at least 2 characters';
+        }
+
+        if (!formData.phone || !/^[0-9+\-\s()]+$/.test(formData.phone)) {
+            newErrors.phone = 'Please enter a valid phone number';
+        }
+
+        if (!formData.address || formData.address.trim().length < 5) {
+            newErrors.address = 'Please enter a complete street address';
+        }
+
+        if (!formData.city || formData.city.trim().length < 2) {
+            newErrors.city = 'Please enter a valid city name';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const generateSlug = (name: string) => {
@@ -33,32 +67,40 @@ const BusinessOnboardingWizard: React.FC = () => {
             .replace(/\s+/g, '-') + '-' + Math.floor(Math.random() * 1000);
     };
 
+    // D3.1 FIX: Improved error handling and user feedback
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!currentUser) return;
+        if (!currentUser) {
+            toast.error("You must be logged in to create a business.");
+            return;
+        }
+
+        // Validate form before submission
+        if (!validateForm()) {
+            toast.error("Please fix the errors in the form.");
+            return;
+        }
 
         setIsSubmitting(true);
+        let createdBusinessId: number | null = null;
+
         try {
             // 1. Create Business Record
             const slug = generateSlug(formData.name);
             const newBusiness = {
-                name: formData.name,
+                name: formData.name.trim(),
                 slug: slug,
-                owner_id: currentUser.id, // RLS will allow this if we have a policy, or we rely on backend trigger. RLS policy "Users can update own business" won't allow INSERT unless we add INSERT policy.
-                // Wait, RLS verification showed: "Public businesses are viewable", "Users can update own".
-                // We likely need an INSERT policy for authenticated users to create a business.
-                // Let's assume for now the INSERT policy exists or we will fix it if it fails.
+                owner_id: currentUser.id,
                 categories: [formData.category],
-                phone: formData.phone,
-                address: formData.address,
-                city: formData.city || 'Ho Chi Minh', // Default fallbacks
+                phone: formData.phone.trim(),
+                address: formData.address.trim(),
+                city: formData.city.trim() || 'Ho Chi Minh',
                 district: 'District 1',
                 ward: 'Ben Nghe',
-                description: formData.description || `Welcome to ${formData.name}`,
-                image_url: 'https://placehold.co/600x400/E6A4B4/FFFFFF?text=Storefront', // Default placeholder
+                description: formData.description.trim() || `Welcome to ${formData.name.trim()}`,
+                image_url: 'https://placehold.co/600x400/E6A4B4/FFFFFF?text=Storefront',
                 membership_tier: MembershipTier.FREE,
-                is_active: false, // Inactive until approved/paid? Or simple version: active immediately?
-                // Lets make it semi-active (visible to owner, potentially hidden from public until reviewed)
+                is_active: false,
                 working_hours: { "Monday - Friday": "09:00 - 20:00" },
             };
 
@@ -68,28 +110,54 @@ const BusinessOnboardingWizard: React.FC = () => {
                 .select()
                 .single();
 
-            if (businessError) throw businessError;
-            if (!businessData) throw new Error("Failed to create business record.");
+            if (businessError) {
+                // D3.4 FIX: Better error messages for user feedback
+                if (businessError.code === '23505') {
+                    throw new Error("A business with this name already exists. Please choose a different name.");
+                } else if (businessError.code === '42501') {
+                    throw new Error("You don't have permission to create a business. Please contact support.");
+                } else {
+                    throw new Error(`Failed to create business: ${businessError.message}`);
+                }
+            }
+
+            if (!businessData) {
+                throw new Error("Failed to create business record. Please try again.");
+            }
+
+            createdBusinessId = businessData.id;
 
             // 2. Update Profile to link to this business
-            // The trigger 'handle_new_user' created the profile, but 'business_id' is null.
             const { error: profileError } = await supabase
                 .from('profiles')
                 .update({ business_id: businessData.id })
                 .eq('id', currentUser.id);
 
-            if (profileError) throw profileError;
+            if (profileError) {
+                // D3.4 FIX: Rollback business creation if profile update fails
+                if (createdBusinessId) {
+                    await supabase.from('businesses').delete().eq('id', createdBusinessId);
+                }
+                throw new Error(`Failed to link business to your profile: ${profileError.message}`);
+            }
 
             // 3. Refresh Session/Context
-            await refreshProfile(); // function we need to ensure exists in UserSessionContext specific to this need or just reload.
+            await refreshProfile();
 
             toast.success("Business profile created successfully!");
-            // Refresh page to trigger Dashboard load
-            window.location.reload();
+            // Small delay before reload to show success message
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
 
         } catch (error: any) {
             console.error("Onboarding Error:", error);
-            toast.error(error.message || "Failed to create business.");
+            // D3.4 FIX: Always show error feedback to user
+            const errorMessage = error.message || "Failed to create business. Please try again.";
+            toast.error(errorMessage);
+            
+            // D3.1 FIX: Set form-level error for better UX
+            setErrors({ submit: errorMessage });
         } finally {
             setIsSubmitting(false);
         }
@@ -111,7 +179,7 @@ const BusinessOnboardingWizard: React.FC = () => {
                     <form className="space-y-6" onSubmit={handleSubmit}>
                         <div>
                             <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                                Business Name
+                                Business Name <span className="text-red-500">*</span>
                             </label>
                             <div className="mt-1">
                                 <input
@@ -121,8 +189,13 @@ const BusinessOnboardingWizard: React.FC = () => {
                                     required
                                     value={formData.name}
                                     onChange={handleChange}
-                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                                    className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm ${
+                                        errors.name ? 'border-red-500' : 'border-gray-300'
+                                    }`}
                                 />
+                                {errors.name && (
+                                    <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                                )}
                             </div>
                         </div>
 
@@ -149,7 +222,7 @@ const BusinessOnboardingWizard: React.FC = () => {
 
                         <div>
                             <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                                Phone Number
+                                Phone Number <span className="text-red-500">*</span>
                             </label>
                             <div className="mt-1">
                                 <input
@@ -159,14 +232,19 @@ const BusinessOnboardingWizard: React.FC = () => {
                                     required
                                     value={formData.phone}
                                     onChange={handleChange}
-                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                                    className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm ${
+                                        errors.phone ? 'border-red-500' : 'border-gray-300'
+                                    }`}
                                 />
+                                {errors.phone && (
+                                    <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
+                                )}
                             </div>
                         </div>
 
                         <div>
                             <label htmlFor="city" className="block text-sm font-medium text-gray-700">
-                                City
+                                City <span className="text-red-500">*</span>
                             </label>
                             <div className="mt-1">
                                 <input
@@ -177,14 +255,19 @@ const BusinessOnboardingWizard: React.FC = () => {
                                     placeholder="e.g. Ho Chi Minh"
                                     value={formData.city}
                                     onChange={handleChange}
-                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                                    className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm ${
+                                        errors.city ? 'border-red-500' : 'border-gray-300'
+                                    }`}
                                 />
+                                {errors.city && (
+                                    <p className="mt-1 text-sm text-red-600">{errors.city}</p>
+                                )}
                             </div>
                         </div>
 
                         <div>
                             <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-                                Street Address
+                                Street Address <span className="text-red-500">*</span>
                             </label>
                             <div className="mt-1">
                                 <input
@@ -194,10 +277,21 @@ const BusinessOnboardingWizard: React.FC = () => {
                                     required
                                     value={formData.address}
                                     onChange={handleChange}
-                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                                    className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm ${
+                                        errors.address ? 'border-red-500' : 'border-gray-300'
+                                    }`}
                                 />
+                                {errors.address && (
+                                    <p className="mt-1 text-sm text-red-600">{errors.address}</p>
+                                )}
                             </div>
                         </div>
+
+                        {errors.submit && (
+                            <div className="rounded-md bg-red-50 p-4">
+                                <p className="text-sm text-red-800">{errors.submit}</p>
+                            </div>
+                        )}
 
                         <div>
                             <button
@@ -216,3 +310,4 @@ const BusinessOnboardingWizard: React.FC = () => {
 };
 
 export default BusinessOnboardingWizard;
+

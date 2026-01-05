@@ -105,31 +105,51 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
       slug: slug,
       view_count: 0,
     };
+    // D3.4 FIX: Add error feedback for failed actions
     const { error } = await supabase.from('business_blog_posts').insert(postToAdd);
-    if (error) console.error("Error adding business post:", error);
-    else await fetchAllData();
+    if (error) {
+      console.error("Error adding business post:", error);
+      toast.error(`Failed to add post: ${error.message}`);
+    } else {
+      await fetchAllData();
+      toast.success("Post added successfully!");
+    }
   };
   const updatePost = async (updatedPost: BusinessBlogPost) => {
     const { id, ...postToUpdate } = updatedPost;
+    // D3.4 FIX: Add error feedback for failed actions
     const { error } = await supabase.from('business_blog_posts').update(toSnakeCase(postToUpdate)).eq('id', id);
-    if (error) console.error("Error updating business post:", error);
-    else await fetchAllData();
+    if (error) {
+      console.error("Error updating business post:", error);
+      toast.error(`Failed to update post: ${error.message}`);
+    } else {
+      await fetchAllData();
+      toast.success("Post updated successfully!");
+    }
   };
   const deletePost = async (postId: string) => {
+    // D3.4 FIX: Add error feedback for failed actions
     const { error } = await supabase.from('business_blog_posts').delete().eq('id', postId);
-    if (error) console.error("Error deleting business post:", error);
-    else await fetchAllData();
+    if (error) {
+      console.error("Error deleting business post:", error);
+      toast.error(`Failed to delete post: ${error.message}`);
+    } else {
+      await fetchAllData();
+      toast.success("Post deleted successfully!");
+    }
   };
   const getPostBySlug = (slug: string) => posts.find(p => p.slug === slug);
   // FEAT: Add function to get posts by business ID.
   const getPostsByBusinessId = (businessId: number) => {
     return posts.filter(p => p.businessId === businessId);
   };
+  // D2.2 FIX: Use safe RPC function for view count increment (RPC function created in migration)
   const incrementViewCount = async (postId: string) => {
-    // NOTE: This requires an RPC function 'increment_business_blog_view_count' to be created in Supabase.
-    // CREATE OR REPLACE FUNCTION increment_business_blog_view_count(p_post_id uuid) ...
     const { error } = await supabase.rpc('increment_business_blog_view_count', { p_post_id: postId });
-    if (!error) {
+    if (error) {
+      console.error('Error incrementing business blog view count:', error.message);
+    } else {
+      // Optimistically update UI
       setPosts(prev => prev.map(p => p.id === postId ? { ...p, viewCount: (p.viewCount || 0) + 1 } : p));
     }
   };
