@@ -132,22 +132,7 @@ BEGIN
         
         IF v_count > 0 THEN
             RAISE NOTICE '   [OK] Email system has been used';
-            
-            -- Show recent emails
-            RAISE NOTICE '';
-            RAISE NOTICE '   Recent emails (last 5):';
-            FOR v_count IN 
-                SELECT recipient_email, subject, sent_at
-                FROM public.email_notifications_log
-                ORDER BY sent_at DESC
-                LIMIT 5
-            LOOP
-                -- Note: This won't work in DO block, but shows intent
-                RAISE NOTICE '     - %: % (%%)', 
-                    (SELECT recipient_email FROM public.email_notifications_log ORDER BY sent_at DESC LIMIT 1 OFFSET v_count),
-                    (SELECT subject FROM public.email_notifications_log ORDER BY sent_at DESC LIMIT 1 OFFSET v_count),
-                    (SELECT sent_at FROM public.email_notifications_log ORDER BY sent_at DESC LIMIT 1 OFFSET v_count);
-            END LOOP;
+            RAISE NOTICE '   [INFO] To view recent emails, run: SELECT recipient_email, subject, sent_at FROM public.email_notifications_log ORDER BY sent_at DESC LIMIT 5;';
         ELSE
             RAISE NOTICE '   [INFO] No emails logged yet (system ready for use)';
         END IF;
