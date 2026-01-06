@@ -34,16 +34,15 @@ BEGIN
         RAISE WARNING '   [WARN] Found % active businesses without slugs', v_count;
     END IF;
     
-    -- Check blog posts have slugs
+    -- Check blog posts have slugs (blog_posts doesn't have status column)
     SELECT COUNT(*) INTO v_count
     FROM public.blog_posts
-    WHERE status = 'Published'
-      AND (slug IS NULL OR slug = '');
+    WHERE (slug IS NULL OR slug = '');
     
     IF v_count = 0 THEN
-        RAISE NOTICE '   [OK] All published blog posts have slugs';
+        RAISE NOTICE '   [OK] All blog posts have slugs';
     ELSE
-        RAISE WARNING '   [WARN] Found % published blog posts without slugs', v_count;
+        RAISE WARNING '   [WARN] Found % blog posts without slugs', v_count;
     END IF;
     
     -- Check business blog posts have slugs
@@ -153,14 +152,13 @@ BEGIN
     
     RAISE NOTICE '   [INFO] % active businesses available for sitemap', v_business_count;
     
-    -- Count published blog posts for sitemap
+    -- Count blog posts for sitemap (blog_posts doesn't have status column)
     SELECT COUNT(*) INTO v_blog_count
     FROM public.blog_posts
-    WHERE status = 'Published'
-      AND slug IS NOT NULL
+    WHERE slug IS NOT NULL
       AND slug != '';
     
-    RAISE NOTICE '   [INFO] % published blog posts available for sitemap', v_blog_count;
+    RAISE NOTICE '   [INFO] % blog posts available for sitemap', v_blog_count;
     
     -- Count published business blog posts for sitemap
     SELECT COUNT(*) INTO v_business_blog_count
