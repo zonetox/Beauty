@@ -222,3 +222,4 @@ GRANT EXECUTE ON FUNCTION public.search_businesses TO anon;
 GRANT EXECUTE ON FUNCTION public.search_blog_posts TO authenticated;
 GRANT EXECUTE ON FUNCTION public.search_blog_posts TO anon;
 
+

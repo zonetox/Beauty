@@ -53,3 +53,4 @@ ON public.blog_comments
 FOR DELETE
 USING (public.is_admin(public.get_user_email()));
 
+

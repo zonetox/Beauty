@@ -184,3 +184,4 @@ EXCEPTION
         RAISE EXCEPTION 'Search system verification failed: %', SQLERRM;
 END $$;
 
+

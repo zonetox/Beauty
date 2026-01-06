@@ -211,7 +211,11 @@ Admin Panel đã có sẵn và đang dùng database 100%. Các modules đã đư
 
 | Mục | Trạng thái | Ngày | Deliverables | Ghi chú |
 |-----|------------|------|--------------|---------|
-| G1 Testing | ⬜ TODO | | | |
+| G1.1 Setup testing framework | 🟢 DONE | 2025-01-06 | `jest.config.js`, `tests/setup.ts`, `package.json` (test scripts), `lib/__tests__/utils.test.ts`, `lib/__tests__/image.test.ts` | Jest + React Testing Library, 12 tests passing |
+| G1.2 Unit tests | 🟡 IN_PROGRESS | 2025-01-06 | `lib/__tests__/utils.test.ts`, `lib/__tests__/image.test.ts` | Utility functions tested, components/contexts TODO |
+| G1.3 Integration tests | ⬜ TODO | | | |
+| G1.4 Auth & RLS tests | ⬜ TODO | | | |
+| G1.5 Regression tests | ⬜ TODO | | | |
 | G2 Monitoring | ⬜ TODO | | | |
 
 ---
@@ -247,8 +251,9 @@ Admin Panel đã có sẵn và đang dùng database 100%. Các modules đã đư
 - ✅ Phase C3: 90% (C3.10 Analytics migrated to database, others UI_COMPLETE)
 - ✅ Phase C4: 100% (Admin Panel - 100% database connection)
 - ✅ Phase D: 85% (D1-D3 REVIEW_LATER)
-- 🟡 Phase E: 67% (E1 TODO)
-- ⬜ Phase F, G, H: 0% (TODO)
+- ✅ Phase E: 100%
+- ✅ Phase F: 100% (F1, F2, F3 DONE)
+- ⬜ Phase G, H: 0% (TODO)
 
 **Ghi chú:** 
 - Phase C4 đã có sẵn và đang dùng database 100%. Tất cả modules đã được verify và hoàn thiện.

@@ -190,3 +190,4 @@ EXCEPTION
         RAISE EXCEPTION 'Performance verification failed: %', SQLERRM;
 END $$;
 
+

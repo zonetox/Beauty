@@ -63,3 +63,4 @@ Sau khi chạy migrations, chạy verification scripts:
 - Chỉ thêm/sửa schema và policies
 - Backup database trước khi chạy migration (khuyến nghị)
 
+

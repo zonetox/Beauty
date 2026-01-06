@@ -232,3 +232,4 @@ This schema complies with `ARCHITECTURE.md` principles:
 
 
 
+
