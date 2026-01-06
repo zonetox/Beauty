@@ -109,11 +109,20 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
     setAppointmentsLoading(true);
     setAnalyticsLoading(true);
 
+    // F2.1: Optimize queries - select only needed columns
     const [postsRes, reviewsRes, ordersRes, appointmentsRes, businessesRes] = await Promise.all([
-      supabase.from('business_blog_posts').select('*').order('created_date', { ascending: false }),
-      supabase.from('reviews').select('*').order('submitted_date', { ascending: false }),
-      supabase.from('orders').select('*').order('submitted_at', { ascending: false }),
-      supabase.from('appointments').select('*').order('created_at', { ascending: false }),
+      supabase.from('business_blog_posts')
+        .select('id, business_id, slug, title, excerpt, image_url, content, author, created_date, published_date, status, view_count, is_featured, seo')
+        .order('created_date', { ascending: false }),
+      supabase.from('reviews')
+        .select('id, user_id, business_id, user_name, user_avatar_url, rating, comment, submitted_date, status, reply')
+        .order('submitted_date', { ascending: false }),
+      supabase.from('orders')
+        .select('id, business_id, package_id, customer_name, customer_email, customer_phone, total_amount, status, submitted_at, notes')
+        .order('submitted_at', { ascending: false }),
+      supabase.from('appointments')
+        .select('id, business_id, service_id, customer_name, customer_email, customer_phone, appointment_date, appointment_time, status, notes, created_at')
+        .order('created_at', { ascending: false }),
       supabase.from('businesses').select('id, view_count').order('id')
     ]);
 

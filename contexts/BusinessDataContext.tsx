@@ -154,19 +154,32 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
             })) as Business[];
 
             setBusinesses(mapped);
-            // Get total count separately for search results
-            const { count } = await supabase
-              .rpc('search_businesses', {
-                p_search_text: options.search.trim(),
+            // Get total count using count function
+            const { count: searchCount } = await supabase
+              .rpc('get_business_count', {
                 p_category: options.category || null,
                 p_city: options.location || null,
-                p_district: options.district || null,
-                p_tags: null,
-                p_limit: 10000, // Large limit to get count
-                p_offset: 0
-              }).select('id').limit(10000);
+                p_district: options.district || null
+              });
             
-            setTotalBusinesses(count?.length || mapped.length);
+            // If search text provided, we need to count search results
+            // For now, use mapped length as approximation (can be improved with separate count query)
+            if (options.search && options.search.trim()) {
+              // Use a separate count query for search results
+              const { data: countData } = await supabase
+                .rpc('search_businesses', {
+                  p_search_text: options.search.trim(),
+                  p_category: options.category || null,
+                  p_city: options.location || null,
+                  p_district: options.district || null,
+                  p_tags: null,
+                  p_limit: 10000,
+                  p_offset: 0
+                });
+              setTotalBusinesses(countData?.length || mapped.length);
+            } else {
+              setTotalBusinesses(searchCount || mapped.length);
+            }
             setCurrentPage(page);
             setBusinessLoading(false);
             return;
@@ -232,11 +245,17 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
       setBusinessMarkers(snakeToCamel(markerData));
     }
 
-    // Fetch other data
+    // F2.1: Optimize queries - select only needed columns
     const [blogRes, catRes, pkgRes] = await Promise.all([
-      supabase.from('blog_posts').select('*').order('date', { ascending: false }),
-      supabase.from('blog_categories').select('*').order('name'),
-      supabase.from('membership_packages').select('*').order('price')
+      supabase.from('blog_posts')
+        .select('id, slug, title, image_url, excerpt, author, date, category, content, view_count')
+        .order('date', { ascending: false }),
+      supabase.from('blog_categories')
+        .select('id, name')
+        .order('name'),
+      supabase.from('membership_packages')
+        .select('id, name, description, price, duration_months, features, is_active')
+        .order('price')
     ]);
 
     if (blogRes.error) console.error("Error fetching blog posts:", blogRes.error.message);

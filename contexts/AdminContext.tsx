@@ -302,6 +302,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             return;
         }
         try {
+            // F2.1: Optimize queries - select only needed columns
             const [
                 announcementsRes,
                 ticketsRes,
@@ -309,11 +310,19 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 settingsRes,
                 pageContentRes
             ] = await Promise.all([
-                supabase.from('announcements').select('*').order('created_at', { ascending: false }),
-                supabase.from('support_tickets').select('*').order('last_reply_at', { ascending: false, nullsFirst: false }).order('created_at', { ascending: false }),
-                supabase.from('registration_requests').select('*').order('submitted_at', { ascending: false }),
+                supabase.from('announcements')
+                    .select('id, title, content, type, created_at')
+                    .order('created_at', { ascending: false }),
+                supabase.from('support_tickets')
+                    .select('id, business_id, subject, message, status, created_at, last_reply_at, replies')
+                    .order('last_reply_at', { ascending: false, nullsFirst: false })
+                    .order('created_at', { ascending: false }),
+                supabase.from('registration_requests')
+                    .select('id, business_name, email, phone, address, city, district, categories, submitted_at, status, notes')
+                    .order('submitted_at', { ascending: false }),
                 supabase.from('app_settings').select('settings_data').eq('id', 1).maybeSingle(),
-                supabase.from('page_content').select('*')
+                supabase.from('page_content')
+                    .select('id, page_name, content_data')
             ]);
 
             if (announcementsRes.data) {
