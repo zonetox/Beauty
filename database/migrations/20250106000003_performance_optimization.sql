@@ -122,16 +122,17 @@ WHERE schemaname = 'public'
 ORDER BY idx_scan DESC;
 
 -- View for unused indexes (candidates for removal)
+-- Note: This view requires pg_stat_user_indexes which may not be available in all PostgreSQL versions
 CREATE OR REPLACE VIEW public.v_unused_indexes AS
 SELECT 
     schemaname,
-    tablename,
-    indexname,
+    relname as tablename,
+    indexrelname as indexname,
     pg_size_pretty(pg_relation_size(indexrelid)) as index_size
 FROM pg_stat_user_indexes
 WHERE schemaname = 'public'
   AND idx_scan = 0
-  AND indexname NOT LIKE 'pg_toast%'
+  AND indexrelname NOT LIKE 'pg_toast%'
 ORDER BY pg_relation_size(indexrelid) DESC;
 
 -- ============================================
