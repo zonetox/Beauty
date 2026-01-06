@@ -16,10 +16,8 @@ Allow: /directory
 Allow: /blog
 Allow: /business/
 
-# Sitemap location (dynamically generated)
-Sitemap: https://1beauty.asia/sitemap.xml
-# Note: Sitemap is generated dynamically via Edge Function at /api/generate-sitemap
-# For static hosting, use: Sitemap: https://1beauty.asia/.netlify/functions/generate-sitemap
+# Sitemap location (dynamically generated via Supabase Edge Function)
+Sitemap: https://fdklazlcbxaiapsnnbqq.supabase.co/functions/v1/generate-sitemap
 
 # Crawl-delay (optional, adjust as needed)
 Crawl-delay: 1
