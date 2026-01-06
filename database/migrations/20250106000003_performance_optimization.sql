@@ -25,8 +25,8 @@ WHERE status = 'Visible';
 
 -- Index for appointments by business_id and date
 CREATE INDEX IF NOT EXISTS idx_appointments_business_date 
-ON public.appointments(business_id, appointment_date) 
-WHERE appointment_date IS NOT NULL;
+ON public.appointments(business_id, date) 
+WHERE date IS NOT NULL;
 
 -- Index for orders by business_id and status
 CREATE INDEX IF NOT EXISTS idx_orders_business_status 

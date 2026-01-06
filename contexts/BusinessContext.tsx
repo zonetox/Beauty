@@ -121,7 +121,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
         .select('id, business_id, package_id, customer_name, customer_email, customer_phone, total_amount, status, submitted_at, notes')
         .order('submitted_at', { ascending: false }),
       supabase.from('appointments')
-        .select('id, business_id, service_id, customer_name, customer_email, customer_phone, appointment_date, appointment_time, status, notes, created_at')
+        .select('id, business_id, service_id, service_name, staff_member_id, customer_name, customer_email, customer_phone, date, time_slot, status, notes, created_at')
         .order('created_at', { ascending: false }),
       supabase.from('businesses').select('id, view_count').order('id')
     ]);
