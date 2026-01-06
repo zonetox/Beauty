@@ -60,7 +60,7 @@
 | A3.2 RLS policy design | 🟢 DONE | 2025-01-05 | `database/rls_policies_v1.sql` | Locked |
 | A3.3 Security verification | 🟢 DONE | 2025-01-05 | `database/RLS_MATRIX.md` | Locked |
 | A3.4 Security audit | 🟢 DONE | 2025-01-06 | `database/verifications/a3.4_security_audit.sql`, `database/rls_policies_v1.sql` updated | All tables have RLS, policies verified |
-| A3.5 Test matrix | ⬜ TODO | | | |
+| A3.5 Test matrix | 🟢 DONE | 2025-01-06 | `database/verifications/a3.5_test_matrix.sql` | RLS policies test cases verified |
 | A3.6 RLS policies file | 🟢 DONE | 2025-01-05 | `database/rls_policies_v1.sql` | Locked |
 
 ### A4. STORAGE & MEDIA SECURITY
