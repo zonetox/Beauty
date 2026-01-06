@@ -307,12 +307,23 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
   }, [fetchNotifications]);
 
   const addNotification = async (recipientEmail: string, subject: string, body: string) => {
-    // This now calls the Supabase Edge Function
+    // Use email service for better integration and database logging
     if (isSupabaseConfigured) {
-      const { error } = await supabase.functions.invoke('send-email', {
-        body: { to: recipientEmail, subject, html: body.replace(/\n/g, '<br>') }
-      });
-      if (error) console.error('Error sending email:', error);
+      try {
+        // Import email service dynamically to avoid circular dependencies
+        const { sendSimpleEmail } = await import('../lib/emailService');
+        const result = await sendSimpleEmail(recipientEmail, subject, body.replace(/\n/g, '<br>'));
+        if (!result.success) {
+          console.error('Error sending email:', result.error);
+        }
+      } catch (error) {
+        console.error('Error importing email service:', error);
+        // Fallback to direct Edge Function call
+        const { error: emailError } = await supabase.functions.invoke('send-email', {
+          body: { to: recipientEmail, subject, html: body.replace(/\n/g, '<br>') }
+        });
+        if (emailError) console.error('Error sending email:', emailError);
+      }
     }
 
     const newNotification: Notification = { 

@@ -191,7 +191,7 @@ Admin Panel đã có sẵn và đang dùng database 100%. Các modules đã đư
 
 | Mục | Trạng thái | Ngày | Deliverables | Ghi chú |
 |-----|------------|------|--------------|---------|
-| E1 Email system | ⬜ TODO | | | |
+| E1 Email system | 🟢 DONE | 2025-01-06 | `lib/emailService.ts`, `supabase/functions/send-templated-email/index.ts`, `database/verifications/e1_email_system_verification.sql` | All 8 email templates, database logging, trigger helpers |
 | E2 Edge functions | 🟢 DONE | 2025-01-05 | Edge functions verified | Locked |
 | E3 Notifications | 🟢 DONE | 2025-01-05 | Verification complete | Locked |
 
