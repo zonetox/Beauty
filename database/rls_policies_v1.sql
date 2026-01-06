@@ -880,6 +880,97 @@ FOR DELETE
 USING (public.is_admin(public.get_user_email()));
 
 -- ============================================
+-- BLOG_COMMENTS POLICIES
+-- ============================================
+
+-- SELECT: Public can read all comments
+DROP POLICY IF EXISTS "blog_comments_select_public" ON public.blog_comments;
+CREATE POLICY "blog_comments_select_public"
+ON public.blog_comments
+FOR SELECT
+USING (TRUE);
+
+-- INSERT: Authenticated users can insert comments
+DROP POLICY IF EXISTS "blog_comments_insert_authenticated" ON public.blog_comments;
+CREATE POLICY "blog_comments_insert_authenticated"
+ON public.blog_comments
+FOR INSERT
+WITH CHECK (auth.uid() IS NOT NULL);
+
+-- UPDATE: Only admins can update comments
+DROP POLICY IF EXISTS "blog_comments_update_admin" ON public.blog_comments;
+CREATE POLICY "blog_comments_update_admin"
+ON public.blog_comments
+FOR UPDATE
+USING (public.is_admin(public.get_user_email()))
+WITH CHECK (public.is_admin(public.get_user_email()));
+
+-- DELETE: Only admins can delete comments
+DROP POLICY IF EXISTS "blog_comments_delete_admin" ON public.blog_comments;
+CREATE POLICY "blog_comments_delete_admin"
+ON public.blog_comments
+FOR DELETE
+USING (public.is_admin(public.get_user_email()));
+
+-- ============================================
+-- ADMIN_ACTIVITY_LOGS POLICIES
+-- ============================================
+
+-- SELECT: Only admins can read logs
+DROP POLICY IF EXISTS "admin_activity_logs_select_admin" ON public.admin_activity_logs;
+CREATE POLICY "admin_activity_logs_select_admin"
+ON public.admin_activity_logs
+FOR SELECT
+USING (public.is_admin(public.get_user_email()));
+
+-- INSERT: Only admins can insert logs
+DROP POLICY IF EXISTS "admin_activity_logs_insert_admin" ON public.admin_activity_logs;
+CREATE POLICY "admin_activity_logs_insert_admin"
+ON public.admin_activity_logs
+FOR INSERT
+WITH CHECK (public.is_admin(public.get_user_email()));
+
+-- DELETE: Only admins can delete logs
+DROP POLICY IF EXISTS "admin_activity_logs_delete_admin" ON public.admin_activity_logs;
+CREATE POLICY "admin_activity_logs_delete_admin"
+ON public.admin_activity_logs
+FOR DELETE
+USING (public.is_admin(public.get_user_email()));
+
+-- ============================================
+-- EMAIL_NOTIFICATIONS_LOG POLICIES
+-- ============================================
+
+-- SELECT: Only admins can read notifications log
+DROP POLICY IF EXISTS "email_notifications_log_select_admin" ON public.email_notifications_log;
+CREATE POLICY "email_notifications_log_select_admin"
+ON public.email_notifications_log
+FOR SELECT
+USING (public.is_admin(public.get_user_email()));
+
+-- INSERT: Only admins can insert notifications log
+DROP POLICY IF EXISTS "email_notifications_log_insert_admin" ON public.email_notifications_log;
+CREATE POLICY "email_notifications_log_insert_admin"
+ON public.email_notifications_log
+FOR INSERT
+WITH CHECK (public.is_admin(public.get_user_email()));
+
+-- UPDATE: Only admins can update notifications log (mark as read)
+DROP POLICY IF EXISTS "email_notifications_log_update_admin" ON public.email_notifications_log;
+CREATE POLICY "email_notifications_log_update_admin"
+ON public.email_notifications_log
+FOR UPDATE
+USING (public.is_admin(public.get_user_email()))
+WITH CHECK (public.is_admin(public.get_user_email()));
+
+-- DELETE: Only admins can delete notifications log
+DROP POLICY IF EXISTS "email_notifications_log_delete_admin" ON public.email_notifications_log;
+CREATE POLICY "email_notifications_log_delete_admin"
+ON public.email_notifications_log
+FOR DELETE
+USING (public.is_admin(public.get_user_email()));
+
+-- ============================================
 -- END OF RLS POLICIES v1.0
 -- ============================================
 
