@@ -48,6 +48,39 @@ interface LocalBusinessSchema {
   }>;
 }
 
+interface ReviewSchema {
+  '@type'?: 'Review';
+  author?: {
+    '@type'?: 'Person';
+    name?: string;
+  };
+  datePublished?: string;
+  reviewBody?: string;
+  reviewRating?: {
+    '@type'?: 'Rating';
+    ratingValue?: number;
+    bestRating?: number;
+  };
+  itemReviewed?: {
+    '@type'?: 'LocalBusiness';
+    name?: string;
+  };
+}
+
+interface OrganizationSchema {
+  '@type'?: 'Organization';
+  name?: string;
+  url?: string;
+  logo?: string;
+  sameAs?: string[];
+  contactPoint?: {
+    '@type'?: 'ContactPoint';
+    telephone?: string;
+    contactType?: string;
+    areaServed?: string;
+  };
+}
+
 interface SEOHeadProps {
   title?: string;
   description?: string;
@@ -57,6 +90,8 @@ interface SEOHeadProps {
   type?: 'website' | 'article' | 'business';
   articleSchema?: ArticleSchema;
   businessSchema?: LocalBusinessSchema;
+  reviewSchema?: ReviewSchema[];
+  organizationSchema?: OrganizationSchema;
 }
 
 const SEOHead: React.FC<SEOHeadProps> = ({
@@ -68,6 +103,8 @@ const SEOHead: React.FC<SEOHeadProps> = ({
   type = 'website',
   articleSchema,
   businessSchema,
+  reviewSchema,
+  organizationSchema,
 }) => {
   useEffect(() => {
     // Update document title
@@ -129,103 +166,147 @@ const SEOHead: React.FC<SEOHeadProps> = ({
     canonical.setAttribute('href', url);
 
     // Schema.org JSON-LD
-    const schemaScript = document.getElementById('schema-org-json');
-    if (schemaScript) {
-      schemaScript.remove();
-    }
+    // Remove all existing schema scripts
+    const existingSchemaScripts = document.querySelectorAll('script[id^="schema-org-json"]');
+    existingSchemaScripts.forEach(script => script.remove());
 
-    let schema: any = {
-      '@context': 'https://schema.org',
-    };
+    // Build array of schemas (can have multiple)
+    const schemas: any[] = [];
 
+    // Main schema based on type
     if (type === 'website') {
-      schema['@type'] = 'WebSite';
-      schema.name = '1Beauty.asia';
-      schema.description = description;
-      schema.url = url;
-      schema.potentialAction = {
-        '@type': 'SearchAction',
-        target: {
-          '@type': 'EntryPoint',
-          urlTemplate: typeof window !== 'undefined' 
-            ? `${window.location.origin}/directory?keyword={search_term_string}`
-            : `${url.split('/')[0]}//${url.split('/')[2]}/directory?keyword={search_term_string}`,
+      const websiteSchema: any = {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: '1Beauty.asia',
+        description: description,
+        url: url,
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: {
+            '@type': 'EntryPoint',
+            urlTemplate: typeof window !== 'undefined' 
+              ? `${window.location.origin}/directory?keyword={search_term_string}`
+              : `${url.split('/')[0]}//${url.split('/')[2]}/directory?keyword={search_term_string}`,
+          },
+          'query-input': 'required name=search_term_string',
         },
-        'query-input': 'required name=search_term_string',
       };
+      schemas.push(websiteSchema);
     } else if (type === 'article' && articleSchema) {
-      schema['@type'] = 'Article';
-      schema.headline = articleSchema.headline || title;
-      schema.description = description;
-      schema.image = articleSchema.image || [image];
-      schema.url = url;
+      const articleSchemaObj: any = {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: articleSchema.headline || title,
+        description: description,
+        image: articleSchema.image || [image],
+        url: url,
+        publisher: articleSchema.publisher || {
+          '@type': 'Organization',
+          name: '1Beauty.asia',
+          logo: {
+            '@type': 'ImageObject',
+            url: typeof window !== 'undefined' 
+              ? `${window.location.origin}/favicon.svg`
+              : '',
+          },
+        },
+      };
       if (articleSchema.author) {
-        schema.author = {
+        articleSchemaObj.author = {
           '@type': 'Person',
           name: articleSchema.author.name,
           ...(articleSchema.author.url && { url: articleSchema.author.url }),
         };
       }
       if (articleSchema.datePublished) {
-        schema.datePublished = articleSchema.datePublished;
+        articleSchemaObj.datePublished = articleSchema.datePublished;
       }
       if (articleSchema.dateModified) {
-        schema.dateModified = articleSchema.dateModified;
+        articleSchemaObj.dateModified = articleSchema.dateModified;
       }
-      schema.publisher = articleSchema.publisher || {
-        '@type': 'Organization',
-        name: '1Beauty.asia',
-        logo: {
-          '@type': 'ImageObject',
-          url: typeof window !== 'undefined' 
-            ? `${window.location.origin}/favicon.svg`
-            : '',
-        },
-      };
+      schemas.push(articleSchemaObj);
     } else if (type === 'business' && businessSchema) {
-      schema['@type'] = 'LocalBusiness';
-      schema.name = businessSchema.name || title;
-      schema.description = description;
-      schema.image = businessSchema.image || [image];
-      schema.url = url;
+      const businessSchemaObj: any = {
+        '@context': 'https://schema.org',
+        '@type': 'LocalBusiness',
+        name: businessSchema.name || title,
+        description: description,
+        image: businessSchema.image || [image],
+        url: url,
+      };
       if (businessSchema.address) {
-        schema.address = {
+        businessSchemaObj.address = {
           '@type': 'PostalAddress',
           ...businessSchema.address,
         };
       }
       if (businessSchema.geo) {
-        schema.geo = {
+        businessSchemaObj.geo = {
           '@type': 'GeoCoordinates',
           ...businessSchema.geo,
         };
       }
       if (businessSchema.telephone) {
-        schema.telephone = businessSchema.telephone;
+        businessSchemaObj.telephone = businessSchema.telephone;
       }
       if (businessSchema.priceRange) {
-        schema.priceRange = businessSchema.priceRange;
+        businessSchemaObj.priceRange = businessSchema.priceRange;
       }
       if (businessSchema.aggregateRating) {
-        schema.aggregateRating = {
+        businessSchemaObj.aggregateRating = {
           '@type': 'AggregateRating',
           ...businessSchema.aggregateRating,
         };
       }
       if (businessSchema.openingHoursSpecification && businessSchema.openingHoursSpecification.length > 0) {
-        schema.openingHoursSpecification = businessSchema.openingHoursSpecification.map(oh => ({
+        businessSchemaObj.openingHoursSpecification = businessSchema.openingHoursSpecification.map(oh => ({
           '@type': 'OpeningHoursSpecification',
           ...oh,
         }));
       }
+      schemas.push(businessSchemaObj);
     }
 
-    const script = document.createElement('script');
-    script.id = 'schema-org-json';
-    script.type = 'application/ld+json';
-    script.textContent = JSON.stringify(schema);
-    document.head.appendChild(script);
-  }, [title, description, keywords, image, url, type, articleSchema, businessSchema]);
+    // Add Organization schema if provided
+    if (organizationSchema) {
+      const orgSchema: any = {
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: organizationSchema.name || '1Beauty.asia',
+        ...(organizationSchema.url && { url: organizationSchema.url }),
+        ...(organizationSchema.logo && { logo: organizationSchema.logo }),
+        ...(organizationSchema.sameAs && { sameAs: organizationSchema.sameAs }),
+        ...(organizationSchema.contactPoint && { contactPoint: organizationSchema.contactPoint }),
+      };
+      schemas.push(orgSchema);
+    }
+
+    // Add Review schemas if provided
+    if (reviewSchema && reviewSchema.length > 0) {
+      reviewSchema.forEach(review => {
+        const reviewSchemaObj: any = {
+          '@context': 'https://schema.org',
+          '@type': 'Review',
+          ...(review.author && { author: review.author }),
+          ...(review.datePublished && { datePublished: review.datePublished }),
+          ...(review.reviewBody && { reviewBody: review.reviewBody }),
+          ...(review.reviewRating && { reviewRating: review.reviewRating }),
+          ...(review.itemReviewed && { itemReviewed: review.itemReviewed }),
+        };
+        schemas.push(reviewSchemaObj);
+      });
+    }
+
+    // Render all schemas
+    schemas.forEach((schema, index) => {
+      const script = document.createElement('script');
+      script.id = `schema-org-json-${index}`;
+      script.type = 'application/ld+json';
+      script.textContent = JSON.stringify(schema);
+      document.head.appendChild(script);
+    });
+  }, [title, description, keywords, image, url, type, articleSchema, businessSchema, reviewSchema, organizationSchema]);
 
   return null;
 };

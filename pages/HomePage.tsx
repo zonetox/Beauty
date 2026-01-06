@@ -279,6 +279,21 @@ const HomePage: React.FC = () => {
         title={seoTitle}
         description={seoDescription}
         image={seoImage}
+        organizationSchema={{
+          '@type': 'Organization',
+          name: '1Beauty.asia',
+          url: typeof window !== 'undefined' ? window.location.origin : 'https://1beauty.asia',
+          logo: typeof window !== 'undefined' ? `${window.location.origin}/favicon.svg` : 'https://1beauty.asia/favicon.svg',
+          sameAs: [
+            'https://www.facebook.com/1beauty.asia',
+            'https://www.instagram.com/1beauty.asia',
+          ],
+          contactPoint: {
+            '@type': 'ContactPoint',
+            contactType: 'Customer Service',
+            areaServed: 'VN',
+          },
+        }}
       />
       <div>
         {/* Hero Section */}

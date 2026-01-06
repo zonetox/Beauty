@@ -16,10 +16,13 @@ Allow: /directory
 Allow: /blog
 Allow: /business/
 
-# Sitemap location (will be generated)
+# Sitemap location (dynamically generated)
 Sitemap: https://1beauty.asia/sitemap.xml
+# Note: Sitemap is generated dynamically via Edge Function at /api/generate-sitemap
+# For static hosting, use: Sitemap: https://1beauty.asia/.netlify/functions/generate-sitemap
 
 # Crawl-delay (optional, adjust as needed)
 Crawl-delay: 1
+
 
 
