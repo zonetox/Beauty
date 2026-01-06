@@ -7,7 +7,17 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const SITE_URL = Deno.env.get('SITE_URL') || 'https://1beauty.asia';
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
 serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
   try {
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -178,6 +188,7 @@ serve(async (req) => {
     // Return XML response
     return new Response(sitemap, {
       headers: {
+        ...corsHeaders,
         'Content-Type': 'application/xml; charset=utf-8',
         'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
       },
@@ -193,6 +204,7 @@ serve(async (req) => {
       {
         status: 500,
         headers: {
+          ...corsHeaders,
           'Content-Type': 'application/xml; charset=utf-8',
         },
       }
