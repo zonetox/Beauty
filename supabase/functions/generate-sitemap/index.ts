@@ -120,11 +120,8 @@ serve(async (req) => {
         if (post.updated_at) {
           lastmod = new Date(post.updated_at).toISOString().split('T')[0];
         } else if (post.date) {
-          // Parse date format DD/MM/YYYY
-          const [day, month, year] = post.date.split('/');
-          if (day && month && year) {
-            lastmod = new Date(`${year}-${month}-${day}`).toISOString().split('T')[0];
-          }
+          // post.date is TIMESTAMP WITH TIME ZONE, convert to ISO date string
+          lastmod = new Date(post.date).toISOString().split('T')[0];
         }
         sitemap += `  
   <!-- Blog Post: ${post.slug} -->
