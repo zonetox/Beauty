@@ -107,11 +107,13 @@ ORDER BY mean_exec_time DESC
 LIMIT 50;
 
 -- View for index usage statistics
+-- Note: This view requires pg_stat_user_indexes which may not be available in all PostgreSQL versions
+-- If this fails, comment out or remove this view
 CREATE OR REPLACE VIEW public.v_index_usage AS
 SELECT 
     schemaname,
-    tablename,
-    indexname,
+    relname as tablename,
+    indexrelname as indexname,
     idx_scan as index_scans,
     idx_tup_read as tuples_read,
     idx_tup_fetch as tuples_fetched
