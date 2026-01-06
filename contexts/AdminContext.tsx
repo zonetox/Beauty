@@ -400,7 +400,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 subject: ticketData.subject,
                 message: ticketData.message,
                 status: TicketStatus.OPEN,
-                replies: '[]'::JSONB,
+                replies: [],
             };
             const { data, error } = await supabase
                 .from('support_tickets')

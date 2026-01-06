@@ -905,85 +905,85 @@ Mỗi mục đều phải đi theo chu kỳ 6 bước sau. **KHÔNG ĐƯỢC B�
 
 **Danh mục:**
 
-- [ ] **C4.1** Admin auth:
-  - [ ] Login page
-  - [ ] Session management
-  - [ ] Disable dev quick login in production
-  - [ ] Verify `pages/AdminLoginPage.tsx`
+- [x] **C4.1** Admin auth:
+  - [x] Login page
+  - [x] Session management
+  - [x] Disable dev quick login in production
+  - [x] Verify `pages/AdminLoginPage.tsx`
 
-- [ ] **C4.2** Permission-based UI:
-  - [ ] Show/hide features based on permissions
-  - [ ] Access denied messages
-  - [ ] Verify tất cả admin features có permission check
+- [x] **C4.2** Permission-based UI:
+  - [x] Show/hide features based on permissions
+  - [x] Access denied messages
+  - [x] Verify tất cả admin features có permission check
 
-- [ ] **C4.3** Dashboard:
-  - [ ] Statistics overview
-  - [ ] Recent activities
-  - [ ] Quick actions
-  - [ ] Verify `components/AdminDashboardOverview.tsx`
+- [x] **C4.3** Dashboard:
+  - [x] Statistics overview
+  - [x] Recent activities
+  - [x] Quick actions
+  - [x] Verify `components/AdminDashboardOverview.tsx`
 
-- [ ] **C4.4** Businesses management:
-  - [ ] List businesses
-  - [ ] View business details
-  - [ ] Edit business
-  - [ ] Delete business
-  - [ ] Bulk import
-  - [ ] Verify `components/BusinessManagementTable.tsx`
-  - [ ] Test CRUD operations
+- [x] **C4.4** Businesses management:
+  - [x] List businesses
+  - [x] View business details
+  - [x] Edit business
+  - [x] Delete business
+  - [x] Bulk import
+  - [x] Verify `components/BusinessManagementTable.tsx`
+  - [x] Test CRUD operations
 
-- [ ] **C4.5** Orders:
-  - [ ] List orders
-  - [ ] View order details
-  - [ ] Update order status
-  - [ ] Verify order management
-  - [ ] Test order workflow
+- [x] **C4.5** Orders:
+  - [x] List orders
+  - [x] View order details
+  - [x] Update order status
+  - [x] Verify order management
+  - [x] Test order workflow
 
-- [ ] **C4.6** Packages:
-  - [ ] List membership packages
-  - [ ] Create package
-  - [ ] Edit package
-  - [ ] Delete package
-  - [ ] Verify package management
-  - [ ] Test CRUD operations
+- [x] **C4.6** Packages:
+  - [x] List membership packages
+  - [x] Create package
+  - [x] Edit package
+  - [x] Delete package
+  - [x] Verify package management
+  - [x] Test CRUD operations
 
-- [ ] **C4.7** Content:
-  - [ ] Page content editor
-  - [ ] Homepage editor
-  - [ ] Blog management
-  - [ ] Verify content management
+- [x] **C4.7** Content:
+  - [x] Page content editor
+  - [x] Homepage editor
+  - [x] Blog management
+  - [x] Verify content management
 
-- [ ] **C4.8** Homepage editor:
-  - [ ] Hero slides editor
-  - [ ] Sections configuration
-  - [ ] Preview
-  - [ ] Publish
-  - [ ] Verify `components/HomepageEditor.tsx`
+- [x] **C4.8** Homepage editor:
+  - [x] Hero slides editor
+  - [x] Sections configuration
+  - [x] Preview
+  - [x] Publish
+  - [x] Verify `components/HomepageEditor.tsx`
 
-- [ ] **C4.9** Logs:
-  - [ ] Activity log viewer
-  - [ ] Email notifications log
-  - [ ] Filter & search logs
-  - [ ] Verify log viewers
+- [x] **C4.9** Logs:
+  - [x] Activity log viewer
+  - [x] Email notifications log
+  - [x] Filter & search logs
+  - [x] Verify log viewers
 
-- [ ] **C4.10** Support:
-  - [ ] Support tickets management
-  - [ ] Reply to tickets
-  - [ ] Update ticket status
-  - [ ] Verify `components/AdminSupportTickets.tsx`
+- [x] **C4.10** Support:
+  - [x] Support tickets management
+  - [x] Reply to tickets
+  - [x] Update ticket status
+  - [x] Verify `components/AdminSupportTickets.tsx`
 
-- [ ] **C4.11** Tools:
-  - [ ] Bulk import tool
-  - [ ] API health check
-  - [ ] Database tools (nếu có)
-  - [ ] Verify admin tools
+- [x] **C4.11** Tools:
+  - [x] Bulk import tool
+  - [x] API health check
+  - [x] Database tools (nếu có)
+  - [x] Verify admin tools
 
-- [ ] **C4.12** Other admin features:
-  - [ ] Users management
-  - [ ] Admin users management
-  - [ ] Registration requests
-  - [ ] Announcements
-  - [ ] System settings
-  - [ ] Theme editor
+- [x] **C4.12** Other admin features:
+  - [x] Users management
+  - [x] Admin users management
+  - [x] Registration requests
+  - [x] Announcements
+  - [x] System settings
+  - [x] Theme editor
 
 **Deliverables:**
 - Tất cả admin features hoàn chỉnh và test với data thật

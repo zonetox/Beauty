@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
 import { BlogPost, BlogComment, BlogCategory } from '../types.ts';
-import { supabase } from '../lib/supabaseClient.ts';
+import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { BLOG_CATEGORIES as initialBlogCategories } from '../constants.ts';
 
 interface BlogDataContextType {
@@ -22,7 +22,6 @@ interface BlogDataContextType {
 
 const BlogDataContext = createContext<BlogDataContextType | undefined>(undefined);
 
-const COMMENTS_LOCAL_STORAGE_KEY = 'blog_comments';
 const CATEGORIES_LOCAL_STORAGE_KEY = 'blog_categories';
 
 
@@ -48,16 +47,58 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
     fetchBlogPosts();
   }, [fetchBlogPosts]);
 
-  // Comments and Categories continue to use localStorage for this iteration.
-   useEffect(() => {
+  // Fetch comments from database (C2.4: Migrated from localStorage)
+  const fetchComments = useCallback(async () => {
+    if (!isSupabaseConfigured) {
+      // Fallback to localStorage if Supabase not configured
+      try {
+        const savedCommentsJSON = localStorage.getItem('blog_comments');
+        if (savedCommentsJSON) {
+          setComments(JSON.parse(savedCommentsJSON));
+        }
+      } catch (error) {
+        console.error('Failed to parse comments from localStorage:', error);
+        setComments([]);
+      }
+      return;
+    }
+
     try {
-      const savedCommentsJSON = localStorage.getItem(COMMENTS_LOCAL_STORAGE_KEY);
-      setComments(savedCommentsJSON ? JSON.parse(savedCommentsJSON) : []);
+      const { data, error } = await supabase
+        .from('blog_comments')
+        .select('*')
+        .order('date', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching blog comments:', error);
+        // Fallback to localStorage
+        try {
+          const savedCommentsJSON = localStorage.getItem('blog_comments');
+          if (savedCommentsJSON) {
+            setComments(JSON.parse(savedCommentsJSON));
+          }
+        } catch (e) {
+          console.error('Failed to parse comments from localStorage:', e);
+        }
+      } else if (data) {
+        const mappedComments: BlogComment[] = data.map(comment => ({
+          id: comment.id,
+          postId: comment.post_id,
+          authorName: comment.author_name,
+          authorAvatarUrl: `https://picsum.photos/seed/${comment.author_name.replace(/\s+/g, '-')}/100/100`,
+          content: comment.content,
+          date: comment.date || comment.created_at,
+        }));
+        setComments(mappedComments);
+      }
     } catch (error) {
-      console.error(`Failed to parse comments from localStorage:`, error);
-      setComments([]);
+      console.error('Error in fetchComments:', error);
     }
   }, []);
+
+  useEffect(() => {
+    fetchComments();
+  }, [fetchComments]);
   
   useEffect(() => {
     try {
@@ -69,10 +110,6 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   }, []);
 
-  const updateCommentsLocalStorage = (commentsToSave: BlogComment[]) => {
-    localStorage.setItem(COMMENTS_LOCAL_STORAGE_KEY, JSON.stringify(commentsToSave));
-  };
-  
   const updateCategoriesLocalStorage = (categoriesToSave: BlogCategory[]) => {
     localStorage.setItem(CATEGORIES_LOCAL_STORAGE_KEY, JSON.stringify(categoriesToSave));
   };
@@ -121,7 +158,7 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
     return comments.filter(c => c.postId === postId).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   };
 
-  const addComment = (postId: number, authorName: string, content: string) => {
+  const addComment = async (postId: number, authorName: string, content: string) => {
     const newComment: BlogComment = {
         id: crypto.randomUUID(),
         postId,
@@ -130,9 +167,52 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
         content,
         date: new Date().toISOString(),
     };
-    const updatedComments = [...comments, newComment];
-    setComments(updatedComments);
-    updateCommentsLocalStorage(updatedComments);
+
+    // Update local state immediately
+    setComments(prev => [...prev, newComment]);
+
+    if (!isSupabaseConfigured) {
+      // Fallback to localStorage if Supabase not configured
+      try {
+        const updatedComments = [...comments, newComment];
+        localStorage.setItem('blog_comments', JSON.stringify(updatedComments));
+      } catch (error) {
+        console.error('Failed to save comment to localStorage:', error);
+      }
+      return;
+    }
+
+    try {
+      // Save to database
+      const { error } = await supabase
+        .from('blog_comments')
+        .insert({
+          post_id: postId,
+          author_name: authorName,
+          content: content,
+          date: newComment.date,
+        });
+
+      if (error) {
+        console.error('Error saving comment:', error);
+        // Revert local state
+        setComments(prev => prev.filter(c => c.id !== newComment.id));
+        // Fallback to localStorage
+        try {
+          const updatedComments = [...comments, newComment];
+          localStorage.setItem('blog_comments', JSON.stringify(updatedComments));
+        } catch (e) {
+          console.error('Failed to save to localStorage:', e);
+        }
+      } else {
+        // Refresh comments from database
+        await fetchComments();
+      }
+    } catch (error) {
+      console.error('Error in addComment:', error);
+      // Revert local state
+      setComments(prev => prev.filter(c => c.id !== newComment.id));
+    }
   };
   
   const addBlogCategory = (name: string) => {
