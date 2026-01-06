@@ -97,11 +97,10 @@ serve(async (req) => {
       });
     }
 
-    // Fetch published blog posts (platform blog)
+    // Fetch blog posts (platform blog - no status column, all are published)
     const { data: blogPosts, error: blogPostsError } = await supabase
       .from('blog_posts')
       .select('slug, updated_at, date')
-      .eq('status', 'Published')
       .not('slug', 'is', null);
 
     if (!blogPostsError && blogPosts) {
