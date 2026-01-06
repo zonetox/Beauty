@@ -201,7 +201,7 @@ Admin Panel đã có sẵn và đang dùng database 100%. Các modules đã đư
 
 | Mục | Trạng thái | Ngày | Deliverables | Ghi chú |
 |-----|------------|------|--------------|---------|
-| F1 Search | ⬜ TODO | | | |
+| F1 Search | 🟢 DONE | 2025-01-06 | `database/migrations/20250106000002_add_search_indexes.sql`, `database/verifications/f1_search_verification.sql`, `contexts/BusinessDataContext.tsx` updated | Full-text search, indexes, RPC functions, ranking |
 | F2 Performance | ⬜ TODO | | | |
 | F3 SEO | ⬜ TODO | | | |
 

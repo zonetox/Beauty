@@ -112,38 +112,104 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
 
     setBusinessLoading(true);
     const from = (page - 1) * PAGE_SIZE;
-    const to = from + PAGE_SIZE - 1;
 
-    let query = supabase.from('businesses')
-      .select('*', { count: 'exact' });
+    try {
+      // Use RPC function for full-text search if search text is provided
+      if (options.search && options.search.trim()) {
+        const { data: searchData, error: searchError } = await supabase
+          .rpc('search_businesses', {
+            p_search_text: options.search.trim(),
+            p_category: options.category || null,
+            p_city: options.location || null,
+            p_district: options.district || null,
+            p_tags: null,
+            p_limit: PAGE_SIZE,
+            p_offset: from
+          });
 
-    // Apply filters if any
-    if (options.location) query = query.eq('city', options.location);
-    if (options.district) query = query.eq('district', options.district);
-    if (options.category) query = query.contains('categories', [options.category]);
-    if (options.search) query = query.ilike('name', `%${options.search}%`);
+        if (searchError) {
+          console.error('Error searching businesses:', searchError.message);
+          // Fallback to regular query
+        } else if (searchData && searchData.length > 0) {
+          // Fetch full business data for search results
+          const businessIds = searchData.map((b: any) => b.id);
+          const { data: fullData, error: fetchError } = await supabase
+            .from('businesses')
+            .select('*', { count: 'exact' })
+            .in('id', businessIds)
+            .order('is_featured', { ascending: false })
+            .order('id', { ascending: true });
 
-    const { data, count, error } = await query
-      .order('is_featured', { ascending: false })
-      .order('id', { ascending: true })
-      .range(from, to);
+          if (fetchError) {
+            console.error('Error fetching business details:', fetchError.message);
+            toast.error('Failed to load businesses');
+          } else if (fullData) {
+            const mapped = snakeToCamel(fullData).map((b: any) => ({
+              ...b,
+              services: [],
+              gallery: [],
+              team: [],
+              deals: [],
+              reviews: []
+            })) as Business[];
 
-    if (error) {
-      console.error('Error fetching businesses:', error.message);
+            setBusinesses(mapped);
+            // Get total count separately for search results
+            const { count } = await supabase
+              .rpc('search_businesses', {
+                p_search_text: options.search.trim(),
+                p_category: options.category || null,
+                p_city: options.location || null,
+                p_district: options.district || null,
+                p_tags: null,
+                p_limit: 10000, // Large limit to get count
+                p_offset: 0
+              }).select('id').limit(10000);
+            
+            setTotalBusinesses(count?.length || mapped.length);
+            setCurrentPage(page);
+            setBusinessLoading(false);
+            return;
+          }
+        }
+      }
+
+      // Regular query (fallback or no search text)
+      const to = from + PAGE_SIZE - 1;
+      let query = supabase.from('businesses')
+        .select('*', { count: 'exact' });
+
+      // Apply filters if any
+      if (options.location) query = query.eq('city', options.location);
+      if (options.district) query = query.eq('district', options.district);
+      if (options.category) query = query.contains('categories', [options.category]);
+      if (options.search) query = query.ilike('name', `%${options.search}%`);
+
+      const { data, count, error } = await query
+        .order('is_featured', { ascending: false })
+        .order('id', { ascending: true })
+        .range(from, to);
+
+      if (error) {
+        console.error('Error fetching businesses:', error.message);
+        toast.error('Failed to load businesses');
+      } else if (data) {
+        const mapped = snakeToCamel(data).map((b: any) => ({
+          ...b,
+          services: [],
+          gallery: [],
+          team: [],
+          deals: [],
+          reviews: []
+        })) as Business[];
+
+        setBusinesses(mapped);
+        if (count !== null) setTotalBusinesses(count);
+        setCurrentPage(page);
+      }
+    } catch (error: any) {
+      console.error('Unexpected error fetching businesses:', error);
       toast.error('Failed to load businesses');
-    } else if (data) {
-      const mapped = snakeToCamel(data).map((b: any) => ({
-        ...b,
-        services: [],
-        gallery: [],
-        team: [],
-        deals: [],
-        reviews: []
-      })) as Business[];
-
-      setBusinesses(mapped);
-      if (count !== null) setTotalBusinesses(count);
-      setCurrentPage(page);
     }
     setBusinessLoading(false);
   }, []);
