@@ -409,3 +409,6 @@ ALTER TABLE public.page_content ENABLE ROW LEVEL SECURITY;
 -- It creates missing structures safely using IF NOT EXISTS patterns
 
 
+
+
+

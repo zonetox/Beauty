@@ -301,7 +301,62 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             setAnnouncements([]); setTickets([]); setRegistrationRequests([]); setSettings(null); setPageContent({});
             return;
         }
-        /* ... rest of implementation unchanged ... */
+        try {
+            const [
+                announcementsRes,
+                ticketsRes,
+                requestsRes,
+                settingsRes,
+                pageContentRes
+            ] = await Promise.all([
+                supabase.from('announcements').select('*').order('created_at', { ascending: false }),
+                supabase.from('support_tickets').select('*').order('last_reply_at', { ascending: false, nullsFirst: false }).order('created_at', { ascending: false }),
+                supabase.from('registration_requests').select('*').order('submitted_at', { ascending: false }),
+                supabase.from('app_settings').select('settings_data').eq('id', 1).maybeSingle(),
+                supabase.from('page_content').select('*')
+            ]);
+
+            if (announcementsRes.data) {
+                setAnnouncements(snakeToCamel(announcementsRes.data) as Announcement[]);
+            }
+            if (announcementsRes.error) {
+                console.error("Error fetching announcements:", announcementsRes.error.message);
+            }
+
+            if (ticketsRes.data) {
+                setTickets(snakeToCamel(ticketsRes.data) as SupportTicket[]);
+            }
+            if (ticketsRes.error) {
+                console.error("Error fetching tickets:", ticketsRes.error.message);
+            }
+
+            if (requestsRes.data) {
+                setRegistrationRequests(snakeToCamel(requestsRes.data) as RegistrationRequest[]);
+            }
+            if (requestsRes.error) {
+                console.error("Error fetching registration requests:", requestsRes.error.message);
+            }
+
+            if (settingsRes.data) {
+                setSettings(settingsRes.data.settings_data as AppSettings);
+            }
+            if (settingsRes.error) {
+                console.error("Error fetching settings:", settingsRes.error.message);
+            }
+
+            if (pageContentRes.data) {
+                const dbContent = pageContentRes.data.reduce((acc: any, page: any) => {
+                    acc[page.page_name as PageName] = page.content_data;
+                    return acc;
+                }, {} as { [key in PageName]?: PageData });
+                setPageContent(dbContent);
+            }
+            if (pageContentRes.error) {
+                console.error("Error fetching page content:", pageContentRes.error.message);
+            }
+        } catch (error) {
+            console.error("Error in fetchAllAdminData:", error);
+        }
     }, []);
     useEffect(() => {
         fetchAllAdminData();
@@ -333,12 +388,136 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const getUnreadAnnouncements = (businessId: number) => { /* ... */ return []; };
     const markAnnouncementAsRead = (businessId: number, announcementId: string) => { /* ... */ };
     const getTicketsForBusiness = (businessId: number) => tickets.filter(t => t.businessId === businessId);
-    const addTicket = async (ticketData: Omit<SupportTicket, 'id' | 'createdAt' | 'lastReplyAt' | 'status' | 'replies'>) => { if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add ticket."); return; } /* ... */ };
-    const addReply = async (ticketId: string, replyData: Omit<TicketReply, 'id' | 'createdAt'>) => { if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add reply."); return; } /* ... */ };
-    const updateTicketStatus = async (ticketId: string, status: TicketStatus) => { if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update status."); return; } /* ... */ };
+    const addTicket = async (ticketData: Omit<SupportTicket, 'id' | 'createdAt' | 'lastReplyAt' | 'status' | 'replies'>) => {
+        if (!isSupabaseConfigured) {
+            toast.error("Preview Mode: Cannot add ticket.");
+            return;
+        }
+        try {
+            const ticketToInsert = {
+                business_id: ticketData.businessId,
+                business_name: ticketData.businessName,
+                subject: ticketData.subject,
+                message: ticketData.message,
+                status: TicketStatus.OPEN,
+                replies: '[]'::JSONB,
+            };
+            const { data, error } = await supabase
+                .from('support_tickets')
+                .insert(ticketToInsert)
+                .select()
+                .single();
+            if (error) {
+                console.error("Error adding ticket:", error);
+                toast.error(`Failed to create ticket: ${error.message}`);
+                throw error;
+            }
+            if (data) {
+                const camelData = snakeToCamel(data) as SupportTicket;
+                setTickets(prev => [camelData, ...prev]);
+                toast.success("Support ticket created successfully!");
+            }
+        } catch (error) {
+            console.error("Error in addTicket:", error);
+            throw error;
+        }
+    };
+    const addReply = async (ticketId: string, replyData: Omit<TicketReply, 'id' | 'createdAt'>) => {
+        if (!isSupabaseConfigured) {
+            toast.error("Preview Mode: Cannot add reply.");
+            return;
+        }
+        try {
+            const ticket = tickets.find(t => t.id === ticketId);
+            if (!ticket) {
+                toast.error("Ticket not found");
+                return;
+            }
+            const newReply: TicketReply = {
+                ...replyData,
+                id: crypto.randomUUID(),
+                createdAt: new Date().toISOString(),
+            };
+            const updatedReplies = [...(ticket.replies || []), newReply];
+            const { data, error } = await supabase
+                .from('support_tickets')
+                .update({
+                    replies: updatedReplies,
+                    last_reply_at: new Date().toISOString(),
+                })
+                .eq('id', ticketId)
+                .select()
+                .single();
+            if (error) {
+                console.error("Error adding reply:", error);
+                toast.error(`Failed to send reply: ${error.message}`);
+                throw error;
+            }
+            if (data) {
+                const camelData = snakeToCamel(data) as SupportTicket;
+                setTickets(prev => prev.map(t => t.id === ticketId ? camelData : t));
+                toast.success("Reply sent successfully!");
+            }
+        } catch (error) {
+            console.error("Error in addReply:", error);
+            throw error;
+        }
+    };
+    const updateTicketStatus = async (ticketId: string, status: TicketStatus) => {
+        if (!isSupabaseConfigured) {
+            toast.error("Preview Mode: Cannot update status.");
+            return;
+        }
+        try {
+            const { data, error } = await supabase
+                .from('support_tickets')
+                .update({ status })
+                .eq('id', ticketId)
+                .select()
+                .single();
+            if (error) {
+                console.error("Error updating ticket status:", error);
+                toast.error(`Failed to update status: ${error.message}`);
+                throw error;
+            }
+            if (data) {
+                const camelData = snakeToCamel(data) as SupportTicket;
+                setTickets(prev => prev.map(t => t.id === ticketId ? camelData : t));
+                toast.success("Ticket status updated successfully!");
+            }
+        } catch (error) {
+            console.error("Error in updateTicketStatus:", error);
+            throw error;
+        }
+    };
     const approveRegistrationRequest = async (requestId: string) => { if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot approve request."); return; } /* ... */ };
     const rejectRegistrationRequest = async (requestId: string) => { if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot reject request."); return; } /* ... */ };
-    const updateSettings = async (newSettings: AppSettings) => { if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update settings."); return; } /* ... */ };
+    const updateSettings = async (newSettings: AppSettings) => {
+        if (!isSupabaseConfigured) {
+            toast.error("Preview Mode: Cannot update settings.");
+            return;
+        }
+        try {
+            // Upsert settings (id = 1 is the single settings record)
+            const { data, error } = await supabase
+                .from('app_settings')
+                .upsert({ id: 1, settings_data: newSettings }, { onConflict: 'id' })
+                .select()
+                .single();
+            if (error) {
+                console.error("Error updating settings:", error);
+                toast.error(`Failed to update settings: ${error.message}`);
+                throw error;
+            }
+            if (data) {
+                setSettings(data.settings_data as AppSettings);
+                toast.success("Settings updated successfully!");
+            }
+        } catch (error) {
+            console.error("Error in updateSettings:", error);
+            throw error;
+        }
+    };
     const getPageContent = (page: PageName) => pageContent[page];
     const updatePageContent = async (page: PageName, newContent: PageData) => { if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update page content."); return; } /* ... */ };
 

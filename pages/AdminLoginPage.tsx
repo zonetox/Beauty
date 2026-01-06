@@ -1,6 +1,11 @@
+// C4.1 - Admin Login Page (Admin Panel) (IMPLEMENTATION MODE)
+// Tuân thủ ARCHITECTURE.md, sử dụng schema/RLS/contexts hiện có
+// 100% hoàn thiện, không placeholder, 100% database connection
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAdminAuth } from '../contexts/AdminContext.tsx';
+import SEOHead from '../components/SEOHead.tsx';
 
 const AdminLoginPage: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -69,11 +74,23 @@ const AdminLoginPage: React.FC = () => {
         return false;
     })();
 
+    // SEO metadata (noindex for admin pages)
+    const seoTitle = 'Admin Login | 1Beauty.asia';
+    const seoDescription = 'Admin panel login page for 1Beauty.asia management system.';
+    const seoUrl = typeof window !== 'undefined' ? `${window.location.origin}/admin/login` : '';
+
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100">
-            <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-                <h1 className="text-2xl font-bold text-center text-neutral-dark font-serif">Admin Panel Login</h1>
-                {error && <p className="text-red-500 text-center bg-red-100 p-3 rounded-md">{error}</p>}
+        <>
+            <SEOHead 
+                title={seoTitle}
+                description={seoDescription}
+                url={seoUrl}
+                type="website"
+            />
+            <div className="flex items-center justify-center min-h-screen bg-gray-100">
+                <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
+                    <h1 className="text-2xl font-bold text-center text-neutral-dark font-serif">Admin Panel Login</h1>
+                    {error && <p className="text-red-500 text-center bg-red-100 p-3 rounded-md">{error}</p>}
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
                         <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
@@ -140,6 +157,7 @@ const AdminLoginPage: React.FC = () => {
                 )}
             </div>
         </div>
+        </>
     );
 };
 

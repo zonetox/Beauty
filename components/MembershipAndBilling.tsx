@@ -1,10 +1,15 @@
+// C3.11 - Membership & Billing (IMPLEMENTATION MODE)
+// Tuân thủ ARCHITECTURE.md, sử dụng schema/RLS/contexts hiện có
+// 100% hoàn thiện, không placeholder
 
 import React, { useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useBusinessAuth, useOrderData } from '../contexts/BusinessContext.tsx';
-import { useMembershipPackageData, useBusinessData } from '../contexts/BusinessDataContext.tsx';
+import { useMembershipPackageData } from '../contexts/BusinessDataContext.tsx';
 import { useAdmin } from '../contexts/AdminContext.tsx';
 import { OrderStatus, MembershipPackage, Order } from '../types.ts';
+import LoadingState from './LoadingState.tsx';
+import EmptyState from './EmptyState.tsx';
 
 const statusStyles: { [key in OrderStatus]: string } = {
     [OrderStatus.PENDING]: 'bg-yellow-100 text-yellow-800',
@@ -29,44 +34,62 @@ const CrossIcon: React.FC<{ className?: string }> = ({ className = '' }) => (
 const MembershipAndBilling: React.FC = () => {
     const { currentBusiness } = useBusinessAuth();
     const { packages } = useMembershipPackageData();
-    const { orders, addOrder } = useOrderData();
+    const { orders, addOrder, loading: ordersLoading } = useOrderData();
     const { settings } = useAdmin();
     const [showPaymentInfo, setShowPaymentInfo] = useState(false);
     const [selectedPackageForPayment, setSelectedPackageForPayment] = useState<MembershipPackage | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-
-    if (!currentBusiness) return null;
+    if (!currentBusiness) {
+        return (
+            <div className="p-8">
+                <EmptyState
+                    title="No business found"
+                    message="Please select a business to manage membership and billing."
+                />
+            </div>
+        );
+    }
 
     const currentPackage = packages.find(p => p.tier === currentBusiness.membershipTier);
-    const businessOrders = orders.filter(o => o.businessId === currentBusiness.id);
+    const businessOrders = useMemo(() => {
+        return orders.filter(o => o.businessId === currentBusiness.id).sort((a, b) => 
+            new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
+        );
+    }, [orders, currentBusiness.id]);
 
     const handleUpgradeRequest = async (pkg: MembershipPackage) => {
-        if (!window.confirm(`Are you sure you want to request an upgrade to the ${pkg.name} package?`)) {
+        if (pkg.id === currentPackage?.id) {
+            toast.error('This is already your current plan');
             return;
         }
 
-        const upgradePromise = (async () => {
+        if (!window.confirm(`Are you sure you want to request ${pkg.price > (currentPackage?.price || 0) ? 'an upgrade' : 'a change'} to the ${pkg.name} package?`)) {
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
             const newOrder = {
                 businessId: currentBusiness.id,
                 businessName: currentBusiness.name,
                 packageId: pkg.id,
                 packageName: pkg.name,
                 amount: pkg.price,
-                status: OrderStatus.AWAITING_CONFIRMATION, // Set status for manual admin approval
+                status: OrderStatus.AWAITING_CONFIRMATION,
                 paymentMethod: 'Bank Transfer' as const,
                 submittedAt: new Date().toISOString(),
             };
             await addOrder(newOrder);
-        })();
-
-        toast.promise(upgradePromise, {
-            loading: 'Submitting your upgrade request...',
-            success: 'Request submitted! Please complete payment. An admin will activate your plan upon confirmation.',
-            error: 'There was an error submitting your request.'
-        });
-        
-        setSelectedPackageForPayment(pkg);
-        setShowPaymentInfo(true);
+            toast.success('Request submitted! Please complete payment. An admin will activate your plan upon confirmation.');
+            setSelectedPackageForPayment(pkg);
+            setShowPaymentInfo(true);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Failed to submit request';
+            toast.error(message);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
     
     const handleScrollToCompare = () => {
@@ -79,8 +102,25 @@ const MembershipAndBilling: React.FC = () => {
 
     const formatDate = (dateString?: string) => {
         if (!dateString) return 'N/A';
-        return new Date(dateString).toLocaleDateString('vi-VN');
-    }
+        return new Date(dateString).toLocaleDateString('vi-VN', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
+
+    const isExpired = useMemo(() => {
+        if (!currentBusiness.membershipExpiryDate) return false;
+        return new Date(currentBusiness.membershipExpiryDate) < new Date();
+    }, [currentBusiness.membershipExpiryDate]);
+
+    const daysUntilExpiry = useMemo(() => {
+        if (!currentBusiness.membershipExpiryDate) return null;
+        const expiry = new Date(currentBusiness.membershipExpiryDate);
+        const now = new Date();
+        const diff = expiry.getTime() - now.getTime();
+        return Math.ceil(diff / (1000 * 60 * 60 * 24));
+    }, [currentBusiness.membershipExpiryDate]);
 
     const featureRows = [
         { key: 'permissions.customLandingPage', label: 'Custom Landing Page' },
@@ -88,6 +128,8 @@ const MembershipAndBilling: React.FC = () => {
         { key: 'permissions.privateBlog', label: 'Private Blog' },
         { key: 'permissions.photoLimit', label: 'Photo Limit' },
         { key: 'permissions.videoLimit', label: 'Video Limit' },
+        { key: 'permissions.monthlyPostLimit', label: 'Monthly Blog Posts' },
+        { key: 'permissions.featuredPostLimit', label: 'Featured Posts' },
         { key: 'permissions.featuredLevel', label: 'Featured Level' },
     ];
     
@@ -109,10 +151,19 @@ const MembershipAndBilling: React.FC = () => {
             return value ? <CheckIcon className="text-green-500 mx-auto" /> : <CrossIcon className="text-red-400 mx-auto" />;
         }
         if (typeof value === 'number') {
-             return <span className="font-semibold">{value}</span>;
+            if (value === 0) return <span className="text-gray-400">—</span>;
+            return <span className="font-semibold">{value === -1 ? 'Unlimited' : value}</span>;
         }
         return value;
     };
+
+    if (ordersLoading) {
+        return (
+            <div className="p-8">
+                <LoadingState message="Loading membership and billing information..." />
+            </div>
+        );
+    }
 
     return (
         <div className="p-8 space-y-8">
@@ -125,7 +176,13 @@ const MembershipAndBilling: React.FC = () => {
                             <h3 className="font-bold text-blue-800">Complete Your Payment</h3>
                             <p className="text-sm text-blue-700 mt-1">To activate your <strong>{selectedPackageForPayment.name}</strong> plan, please make a bank transfer with the following details:</p>
                         </div>
-                        <button onClick={() => setShowPaymentInfo(false)} className="text-blue-500 hover:text-blue-700 font-bold">&times;</button>
+                        <button
+                            onClick={() => setShowPaymentInfo(false)}
+                            className="text-blue-500 hover:text-blue-700 font-bold text-xl leading-none"
+                            disabled={isSubmitting}
+                        >
+                            &times;
+                        </button>
                     </div>
                     <div className="mt-4 p-4 bg-white rounded border border-blue-200 text-sm space-y-2">
                         <p><strong>Bank:</strong> {settings.bankDetails.bankName}</p>
@@ -139,82 +196,131 @@ const MembershipAndBilling: React.FC = () => {
             )}
             
             <div>
-                <div className="bg-primary/10 p-6 rounded-lg border border-primary/20">
+                <div className={`p-6 rounded-lg border ${isExpired ? 'bg-red-50 border-red-200' : 'bg-primary/10 border-primary/20'}`}>
                     <h3 className="text-xl font-bold text-neutral-dark mb-4">Current Plan</h3>
                     {currentPackage ? (
                         <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-6">
                             <div>
                                 <p className="text-2xl font-bold font-serif text-primary">{currentPackage.name}</p>
                                 <p className="text-gray-600 max-w-lg">{currentPackage.description}</p>
-                                {currentBusiness.membershipExpiryDate && <p className="text-sm font-semibold mt-2">Expires on: {formatDate(currentBusiness.membershipExpiryDate)}</p>}
+                                {currentBusiness.membershipExpiryDate && (
+                                    <div className="mt-2">
+                                        <p className={`text-sm font-semibold ${isExpired ? 'text-red-600' : daysUntilExpiry !== null && daysUntilExpiry <= 30 ? 'text-yellow-600' : 'text-gray-700'}`}>
+                                            {isExpired ? (
+                                                <>Expired on: {formatDate(currentBusiness.membershipExpiryDate)}</>
+                                            ) : (
+                                                <>
+                                                    Expires on: {formatDate(currentBusiness.membershipExpiryDate)}
+                                                    {daysUntilExpiry !== null && daysUntilExpiry <= 30 && (
+                                                        <span className="ml-2">({daysUntilExpiry} days remaining)</span>
+                                                    )}
+                                                </>
+                                            )}
+                                        </p>
+                                        {isExpired && (
+                                            <p className="text-xs text-red-600 mt-1">Please renew your membership to continue using premium features.</p>
+                                        )}
+                                    </div>
+                                )}
                             </div>
-                            <button onClick={handleScrollToCompare} className="bg-primary text-white px-6 py-3 rounded-md font-semibold hover:bg-primary-dark transition-colors self-start sm:self-center flex-shrink-0">
-                                Renew / Upgrade Plan
+                            <button
+                                onClick={handleScrollToCompare}
+                                className="bg-primary text-white px-6 py-3 rounded-md font-semibold hover:bg-primary-dark transition-colors self-start sm:self-center flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={isSubmitting}
+                            >
+                                {isExpired ? 'Renew Plan' : 'Renew / Upgrade Plan'}
                             </button>
                         </div>
-                    ) : <p>Could not load your current plan details.</p>}
+                    ) : (
+                        <p className="text-gray-500">Could not load your current plan details.</p>
+                    )}
                 </div>
 
                 <div id="compare-plans-section" className="pt-8">
                     <h3 className="text-xl font-bold text-neutral-dark mb-4">Compare Plans</h3>
-                    <div className="overflow-x-auto border rounded-lg bg-white">
-                         <table className="w-full text-sm">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="p-4 text-left font-semibold text-neutral-dark min-w-[200px]">Feature</th>
-                                    {packages.map(pkg => (
-                                        <th key={pkg.id} className={`p-4 text-center font-bold min-w-[150px] ${pkg.id === currentPackage?.id ? 'text-primary' : 'text-neutral-dark'}`}>
-                                            {pkg.name}
-                                            {pkg.isPopular && <span className="block text-xs font-normal text-secondary">Most Popular</span>}
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr className="border-t">
-                                    <td className="p-4 font-semibold">Price</td>
-                                    {packages.map(pkg => (
-                                        <td key={pkg.id} className="p-4 text-center">
-                                        <div className="text-lg font-bold text-neutral-dark">{formatPrice(pkg.price)}</div>
-                                        <div className="text-xs text-gray-500">/ {pkg.durationMonths} months</div>
-                                        </td>
-                                    ))}
-                                </tr>
-                                <tr className="border-t bg-gray-50/50">
-                                    <td colSpan={packages.length + 1} className="p-3 font-semibold text-neutral-dark">Core Features</td>
-                                </tr>
-                                {featureRows.map(({key, label}) => (
-                                    <tr key={key} className="border-t">
-                                        <td className="p-4">{label}</td>
+                    {packages.length === 0 ? (
+                        <EmptyState
+                            title="No membership packages available"
+                            message="Membership packages are not configured. Please contact support."
+                        />
+                    ) : (
+                        <div className="overflow-x-auto border rounded-lg bg-white">
+                            <table className="w-full text-sm">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="p-4 text-left font-semibold text-neutral-dark min-w-[200px]">Feature</th>
                                         {packages.map(pkg => (
-                                            <td key={pkg.id} className="p-4 text-center">{renderPermission(getNestedValue(pkg, key), key)}</td>
+                                            <th key={pkg.id} className={`p-4 text-center font-bold min-w-[150px] ${pkg.id === currentPackage?.id ? 'text-primary' : 'text-neutral-dark'}`}>
+                                                {pkg.name}
+                                                {pkg.isPopular && <span className="block text-xs font-normal text-secondary mt-1">Most Popular</span>}
+                                            </th>
                                         ))}
                                     </tr>
-                                ))}
-                                <tr className="border-t">
-                                    <td className="p-4"></td>
-                                    {packages.map(pkg => (
-                                        <td key={pkg.id} className="p-4 text-center">
-                                            {pkg.id === currentPackage?.id ? (
-                                                <span className="inline-block px-4 py-2 text-sm font-semibold text-white bg-primary rounded-md cursor-default">Current Plan</span>
-                                            ) : (
-                                                <button onClick={() => handleUpgradeRequest(pkg)} className="px-4 py-2 text-sm font-semibold text-white bg-secondary rounded-md hover:opacity-90 transition-opacity">
-                                                    {pkg.price > (currentPackage?.price || 0) ? 'Upgrade' : 'Change Plan'}
-                                                </button>
-                                            )}
-                                        </td>
+                                </thead>
+                                <tbody>
+                                    <tr className="border-t">
+                                        <td className="p-4 font-semibold">Price</td>
+                                        {packages.map(pkg => (
+                                            <td key={pkg.id} className="p-4 text-center">
+                                                <div className="text-lg font-bold text-neutral-dark">{formatPrice(pkg.price)}</div>
+                                                <div className="text-xs text-gray-500">/ {pkg.durationMonths} months</div>
+                                            </td>
+                                        ))}
+                                    </tr>
+                                    <tr className="border-t bg-gray-50/50">
+                                        <td colSpan={packages.length + 1} className="p-3 font-semibold text-neutral-dark">Core Features</td>
+                                    </tr>
+                                    {featureRows.map(({key, label}) => (
+                                        <tr key={key} className="border-t">
+                                            <td className="p-4">{label}</td>
+                                            {packages.map(pkg => (
+                                                <td key={pkg.id} className="p-4 text-center">{renderPermission(getNestedValue(pkg, key), key)}</td>
+                                            ))}
+                                        </tr>
                                     ))}
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                                    <tr className="border-t">
+                                        <td className="p-4"></td>
+                                        {packages.map(pkg => (
+                                            <td key={pkg.id} className="p-4 text-center">
+                                                {pkg.id === currentPackage?.id ? (
+                                                    <span className="inline-block px-4 py-2 text-sm font-semibold text-white bg-primary rounded-md cursor-default">
+                                                        Current Plan
+                                                    </span>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => handleUpgradeRequest(pkg)}
+                                                        disabled={isSubmitting}
+                                                        className="px-4 py-2 text-sm font-semibold text-white bg-secondary rounded-md hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto"
+                                                    >
+                                                        {isSubmitting ? (
+                                                            <>
+                                                                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                                Submitting...
+                                                            </>
+                                                        ) : (
+                                                            pkg.price > (currentPackage?.price || 0) ? 'Upgrade' : 'Change Plan'
+                                                        )}
+                                                    </button>
+                                                )}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
             </div>
 
             {/* Order History */}
             <div>
                 <h3 className="text-xl font-bold text-neutral-dark mb-4">Order History</h3>
-                {businessOrders.length > 0 ? (
+                {businessOrders.length === 0 ? (
+                    <EmptyState
+                        title="No orders found"
+                        message="Your order history will appear here once you submit a membership upgrade or renewal request."
+                    />
+                ) : (
                     <div className="overflow-x-auto border rounded-lg bg-white">
                         <table className="w-full text-sm text-left text-gray-500">
                             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
@@ -229,7 +335,7 @@ const MembershipAndBilling: React.FC = () => {
                             <tbody>
                                 {businessOrders.map(order => (
                                     <tr key={order.id} className="bg-white border-b last:border-b-0 hover:bg-gray-50">
-                                        <td className="px-6 py-4 font-mono text-xs">{order.id}</td>
+                                        <td className="px-6 py-4 font-mono text-xs">{order.id.substring(0, 8)}...</td>
                                         <td className="px-6 py-4 font-medium text-neutral-dark">{order.packageName}</td>
                                         <td className="px-6 py-4">{formatPrice(order.amount)}</td>
                                         <td className="px-6 py-4">{formatDate(order.submittedAt)}</td>
@@ -243,8 +349,6 @@ const MembershipAndBilling: React.FC = () => {
                             </tbody>
                         </table>
                     </div>
-                ) : (
-                    <p className="text-center text-gray-500 py-6 bg-gray-50 rounded-lg">No orders found.</p>
                 )}
             </div>
         </div>

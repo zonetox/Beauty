@@ -1,7 +1,7 @@
 
 
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
-import { Business, BusinessBlogPost, Review, BusinessAnalytics, Appointment, Order, OrderStatus, AppointmentStatus, Profile, Deal } from '../types.ts';
+import { Business, BusinessBlogPost, Review, ReviewStatus, BusinessAnalytics, Appointment, Order, OrderStatus, AppointmentStatus, Profile, Deal } from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { useUserSession } from './UserSessionContext.tsx';
 import { useBusinessData, useMembershipPackageData } from './BusinessDataContext.tsx';
@@ -71,8 +71,10 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [blogLoading, setBlogLoading] = useState(true);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
-  const [analyticsData] = useState<BusinessAnalytics[]>([]);
+  const [analyticsData, setAnalyticsData] = useState<BusinessAnalytics[]>([]);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [appointmentsLoading, setAppointmentsLoading] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
 
@@ -93,6 +95,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
       setBlogLoading(false);
       setReviewsLoading(false);
       setOrdersLoading(false);
+      setAppointmentsLoading(false);
       setPosts([]);
       setReviews([]);
       setOrders([]);
@@ -103,6 +106,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
     setBlogLoading(true);
     setReviewsLoading(true);
     setOrdersLoading(true);
+    setAppointmentsLoading(true);
 
     const [postsRes, reviewsRes, ordersRes, appointmentsRes] = await Promise.all([
       supabase.from('business_blog_posts').select('*').order('created_date', { ascending: false }),
@@ -129,35 +133,98 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
     setBlogLoading(false);
     setReviewsLoading(false);
     setOrdersLoading(false);
+    setAppointmentsLoading(false);
   }, []);
 
   useEffect(() => { fetchAllData(); }, [fetchAllData]);
 
   // --- LOGIC (copied from old BusinessBlogDataContext) ---
   const addPost = async (newPostData: Omit<BusinessBlogPost, 'id' | 'slug' | 'createdDate' | 'viewCount'>) => {
-    if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add post."); return; }
-    const slug = newPostData.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-') + `-${Date.now()}`;
-    const postToAdd = {
-      ...toSnakeCase(newPostData),
-      slug: slug,
-      view_count: 0,
-    };
-    const { error } = await supabase.from('business_blog_posts').insert(postToAdd);
-    if (error) console.error("Error adding business post:", error.message);
-    else await fetchAllData();
+    if (!isSupabaseConfigured) { 
+      toast.error("Preview Mode: Cannot add post."); 
+      throw new Error("Preview Mode: Cannot add post.");
+    }
+    try {
+      const slug = newPostData.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-') + `-${Date.now()}`;
+      const postToAdd = {
+        ...toSnakeCase(newPostData),
+        slug: slug,
+        view_count: 0,
+      };
+      const { error } = await supabase.from('business_blog_posts').insert(postToAdd);
+      if (error) {
+        console.error("Error adding business post:", error.message);
+        toast.error(`Failed to add post: ${error.message}`);
+        throw error;
+      }
+      await fetchAllData();
+      toast.success("Post added successfully!");
+    } catch (error) {
+      throw error;
+    }
   };
+  
   const updatePost = async (updatedPost: BusinessBlogPost) => {
-    if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update post."); return; }
-    const { id, ...postToUpdate } = updatedPost;
-    const { error } = await supabase.from('business_blog_posts').update(toSnakeCase(postToUpdate)).eq('id', id);
-    if (error) console.error("Error updating business post:", error.message);
-    else await fetchAllData();
+    if (!isSupabaseConfigured) { 
+      toast.error("Preview Mode: Cannot update post."); 
+      throw new Error("Preview Mode: Cannot update post.");
+    }
+    try {
+      // If image changed and old image is from blog-images bucket, delete it
+      const oldPost = posts.find(p => p.id === updatedPost.id);
+      if (oldPost && oldPost.imageUrl !== updatedPost.imageUrl && oldPost.imageUrl.includes('blog-images')) {
+        try {
+          const { deleteFileByUrl } = await import('../lib/storage.ts');
+          await deleteFileByUrl('blog-images', oldPost.imageUrl);
+        } catch (deleteError) {
+          // Log but don't fail the update operation
+          console.warn('Failed to delete old blog post image from storage:', deleteError);
+        }
+      }
+
+      const { id, ...postToUpdate } = updatedPost;
+      const { error } = await supabase.from('business_blog_posts').update(toSnakeCase(postToUpdate)).eq('id', id);
+      if (error) {
+        console.error("Error updating business post:", error.message);
+        toast.error(`Failed to update post: ${error.message}`);
+        throw error;
+      }
+      await fetchAllData();
+      toast.success("Post updated successfully!");
+    } catch (error) {
+      throw error;
+    }
   };
+  
   const deletePost = async (postId: string) => {
-    if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot delete post."); return; }
-    const { error } = await supabase.from('business_blog_posts').delete().eq('id', postId);
-    if (error) console.error("Error deleting business post:", error.message);
-    else await fetchAllData();
+    if (!isSupabaseConfigured) { 
+      toast.error("Preview Mode: Cannot delete post."); 
+      throw new Error("Preview Mode: Cannot delete post.");
+    }
+    try {
+      // Delete image from Storage if exists and is from blog-images bucket
+      const post = posts.find(p => p.id === postId);
+      if (post && post.imageUrl && post.imageUrl.includes('blog-images')) {
+        try {
+          const { deleteFileByUrl } = await import('../lib/storage.ts');
+          await deleteFileByUrl('blog-images', post.imageUrl);
+        } catch (deleteError) {
+          // Log but don't fail the delete operation
+          console.warn('Failed to delete blog post image from storage:', deleteError);
+        }
+      }
+
+      const { error } = await supabase.from('business_blog_posts').delete().eq('id', postId);
+      if (error) {
+        console.error("Error deleting business post:", error.message);
+        toast.error(`Failed to delete post: ${error.message}`);
+        throw error;
+      }
+      await fetchAllData();
+      toast.success("Post deleted successfully!");
+    } catch (error) {
+      throw error;
+    }
   };
   const getPostBySlug = (slug: string) => posts.find(p => p.slug === slug);
   const getPostsByBusinessId = (businessId: number) => posts.filter(p => p.businessId === businessId);
@@ -187,27 +254,45 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   };
   const addReply = async (reviewId: string, replyContent: string) => {
-    if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add reply."); throw new Error("Preview Mode"); }
-    const reply = { content: replyContent, replied_date: new Date().toISOString() };
-    const { error } = await supabase.from('reviews').update({ reply }).eq('id', reviewId);
-    if (error) {
-      console.error("Error adding reply:", error.message);
-      throw error;
-    } else {
+    if (!isSupabaseConfigured) { 
+      toast.error("Preview Mode: Cannot add reply."); 
+      throw new Error("Preview Mode: Cannot add reply.");
+    }
+    try {
+      const reply = { content: replyContent, replied_date: new Date().toISOString() };
+      const { error } = await supabase.from('reviews').update({ reply }).eq('id', reviewId);
+      if (error) {
+        console.error("Error adding reply:", error.message);
+        toast.error(`Failed to save reply: ${error.message}`);
+        throw error;
+      }
       await fetchAllData();
+      toast.success("Reply saved successfully!");
+    } catch (error) {
+      throw error;
     }
   };
   const toggleReviewVisibility = async (reviewId: string) => {
-    if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot change review visibility."); return; }
-    const review = reviews.find(r => r.id === reviewId);
-    if (!review) return;
-    const newStatus = review.status === 'Visible' ? 'Hidden' : 'Visible';
-    const { error } = await supabase.from('reviews').update({ status: newStatus }).eq('id', reviewId);
-    if (error) {
-      console.error("Error toggling review visibility:", error.message);
-      throw error;
-    } else {
+    if (!isSupabaseConfigured) { 
+      toast.error("Preview Mode: Cannot change review visibility."); 
+      throw new Error("Preview Mode: Cannot change review visibility.");
+    }
+    try {
+      const review = reviews.find(r => r.id === reviewId);
+      if (!review) {
+        throw new Error("Review not found");
+      }
+      const newStatus = review.status === ReviewStatus.VISIBLE ? ReviewStatus.HIDDEN : ReviewStatus.VISIBLE;
+      const { error } = await supabase.from('reviews').update({ status: newStatus }).eq('id', reviewId);
+      if (error) {
+        console.error("Error toggling review visibility:", error.message);
+        toast.error(`Failed to update review visibility: ${error.message}`);
+        throw error;
+      }
       await fetchAllData();
+      toast.success(`Review ${newStatus === ReviewStatus.HIDDEN ? 'hidden' : 'shown'} successfully!`);
+    } catch (error) {
+      throw error;
     }
   };
   const getReviewsByBusinessId = (businessId: number) => reviews.filter(r => r.business_id === businessId);
@@ -226,13 +311,20 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   const updateAppointmentStatus = async (appointmentId: string, status: AppointmentStatus) => {
-    if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update appointment status."); return; }
-    const { error } = await supabase.from('appointments').update({ status }).eq('id', appointmentId);
-    if (error) {
-      console.error("Error updating appointment status:", error.message);
-      throw error;
-    } else {
+    if (!isSupabaseConfigured) { 
+      toast.error("Preview Mode: Cannot update appointment status."); 
+      throw new Error("Preview Mode: Cannot update appointment status.");
+    }
+    try {
+      const { error } = await supabase.from('appointments').update({ status }).eq('id', appointmentId);
+      if (error) {
+        console.error("Error updating appointment status:", error.message);
+        toast.error(`Failed to update appointment: ${error.message}`);
+        throw error;
+      }
       await fetchAllData();
+    } catch (error) {
+      throw error;
     }
   };
 
@@ -298,8 +390,8 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
     posts, blogLoading, getPostBySlug, addPost, updatePost, deletePost, incrementViewCount, getPostsByBusinessId,
     addDeal, updateDeal, deleteDeal,
     reviews, reviewsLoading, getReviewsByBusinessId, addReview, addReply, toggleReviewVisibility,
-    getAnalyticsByBusinessId,
-    appointments, getAppointmentsForBusiness, addAppointment, updateAppointmentStatus,
+    analyticsData, analyticsLoading, getAnalyticsByBusinessId,
+    appointments, appointmentsLoading, getAppointmentsForBusiness, addAppointment, updateAppointmentStatus,
     orders, ordersLoading, addOrder, updateOrderStatus,
   };
 
@@ -328,10 +420,13 @@ export const useReviewsData = () => {
   const { reviews, reviewsLoading, getReviewsByBusinessId, addReview, addReply, toggleReviewVisibility } = useBusiness();
   return { reviews, loading: reviewsLoading, getReviewsByBusinessId, addReview, addReply, toggleReviewVisibility };
 };
-export const useAnalyticsData = () => ({ getAnalyticsByBusinessId: useBusiness().getAnalyticsByBusinessId });
+export const useAnalyticsData = () => {
+  const { getAnalyticsByBusinessId, analyticsLoading } = useBusiness();
+  return { getAnalyticsByBusinessId, loading: analyticsLoading };
+};
 export const useBookingData = () => {
-  const { appointments, getAppointmentsForBusiness, addAppointment, updateAppointmentStatus } = useBusiness();
-  return { appointments, getAppointmentsForBusiness, addAppointment, updateAppointmentStatus };
+  const { appointments, appointmentsLoading, getAppointmentsForBusiness, addAppointment, updateAppointmentStatus } = useBusiness();
+  return { appointments, loading: appointmentsLoading, getAppointmentsForBusiness, addAppointment, updateAppointmentStatus };
 };
 export const useOrderData = () => {
   const { orders, ordersLoading, addOrder, updateOrderStatus } = useBusiness();

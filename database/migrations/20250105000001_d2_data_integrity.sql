@@ -113,3 +113,6 @@ ON public.page_content
 FOR INSERT
 WITH CHECK (public.is_admin(public.get_user_email()));
 
+
+
+

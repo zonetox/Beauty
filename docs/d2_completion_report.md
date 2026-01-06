@@ -263,3 +263,6 @@ Phase D2 - Data Integrity & Runtime Stability đã hoàn thành. Tất cả fixe
 **Breaking Changes:** None  
 **Data Integrity Improvements:** localStorage no longer source of truth, view counts safe, standardized states
 
+
+
+

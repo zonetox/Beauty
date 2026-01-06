@@ -1,10 +1,13 @@
-// pages/RegisterPage.tsx
+// C2.6 - Register Page (Public Site) (IMPLEMENTATION MODE)
+// Tuân thủ ARCHITECTURE.md, sử dụng schema/RLS/contexts hiện có
+// 100% hoàn thiện, không placeholder, chuẩn SEO cơ bản
 
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate, Link } from 'react-router-dom';
 import { MembershipTier, BusinessCategory } from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
+import SEOHead from '../components/SEOHead.tsx';
 
 const RegisterPage: React.FC = () => {
     const navigate = useNavigate();
@@ -71,16 +74,29 @@ const RegisterPage: React.FC = () => {
         }
     };
   
+    // SEO metadata
+    const seoTitle = 'Đăng ký | 1Beauty.asia';
+    const seoDescription = 'Đăng ký tài khoản doanh nghiệp trên 1Beauty.asia để quảng bá dịch vụ và kết nối với khách hàng.';
+    const seoUrl = typeof window !== 'undefined' ? `${window.location.origin}/register` : '';
+
     return (
-    <div className="bg-background">
-      <div className="container mx-auto px-4 py-16">
-        <h1 className="text-4xl font-bold font-serif text-center text-neutral-dark mb-10">Trở thành đối tác của BeautyDir</h1>
-        
-        {/* Registration Form */}
-        <div className="max-w-xl mx-auto bg-white p-8 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold mb-6 font-serif text-neutral-dark">Tạo tài khoản Doanh nghiệp</h2>
-           {error && <p className="text-red-500 text-center bg-red-100 p-3 rounded-md mb-4">{error}</p>}
-          <form onSubmit={handleSubmit}>
+    <>
+      <SEOHead 
+        title={seoTitle}
+        description={seoDescription}
+        keywords="đăng ký, register, tạo tài khoản doanh nghiệp, business registration"
+        url={seoUrl}
+        type="website"
+      />
+      <div className="bg-background">
+        <div className="container mx-auto px-4 py-16">
+          <h1 className="text-4xl font-bold font-serif text-center text-neutral-dark mb-10">Trở thành đối tác của BeautyDir</h1>
+          
+          {/* Registration Form */}
+          <div className="max-w-xl mx-auto bg-white p-8 rounded-lg shadow-md">
+            <h2 className="text-2xl font-bold mb-6 font-serif text-neutral-dark">Tạo tài khoản Doanh nghiệp</h2>
+             {error && <p className="text-red-500 text-center bg-red-100 p-3 rounded-md mb-4">{error}</p>}
+            <form onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Tên doanh nghiệp</label>
@@ -112,10 +128,11 @@ const RegisterPage: React.FC = () => {
                     Đăng nhập tại đây
                 </Link>
             </p>
-          </form>
+            </form>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

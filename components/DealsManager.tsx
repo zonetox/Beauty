@@ -1,52 +1,33 @@
-import React, { useState } from 'react';
+// C3.5 - Deals Management (IMPLEMENTATION MODE)
+// Tuân thủ ARCHITECTURE.md, sử dụng schema/RLS/contexts hiện có
+// 100% hoàn thiện, không placeholder
+
+import React, { useState, useEffect, useMemo } from 'react';
+import toast from 'react-hot-toast';
 import { useBusinessAuth, useDealsData } from '../contexts/BusinessContext.tsx';
 import { Deal, DealStatus } from '../types.ts';
+import LoadingState from './LoadingState.tsx';
+import EmptyState from './EmptyState.tsx';
+import EditDealModal from './EditDealModal.tsx';
 
-// Modal for adding/editing deals
-const EditDealModal: React.FC<{ deal: Partial<Deal> | null; onSave: (deal: Partial<Deal>) => void; onClose: () => void; }> = ({ deal, onSave, onClose }) => {
-    const [formData, setFormData] = useState<Partial<Deal>>(deal || { status: DealStatus.ACTIVE, title: '', description: '' });
+// Helper function to calculate deal status based on dates
+const calculateDealStatus = (deal: Deal): DealStatus => {
+    const now = new Date();
+    const startDate = deal.start_date ? new Date(deal.start_date) : null;
+    const endDate = deal.end_date ? new Date(deal.end_date) : null;
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const { name, value, type } = e.target;
-        const isNumeric = type === 'number';
-        setFormData(prev => ({ ...prev, [name]: isNumeric ? (value ? parseFloat(value) : undefined) : value }));
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        onSave(formData);
-    };
-
-    return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
-                <form onSubmit={handleSubmit}>
-                    <div className="p-4 border-b"><h3 className="text-lg font-bold">{deal?.id ? 'Edit Deal' : 'Add New Deal'}</h3></div>
-                    <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
-                        {/* Form fields */}
-                        <div><label>Title</label><input name="title" value={formData.title || ''} onChange={handleChange} required className="w-full p-2 border rounded"/></div>
-                        <div><label>Description</label><textarea name="description" value={formData.description || ''} onChange={handleChange} rows={3} required className="w-full p-2 border rounded"/></div>
-                        <div><label>Image URL</label><input name="image_url" value={formData.image_url || ''} onChange={handleChange} className="w-full p-2 border rounded"/></div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div><label>Start Date</label><input name="start_date" type="date" value={formData.start_date?.split('T')[0] || ''} onChange={handleChange} className="w-full p-2 border rounded"/></div>
-                            <div><label>End Date</label><input name="end_date" type="date" value={formData.end_date?.split('T')[0] || ''} onChange={handleChange} className="w-full p-2 border rounded"/></div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div><label>Original Price (VND)</label><input name="original_price" type="number" value={formData.original_price || ''} onChange={handleChange} className="w-full p-2 border rounded"/></div>
-                            <div><label>Deal Price (VND)</label><input name="deal_price" type="number" value={formData.deal_price || ''} onChange={handleChange} className="w-full p-2 border rounded"/></div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                             <div><label>Discount %</label><input name="discount_percentage" type="number" value={formData.discount_percentage || ''} onChange={handleChange} className="w-full p-2 border rounded"/></div>
-                             <div><label>Status</label><select name="status" value={formData.status} onChange={handleChange} className="w-full p-2 border rounded">{Object.values(DealStatus).map(s => <option key={s} value={s}>{s}</option>)}</select></div>
-                        </div>
-                    </div>
-                    <div className="bg-gray-50 p-4 flex justify-end gap-3"><button type="button" onClick={onClose} className="px-4 py-2 border rounded">Cancel</button><button type="submit" className="px-4 py-2 bg-primary text-white rounded">Save Deal</button></div>
-                </form>
-            </div>
-        </div>
-    );
+    if (startDate && startDate > now) {
+        return DealStatus.SCHEDULED;
+    }
+    if (endDate && endDate < now) {
+        return DealStatus.EXPIRED;
+    }
+    if (startDate && endDate && startDate <= now && endDate >= now) {
+        return DealStatus.ACTIVE;
+    }
+    // Default to ACTIVE if no dates provided
+    return DealStatus.ACTIVE;
 };
-
 
 const DealsManager: React.FC = () => {
     const { currentBusiness } = useBusinessAuth();
@@ -54,54 +35,207 @@ const DealsManager: React.FC = () => {
 
     const [editingDeal, setEditingDeal] = useState<Partial<Deal> | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
-    if (!currentBusiness) return null;
+    // Calculate status for each deal and memoize
+    const dealsWithStatus = useMemo(() => {
+        if (!currentBusiness?.deals) return [];
+        
+        return currentBusiness.deals.map(deal => {
+            const calculatedStatus = calculateDealStatus(deal);
+            // Use calculated status if deal doesn't have explicit status or if dates changed
+            const shouldUpdateStatus = !deal.status || 
+                (deal.start_date || deal.end_date) && calculatedStatus !== deal.status;
+            
+            return {
+                ...deal,
+                displayStatus: shouldUpdateStatus ? calculatedStatus : deal.status,
+                needsStatusUpdate: shouldUpdateStatus && calculatedStatus !== deal.status
+            };
+        });
+    }, [currentBusiness?.deals]);
 
-    const myDeals = currentBusiness.deals || [];
+    // Auto-update status for deals that need it
+    useEffect(() => {
+        const dealsToUpdate = dealsWithStatus.filter(d => d.needsStatusUpdate);
+        if (dealsToUpdate.length > 0) {
+            // Update status for deals that need it
+            dealsToUpdate.forEach(async (deal) => {
+                try {
+                    await updateDeal({
+                        ...deal,
+                        status: deal.displayStatus
+                    } as Deal);
+                } catch (error) {
+                    // Silent fail - status will be recalculated on next render
+                    console.warn('Failed to auto-update deal status:', error);
+                }
+            });
+        }
+    }, [dealsWithStatus, updateDeal]);
+
+    if (!currentBusiness) {
+        return (
+            <div className="p-8">
+                <EmptyState
+                    title="No business found"
+                    message="Please select a business to manage deals."
+                />
+            </div>
+        );
+    }
 
     const openModal = (deal: Partial<Deal> | null) => {
         setEditingDeal(deal);
         setIsModalOpen(true);
     };
 
-    const handleSaveDeal = (dealData: Partial<Deal>) => {
-        const promise = dealData.id
-            ? updateDeal({ ...dealData, business_id: currentBusiness.id } as Deal)
-            : addDeal({ ...dealData, business_id: currentBusiness.id } as Omit<Deal, 'id'>);
-        
-        promise.then(() => setIsModalOpen(false));
+    const handleSaveDeal = async (dealData: Deal) => {
+        try {
+            // Calculate status based on dates if not explicitly set
+            const finalStatus = dealData.status || calculateDealStatus(dealData);
+            const dealToSave = {
+                ...dealData,
+                status: finalStatus,
+                business_id: currentBusiness.id
+            };
+
+            if (dealData.id) {
+                await updateDeal(dealToSave as Deal);
+            } else {
+                await addDeal(dealToSave as Omit<Deal, 'id'>);
+            }
+            setIsModalOpen(false);
+        } catch (error) {
+            // Error already handled in context with toast
+            // Don't close modal on error
+        }
     };
 
-    const handleDelete = (id: string) => {
-        if (window.confirm("Are you sure?")) {
-            deleteDeal(id);
+    const handleDelete = async (id: string) => {
+        if (window.confirm("Are you sure you want to delete this deal? This action cannot be undone.")) {
+            setIsDeleting(id);
+            try {
+                await deleteDeal(id);
+                // Success toast is handled in context
+            } catch (error) {
+                // Error already handled in context with toast
+            } finally {
+                setIsDeleting(null);
+            }
+        }
+    };
+
+    const getStatusBadgeClass = (status: DealStatus) => {
+        switch (status) {
+            case DealStatus.ACTIVE:
+                return 'bg-green-100 text-green-800';
+            case DealStatus.EXPIRED:
+                return 'bg-red-100 text-red-800';
+            case DealStatus.SCHEDULED:
+                return 'bg-blue-100 text-blue-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
         }
     };
 
     return (
         <div className="p-8">
-            {isModalOpen && <EditDealModal deal={editingDeal} onSave={handleSaveDeal} onClose={() => setIsModalOpen(false)} />}
-            <div className="flex justify-between items-center mb-6">
+            {isModalOpen && (
+                <EditDealModal 
+                    deal={editingDeal} 
+                    onSave={handleSaveDeal} 
+                    onClose={() => setIsModalOpen(false)}
+                    businessId={currentBusiness.id}
+                />
+            )}
+            
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
                 <h2 className="text-2xl font-bold font-serif text-neutral-dark">Deals Management</h2>
-                <button onClick={() => openModal(null)} className="bg-secondary text-white px-4 py-2 rounded-md font-semibold text-sm">+ Add New Deal</button>
+                <button 
+                    onClick={() => openModal(null)} 
+                    className="bg-secondary text-white px-4 py-2 rounded-md font-semibold text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isDeleting !== null}
+                >
+                    + Add New Deal
+                </button>
             </div>
 
-            <div className="space-y-3">
-                {myDeals.map(deal => (
-                    <div key={deal.id} className="flex items-center gap-4 p-3 border rounded-md bg-white shadow-sm">
-                        <div className="flex-grow">
-                            <p className="font-semibold text-neutral-dark">{deal.title}</p>
-                            <p className="text-sm text-gray-500 truncate">{deal.description}</p>
+            {dealsWithStatus.length === 0 ? (
+                <EmptyState
+                    title="No deals yet"
+                    message="Get started by creating your first deal to attract more customers."
+                    action={
+                        <button 
+                            onClick={() => openModal(null)} 
+                            className="bg-secondary text-white px-4 py-2 rounded-md font-semibold text-sm hover:opacity-90"
+                        >
+                            Create Your First Deal
+                        </button>
+                    }
+                />
+            ) : (
+                <div className="space-y-3">
+                    {dealsWithStatus.map(deal => (
+                        <div 
+                            key={deal.id} 
+                            className="flex items-center gap-4 p-3 border rounded-md bg-white shadow-sm hover:shadow-md transition-shadow"
+                        >
+                            {deal.image_url && (
+                                <img 
+                                    src={deal.image_url} 
+                                    alt={deal.title} 
+                                    className="w-16 h-16 object-cover rounded-md flex-shrink-0"
+                                    onError={(e) => {
+                                        (e.target as HTMLImageElement).style.display = 'none';
+                                    }}
+                                />
+                            )}
+                            <div className="flex-grow min-w-0">
+                                <p className="font-semibold text-neutral-dark">{deal.title}</p>
+                                <p className="text-sm text-gray-500 truncate">{deal.description || 'No description'}</p>
+                                <div className="flex items-center gap-4 mt-1 text-xs text-gray-400">
+                                    {deal.start_date && (
+                                        <span>Start: {new Date(deal.start_date).toLocaleDateString()}</span>
+                                    )}
+                                    {deal.end_date && (
+                                        <span>End: {new Date(deal.end_date).toLocaleDateString()}</span>
+                                    )}
+                                    {deal.deal_price && deal.original_price && (
+                                        <span className="text-primary font-semibold">
+                                            {deal.deal_price.toLocaleString('vi-VN')}đ 
+                                            {deal.original_price > deal.deal_price && (
+                                                <span className="text-gray-400 line-through ml-1">
+                                                    {deal.original_price.toLocaleString('vi-VN')}đ
+                                                </span>
+                                            )}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                            <span className={`px-3 py-1 text-xs font-semibold rounded-full flex-shrink-0 ${getStatusBadgeClass(deal.displayStatus)}`}>
+                                {deal.displayStatus}
+                            </span>
+                            <div className="flex gap-2 flex-shrink-0">
+                                <button 
+                                    onClick={() => openModal(deal)} 
+                                    className="text-secondary font-semibold text-sm hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={isDeleting !== null}
+                                >
+                                    Edit
+                                </button>
+                                <button 
+                                    onClick={() => handleDelete(deal.id)} 
+                                    className="text-red-500 font-semibold text-sm hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={isDeleting === deal.id || isDeleting !== null}
+                                >
+                                    {isDeleting === deal.id ? 'Deleting...' : 'Delete'}
+                                </button>
+                            </div>
                         </div>
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${deal.status === DealStatus.ACTIVE ? 'bg-green-100 text-green-800' : 'bg-gray-200'}`}>{deal.status}</span>
-                        <div className="flex gap-2">
-                            <button onClick={() => openModal(deal)} className="text-secondary font-semibold text-sm hover:underline">Edit</button>
-                            <button onClick={() => handleDelete(deal.id)} className="text-red-500 font-semibold text-sm hover:underline">Delete</button>
-                        </div>
-                    </div>
-                ))}
-            </div>
-             {myDeals.length === 0 && <div className="text-center py-12 bg-gray-50 rounded-lg"><p>No deals created yet.</p></div>}
+                    ))}
+                </div>
+            )}
         </div>
     );
 };

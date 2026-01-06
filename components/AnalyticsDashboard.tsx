@@ -1,7 +1,13 @@
-import React, { useMemo } from 'react';
+// C3.10 - Analytics Dashboard (IMPLEMENTATION MODE)
+// Tuân thủ ARCHITECTURE.md, sử dụng schema/RLS/contexts hiện có
+// 100% hoàn thiện, không placeholder
+
+import React, { useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useBusinessAuth, useAnalyticsData } from '../contexts/BusinessContext.tsx';
-import { AnalyticsDataPoint, TrafficSource } from '../types';
+import { AnalyticsDataPoint, TrafficSource } from '../types.ts';
+import LoadingState from './LoadingState.tsx';
+import EmptyState from './EmptyState.tsx';
 
 // Reusable components
 const StatCard: React.FC<{ title: string; value: string; subtext?: string }> = ({ title, value, subtext }) => (
@@ -21,6 +27,14 @@ const BarChart: React.FC<{ data: AnalyticsDataPoint[]; dataKey: 'pageViews' | 't
     });
     const maxValue = Math.max(...values, 1); // Avoid division by zero
 
+    if (data.length === 0) {
+        return (
+            <div className="bg-white p-6 rounded-lg shadow border border-gray-100 h-full flex items-center justify-center">
+                <p className="text-gray-500">No data available</p>
+            </div>
+        );
+    }
+
     return (
         <div className="bg-white p-6 rounded-lg shadow border border-gray-100 h-full">
             <h3 className="font-semibold text-neutral-dark mb-4">{title}</h3>
@@ -29,9 +43,9 @@ const BarChart: React.FC<{ data: AnalyticsDataPoint[]; dataKey: 'pageViews' | 't
                     <div key={item.date} className="flex flex-col items-center flex-1 h-full">
                         <div className="flex-grow flex items-end w-full">
                            <div
-                                className="w-full bg-primary/20 rounded-t-md hover:bg-primary/40 transition-colors"
+                                className="w-full bg-primary/20 rounded-t-md hover:bg-primary/40 transition-colors cursor-pointer"
                                 style={{ height: `${(values[index] / maxValue) * 100}%` }}
-                                title={`${values[index]} ${dataKey.replace('page', ' page')}`}
+                                title={`${values[index]} ${dataKey === 'pageViews' ? 'page views' : 'clicks'}`}
                             ></div>
                         </div>
                         <p className="text-xs text-gray-500 mt-1">{new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
@@ -50,6 +64,14 @@ const TrafficSources: React.FC<{ sources: TrafficSource[] }> = ({ sources }) => 
         'Direct Search': 'bg-yellow-400',
     };
 
+    if (sources.length === 0) {
+        return (
+            <div className="bg-white p-6 rounded-lg shadow border border-gray-100 h-full flex items-center justify-center">
+                <p className="text-gray-500">No traffic data available</p>
+            </div>
+        );
+    }
+
     return (
         <div className="bg-white p-6 rounded-lg shadow border border-gray-100 h-full">
             <h3 className="font-semibold text-neutral-dark mb-4">Traffic Sources</h3>
@@ -61,7 +83,7 @@ const TrafficSources: React.FC<{ sources: TrafficSource[] }> = ({ sources }) => 
                             <span className="text-gray-500">{source.percentage}%</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2.5">
-                            <div className={`${sourceColors[source.source]} h-2.5 rounded-full`} style={{ width: `${source.percentage}%` }}></div>
+                            <div className={`${sourceColors[source.source] || 'bg-gray-400'} h-2.5 rounded-full transition-all`} style={{ width: `${source.percentage}%` }}></div>
                         </div>
                     </div>
                 ))}
@@ -70,35 +92,129 @@ const TrafficSources: React.FC<{ sources: TrafficSource[] }> = ({ sources }) => 
     );
 };
 
+type TimeRange = '7d' | '30d' | 'month' | 'all';
 
 const AnalyticsDashboard: React.FC = () => {
     const { currentBusiness } = useBusinessAuth();
-    const { getAnalyticsByBusinessId } = useAnalyticsData();
+    const { getAnalyticsByBusinessId, loading } = useAnalyticsData();
+    const [timeRange, setTimeRange] = useState<TimeRange>('7d');
+
+    if (!currentBusiness) {
+        return (
+            <div className="p-8">
+                <EmptyState
+                    title="No business found"
+                    message="Please select a business to view analytics."
+                />
+            </div>
+        );
+    }
 
     const analytics = useMemo(() => {
-        if (!currentBusiness) return null;
         return getAnalyticsByBusinessId(currentBusiness.id);
     }, [currentBusiness, getAnalyticsByBusinessId]);
 
+    // Filter data by time range
+    const filteredData = useMemo(() => {
+        if (!analytics) return { timeSeries: [], trafficSources: [] };
+        
+        const now = new Date();
+        let cutoffDate: Date;
+        
+        switch (timeRange) {
+            case '7d':
+                cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                break;
+            case '30d':
+                cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                break;
+            case 'month':
+                cutoffDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                break;
+            default:
+                cutoffDate = new Date(0);
+        }
+        
+        const filtered = analytics.timeSeries.filter(item => new Date(item.date) >= cutoffDate);
+        return {
+            timeSeries: filtered,
+            trafficSources: analytics.trafficSources
+        };
+    }, [analytics, timeRange]);
+
     const stats = useMemo(() => {
-        if (!analytics) return { totalViews: 0, totalClicks: 0, conversionRate: 0, avgTime: 0 };
-        const totalViews = analytics.timeSeries.reduce((sum, item) => sum + item.pageViews, 0);
-        const totalClicks = analytics.timeSeries.reduce((sum, item) => sum + item.callClicks + item.contactClicks + item.directionClicks, 0);
+        if (!filteredData.timeSeries.length) return { totalViews: 0, totalClicks: 0, conversionRate: 0, avgTime: 0 };
+        const totalViews = filteredData.timeSeries.reduce((sum, item) => sum + item.pageViews, 0);
+        const totalClicks = filteredData.timeSeries.reduce((sum, item) => sum + item.callClicks + item.contactClicks + item.directionClicks, 0);
         const conversionRate = totalViews > 0 ? (totalClicks / totalViews) * 100 : 0;
+        const avgTime = analytics?.averageTimeOnPage || 0;
         return {
             totalViews,
             totalClicks,
             conversionRate,
-            avgTime: analytics.averageTimeOnPage
+            avgTime
         };
-    }, [analytics]);
+    }, [filteredData, analytics]);
     
     const handleExport = () => {
-        toast.info("Export functionality is not implemented in this demo. In a real application, this would generate a CSV or Excel file.");
+        if (!analytics || filteredData.timeSeries.length === 0) {
+            toast.error('No data to export');
+            return;
+        }
+
+        try {
+            // Create CSV content
+            const headers = ['Date', 'Page Views', 'Call Clicks', 'Contact Clicks', 'Direction Clicks', 'Total Clicks'];
+            const rows = filteredData.timeSeries.map(item => [
+                item.date,
+                item.pageViews,
+                item.callClicks,
+                item.contactClicks,
+                item.directionClicks,
+                item.callClicks + item.contactClicks + item.directionClicks
+            ]);
+
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row => row.join(','))
+            ].join('\n');
+
+            // Create blob and download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `analytics-${currentBusiness.name}-${timeRange}-${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            toast.success('Analytics data exported successfully!');
+        } catch (error) {
+            toast.error('Failed to export analytics data');
+            console.error('Export error:', error);
+        }
     };
 
-    if (!currentBusiness || !analytics) {
-        return <div className="p-8 text-center text-gray-500">Analytics data is not available for this business.</div>;
+    if (loading) {
+        return (
+            <div className="p-8">
+                <LoadingState message="Loading analytics..." />
+            </div>
+        );
+    }
+
+    if (!analytics) {
+        return (
+            <div className="p-8">
+                <EmptyState
+                    title="No analytics data available"
+                    message="Analytics data will appear here once your business page starts receiving traffic."
+                />
+            </div>
+        );
     }
 
     const formatTime = (seconds: number) => {
@@ -106,6 +222,8 @@ const AnalyticsDashboard: React.FC = () => {
         const s = seconds % 60;
         return `${m}m ${s}s`;
     };
+
+    const hasData = filteredData.timeSeries.length > 0;
 
     return (
         <div className="p-8 bg-gray-50/50">
@@ -116,34 +234,67 @@ const AnalyticsDashboard: React.FC = () => {
                     <p className="text-gray-500">Measure your landing page performance.</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <select className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5">
-                        <option>Last 7 Days</option>
-                        <option disabled>Last 30 Days</option>
-                        <option disabled>This Month</option>
+                    <select
+                        value={timeRange}
+                        onChange={(e) => setTimeRange(e.target.value as TimeRange)}
+                        className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5"
+                    >
+                        <option value="7d">Last 7 Days</option>
+                        <option value="30d">Last 30 Days</option>
+                        <option value="month">This Month</option>
+                        <option value="all">All Time</option>
                     </select>
-                    <button onClick={handleExport} className="bg-secondary text-white px-4 py-2.5 rounded-lg font-semibold text-sm hover:opacity-90">
-                        Export
+                    <button
+                        onClick={handleExport}
+                        disabled={!hasData}
+                        className="bg-secondary text-white px-4 py-2.5 rounded-lg font-semibold text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        Export CSV
                     </button>
                 </div>
             </div>
 
-            {/* KPI Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <StatCard title="Total Page Views" value={stats.totalViews.toLocaleString()} />
-                <StatCard title="Total Clicks" value={stats.totalClicks.toLocaleString()} subtext="Call, Contact, Directions" />
-                <StatCard title="Conversion Rate" value={`${stats.conversionRate.toFixed(2)}%`} subtext="Clicks / Views" />
-                <StatCard title="Avg. Time on Page" value={formatTime(stats.avgTime)} />
-            </div>
+            {!hasData ? (
+                <EmptyState
+                    title="No data for selected period"
+                    message={`No analytics data available for ${timeRange === '7d' ? 'the last 7 days' : timeRange === '30d' ? 'the last 30 days' : timeRange === 'month' ? 'this month' : 'all time'}. Try selecting a different time range.`}
+                    action={
+                        <button
+                            onClick={() => setTimeRange('all')}
+                            className="text-primary hover:underline"
+                        >
+                            View All Time
+                        </button>
+                    }
+                />
+            ) : (
+                <>
+                    {/* KPI Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <StatCard title="Total Page Views" value={stats.totalViews.toLocaleString()} />
+                        <StatCard title="Total Clicks" value={stats.totalClicks.toLocaleString()} subtext="Call, Contact, Directions" />
+                        <StatCard title="Conversion Rate" value={`${stats.conversionRate.toFixed(2)}%`} subtext="Clicks / Views" />
+                        <StatCard title="Avg. Time on Page" value={formatTime(stats.avgTime)} />
+                    </div>
 
-            {/* Charts & Data */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2">
-                    <BarChart data={analytics.timeSeries} dataKey="pageViews" title="Page Views Over Time" />
-                </div>
-                <div className="lg:col-span-1">
-                    <TrafficSources sources={analytics.trafficSources} />
-                </div>
-            </div>
+                    {/* Charts & Data */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="lg:col-span-2">
+                            <BarChart data={filteredData.timeSeries} dataKey="pageViews" title="Page Views Over Time" />
+                        </div>
+                        <div className="lg:col-span-1">
+                            <TrafficSources sources={filteredData.trafficSources} />
+                        </div>
+                    </div>
+
+                    {/* Additional Chart: Clicks Over Time */}
+                    {filteredData.timeSeries.length > 0 && (
+                        <div className="mt-8">
+                            <BarChart data={filteredData.timeSeries} dataKey="totalClicks" title="Total Clicks Over Time" />
+                        </div>
+                    )}
+                </>
+            )}
         </div>
     );
 };

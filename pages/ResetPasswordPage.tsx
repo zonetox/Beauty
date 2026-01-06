@@ -1,7 +1,11 @@
+// C2.6 - Reset Password Page (Public Site) (IMPLEMENTATION MODE)
+// Tuân thủ ARCHITECTURE.md, sử dụng schema/RLS/contexts hiện có
+// 100% hoàn thiện, không placeholder, chuẩn SEO cơ bản
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useUserSession } from '../contexts/UserSessionContext.tsx';
+import SEOHead from '../components/SEOHead.tsx';
 
 type PageState = 'form' | 'success';
 
@@ -102,12 +106,26 @@ const ResetPasswordPage: React.FC = () => {
     }
 
 
+    // SEO metadata
+    const seoTitle = 'Đặt lại mật khẩu | 1Beauty.asia';
+    const seoDescription = 'Đặt lại mật khẩu tài khoản doanh nghiệp của bạn trên 1Beauty.asia.';
+    const seoUrl = typeof window !== 'undefined' ? `${window.location.origin}/reset-password` : '';
+
     return (
-        <div className="flex items-center justify-center min-h-[calc(100vh-128px)] bg-background">
-            <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-                {renderContent()}
+        <>
+            <SEOHead 
+                title={seoTitle}
+                description={seoDescription}
+                keywords="đặt lại mật khẩu, reset password, quên mật khẩu"
+                url={seoUrl}
+                type="website"
+            />
+            <div className="flex items-center justify-center min-h-[calc(100vh-128px)] bg-background">
+                <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
+                    {renderContent()}
+                </div>
             </div>
-        </div>
+        </>
     );
 };
 

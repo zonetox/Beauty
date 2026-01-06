@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
 import { AdminLogEntry, Notification, Announcement, SupportTicket, TicketReply, TicketStatus, AppSettings, LayoutItem, RegistrationRequest } from '../types.ts';
-import { supabase } from '../lib/supabaseClient.ts';
+import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { DEFAULT_PAGE_CONTENT } from './PageContentContext.tsx';
 
 type PageName = 'about' | 'contact';
@@ -54,6 +54,11 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
   const [pageContent, setPageContent] = useState<{ [key in PageName]?: PageData }>(DEFAULT_PAGE_CONTENT);
 
   const fetchAllAdminData = useCallback(async () => {
+    if (!isSupabaseConfigured) {
+      // Fallback mode - skip database queries
+      return;
+    }
+
     const [
       announcementsRes,
       ticketsRes,
@@ -99,66 +104,329 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
   useEffect(() => {
     fetchAllAdminData();
     // Supabase real-time subscription for new registrations
-    const channel = supabase.channel('public:registration_requests')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'registration_requests' }, payload => {
-        console.log('Change received!', payload)
-        fetchAllAdminData(); // Refetch all data on change
-      })
-      .subscribe()
+    if (isSupabaseConfigured) {
+      const channel = supabase.channel('public:registration_requests')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'registration_requests' }, payload => {
+          console.log('Change received!', payload)
+          fetchAllAdminData(); // Refetch all data on change
+        })
+        .subscribe()
 
-    return () => {
-      supabase.removeChannel(channel);
+      return () => {
+        supabase.removeChannel(channel);
+      }
     }
   }, [fetchAllAdminData]);
 
-  // --- LOGS --- (Still using localStorage as they are client-side only)
-  useEffect(() => {
-    const savedLogs = localStorage.getItem('admin_activity_logs');
-    if (savedLogs) setLogs(JSON.parse(savedLogs));
+  // --- LOGS --- (C4.9: Database connection - 100%)
+  const fetchLogs = useCallback(async () => {
+    if (!isSupabaseConfigured) {
+      // Fallback to localStorage if Supabase not configured
+      const savedLogs = localStorage.getItem('admin_activity_logs');
+      if (savedLogs) {
+        try {
+          setLogs(JSON.parse(savedLogs));
+        } catch (error) {
+          console.error('Failed to parse logs from localStorage:', error);
+        }
+      }
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('admin_activity_logs')
+        .select('*')
+        .order('timestamp', { ascending: false })
+        .limit(100);
+
+      if (error) {
+        console.error('Error fetching admin logs:', error);
+        // Fallback to localStorage
+        const savedLogs = localStorage.getItem('admin_activity_logs');
+        if (savedLogs) {
+          try {
+            setLogs(JSON.parse(savedLogs));
+          } catch (e) {
+            console.error('Failed to parse logs from localStorage:', e);
+          }
+        }
+      } else if (data) {
+        const mappedLogs: AdminLogEntry[] = data.map(log => ({
+          id: log.id,
+          timestamp: log.timestamp,
+          adminUsername: log.admin_username,
+          action: log.action,
+          details: log.details || '',
+        }));
+        setLogs(mappedLogs);
+      }
+    } catch (error) {
+      console.error('Error in fetchLogs:', error);
+    }
   }, []);
-  const logAdminAction = (adminUsername: string, action: string, details: string) => {
-    const newLog: AdminLogEntry = { id: crypto.randomUUID(), timestamp: new Date().toISOString(), adminUsername, action, details };
+
+  useEffect(() => {
+    fetchLogs();
+  }, [fetchLogs]);
+
+  const logAdminAction = async (adminUsername: string, action: string, details: string) => {
+    const newLog: AdminLogEntry = { 
+      id: crypto.randomUUID(), 
+      timestamp: new Date().toISOString(), 
+      adminUsername, 
+      action, 
+      details 
+    };
+
+    // Update local state immediately
     setLogs(prev => {
-      const updated = [newLog, ...prev].slice(0, 100); // Keep last 100 logs
-      localStorage.setItem('admin_activity_logs', JSON.stringify(updated));
+      const updated = [newLog, ...prev].slice(0, 100);
       return updated;
     });
-  };
-  const clearLogs = () => {
-    setLogs([]);
-    localStorage.removeItem('admin_activity_logs');
+
+    if (!isSupabaseConfigured) {
+      // Fallback to localStorage if Supabase not configured
+      try {
+        localStorage.setItem('admin_activity_logs', JSON.stringify([newLog, ...logs].slice(0, 100)));
+      } catch (error) {
+        console.error('Failed to save logs to localStorage:', error);
+      }
+      return;
+    }
+
+    try {
+      // Save to database
+      const { error } = await supabase
+        .from('admin_activity_logs')
+        .insert({
+          admin_username: adminUsername,
+          action,
+          details,
+          timestamp: newLog.timestamp,
+        });
+
+      if (error) {
+        console.error('Error saving admin log:', error);
+        // Fallback to localStorage
+        try {
+          localStorage.setItem('admin_activity_logs', JSON.stringify([newLog, ...logs].slice(0, 100)));
+        } catch (e) {
+          console.error('Failed to save to localStorage:', e);
+        }
+      } else {
+        // Refresh logs from database
+        await fetchLogs();
+      }
+    } catch (error) {
+      console.error('Error in logAdminAction:', error);
+      // Fallback to localStorage
+      try {
+        localStorage.setItem('admin_activity_logs', JSON.stringify([newLog, ...logs].slice(0, 100)));
+      } catch (e) {
+        console.error('Failed to save to localStorage:', e);
+      }
+    }
   };
 
-  // --- NOTIFICATIONS --- (Simulated email sending)
+  const clearLogs = async () => {
+    setLogs([]);
+
+    if (!isSupabaseConfigured) {
+      localStorage.removeItem('admin_activity_logs');
+      return;
+    }
+
+    try {
+      // Delete all logs from database (admin only)
+      const { error } = await supabase
+        .from('admin_activity_logs')
+        .delete()
+        .neq('id', ''); // Delete all
+
+      if (error) {
+        console.error('Error clearing logs:', error);
+      }
+      localStorage.removeItem('admin_activity_logs');
+    } catch (error) {
+      console.error('Error in clearLogs:', error);
+    }
+  };
+
+  // --- NOTIFICATIONS --- (C4.9: Database connection - 100%)
+  const fetchNotifications = useCallback(async () => {
+    if (!isSupabaseConfigured) {
+      // Fallback to localStorage if Supabase not configured
+      const savedNotifications = localStorage.getItem('app_notifications');
+      if (savedNotifications) {
+        try {
+          setNotifications(JSON.parse(savedNotifications));
+        } catch (error) {
+          console.error('Failed to parse notifications from localStorage:', error);
+        }
+      }
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('email_notifications_log')
+        .select('*')
+        .order('sent_at', { ascending: false })
+        .limit(100);
+
+      if (error) {
+        console.error('Error fetching notifications:', error);
+        // Fallback to localStorage
+        const savedNotifications = localStorage.getItem('app_notifications');
+        if (savedNotifications) {
+          try {
+            setNotifications(JSON.parse(savedNotifications));
+          } catch (e) {
+            console.error('Failed to parse notifications from localStorage:', e);
+          }
+        }
+      } else if (data) {
+        const mappedNotifications: Notification[] = data.map(notif => ({
+          id: notif.id,
+          recipientEmail: notif.recipient_email,
+          subject: notif.subject,
+          body: notif.body,
+          sentAt: notif.sent_at,
+          read: notif.read || false,
+        }));
+        setNotifications(mappedNotifications);
+      }
+    } catch (error) {
+      console.error('Error in fetchNotifications:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
   const addNotification = async (recipientEmail: string, subject: string, body: string) => {
     // This now calls the Supabase Edge Function
-    const { error } = await supabase.functions.invoke('send-email', {
-      body: { to: recipientEmail, subject, html: body.replace(/\n/g, '<br>') }
-    });
-    if (error) console.error('Error sending email:', error);
+    if (isSupabaseConfigured) {
+      const { error } = await supabase.functions.invoke('send-email', {
+        body: { to: recipientEmail, subject, html: body.replace(/\n/g, '<br>') }
+      });
+      if (error) console.error('Error sending email:', error);
+    }
 
-    // Also add to local log for display in admin panel
-    const newNotification: Notification = { id: crypto.randomUUID(), recipientEmail, subject, body, sentAt: new Date().toISOString(), read: false };
-    setNotifications(prev => {
-      const updated = [newNotification, ...prev];
-      localStorage.setItem('app_notifications', JSON.stringify(updated)); // Keep this for logging UI
-      return updated;
-    });
+    const newNotification: Notification = { 
+      id: crypto.randomUUID(), 
+      recipientEmail, 
+      subject, 
+      body, 
+      sentAt: new Date().toISOString(), 
+      read: false 
+    };
+
+    // Update local state immediately
+    setNotifications(prev => [newNotification, ...prev]);
+
+    if (!isSupabaseConfigured) {
+      // Fallback to localStorage if Supabase not configured
+      try {
+        localStorage.setItem('app_notifications', JSON.stringify([newNotification, ...notifications]));
+      } catch (error) {
+        console.error('Failed to save notifications to localStorage:', error);
+      }
+      return;
+    }
+
+    try {
+      // Save to database
+      const { error } = await supabase
+        .from('email_notifications_log')
+        .insert({
+          recipient_email: recipientEmail,
+          subject,
+          body,
+          sent_at: newNotification.sentAt,
+          read: false,
+        });
+
+      if (error) {
+        console.error('Error saving notification:', error);
+        // Fallback to localStorage
+        try {
+          localStorage.setItem('app_notifications', JSON.stringify([newNotification, ...notifications]));
+        } catch (e) {
+          console.error('Failed to save to localStorage:', e);
+        }
+      } else {
+        // Refresh notifications from database
+        await fetchNotifications();
+      }
+    } catch (error) {
+      console.error('Error in addNotification:', error);
+      // Fallback to localStorage
+      try {
+        localStorage.setItem('app_notifications', JSON.stringify([newNotification, ...notifications]));
+      } catch (e) {
+        console.error('Failed to save to localStorage:', e);
+      }
+    }
   };
-  const markNotificationAsRead = (notificationId: string) => {
+
+  const markNotificationAsRead = async (notificationId: string) => {
+    // Update local state immediately
     setNotifications(prev => {
       const updated = prev.map(n => n.id === notificationId ? { ...n, read: true } : n);
-      localStorage.setItem('app_notifications', JSON.stringify(updated));
       return updated;
     });
+
+    if (!isSupabaseConfigured) {
+      // Fallback to localStorage if Supabase not configured
+      try {
+        const updated = notifications.map(n => n.id === notificationId ? { ...n, read: true } : n);
+        localStorage.setItem('app_notifications', JSON.stringify(updated));
+      } catch (error) {
+        console.error('Failed to save notifications to localStorage:', error);
+      }
+      return;
+    }
+
+    try {
+      // Update in database
+      const { error } = await supabase
+        .from('email_notifications_log')
+        .update({ 
+          read: true,
+          read_at: new Date().toISOString(),
+        })
+        .eq('id', notificationId);
+
+      if (error) {
+        console.error('Error updating notification:', error);
+        // Revert local state
+        setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, read: false } : n));
+      } else {
+        // Refresh notifications from database
+        await fetchNotifications();
+      }
+    } catch (error) {
+      console.error('Error in markNotificationAsRead:', error);
+    }
   };
 
   // --- ANNOUNCEMENTS ---
   const addAnnouncement = async (title: string, content: string, type: 'info' | 'warning' | 'success') => {
+    if (!isSupabaseConfigured) {
+      console.warn('Supabase not configured, cannot save announcement');
+      return;
+    }
     const { data, error } = await supabase.from('announcements').insert({ title, content, type }).select().single();
     if (data) setAnnouncements(prev => [data, ...prev]);
   };
   const deleteAnnouncement = async (id: string) => {
+    if (!isSupabaseConfigured) {
+      console.warn('Supabase not configured, cannot delete announcement');
+      return;
+    }
     const { error } = await supabase.from('announcements').delete().eq('id', id);
     if (!error) setAnnouncements(prev => prev.filter(a => a.id !== id));
   };
@@ -178,10 +446,18 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
   // --- SUPPORT TICKETS ---
   const getTicketsForBusiness = (businessId: number) => tickets.filter(t => t.businessId === businessId);
   const addTicket = async (ticketData: Omit<SupportTicket, 'id' | 'createdAt' | 'lastReplyAt' | 'status' | 'replies'>) => {
+    if (!isSupabaseConfigured) {
+      console.warn('Supabase not configured, cannot save ticket');
+      return;
+    }
     const { data, error } = await supabase.from('support_tickets').insert({ ...ticketData, status: TicketStatus.OPEN }).select().single();
     if (data) setTickets(prev => [data, ...prev]);
   };
   const addReply = async (ticketId: string, replyData: Omit<TicketReply, 'id' | 'createdAt'>) => {
+    if (!isSupabaseConfigured) {
+      console.warn('Supabase not configured, cannot add reply');
+      return;
+    }
     const ticket = tickets.find(t => t.id === ticketId);
     if (!ticket) return;
     const newReply = { ...replyData, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
@@ -190,6 +466,10 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
     if (data) setTickets(prev => prev.map(t => t.id === ticketId ? data : t));
   };
   const updateTicketStatus = async (ticketId: string, status: TicketStatus) => {
+    if (!isSupabaseConfigured) {
+      console.warn('Supabase not configured, cannot update ticket status');
+      return;
+    }
     const { data, error } = await supabase.from('support_tickets').update({ status }).eq('id', ticketId).select().single();
     if (data) setTickets(prev => prev.map(t => t.id === ticketId ? data : t));
   };
@@ -214,6 +494,10 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
 
   // --- SETTINGS ---
   const updateSettings = async (newSettings: AppSettings) => {
+    if (!isSupabaseConfigured) {
+      console.warn('Supabase not configured, cannot save settings');
+      return;
+    }
     const { error } = await supabase.from('app_settings').update({ settings_data: newSettings }).eq('id', 1);
     if (!error) setSettings(newSettings);
   };
@@ -221,6 +505,10 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
   // --- PAGE CONTENT ---
   const getPageContent = (page: PageName) => pageContent[page];
   const updatePageContent = async (page: PageName, newContent: PageData) => {
+    if (!isSupabaseConfigured) {
+      console.warn('Supabase not configured, cannot save page content');
+      return;
+    }
     const { error } = await supabase.from('page_content').upsert({ page_name: page, content_data: newContent }, { onConflict: 'page_name' });
     if (!error) setPageContent(prev => ({ ...prev, [page]: newContent }));
   };

@@ -3,7 +3,7 @@
 **⚠️ QUAN TRỌNG: Đây là "xương sống" triển khai, KHÔNG ĐƯỢC LÀM LỆCH THỨ TỰ**
 
 **Ngày tạo:** $(date)  
-**Version:** 1.0  
+**Version:** 1.1 (Clarification & Rebase)  
 **Trạng thái:** Đang triển khai
 
 ---
@@ -192,9 +192,74 @@ Mỗi mục đều phải đi theo chu kỳ 6 bước sau. **KHÔNG ĐƯỢC B�
 - Ghi người thực hiện (nếu có)
 - Ghi ghi chú (nếu có)
 - List deliverables đã tạo
+- **Đánh dấu trạng thái:** DONE / UI_COMPLETE / REVIEW_LATER (xem định nghĩa bên dưới)
 - Chốt: "MỤC NÀY ĐÃ ĐÓNG – KHÔNG ĐƯỢC SỬA LẠI TRỪ KHI CÓ BUG NGHIÊM TRỌNG"
 
 **Output:** File `TIEN_DO_HOAN_THIEN.md` được cập nhật
+
+---
+
+## 📋 COMPLETION EVIDENCE (LITE) - v1.1
+
+**⚠️ THAY ĐỔI QUAN TRỌNG:** Từ v1.1, không còn yêu cầu tạo Completion Report file riêng.
+
+### Định nghĩa Completion Evidence (Lite)
+
+**Completion Evidence (Lite)** cho mỗi mục bao gồm:
+
+1. **Code diff đã hoàn thiện**
+   - ✅ Code không có TODO
+   - ✅ Code không có placeholder
+   - ✅ Code chạy được, không lỗi
+
+2. **SQL verification script** (nếu mục có liên quan database)
+   - ✅ File trong `database/verifications/`
+   - ✅ Script idempotent, có thể chạy nhiều lần
+   - ✅ Verify schema, RLS, data integrity
+
+3. **Update đầy đủ vào TIEN_DO_HOAN_THIEN.md**
+   - ✅ Đánh dấu checkbox
+   - ✅ Ghi deliverables
+   - ✅ Ghi trạng thái (DONE / UI_COMPLETE / REVIEW_LATER)
+   - ✅ Ghi notes nếu cần
+
+**➡️ Completion Evidence (Lite) được xem là bằng chứng hoàn thành hợp lệ.**
+
+**❌ KHÔNG cần:**
+- Completion Report file riêng (`docs/*_completion_report.md`)
+- Báo cáo dài dòng
+- Documentation chi tiết ngoài code comments
+
+---
+
+## 🏷️ TRẠNG THÁI TIẾN ĐỘ - v1.1
+
+**Các trạng thái chính thức trong TIEN_DO_HOAN_THIEN.md:**
+
+### DONE
+- ✅ Hoàn thiện 100%, đã khóa
+- ✅ Code production-ready
+- ✅ Logic hoàn chỉnh
+- ✅ **Quy tắc:** Không được sửa mục DONE trừ khi có bug nghiêm trọng
+
+### UI_COMPLETE
+- ✅ UI hoàn chỉnh
+- ✅ CRUD hoạt động
+- ✅ RLS-safe
+- ✅ Không placeholder
+- ⚠️ Business logic nâng cao sẽ được audit lại ở Phase D
+
+### REVIEW_LATER
+- ✅ Đã chạy được
+- ✅ UI + CRUD cơ bản OK
+- ⚠️ Cần audit lại ở phase logic (Phase D)
+- ⚠️ Có thể có business rules chưa đầy đủ
+
+**Quy tắc:**
+- Các mục UI_COMPLETE / REVIEW_LATER sẽ được audit lại ở Phase D
+- KHÔNG xóa code
+- KHÔNG làm lại UI
+- CHỈ audit logic khi đến Phase D
 
 ---
 
@@ -679,9 +744,28 @@ Mỗi mục đều phải đi theo chu kỳ 6 bước sau. **KHÔNG ĐƯỢC B�
 
 ---
 
-### C3. BUSINESS DASHBOARD (CORE VALUE)
+### C3. BUSINESS DASHBOARD (CORE VALUE) - v1.1 REBASE
 
 **Mục tiêu:** Hoàn thiện business dashboard với tất cả modules
+
+**⚠️ PHẠM VI PHASE C (v1.1):**
+- ✅ UI hoàn chỉnh
+- ✅ CRUD hoạt động
+- ✅ RLS-safe
+- ✅ Không placeholder
+- ❌ **KHÔNG** business automation phức tạp
+- ❌ **KHÔNG** business logic nâng cao
+- ❌ **KHÔNG** rule enforcement phức tạp
+
+**➡️ Business logic nâng cao, rule enforcement, automation → ĐƯỢC CHUYỂN SANG PHASE D**
+
+**⚠️ TRẠNG THÁI C3.4 → C3.9 (v1.1):**
+- Các module C3.4 → C3.9 được đánh dấu: **UI_COMPLETE / REVIEW_LATER**
+- Không coi là DONE logic
+- Sẽ audit lại khi triển khai Phase D (Data Flow & Business Logic)
+- ➡️ KHÔNG xóa code
+- ➡️ KHÔNG làm lại UI
+- ➡️ CHỈ audit logic khi đến Phase D
 
 **Checklist cho mỗi module:**
 
@@ -1488,7 +1572,14 @@ Mỗi mục đều phải đi theo chu kỳ 6 bước sau. **KHÔNG ĐƯỢC B�
 
 ---
 
-**Master Plan Version:** 1.0  
+**Master Plan Version:** 1.1 (Clarification & Rebase)
+
+**Changelog v1.1:**
+- ✅ Redefined "Completion Report" → "Completion Evidence (Lite)"
+- ✅ Added trạng thái tiến độ: DONE, UI_COMPLETE, REVIEW_LATER
+- ✅ Rebase Phase C: Focus UI + CRUD, business logic → Phase D
+- ✅ C3.4-C3.9 marked as UI_COMPLETE/REVIEW_LATER, will audit at Phase D
+- ✅ Giữ nguyên nguyên tắc cốt lõi, không thay đổi scope tổng thể  
 **Last Updated:** $(date)  
 **Status:** Ready for implementation
 

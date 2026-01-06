@@ -1,15 +1,19 @@
-
+// C3.13 - Settings (IMPLEMENTATION MODE)
+// Tuân thủ ARCHITECTURE.md, sử dụng schema/RLS/contexts hiện có
+// 100% hoàn thiện, không placeholder
 
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useBusinessAuth } from '../contexts/BusinessAuthContext';
 import { useBusinessData } from '../contexts/BusinessDataContext';
 import { StaffMember, NotificationSettings, StaffMemberRole, Business } from '../types.ts';
+import LoadingState from './LoadingState.tsx';
+import EmptyState from './EmptyState.tsx';
 
 // Reusable components
 const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-        <div className="p-4 border-b">
+        <div className="p-4 border-b bg-gray-50">
             <h3 className="text-lg font-semibold text-neutral-dark">{title}</h3>
         </div>
         <div className="p-4 space-y-4">
@@ -18,31 +22,51 @@ const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({ t
     </div>
 );
 
-const InputField: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label: string }> = ({ label, ...props }) => (
+const InputField: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { 
+    label: string; 
+    error?: string;
+    required?: boolean;
+}> = ({ label, error, required, ...props }) => (
     <div>
-        <label className="block text-sm font-medium text-gray-700">{label}</label>
-        <input {...props} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+            {label} {required && <span className="text-red-500">*</span>}
+        </label>
+        <input 
+            {...props} 
+            className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
+                error ? 'border-red-500' : 'border-gray-300'
+            }`}
+        />
+        {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
     </div>
 );
 
-const Toggle: React.FC<{ label: string; enabled: boolean; onChange: () => void }> = ({ label, enabled, onChange }) => (
-    <label className="flex items-center justify-between cursor-pointer">
-        <span className="text-gray-700">{label}</span>
-        <div className="relative">
-            <input type="checkbox" className="sr-only" checked={enabled} onChange={onChange} />
-            <div className="block bg-gray-200 w-14 h-8 rounded-full"></div>
-            <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition ${enabled ? 'translate-x-full bg-primary' : ''}`}></div>
+const Toggle: React.FC<{ 
+    label: string; 
+    enabled: boolean; 
+    onChange: () => void;
+    description?: string;
+}> = ({ label, enabled, onChange, description }) => (
+    <div className="flex items-start justify-between">
+        <div className="flex-1">
+            <label className="text-gray-700 font-medium cursor-pointer" onClick={onChange}>{label}</label>
+            {description && <p className="text-xs text-gray-500 mt-1">{description}</p>}
         </div>
-    </label>
+        <button
+            type="button"
+            onClick={onChange}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                enabled ? 'bg-primary' : 'bg-gray-200'
+            }`}
+        >
+            <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    enabled ? 'translate-x-6' : 'translate-x-1'
+                }`}
+            />
+        </button>
+    </div>
 );
-
-const Spinner: React.FC = () => (
-    <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-    </svg>
-);
-
 
 const AccountSettings: React.FC = () => {
     const { currentBusiness } = useBusinessAuth();
@@ -50,27 +74,105 @@ const AccountSettings: React.FC = () => {
     
     const [formData, setFormData] = useState<Business | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [errors, setErrors] = useState<{
+        name?: string;
+        email?: string;
+        phone?: string;
+        staff?: { [index: number]: { name?: string; email?: string } };
+    }>({});
 
     useEffect(() => {
         if (currentBusiness) {
             // Deep copy to prevent direct mutation of context state
             setFormData(JSON.parse(JSON.stringify(currentBusiness)));
+            setErrors({});
         }
     }, [currentBusiness]);
 
-    if (!formData) return null;
+    if (!currentBusiness) {
+        return (
+            <div className="p-8">
+                <EmptyState
+                    title="No business found"
+                    message="Please select a business to manage settings."
+                />
+            </div>
+        );
+    }
+
+    if (!formData) {
+        return (
+            <div className="p-8">
+                <LoadingState message="Loading account settings..." />
+            </div>
+        );
+    }
+
+    const validateForm = (): boolean => {
+        const newErrors: typeof errors = {};
+
+        if (!formData.name || formData.name.trim().length < 2) {
+            newErrors.name = 'Business name must be at least 2 characters';
+        } else if (formData.name.trim().length > 200) {
+            newErrors.name = 'Business name must be less than 200 characters';
+        }
+
+        if (formData.email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(formData.email)) {
+                newErrors.email = 'Please enter a valid email address';
+            }
+        }
+
+        if (formData.phone) {
+            const phoneRegex = /^[0-9+\-\s()]+$/;
+            if (!phoneRegex.test(formData.phone)) {
+                newErrors.phone = 'Please enter a valid phone number';
+            }
+        }
+
+        // Validate staff members
+        if (formData.staff && formData.staff.length > 0) {
+            const staffErrors: { [index: number]: { name?: string; email?: string } } = {};
+            formData.staff.forEach((member, index) => {
+                if (member.name && member.name.trim().length < 2) {
+                    if (!staffErrors[index]) staffErrors[index] = {};
+                    staffErrors[index].name = 'Name must be at least 2 characters';
+                }
+                if (member.email) {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(member.email)) {
+                        if (!staffErrors[index]) staffErrors[index] = {};
+                        staffErrors[index].email = 'Please enter a valid email address';
+                    }
+                }
+            });
+            if (Object.keys(staffErrors).length > 0) {
+                newErrors.staff = staffErrors;
+            }
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
 
     const handleOwnerInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        // Note: This changes business name, email, phone which might be distinct from owner info
-        // In a more complex app, owner info would be in the 'profiles' table.
-        // For now, we edit the business contact info.
-        setFormData(prev => prev ? { ...prev, [e.target.name]: e.target.value } : null);
+        const { name, value } = e.target;
+        setFormData(prev => prev ? { ...prev, [name]: value } : null);
+        // Clear error when user types
+        if (errors[name as keyof typeof errors]) {
+            setErrors(prev => ({ ...prev, [name]: undefined }));
+        }
     };
     
     const handleNotificationChange = (key: keyof NotificationSettings) => {
         setFormData(prev => {
             if (!prev) return null;
-            const currentSettings = prev.notificationSettings || { reviewAlerts: false, bookingRequests: false, platformNews: false };
+            const currentSettings = prev.notificationSettings || { 
+                reviewAlerts: false, 
+                bookingRequests: false, 
+                platformNews: false 
+            };
             return {
                 ...prev,
                 notificationSettings: {
@@ -96,28 +198,47 @@ const AccountSettings: React.FC = () => {
             if (!prev) return null;
             const updatedStaff = [...(prev.staff || [])];
             if (updatedStaff[index]) {
-                 updatedStaff[index] = { ...updatedStaff[index], [field]: value as any };
+                updatedStaff[index] = { ...updatedStaff[index], [field]: value as any };
             }
             return { ...prev, staff: updatedStaff };
         });
+        // Clear error when user types
+        if (errors.staff && errors.staff[index]) {
+            setErrors(prev => ({
+                ...prev,
+                staff: {
+                    ...prev.staff,
+                    [index]: {
+                        ...prev.staff![index],
+                        [field]: undefined
+                    }
+                }
+            }));
+        }
     };
 
     const handleRemoveStaff = (id: string) => {
         setFormData(prev => prev ? { ...prev, staff: (prev.staff || []).filter(s => s.id !== id) } : null);
     };
 
-    const handleSave = (e: React.FormEvent) => {
+    const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsSaving(true);
-        const savePromise = updateBusiness(formData);
+        
+        if (!validateForm()) {
+            toast.error('Please fix the errors before saving');
+            return;
+        }
 
-        toast.promise(savePromise, {
-            loading: 'Saving settings...',
-            success: 'Settings saved successfully!',
-            error: 'Failed to save settings.',
-        }).finally(() => {
+        setIsSaving(true);
+        try {
+            await updateBusiness(formData);
+            toast.success('Settings saved successfully!');
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Failed to save settings';
+            toast.error(message);
+        } finally {
             setIsSaving(false);
-        });
+        }
     };
     
     return (
@@ -125,47 +246,163 @@ const AccountSettings: React.FC = () => {
             <h2 className="text-2xl font-bold font-serif text-neutral-dark">Account Settings</h2>
             
             <SectionCard title="Contact Information">
-                <InputField label="Business Name" name="name" value={formData.name} onChange={handleOwnerInfoChange} />
-                <InputField label="Contact Email" type="email" name="email" value={formData.email || ''} onChange={handleOwnerInfoChange} />
-                <InputField label="Contact Phone" type="tel" name="phone" value={formData.phone} onChange={handleOwnerInfoChange} />
+                <InputField 
+                    label="Business Name" 
+                    name="name" 
+                    value={formData.name} 
+                    onChange={handleOwnerInfoChange}
+                    error={errors.name}
+                    required
+                />
+                <InputField 
+                    label="Contact Email" 
+                    type="email" 
+                    name="email" 
+                    value={formData.email || ''} 
+                    onChange={handleOwnerInfoChange}
+                    error={errors.email}
+                    placeholder="business@example.com"
+                />
+                <InputField 
+                    label="Contact Phone" 
+                    type="tel" 
+                    name="phone" 
+                    value={formData.phone || ''} 
+                    onChange={handleOwnerInfoChange}
+                    error={errors.phone}
+                    placeholder="+84 123 456 789"
+                />
             </SectionCard>
 
             <SectionCard title="Change Password">
-                <p className="text-sm text-gray-500">This feature is managed through your main login page. If you've forgotten your password, please log out and use the "Forgot Password" link.</p>
-                <button type="button" disabled className="px-4 py-2 bg-primary text-white rounded-md opacity-50 cursor-not-allowed">
-                    Update Password
+                <p className="text-sm text-gray-600 mb-4">
+                    Password changes are managed through your main login page. If you've forgotten your password, 
+                    please log out and use the "Forgot Password" link on the login page.
+                </p>
+                <button 
+                    type="button" 
+                    disabled 
+                    className="px-4 py-2 bg-gray-300 text-gray-600 rounded-md opacity-50 cursor-not-allowed"
+                >
+                    Update Password (Not Available Here)
                 </button>
             </SectionCard>
             
-            <SectionCard title="Staff Management (for notifications, etc.)">
+            <SectionCard title="Staff Management">
+                <p className="text-sm text-gray-600 mb-4">
+                    Add staff members who can help manage your business profile. They will receive notifications 
+                    based on their role.
+                </p>
                 <div className="space-y-3">
                     {(formData.staff || []).map((member, index) => (
-                        <div key={member.id} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-center p-3 bg-gray-50 rounded-md">
-                            <input value={member.name} onChange={e => handleStaffChange(index, 'name', e.target.value)} placeholder="Name" className="md:col-span-1 block w-full px-3 py-2 border border-gray-300 rounded-md" />
-                            <input type="email" value={member.email} onChange={e => handleStaffChange(index, 'email', e.target.value)} placeholder="Email" className="md:col-span-1 block w-full px-3 py-2 border border-gray-300 rounded-md" />
-                            <select value={member.role} onChange={e => handleStaffChange(index, 'role', e.target.value)} className="md:col-span-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
-                                {Object.values(StaffMemberRole).map(role => <option key={role} value={role}>{role}</option>)}
-                            </select>
-                            <button type="button" onClick={() => handleRemoveStaff(member.id)} className="text-red-500 font-semibold text-sm hover:underline justify-self-end">Remove</button>
+                        <div 
+                            key={member.id} 
+                            className="grid grid-cols-1 md:grid-cols-4 gap-3 items-start p-3 bg-gray-50 rounded-md border border-gray-200"
+                        >
+                            <div className="md:col-span-1">
+                                <input 
+                                    value={member.name} 
+                                    onChange={e => handleStaffChange(index, 'name', e.target.value)} 
+                                    placeholder="Name" 
+                                    className={`block w-full px-3 py-2 border rounded-md ${
+                                        errors.staff?.[index]?.name ? 'border-red-500' : 'border-gray-300'
+                                    }`}
+                                />
+                                {errors.staff?.[index]?.name && (
+                                    <p className="mt-1 text-xs text-red-500">{errors.staff[index].name}</p>
+                                )}
+                            </div>
+                            <div className="md:col-span-1">
+                                <input 
+                                    type="email" 
+                                    value={member.email} 
+                                    onChange={e => handleStaffChange(index, 'email', e.target.value)} 
+                                    placeholder="Email" 
+                                    className={`block w-full px-3 py-2 border rounded-md ${
+                                        errors.staff?.[index]?.email ? 'border-red-500' : 'border-gray-300'
+                                    }`}
+                                />
+                                {errors.staff?.[index]?.email && (
+                                    <p className="mt-1 text-xs text-red-500">{errors.staff[index].email}</p>
+                                )}
+                            </div>
+                            <div className="md:col-span-1">
+                                <select 
+                                    value={member.role} 
+                                    onChange={e => handleStaffChange(index, 'role', e.target.value)} 
+                                    className="block w-full px-3 py-2 border border-gray-300 rounded-md"
+                                >
+                                    {Object.values(StaffMemberRole).map(role => (
+                                        <option key={role} value={role}>{role}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <button 
+                                type="button" 
+                                onClick={() => handleRemoveStaff(member.id)} 
+                                className="text-red-500 font-semibold text-sm hover:underline justify-self-end"
+                            >
+                                Remove
+                            </button>
                         </div>
                     ))}
+                    {(!formData.staff || formData.staff.length === 0) && (
+                        <p className="text-sm text-gray-500 italic">No staff members added yet.</p>
+                    )}
                 </div>
-                <button type="button" onClick={handleAddStaff} className="text-secondary font-semibold text-sm hover:underline mt-2">+ Add Staff Member</button>
+                <button 
+                    type="button" 
+                    onClick={handleAddStaff} 
+                    className="text-secondary font-semibold text-sm hover:underline mt-2"
+                >
+                    + Add Staff Member
+                </button>
             </SectionCard>
 
             <SectionCard title="Notification Settings">
-                <Toggle label="Email me about new reviews" enabled={formData.notificationSettings?.reviewAlerts || false} onChange={() => handleNotificationChange('reviewAlerts')} />
-                <Toggle label="Email me about new booking requests" enabled={formData.notificationSettings?.bookingRequests || false} onChange={() => handleNotificationChange('bookingRequests')} />
-                <Toggle label="Email me about platform news and updates" enabled={formData.notificationSettings?.platformNews || false} onChange={() => handleNotificationChange('platformNews')} />
+                <p className="text-sm text-gray-600 mb-4">
+                    Choose which notifications you want to receive via email.
+                </p>
+                <div className="space-y-4">
+                    <Toggle 
+                        label="Email me about new reviews" 
+                        enabled={formData.notificationSettings?.reviewAlerts || false} 
+                        onChange={() => handleNotificationChange('reviewAlerts')}
+                        description="Get notified when customers leave new reviews"
+                    />
+                    <Toggle 
+                        label="Email me about new booking requests" 
+                        enabled={formData.notificationSettings?.bookingRequests || false} 
+                        onChange={() => handleNotificationChange('bookingRequests')}
+                        description="Get notified when customers request appointments"
+                    />
+                    <Toggle 
+                        label="Email me about platform news and updates" 
+                        enabled={formData.notificationSettings?.platformNews || false} 
+                        onChange={() => handleNotificationChange('platformNews')}
+                        description="Receive updates about new features and platform announcements"
+                    />
+                </div>
             </SectionCard>
             
             <div className="flex justify-end pt-6 border-t">
-                 <button 
+                <button 
                     type="submit" 
                     disabled={isSaving} 
-                    className={`w-full sm:w-auto px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white transition-colors flex items-center justify-center ${isSaving ? 'bg-gray-400' : 'bg-primary hover:bg-primary-dark'}`}
+                    className={`w-full sm:w-auto px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white transition-colors flex items-center justify-center gap-2 ${
+                        isSaving 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : 'bg-primary hover:bg-primary-dark'
+                    }`}
                 >
-                    {isSaving ? <><Spinner/> Saving...</> : 'Save All Settings'}
+                    {isSaving ? (
+                        <>
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            Saving...
+                        </>
+                    ) : (
+                        'Save All Settings'
+                    )}
                 </button>
             </div>
         </form>

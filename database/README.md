@@ -229,3 +229,6 @@ This schema complies with `ARCHITECTURE.md` principles:
 **Next Review:** After Phase A completion (A3 - RLS & Security)
 
 
+
+
+
