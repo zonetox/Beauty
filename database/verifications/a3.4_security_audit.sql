@@ -201,7 +201,8 @@ BEGIN
             v_missing_policies := array_append(v_missing_policies, 'blog_comments (no policies)');
         END IF;
     ELSE
-        RAISE NOTICE '   [SKIP] blog_comments table does not exist';
+        RAISE WARNING '   [WARN] blog_comments table does not exist - Run migration 20250106000001_create_blog_comments.sql';
+        v_missing_policies := array_append(v_missing_policies, 'blog_comments table (run migration)');
     END IF;
     
     -- Check admin_activity_logs
