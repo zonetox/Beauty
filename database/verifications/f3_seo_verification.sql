@@ -236,6 +236,7 @@ BEGIN
 
 EXCEPTION
     WHEN OTHERS THEN
-        RAISE EXCEPTION 'SEO verification failed: %%', SQLERRM;
+        RAISE EXCEPTION 'SEO verification failed: %', SQLERRM;
 END $$;
+
 
