@@ -19,7 +19,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import PermissionGuard from '../PermissionGuard';
-import { AuthenticatedAdmin, AdminPermissions } from '../../types';
+import { AuthenticatedAdmin, AdminPermissions, AdminUserRole } from '../../types';
 
 describe('PermissionGuard', () => {
   beforeEach(() => {
@@ -31,7 +31,7 @@ describe('PermissionGuard', () => {
       id: 1,
       username: 'admin',
       email: 'admin@test.com',
-      role: 'Admin',
+      role: AdminUserRole.ADMIN,
       permissions: {
         canManageBusinesses: true,
         canManageUsers: true,
@@ -59,7 +59,7 @@ describe('PermissionGuard', () => {
       id: 1,
       username: 'admin',
       email: 'admin@test.com',
-      role: 'Editor',
+      role: AdminUserRole.EDITOR,
       permissions: {
         canManageBusinesses: false,
         canManageUsers: false,
@@ -106,7 +106,7 @@ describe('PermissionGuard', () => {
       id: 1,
       username: 'admin',
       email: 'admin@test.com',
-      role: 'Editor',
+      role: AdminUserRole.EDITOR,
       permissions: {
         canManageBusinesses: false,
       } as AdminPermissions,
