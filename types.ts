@@ -285,6 +285,12 @@ export interface AdminUser {
   isLocked: boolean;
 }
 
+// AuthenticatedAdmin extends AdminUser with auth user
+// Note: authUser type is from Supabase Auth, using any to avoid circular dependency
+export interface AuthenticatedAdmin extends AdminUser {
+  authUser: any; // Supabase User type from @supabase/supabase-js
+}
+
 export interface Profile {
   id: string; // Corresponds to auth.users.id
   updatedAt?: string;
