@@ -36,6 +36,7 @@ describe('PermissionGuard', () => {
         canManageBusinesses: true,
         canManageUsers: true,
       } as AdminPermissions,
+      isLocked: false,
       authUser: null as any,
     };
 
@@ -64,6 +65,7 @@ describe('PermissionGuard', () => {
         canManageBusinesses: false,
         canManageUsers: false,
       } as AdminPermissions,
+      isLocked: false,
       authUser: null as any,
     };
 
@@ -110,6 +112,7 @@ describe('PermissionGuard', () => {
       permissions: {
         canManageBusinesses: false,
       } as AdminPermissions,
+      isLocked: false,
       authUser: null as any,
     };
 
