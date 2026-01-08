@@ -1,0 +1,26 @@
+# Ignore all directories outside the project
+../*
+../../*
+../../../*
+../../../../*
+../../../../../*
+../../../../../../*
+
+# Ignore specific external directories
+.antigravity
+.cursor
+.genlogin
+.gemini
+AppData
+themissionoflife
+Nho-AI-Memory
+Partner Relationship Management
+Trợ lý AI toàn năng
+code-deploy-dreamscape
+
+# Only include Beauty-main directory
+!Beauty-main
+
+
+
+
