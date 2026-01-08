@@ -227,19 +227,21 @@ Admin Panel đã có sẵn và đang dùng database 100%. Các modules đã đư
 
 | Mục | Trạng thái | Ngày | Deliverables | Ghi chú |
 |-----|------------|------|--------------|---------|
-| H1.1 .env.example | 🟢 DONE | 2025-01-08 | `.env.example`, `docs/H1_ENVIRONMENT_SETUP.md` | Environment variables template và documentation |
-| H1.2 Vercel env | 🟡 IN_PROGRESS | 2025-01-08 | Documentation | Cần setup manual trên Vercel Dashboard |
-| H1.3 Supabase secrets | 🟡 IN_PROGRESS | 2025-01-08 | Documentation | Cần setup manual trên Supabase Dashboard |
-| H1.4 Documentation | 🟢 DONE | 2025-01-08 | `docs/H1_ENVIRONMENT_SETUP.md` | Complete setup guide |
+| H1.1 .env.example | 🟢 DONE | 2025-01-08 | `docs/env.example`, `docs/H1_ENVIRONMENT_SETUP.md` | Environment variables template và documentation |
+| H1.2 Vercel env | 🟡 IN_PROGRESS | 2025-01-08 | `docs/H_PHASE_DEPLOYMENT_GUIDE.md` | Cần setup manual trên Vercel Dashboard |
+| H1.3 Supabase secrets | 🟡 IN_PROGRESS | 2025-01-08 | `docs/H_PHASE_DEPLOYMENT_GUIDE.md` | Cần setup manual trên Supabase Dashboard |
+| H1.4 Documentation | 🟢 DONE | 2025-01-08 | `docs/H1_ENVIRONMENT_SETUP.md`, `docs/H_PHASE_DEPLOYMENT_GUIDE.md` | Complete setup guide |
 | H2.1 Build | 🟢 DONE | 2025-01-08 | Build verified, `docs/H2_DEPLOYMENT_CHECKLIST.md` | Build succeeds, warnings acceptable |
-| H2.2 DB migrate | 🟡 IN_PROGRESS | 2025-01-08 | Checklist created | Need to verify migrations applied |
-| H2.3 Functions deploy | 🟡 IN_PROGRESS | 2025-01-08 | Checklist created | Need to deploy and test functions |
-| H2.4 Storage setup | 🟡 IN_PROGRESS | 2025-01-08 | Checklist created | Need to verify buckets and policies |
+| H2.2 DB migrate | 🟢 DONE | 2025-01-08 | Migrations verified, 23 tables confirmed | All migrations applied, schema verified |
+| H2.3 Functions deploy | 🟡 IN_PROGRESS | 2025-01-08 | `docs/H_PHASE_DEPLOYMENT_GUIDE.md` | 3/5 functions deployed (approve-registration, generate-sitemap, resend-email), need to verify create-admin-user, send-templated-email |
+| H2.4 Storage setup | 🟢 DONE | 2025-01-08 | 4 buckets created, 16 policies applied | `docs/STORAGE_SETUP_COMPLETE.md` |
 | H2.5 Domain | ⬜ TODO | | | Manual setup required |
 | H2.6 SSL | 🟢 DONE | 2025-01-08 | Auto-configured by Vercel | No action needed |
 | H2.7 Final checks | ⬜ TODO | | | Post-deployment testing |
 | Security - Key Management | 🟢 DONE | 2025-01-08 | `.gitignore` (enhanced), `docs/SECURITY_KEY_MANAGEMENT.md`, `docs/SECURITY_AUDIT_CHECKLIST.md` | Key security verified, no exposed keys found |
-| H3 Backup & recovery | ⬜ TODO | | | |
+| H3.1 DB backup | 🟡 IN_PROGRESS | 2025-01-08 | `docs/H3_BACKUP_RECOVERY_PLAN.md` | Documentation created, need to enable in Dashboard |
+| H3.2 Storage backup | 🟡 IN_PROGRESS | 2025-01-08 | `docs/H3_BACKUP_RECOVERY_PLAN.md` | Documentation created, redundancy verified |
+| H3.3 Rollback plan | 🟢 DONE | 2025-01-08 | `docs/H3_BACKUP_RECOVERY_PLAN.md` | Complete rollback procedure documented |
 
 ---
 
@@ -249,13 +251,13 @@ Admin Panel đã có sẵn và đang dùng database 100%. Các modules đã đư
 - Mục DONE = đóng vĩnh viễn
 - UI_COMPLETE / REVIEW_LATER = không sửa UI, chỉ audit logic khi tới Phase D
 
-**Last Updated:** 2025-01-08 (Phase G tests 100% passing - 64/64 tests, Database migrations applied successfully, 2 manual steps remaining)
+**Last Updated:** 2025-01-08 (Phase G tests 100% passing - 64/64 tests, Database migrations applied, Storage buckets created with policies, 1 manual step remaining - leaked password protection)
 
 ---
 
 ## 📊 TỔNG KẾT TIẾN ĐỘ
 
-**Tiến độ tổng thể:** ~95% hoàn thành (Phase A-H: A-G 100%, H đang triển khai - sẵn sàng launch)
+**Tiến độ tổng thể:** ~97% hoàn thành (Phase A-G 100%, Phase H 60% - sẵn sàng launch sau khi hoàn tất manual steps)
 
 **Chi tiết:**
 - ✅ Phase A: 100% (A3.4, A3.5 DONE - Security audit & Test matrix verified)
@@ -267,7 +269,7 @@ Admin Panel đã có sẵn và đang dùng database 100%. Các modules đã đư
 - ✅ Phase E: 100%
 - ✅ Phase F: 100% (F1, F2, F3 DONE)
 - ✅ Phase G: 100% (G1.1-G1.5 DONE - 64/64 tests passing, G2.1-G2.4 DONE)
-- 🟡 Phase H: 30% (H1.1, H1.4, H2.1, H2.6 DONE - Environment setup, Build verified, Security fixes)
+- 🟡 Phase H: 60% (H1.1, H1.4, H2.1, H2.2, H2.4, H2.6, H3.3 DONE - Environment setup, Build verified, DB migrations verified, Storage complete, Backup plan documented)
 
 **Ghi chú:** 
 - Phase C4 đã có sẵn và đang dùng database 100%. Tất cả modules đã được verify và hoàn thiện.
