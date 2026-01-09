@@ -12,6 +12,21 @@ const PageContentEditor: React.FC = () => {
     const [selectedPage, setSelectedPage] = useState<PageName>('about');
     const [isEditing, setIsEditing] = useState(false);
 
+    // Homepage uses different editor (HomepageEditor), show message
+    if (selectedPage === 'homepage') {
+        return (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-blue-900 mb-2">Trang chủ sử dụng Homepage Editor</h3>
+                <p className="text-blue-700 mb-4">
+                    Để chỉnh sửa trang chủ, vui lòng chuyển sang tab <strong>"Homepage Editor"</strong> trong menu bên trái.
+                </p>
+                <p className="text-sm text-blue-600">
+                    Homepage Editor cho phép bạn chỉnh sửa Hero Slides và các sections trên trang chủ.
+                </p>
+            </div>
+        );
+    }
+
     const pageData = getPageContent(selectedPage);
 
     if (!pageData) {

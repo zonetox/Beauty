@@ -51,7 +51,7 @@ const DEV_ADMIN_USERS: AdminUser[] = [
 
 // --- TYPE DEFINITIONS ---
 export interface AuthenticatedAdmin extends AdminUser { authUser: User; }
-type PageName = 'about' | 'contact';
+type PageName = 'about' | 'contact' | 'homepage';
 interface PageData { layout: LayoutItem[]; visibility: { [key: string]: boolean }; }
 
 interface AdminContextType {
