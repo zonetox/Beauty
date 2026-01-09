@@ -153,13 +153,13 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     useEffect(() => {
         let mounted = true;
 
-        // Safety timeout: logic must resolve within 5 seconds or we force loading=false
+        // Safety timeout: logic must resolve within 10 seconds or we force loading=false
         const safetyTimeout = setTimeout(() => {
             if (mounted && loading) {
-                console.warn('AdminContext: Auth check timed out after 5s. Forcing loading=false.');
+                console.warn('AdminContext: Auth check timed out after 10s. Forcing loading=false.');
                 setLoading(false);
             }
-        }, 5000);
+        }, 10000);
 
         const handleAuthChange = async (allAdmins: AdminUser[], user: User | null) => {
             if (!mounted) return;

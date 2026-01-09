@@ -20,6 +20,7 @@ import { BusinessProvider } from './contexts/BusinessContext.tsx';
 import { ThemeProvider } from './contexts/ThemeContext.tsx';
 import { BusinessDashboardProvider } from './contexts/BusinessBlogDataContext.tsx';
 import { AdminPlatformProvider } from './contexts/AdminPlatformContext.tsx';
+import { PublicPageContentProvider } from './contexts/PublicPageContentContext.tsx';
 
 // Lazy load all page components for performance
 const HomePage = lazy(() => import('./pages/HomePage.tsx'));
@@ -119,16 +120,17 @@ const App: React.FC = () => {
                             <PublicDataProvider>
                                 <HomepageDataProvider>
                                     <BusinessProvider>
-                                        <Suspense fallback={<LoadingSpinner />}>
-                                            <Routes>
-                                            {/* Routes WITH standard layout (Header, Footer, etc.) */}
-                                            <Route element={<AppLayout />}>
-                                                <Route index element={<HomePage />} />
-                                                <Route path="directory" element={<DirectoryPage />} />
-                                                <Route path="blog" element={<BlogListPage />} />
-                                                <Route path="blog/:slug" element={<BlogPostPage />} />
-                                                <Route path="about" element={<AboutPage />} />
-                                                <Route path="contact" element={<ContactPage />} />
+                                        <PublicPageContentProvider>
+                                            <Suspense fallback={<LoadingSpinner />}>
+                                                <Routes>
+                                                {/* Routes WITH standard layout (Header, Footer, etc.) */}
+                                                <Route element={<AppLayout />}>
+                                                    <Route index element={<HomePage />} />
+                                                    <Route path="directory" element={<DirectoryPage />} />
+                                                    <Route path="blog" element={<BlogListPage />} />
+                                                    <Route path="blog/:slug" element={<BlogPostPage />} />
+                                                    <Route path="about" element={<AboutPage />} />
+                                                    <Route path="contact" element={<ContactPage />} />
                                                 <Route path="register" element={<RegisterPage />} />
                                                 {/* <Route path="/register-business" element={<RegisterBusinessPage />} /> */}
                                                 <Route path="/partner-registration" element={<PartnerRegistrationPage />} />
@@ -158,10 +160,11 @@ const App: React.FC = () => {
                                             <Route path="business/:businessSlug/post/:postSlug" element={<BusinessPostPage />} />
                                             <Route path="/connection-test" element={<ConnectionTestPage />} />
 
-                                            {/* Catch-all route must be at the top level */}
-                                            <Route path="*" element={<NotFoundPage />} />
-                                        </Routes>
-                                            </Suspense>
+                                                {/* Catch-all route must be at the top level */}
+                                                <Route path="*" element={<NotFoundPage />} />
+                                            </Routes>
+                                                </Suspense>
+                                            </PublicPageContentProvider>
                                         </BusinessProvider>
                                     </HomepageDataProvider>
                                 </PublicDataProvider>

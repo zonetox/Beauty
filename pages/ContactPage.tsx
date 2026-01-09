@@ -3,7 +3,7 @@
 // 100% hoàn thiện, không placeholder, chuẩn SEO cơ bản
 
 import React from 'react';
-import { usePageContent } from '../contexts/AdminPlatformContext';
+import { usePublicPageContent } from '../contexts/PublicPageContentContext';
 import ContactHero from '../components/page-renderer/ContactHero';
 import ContactInfo from '../components/page-renderer/ContactInfo';
 import ContactForm from '../components/page-renderer/ContactForm';
@@ -12,7 +12,7 @@ import SEOHead from '../components/SEOHead.tsx';
 import LoadingState from '../components/LoadingState.tsx';
 
 const ContactPage: React.FC = () => {
-  const { getPageContent } = usePageContent();
+  const { getPageContent, loading } = usePublicPageContent();
   const pageData = getPageContent('contact');
 
   // SEO metadata
@@ -20,7 +20,7 @@ const ContactPage: React.FC = () => {
   const seoDescription = 'Liên hệ với 1Beauty.asia - Chúng tôi luôn sẵn sàng hỗ trợ bạn. Gửi tin nhắn hoặc gọi điện cho chúng tôi ngay hôm nay.';
   const seoUrl = typeof window !== 'undefined' ? `${window.location.origin}/contact` : '';
 
-  if (!pageData) {
+  if (loading || !pageData) {
     return (
       <>
         <SEOHead title={seoTitle} description={seoDescription} url={seoUrl} />

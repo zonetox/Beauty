@@ -82,40 +82,35 @@
 
 ### 2.3 Missing Functions
 
-#### ⚠️ send-templated-email
-- **Status:** NOT DEPLOYED
+#### ✅ send-templated-email
+- **Status:** ✅ **DEPLOYED** (2025-01-09)
+- **Version:** 1
+- **Verify JWT:** true
 - **Location:** `supabase/functions/send-templated-email/index.ts`
 - **Purpose:** Gửi email với templates (8 templates: welcome, registration_approved, etc.)
-- **Action Required:** Deploy function này
+- **Deploy Status:** ✅ **COMPLETE**
 
-**Deploy Command:**
-```bash
-supabase functions deploy send-templated-email
-```
-
-#### ⚠️ create-admin-user
-- **Status:** NOT DEPLOYED
+#### ✅ create-admin-user
+- **Status:** ✅ **DEPLOYED** (2025-01-09)
+- **Version:** 1
+- **Verify JWT:** true
 - **Location:** `supabase/functions/create-admin-user/index.ts`
 - **Purpose:** Tạo admin user mới
-- **Action Required:** Deploy function này
-
-**Deploy Command:**
-```bash
-supabase functions deploy create-admin-user
-```
+- **Deploy Status:** ✅ **COMPLETE**
 
 ### 2.4 Verification Steps
-**Action Required:**
-1. Deploy 2 functions còn thiếu:
-   ```bash
-   supabase functions deploy send-templated-email
-   supabase functions deploy create-admin-user
-   ```
-2. Verify functions hoạt động:
-   - Test `send-templated-email` với template test
-   - Test `create-admin-user` (nếu cần)
+**Status:** ✅ **ALL FUNCTIONS DEPLOYED** (5/5)
 
-**Status:** ⚠️ **2/5 FUNCTIONS CHƯA DEPLOY** (send-templated-email, create-admin-user)
+**Deployed Functions:**
+1. ✅ `approve-registration` - ACTIVE (Version 2)
+2. ✅ `generate-sitemap` - ACTIVE (Version 4)
+3. ✅ `resend-email` - ACTIVE (Version 4)
+4. ✅ `send-templated-email` - ACTIVE (Version 1) - **NEWLY DEPLOYED**
+5. ✅ `create-admin-user` - ACTIVE (Version 1) - **NEWLY DEPLOYED**
+
+**Next Steps (Optional):**
+- Test `send-templated-email` với template test
+- Test `create-admin-user` (nếu cần)
 
 ---
 
@@ -170,7 +165,7 @@ supabase secrets set SITE_URL=https://1beauty.asia
 | Category | Status | Completion |
 |----------|--------|------------|
 | Vercel Env Vars | ⚠️ | 0% (cần verify manual) |
-| Supabase Functions | ⚠️ | 60% (3/5 deployed) |
+| Supabase Functions | ✅ | 100% (5/5 deployed) |
 | Supabase Secrets | ⚠️ | 0% (cần verify manual) |
 
 ### 4.2 Action Items
@@ -180,11 +175,11 @@ supabase secrets set SITE_URL=https://1beauty.asia
    - Check Dashboard → Settings → Environment Variables
    - Verify: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
 
-2. ⚠️ **Deploy Missing Edge Functions**
-   - Deploy `send-templated-email`
-   - Deploy `create-admin-user`
+2. ✅ **Deploy Missing Edge Functions** - **COMPLETE**
+   - ✅ `send-templated-email` - Deployed
+   - ✅ `create-admin-user` - Deployed
 
-3. ⚠️ **Verify Supabase Secrets**
+3. ⚠️ **Verify Supabase Secrets** - **MANUAL REQUIRED**
    - Check Dashboard → Settings → Edge Functions → Secrets
    - Verify: `RESEND_API_KEY` đã set
 
@@ -219,14 +214,11 @@ supabase secrets set SITE_URL=https://1beauty.asia
 # Vào: https://vercel.com/dashboard → beauty → Settings → Environment Variables
 ```
 
-### Step 2: Deploy Missing Functions
+### Step 2: Deploy Missing Functions - ✅ **COMPLETE**
 ```bash
-# Link project (nếu chưa link)
-supabase link --project-ref fdklazlcbxaiapsnnbqq
-
-# Deploy functions
-supabase functions deploy send-templated-email
-supabase functions deploy create-admin-user
+# ✅ Both functions deployed successfully (2025-01-09)
+# - send-templated-email: Version 1, ACTIVE
+# - create-admin-user: Version 1, ACTIVE
 ```
 
 ### Step 3: Verify Supabase Secrets
@@ -252,8 +244,8 @@ supabase secrets set RESEND_API_KEY=your-resend-api-key
 - [x] `approve-registration` - ✅ Deployed
 - [x] `generate-sitemap` - ✅ Deployed
 - [x] `resend-email` - ✅ Deployed
-- [ ] `send-templated-email` - ⚠️ Cần deploy
-- [ ] `create-admin-user` - ⚠️ Cần deploy
+- [x] `send-templated-email` - ✅ Deployed (2025-01-09)
+- [x] `create-admin-user` - ✅ Deployed (2025-01-09)
 
 ### Supabase Secrets
 - [ ] `RESEND_API_KEY` - ⚠️ Cần verify

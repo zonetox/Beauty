@@ -1,12 +1,13 @@
 
 
 
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useUserSession } from '../contexts/UserSessionContext.tsx';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { useTheme } from '../contexts/ThemeContext.tsx';
+import { AdminContext } from '../contexts/AdminContext.tsx';
 
 const UserIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
@@ -28,10 +29,19 @@ const CloseIcon: React.FC<{ className?: string }> = ({ className }) => (
 
 
 const Header: React.FC = () => {
-  const { currentUser, logout } = useUserSession();
+  const { currentUser, logout, profile } = useUserSession();
   const { theme } = useTheme();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
+  // Safely get admin user (may not be in AdminProvider context for public pages)
+  // Use useContext directly to avoid throwing error if not in provider
+  const adminContext = useContext(AdminContext);
+  const adminUser = adminContext?.currentUser || null;
+  const isAdmin = !!adminUser;
+  
+  // Check if user is business owner
+  const isBusinessOwner = !!profile?.businessId;
 
   const handleLogout = async () => {
     await logout();
@@ -80,7 +90,10 @@ const Header: React.FC = () => {
         <NavLink to="/blog" className={classNameFunc} onClick={handleLinkClick}>Blog</NavLink>
         <NavLink to="/about" className={classNameFunc} onClick={handleLinkClick}>Về chúng tôi</NavLink>
         <NavLink to="/contact" className={classNameFunc} onClick={handleLinkClick}>Liên hệ</NavLink>
-        <NavLink to="/admin" className={classNameFunc} onClick={handleLinkClick}>Admin</NavLink>
+        {/* Admin link chỉ hiển thị cho admin */}
+        {isAdmin && (
+          <NavLink to="/admin" className={classNameFunc} onClick={handleLinkClick}>Admin</NavLink>
+        )}
       </>
     );
   };
@@ -109,31 +122,39 @@ const Header: React.FC = () => {
 
           {/* Right side buttons - Desktop */}
           <div className="hidden md:flex items-center ml-2">
-            <button onClick={handleHealthCheck} className="px-3 py-2 rounded-md text-sm font-medium text-amber-700 bg-amber-100 hover:bg-amber-200 transition-colors" title="Check Supabase Connection Status">
-              API Status
-            </button>
+            {/* API Status chỉ hiển thị cho admin trong development */}
+            {isAdmin && (typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'development') && (
+              <button onClick={handleHealthCheck} className="px-3 py-2 rounded-md text-sm font-medium text-amber-700 bg-amber-100 hover:bg-amber-200 transition-colors" title="Check Supabase Connection Status">
+                API Status
+              </button>
+            )}
             {currentUser ? (
               <div className="flex items-center ml-2">
                 <span className="text-sm text-neutral-dark mr-2 hidden lg:block">Chào, {currentUser.user_metadata?.full_name || currentUser.email}!</span>
-                <NavLink to="/account" className={({ isActive }) => `${navLinkClass({ isActive })} flex items-center gap-2`}>
-                  <UserIcon className="w-5 h-5" />
-                  <span className="hidden lg:inline">Dashboard Doanh nghiệp</span>
-                </NavLink>
+                {/* Dashboard Doanh nghiệp chỉ hiển thị cho business owner */}
+                {isBusinessOwner && (
+                  <NavLink to="/account" className={({ isActive }) => `${navLinkClass({ isActive })} flex items-center gap-2`}>
+                    <UserIcon className="w-5 h-5" />
+                    <span className="hidden lg:inline">Dashboard Doanh nghiệp</span>
+                  </NavLink>
+                )}
                 <button onClick={handleLogout} className="ml-2 px-3 py-2 text-sm font-medium text-neutral-dark hover:bg-primary/10 rounded-md">
                   Đăng xuất
                 </button>
               </div>
             ) : (
-              <NavLink to="/login" className={`${navLinkClass({ isActive: false })} ml-2`}>
-                Đăng nhập
-              </NavLink>
+              <>
+                <NavLink to="/login" className={`${navLinkClass({ isActive: false })} ml-2`}>
+                  Đăng nhập
+                </NavLink>
+                <Link
+                  to="/register"
+                  className="ml-4 px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark transition-transform transform hover:scale-105"
+                >
+                  For Business
+                </Link>
+              </>
             )}
-            <Link
-              to="/register"
-              className="ml-4 px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark transition-transform transform hover:scale-105"
-            >
-              For Business
-            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -151,25 +172,31 @@ const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile menu, show/hide based on menu state. */}
+          {/* Mobile menu, show/hide based on menu state. */}
       {isMenuOpen && (
         <div className="md:hidden" id="mobile-menu">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <NavLinks mobile />
-            <button onClick={() => { handleHealthCheck(); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-amber-700 hover:bg-amber-100">
-              Check API Status
-            </button>
+            {/* API Status chỉ hiển thị cho admin trong development */}
+            {isAdmin && (typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'development') && (
+              <button onClick={() => { handleHealthCheck(); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-amber-700 hover:bg-amber-100">
+                Check API Status
+              </button>
+            )}
           </div>
           <div className="pt-4 pb-3 border-t border-gray-200">
             {currentUser ? (
               <div className="px-2 space-y-1">
-                <NavLink to="/account" className={({ isActive }) => `${mobileNavLinkClass({ isActive })} flex items-center gap-3`} onClick={() => setIsMenuOpen(false)}>
-                  <UserIcon className="w-6 h-6" />
-                  <div>
-                    <p className="font-medium">{currentUser.user_metadata?.full_name || currentUser.email}</p>
-                    <p className="text-sm text-gray-500">Quản lý doanh nghiệp</p>
-                  </div>
-                </NavLink>
+                {/* Dashboard Doanh nghiệp chỉ hiển thị cho business owner */}
+                {isBusinessOwner && (
+                  <NavLink to="/account" className={({ isActive }) => `${mobileNavLinkClass({ isActive })} flex items-center gap-3`} onClick={() => setIsMenuOpen(false)}>
+                    <UserIcon className="w-6 h-6" />
+                    <div>
+                      <p className="font-medium">{currentUser.user_metadata?.full_name || currentUser.email}</p>
+                      <p className="text-sm text-gray-500">Quản lý doanh nghiệp</p>
+                    </div>
+                  </NavLink>
+                )}
                 <button onClick={handleLogout} className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-neutral-dark hover:bg-primary/10">
                   Đăng xuất
                 </button>
@@ -177,17 +204,15 @@ const Header: React.FC = () => {
             ) : (
               <div className="px-2 space-y-1">
                 <NavLink to="/login" className={mobileNavLinkClass} onClick={() => setIsMenuOpen(false)}>Đăng nhập</NavLink>
+                <Link
+                  to="/register"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block w-full text-center px-4 py-3 border border-transparent rounded-md shadow-sm font-medium text-white bg-primary hover:bg-primary-dark mt-2"
+                >
+                  Register Business
+                </Link>
               </div>
             )}
-            <div className="mt-3 px-2">
-              <Link
-                to="/register"
-                onClick={() => setIsMenuOpen(false)}
-                className="block w-full text-center px-4 py-3 border border-transparent rounded-md shadow-sm font-medium text-white bg-primary hover:bg-primary-dark"
-              >
-                Register Business
-              </Link>
-            </div>
           </div>
         </div>
       )}
