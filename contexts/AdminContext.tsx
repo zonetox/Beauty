@@ -97,7 +97,7 @@ interface AdminContextType {
     updatePageContent: (page: PageName, newContent: PageData) => Promise<void>;
 }
 
-const AdminContext = createContext<AdminContextType | undefined>(undefined);
+export const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 const ANNOUNCEMENT_READ_KEY = 'read_announcements_by_business';
 const DEV_LOGIN_KEY = 'dev_login_user_id';

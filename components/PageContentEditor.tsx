@@ -5,7 +5,7 @@ import { usePageContent } from '../contexts/AdminPlatformContext.tsx';
 import LayoutEditor from './LayoutEditor.tsx';
 import { LayoutItem } from '../types.ts';
 
-type PageName = 'about' | 'contact';
+type PageName = 'about' | 'contact' | 'homepage';
 
 const PageContentEditor: React.FC = () => {
     const { getPageContent, updatePageContent } = usePageContent();
@@ -38,8 +38,9 @@ const PageContentEditor: React.FC = () => {
                         className="p-2 border rounded-md bg-gray-50"
                         disabled={isEditing}
                     >
-                        <option value="about">About Us</option>
-                        <option value="contact">Contact Us</option>
+                        <option value="homepage">Trang chủ</option>
+                        <option value="about">Về chúng tôi</option>
+                        <option value="contact">Liên hệ</option>
                     </select>
                 </div>
                 {!isEditing && (

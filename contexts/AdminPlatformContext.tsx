@@ -3,7 +3,7 @@ import { AdminLogEntry, Notification, Announcement, SupportTicket, TicketReply, 
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { DEFAULT_PAGE_CONTENT } from './PageContentContext.tsx';
 
-type PageName = 'about' | 'contact';
+type PageName = 'about' | 'contact' | 'homepage';
 interface PageData { layout: LayoutItem[]; visibility: { [key: string]: boolean }; }
 
 interface AdminPlatformContextType {
