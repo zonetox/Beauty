@@ -24,6 +24,8 @@ dist-ssr
 .env.vercel
 docs/.env.vercel
 **/.env.vercel
+# Vercel integration keys - DO NOT COMMIT
+.env.vercel
 
 # Secrets and keys (extra protection)
 *.key
