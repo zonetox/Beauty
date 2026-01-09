@@ -16,11 +16,13 @@ export const supabaseAnonKeyFromEnv =
 
 
 // Check if the credentials are truly configured and not just placeholders.
+// Supports both new keys (sb_publishable_...) and legacy keys (eyJ... JWT)
 export const isSupabaseConfigured =
     !!supabaseUrlFromEnv &&
     !!supabaseAnonKeyFromEnv &&
     !supabaseUrlFromEnv.includes('your-project-url') &&
-    !supabaseAnonKeyFromEnv.includes('your-public-anon-key');
+    !supabaseAnonKeyFromEnv.includes('your-public-anon-key') &&
+    !supabaseAnonKeyFromEnv.includes('sb_publishable_YOUR_KEY_HERE');
 
 // Use real credentials if configured; otherwise, use valid-looking dummy credentials.
 // This prevents the client from throwing an 'Invalid supabaseUrl' error on initialization

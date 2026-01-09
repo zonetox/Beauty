@@ -21,6 +21,9 @@ dist-ssr
 .env.development
 .env.test
 .env.staging
+.env.vercel
+docs/.env.vercel
+**/.env.vercel
 
 # Secrets and keys (extra protection)
 *.key
