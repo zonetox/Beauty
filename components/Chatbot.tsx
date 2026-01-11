@@ -137,8 +137,17 @@ const Chatbot: React.FC = () => {
 
             {isOpen && (
                 <div className="fixed bottom-24 right-6 z-50 w-[calc(100vw-3rem)] max-w-sm h-[60vh] bg-white rounded-lg shadow-xl flex flex-col">
-                    <header className="bg-primary text-white p-4 rounded-t-lg">
+                    <header className="bg-primary text-white p-4 rounded-t-lg flex items-center justify-between">
                         <h3 className="font-bold text-lg">Trợ lý tìm kiếm</h3>
+                        <button
+                            onClick={() => setIsOpen(false)}
+                            className="ml-2 p-1 rounded-full hover:bg-white/20 transition-colors focus:outline-none focus:ring-2 focus:ring-white/50"
+                            aria-label="Đóng chatbot"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
                     </header>
                     <main className="flex-1 p-4 overflow-y-auto bg-gray-50">
                         <div className="space-y-4">
