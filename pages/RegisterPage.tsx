@@ -23,12 +23,15 @@ const RegisterPage: React.FC = () => {
         email: '',
         phone: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        // Business-specific fields
+        category: BusinessCategory.SPA,
+        address: ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
@@ -93,8 +96,8 @@ const RegisterPage: React.FC = () => {
                     owner_id: authData.user.id,
                     email: formData.email,
                     phone: formData.phone.trim(),
-                    address: '', // Will be filled in onboarding
-                    categories: [BusinessCategory.SPA], // Default category, can be changed later
+                    address: formData.address.trim(),
+                    categories: [formData.category],
                 });
 
                 if (!business) {
@@ -277,32 +280,64 @@ const RegisterPage: React.FC = () => {
             <form onSubmit={handleSubmit}>
             <div className="space-y-4">
               {userType === 'business' ? (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Tên doanh nghiệp <span className="text-red-500">*</span></label>
-                  <input type="text" name="business_name" value={formData.business_name} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
-                </div>
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Tên doanh nghiệp <span className="text-red-500">*</span></label>
+                    <input type="text" name="business_name" value={formData.business_name} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Lĩnh vực <span className="text-red-500">*</span></label>
+                    <select name="category" value={formData.category} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
+                      {Object.values(BusinessCategory).map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Địa chỉ doanh nghiệp <span className="text-red-500">*</span></label>
+                    <input type="text" name="address" value={formData.address} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" placeholder="Nhập địa chỉ đầy đủ của doanh nghiệp" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Email <span className="text-red-500">*</span></label>
+                    <input type="email" name="email" value={formData.email} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Số điện thoại <span className="text-red-500">*</span></label>
+                    <input type="tel" name="phone" value={formData.phone} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Mật khẩu <span className="text-red-500">*</span></label>
+                    <input type="password" name="password" value={formData.password} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Xác nhận mật khẩu <span className="text-red-500">*</span></label>
+                    <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                  </div>
+                </>
               ) : (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Họ và tên <span className="text-red-500">*</span></label>
-                  <input type="text" name="full_name" value={formData.full_name} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
-                </div>
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Họ và tên <span className="text-red-500">*</span></label>
+                    <input type="text" name="full_name" value={formData.full_name} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Email <span className="text-red-500">*</span></label>
+                    <input type="email" name="email" value={formData.email} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Số điện thoại</label>
+                    <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Mật khẩu <span className="text-red-500">*</span></label>
+                    <input type="password" name="password" value={formData.password} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Xác nhận mật khẩu <span className="text-red-500">*</span></label>
+                    <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                  </div>
+                </>
               )}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Email</label>
-                <input type="email" name="email" value={formData.email} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Số điện thoại {userType === 'business' && <span className="text-red-500">*</span>}</label>
-                <input type="tel" name="phone" value={formData.phone} onChange={handleChange} required={userType === 'business'} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Mật khẩu</label>
-                <input type="password" name="password" value={formData.password} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
-              </div>
-               <div>
-                <label className="block text-sm font-medium text-gray-700">Xác nhận mật khẩu</label>
-                <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
-              </div>
             </div>
             <button type="submit" disabled={isSubmitting} className="mt-6 w-full bg-primary text-white py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium hover:bg-primary-dark disabled:bg-primary/50 disabled:cursor-not-allowed">
                 {isSubmitting ? 'Đang đăng ký...' : 'Đăng ký'}
