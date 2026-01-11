@@ -36,32 +36,49 @@ const BusinessDetailPage: React.FC = () => {
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
     useEffect(() => {
+        let isMounted = true;
+        
         const loadBusiness = async () => {
             if (!slug) {
-                setError('Business slug is required');
-                setLoading(false);
+                if (isMounted) {
+                    setError('Business slug is required');
+                    setLoading(false);
+                }
                 return;
             }
 
-            setLoading(true);
-            setError(null);
+            if (isMounted) {
+                setLoading(true);
+                setError(null);
+            }
+            
             try {
                 const data = await fetchBusinessBySlug(slug);
+                if (!isMounted) return; // Component unmounted, skip state update
+                
                 if (!data) {
                     setError('Business not found');
                 } else {
                     setBusiness(data);
                 }
             } catch (err) {
+                if (!isMounted) return;
                 const message = err instanceof Error ? err.message : 'Failed to load business details';
                 console.error("Failed to load business details:", err);
                 setError(message);
             } finally {
-                setLoading(false);
+                if (isMounted) {
+                    setLoading(false);
+                }
             }
         };
+        
         loadBusiness();
-    }, [slug, fetchBusinessBySlug]);
+        
+        return () => {
+            isMounted = false;
+        };
+    }, [slug]); // Remove fetchBusinessBySlug from dependencies to prevent double fetch
 
     useEffect(() => {
         if (business) {
@@ -85,7 +102,7 @@ const BusinessDetailPage: React.FC = () => {
                 console.error("Failed to update recently viewed businesses:", error);
             }
         }
-    }, [business, incrementBusinessViewCount]);
+    }, [business?.id]); // Only depend on business.id to prevent unnecessary re-runs
 
     // Loading state
     if (loading) {

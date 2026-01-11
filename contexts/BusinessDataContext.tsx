@@ -1,8 +1,8 @@
 
 
-import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
+import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { Business, BlogPost, BlogComment, BlogCategory, MembershipPackage, Service, MediaItem, TeamMember, Deal, MediaType } from '../types.ts';
+import { Business, BlogPost, BlogComment, BlogCategory, MembershipPackage, Service, MediaItem, TeamMember, Deal, MediaType, Review } from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { useAdmin, useAdminAuth } from './AdminContext.tsx';
 import { uploadFile, deleteFileByUrl } from '../lib/storage.ts';
@@ -303,7 +303,11 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
 
   // NEW: Async detailed getter
   const fetchBusinessBySlug = useCallback(async (slug: string): Promise<Business | null> => {
-    if (!isSupabaseConfigured) return businesses.find(b => b.slug === slug) || null;
+    if (!isSupabaseConfigured) {
+      // Fallback to businesses list if available
+      const cached = businesses.find(b => b.slug === slug);
+      return cached || null;
+    }
 
     // 1. Fetch the main business record
     const { data: businessData, error: businessError } = await supabase
@@ -314,7 +318,9 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
 
     if (businessError || !businessData) {
       console.error("Error fetching business details:", businessError?.message);
-      return null;
+      // Fallback to cached businesses list
+      const cached = businesses.find(b => b.slug === slug);
+      return cached || null;
     }
 
     // 2. Parallel fetch for relations
@@ -329,16 +335,16 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
 
     // 3. Assemble full object
     const fullBusiness: Business = {
-      ...businessData,
-      services: servicesRes.data || [],
-      gallery: mediaRes.data || [], // Map to 'gallery'
-      team: teamRes.data || [],
-      deals: dealsRes.data || [],
-      reviews: reviewsRes.data || []
+      ...snakeToCamel(businessData) as Business,
+      services: (servicesRes.data || []).map(s => snakeToCamel(s) as Service),
+      gallery: (mediaRes.data || []).map(m => snakeToCamel(m) as MediaItem), // Map to 'gallery'
+      team: (teamRes.data || []).map(t => snakeToCamel(t) as TeamMember),
+      deals: (dealsRes.data || []).map(d => snakeToCamel(d) as Deal),
+      reviews: (reviewsRes.data || []).map(r => snakeToCamel(r) as Review)
     };
 
     return fullBusiness;
-  }, [businesses]); // Depend on businesses if we want fallback, but mainly standalone
+  }, [isSupabaseConfigured]); // Remove businesses dependency to prevent function recreation
 
   // D2.2 FIX: Use safe RPC function for view count increment
   const incrementBusinessViewCount = async (businessId: number) => {
