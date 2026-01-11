@@ -35,6 +35,11 @@ docs/.env.vercel
 secrets/
 .secrets
 
+# Database credentials and connection strings
+**/pooler-url
+**/*credentials*
+**/*secrets*
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

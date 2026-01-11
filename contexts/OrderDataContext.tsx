@@ -3,6 +3,7 @@ import { Order, OrderStatus } from '../types.ts';
 import { supabase } from '../lib/supabaseClient.ts';
 import { useAdminPlatform } from './AdminPlatformContext.tsx';
 import { useAdminAuth } from './AuthContext.tsx';
+import { snakeToCamel } from '../lib/utils.ts';
 
 interface OrderDataContextType {
   orders: Order[];
@@ -12,6 +13,17 @@ interface OrderDataContextType {
 }
 
 const OrderDataContext = createContext<OrderDataContextType | undefined>(undefined);
+
+// Helper to convert camelCase to snake_case for Supabase inserts
+const toSnakeCase = (obj: any): any => {
+  if (typeof obj !== 'object' || obj === null) return obj;
+  if (Array.isArray(obj)) return obj.map(toSnakeCase);
+  return Object.keys(obj).reduce((acc: any, key: string) => {
+    const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+    acc[snakeKey] = toSnakeCase(obj[key]);
+    return acc;
+  }, {});
+};
 
 export const OrderDataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -25,7 +37,7 @@ export const OrderDataProvider: React.FC<{ children: ReactNode }> = ({ children 
     if (error) {
         console.error("Error fetching orders:", error);
     } else if (data) {
-        setOrders(data as Order[]);
+        setOrders(snakeToCamel(data) as Order[]);
     }
     setLoading(false);
   }, []);
@@ -36,14 +48,14 @@ export const OrderDataProvider: React.FC<{ children: ReactNode }> = ({ children 
 
 
   const addOrder = async (newOrderData: Omit<Order, 'id'>): Promise<Order> => {
-    const { data, error } = await supabase.from('orders').insert(newOrderData).select().single();
+    const { data, error } = await supabase.from('orders').insert(toSnakeCase(newOrderData)).select().single();
     
     if (error || !data) {
         console.error("Error adding order:", error);
         throw new Error("Failed to create order.");
     }
 
-    const newOrder = data as Order;
+    const newOrder = snakeToCamel(data) as Order;
     setOrders(prev => [newOrder, ...prev]);
     if(currentAdmin){
         logAdminAction(currentAdmin.username, 'Create Order', `New order created for ${newOrder.businessName} for package ${newOrder.packageName}.`);
@@ -61,10 +73,11 @@ export const OrderDataProvider: React.FC<{ children: ReactNode }> = ({ children 
         notes: notes || orderToUpdate.notes,
     };
     
-    const { data, error } = await supabase.from('orders').update(updates).eq('id', orderId).select().single();
+    const { data, error } = await supabase.from('orders').update(toSnakeCase(updates)).eq('id', orderId).select().single();
 
     if (!error && data) {
-        setOrders(prev => prev.map(o => o.id === orderId ? data as Order : o));
+        const updatedOrder = snakeToCamel(data) as Order;
+        setOrders(prev => prev.map(o => o.id === orderId ? updatedOrder : o));
         if (currentAdmin) {
             if (newStatus === OrderStatus.COMPLETED) {
                 logAdminAction(currentAdmin.username, 'Confirm Payment', `Confirmed payment for Order #${orderId} (${orderToUpdate.businessName}).`);

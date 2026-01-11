@@ -325,11 +325,11 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                     .order('last_reply_at', { ascending: false, nullsFirst: false })
                     .order('created_at', { ascending: false }),
                 supabase.from('registration_requests')
-                    .select('id, business_name, email, phone, address, city, district, categories, submitted_at, status, notes')
+                    .select('id, business_name, email, phone, address, category, tier, submitted_at, status')
                     .order('submitted_at', { ascending: false }),
                 supabase.from('app_settings').select('settings_data').eq('id', 1).maybeSingle(),
                 supabase.from('page_content')
-                    .select('id, page_name, content_data')
+                    .select('page_name, content_data')
             ]);
 
             if (announcementsRes.data) {

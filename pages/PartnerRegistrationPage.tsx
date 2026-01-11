@@ -12,8 +12,7 @@ const PartnerRegistrationPage: React.FC = () => {
         phone: '',
         category: BusinessCategory.SPA, // Default
         address: '',
-        tier: MembershipTier.PREMIUM, // Preference
-        notes: ''
+        tier: MembershipTier.PREMIUM // Preference
     });
     const [loading, setLoading] = useState(false);
 
