@@ -573,14 +573,25 @@ All frontend queries comply with RLS policies. No RLS bypasses are used.
 
 ## 🎯 BUSINESS LIFECYCLE & TRIAL MANAGEMENT
 
-### Business Creation Flow
+### Registration Flows
 
-**Direct Registration (`/register`):**
-1. User signs up via `supabase.auth.signUp()` (NO email verification)
-2. Profile created automatically via `handle_new_user` trigger
-3. Business created immediately via `createBusinessWithTrial()` utility
-4. Trial initialized: `membership_tier = 'Premium'`, `membership_expiry_date = now() + 30 days`
-5. User redirected to `/dashboard`
+**User Registration (`/register` - User Type):**
+1. User selects "Người dùng" (User) option
+2. User signs up via `supabase.auth.signUp()` (NO email verification)
+3. Profile created automatically via `handle_new_user` trigger
+   - `business_id = NULL` (regular user, not business owner)
+4. User redirected to homepage (`/`)
+5. Can browse businesses, create reviews, make appointments
+6. Cannot access business dashboard
+
+**Business Registration (`/register` - Business Type):**
+1. User selects "Doanh nghiệp" (Business) option
+2. User signs up via `supabase.auth.signUp()` (NO email verification)
+3. Profile created automatically via `handle_new_user` trigger
+4. Business created immediately via `createBusinessWithTrial()` utility
+5. Trial initialized: `membership_tier = 'Premium'`, `membership_expiry_date = now() + 30 days`
+6. Profile updated with `business_id` linking to created business
+7. User redirected to `/account` (Business Dashboard)
 
 **Registration Request Flow (`approve-registration` Edge Function):**
 1. Admin approves registration request
