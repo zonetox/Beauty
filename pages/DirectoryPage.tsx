@@ -134,6 +134,8 @@ const DirectoryPage: React.FC = () => {
     const activeFilters = getFiltersFromUrl();
 
     // Effect to fetch paginated businesses when filters or page in URL changes
+    // FIX: Remove fetchBusinesses and getFiltersFromUrl from dependencies to prevent infinite loop
+    // They are stable references from context, but including them causes re-renders
     useEffect(() => {
         const filters = getFiltersFromUrl();
         fetchBusinesses(filters.page, {
@@ -142,7 +144,8 @@ const DirectoryPage: React.FC = () => {
             district: filters.district,
             category: filters.category
         });
-    }, [location.search, fetchBusinesses, getFiltersFromUrl]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [location.search]); // Only depend on location.search to prevent navigation throttling
 
     // Fast marker filtering for Map (uses the lightweight markers state)
     const filteredMarkers = useMemo(() => {
@@ -227,7 +230,8 @@ const DirectoryPage: React.FC = () => {
         }
     }, [selectedBusinessId, viewMode]);
 
-    const handleFilterChange = (newFilters: Partial<ReturnType<typeof getFiltersFromUrl>>) => {
+    // FIX: Memoize handleFilterChange to prevent infinite navigation loop
+    const handleFilterChange = useCallback((newFilters: Partial<ReturnType<typeof getFiltersFromUrl>>) => {
         const currentFilters = getFiltersFromUrl();
         const updatedFilters = { ...currentFilters, ...newFilters };
         const params = new URLSearchParams();
@@ -245,7 +249,7 @@ const DirectoryPage: React.FC = () => {
         params.set('page', newPage.toString());
 
         navigate(`/directory?${params.toString()}`, { replace: true });
-    };
+    }, [getFiltersFromUrl, navigate]);
 
     const hasActiveFilters = useMemo(() => {
         return Object.entries(activeFilters).some(([key, value]) => 
@@ -312,7 +316,7 @@ const DirectoryPage: React.FC = () => {
                 <div className="container mx-auto px-4 py-6">
                     {/* Search Bar */}
                     <SearchBar
-                        onSearch={(filters) => handleFilterChange(filters)}
+                        onSearch={handleFilterChange}
                         categories={CATEGORIES} 
                         locations={CITIES} 
                         locationsHierarchy={LOCATIONS_HIERARCHY}
