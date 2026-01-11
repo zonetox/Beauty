@@ -33,6 +33,7 @@ This directory contains authoritative documentation about the database infrastru
 ### `/` - Root Level
 
 - **`development-rules.md`** - **REQUIRED READING** - Rules for adding new features
+- **`DATABASE_DEVELOPMENT_WORKFLOW.md`** - **MANDATORY** - Quy trình phát triển database (bắt buộc tuân thủ)
 
 ---
 
@@ -47,11 +48,14 @@ This directory contains authoritative documentation about the database infrastru
 
 ### ❗ Before Adding New Features
 
-1. **READ `development-rules.md`** - Understand the workflow
-2. **Design database changes FIRST** - Don't code frontend without DB design
-3. **Create migration** - Update database schema
-4. **Update docs** - Document all schema changes
-5. **Then code frontend** - Align with new schema
+1. **READ `DATABASE_DEVELOPMENT_WORKFLOW.md`** - **MANDATORY** - Quy trình bắt buộc
+2. **READ `development-rules.md`** - Understand the workflow
+3. **Design database changes FIRST** - Don't code frontend without DB design
+4. **Create migration** - Update database schema
+5. **Update docs IMMEDIATELY** - **BẮT BUỘC** - Document all schema changes ngay lập tức
+6. **Verify docs match database** - Đảm bảo docs chính xác 100%
+7. **Then code frontend** - Align with new schema
+8. **No placeholders** - Code hoàn thiện, không có TODO/FIXME
 
 ### ❗ Database Schema is AUTHORITATIVE
 
@@ -100,13 +104,22 @@ This directory contains authoritative documentation about the database infrastru
 - ✅ RPC functions added/removed
 - ✅ Enum types added/changed
 
-### Update Process
+### Update Process (MANDATORY)
 
 1. Run migration/change database
-2. Verify change in Supabase
-3. Update relevant doc file(s)
-4. Update `README.md` if structure changes
-5. Notify team if contract changes
+2. Verify change in Supabase Dashboard
+3. **Update relevant doc file(s) IMMEDIATELY** - **BẮT BUỘC**
+   - `schema.md` - Tables/columns
+   - `relations.md` - Foreign keys
+   - `enums.md` - Enum types
+   - `rls.md` - RLS policies
+   - `functions.md` - Functions/triggers
+   - `limitations.md` - Limitations
+4. **Verify docs match database** - 100% accuracy required
+5. Update `README.md` if structure changes
+6. Notify team if contract changes
+
+**⚠️ LƯU Ý:** Không được viết code trước khi update docs. Docs phải được update ngay sau migration.
 
 ---
 

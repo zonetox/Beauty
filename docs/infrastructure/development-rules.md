@@ -8,6 +8,36 @@
 
 ## 🚨 CRITICAL RULES - READ BEFORE CODING
 
+> **⚠️ QUAN TRỌNG:** Xem chi tiết quy trình trong `DATABASE_DEVELOPMENT_WORKFLOW.md`
+
+### ❗ Rule 0: MANDATORY - Đọc Database Docs TRƯỚC KHI Code
+
+**BẮT BUỘC:** Khi phát triển tính năng mới cần database:
+
+1. **Đọc Database Docs TRƯỚC:**
+   - ✅ `/docs/infrastructure/database/schema.md`
+   - ✅ `/docs/infrastructure/database/relations.md`
+   - ✅ `/docs/infrastructure/database/rls.md`
+   - ✅ `/docs/infrastructure/database/functions.md`
+   - ✅ `/docs/infrastructure/database/limitations.md`
+
+2. **Nếu cần thêm database:**
+   - ✅ Tạo migration SQL
+   - ✅ Apply migration trong Supabase
+   - ✅ **CẬP NHẬT DATABASE DOCS NGAY LẬP TỨC** (BẮT BUỘC)
+   - ✅ Verify docs khớp với database thực tế
+   - ✅ Sau đó mới viết code
+
+3. **Khi viết code:**
+   - ✅ Sử dụng đúng tên columns từ `schema.md`
+   - ✅ Tuân thủ RLS policies từ `rls.md`
+   - ✅ Không có placeholder code
+   - ✅ Code hoàn thiện, không có TODO/FIXME
+
+**Xem chi tiết:** `/docs/infrastructure/DATABASE_DEVELOPMENT_WORKFLOW.md`
+
+---
+
 ### ❗ Rule 1: NEVER Write Frontend Without Reading Schema
 
 **MANDATORY:** Before writing ANY frontend code that interacts with the database:
