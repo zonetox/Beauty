@@ -83,9 +83,9 @@ const RegisterPage: React.FC = () => {
                 throw new Error('Failed to create business. Please try again.');
             }
 
-            // 4. Success - redirect to dashboard
+            // 4. Success - redirect to account dashboard
             toast.success('Đăng ký thành công! Tài khoản của bạn đã được tạo với gói dùng thử 30 ngày.');
-            navigate('/dashboard'); // Redirect to dashboard
+            navigate('/account'); // Redirect to account dashboard (route is /account, not /dashboard)
 
         } catch (err: any) {
             setError(err.message || 'An unexpected error occurred during registration.');
