@@ -40,21 +40,37 @@ const RegisterPage: React.FC = () => {
         e.preventDefault();
         setError('');
         
-        // Validation
+        // Validation - Show toast instead of browser alerts
         if (formData.password !== formData.confirmPassword) {
-            setError('Passwords do not match.');
+            const errorMsg = 'Mật khẩu không khớp.';
+            setError(errorMsg);
+            toast.error(errorMsg);
             return;
         }
         if (formData.password.length < 6) {
-            setError('Password must be at least 6 characters long.');
+            const errorMsg = 'Mật khẩu phải có ít nhất 6 ký tự.';
+            setError(errorMsg);
+            toast.error(errorMsg);
             return;
         }
-        if (userType === 'business' && !formData.business_name.trim()) {
-            setError('Business name is required.');
-            return;
+        if (userType === 'business') {
+            if (!formData.business_name.trim()) {
+                const errorMsg = 'Vui lòng nhập tên doanh nghiệp.';
+                setError(errorMsg);
+                toast.error(errorMsg);
+                return;
+            }
+            if (!formData.address.trim()) {
+                const errorMsg = 'Vui lòng nhập địa chỉ doanh nghiệp.';
+                setError(errorMsg);
+                toast.error(errorMsg);
+                return;
+            }
         }
         if (userType === 'user' && !formData.full_name.trim()) {
-            setError('Full name is required.');
+            const errorMsg = 'Vui lòng nhập họ và tên.';
+            setError(errorMsg);
+            toast.error(errorMsg);
             return;
         }
 
