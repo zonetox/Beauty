@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CATEGORIES, LOCATIONS_HIERARCHY, CITIES } from '../constants.ts';
 import { BusinessCategory } from '../types.ts';
@@ -15,12 +15,15 @@ const Chatbot: React.FC = () => {
     const [inputValue, setInputValue] = useState('');
     const navigate = useNavigate();
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const timeoutRefs = useRef<NodeJS.Timeout[]>([]); // Track all timeouts for cleanup
 
-    const scrollToBottom = () => {
+    const scrollToBottom = useCallback(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
+    }, []);
 
-    useEffect(scrollToBottom, [messages]);
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages, scrollToBottom]);
     
     useEffect(() => {
         if (isOpen) {
@@ -30,6 +33,12 @@ const Chatbot: React.FC = () => {
                 sender: 'bot'
             }]);
         }
+        
+        // Cleanup: Clear all timeouts when component unmounts or chat closes
+        return () => {
+            timeoutRefs.current.forEach(timeout => clearTimeout(timeout));
+            timeoutRefs.current = [];
+        };
     }, [isOpen]);
 
     const processUserMessage = (text: string) => {
@@ -74,18 +83,23 @@ const Chatbot: React.FC = () => {
             params.set('keyword', keywords);
         }
 
-        setTimeout(() => {
+        const timeout1 = setTimeout(() => {
             if (params.toString()) {
                 const searchUrl = `/directory?${params.toString()}`;
                 addBotMessage(`Tuyệt vời! Dựa trên yêu cầu của bạn, tôi sẽ tìm kiếm ngay bây giờ...`);
-                setTimeout(() => {
-                    navigate(searchUrl);
-                    setIsOpen(false);
+                const timeout2 = setTimeout(() => {
+                    // Check if component is still mounted before navigating
+                    if (messagesEndRef.current) {
+                        navigate(searchUrl);
+                        setIsOpen(false);
+                    }
                 }, 1000);
+                timeoutRefs.current.push(timeout2);
             } else {
                 addBotMessage("Tôi chưa hiểu rõ yêu cầu. Bạn có thể thử tìm theo tên dịch vụ (ví dụ: 'massage'), và địa điểm (ví dụ: 'Quận 1') không?");
             }
         }, 800);
+        timeoutRefs.current.push(timeout1);
     };
 
     const addBotMessage = (text: string) => {
