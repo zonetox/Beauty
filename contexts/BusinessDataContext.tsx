@@ -301,11 +301,17 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
   // Existing synchronous getter (from loaded list)
   const getBusinessBySlug = (slug: string) => businesses.find(b => b.slug === slug);
 
+  // Use useRef to access businesses without causing function recreation
+  const businessesRef = useRef(businesses);
+  useEffect(() => {
+    businessesRef.current = businesses;
+  }, [businesses]);
+
   // NEW: Async detailed getter
   const fetchBusinessBySlug = useCallback(async (slug: string): Promise<Business | null> => {
     if (!isSupabaseConfigured) {
       // Fallback to businesses list if available
-      const cached = businesses.find(b => b.slug === slug);
+      const cached = businessesRef.current.find(b => b.slug === slug);
       return cached || null;
     }
 
@@ -319,7 +325,7 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
     if (businessError || !businessData) {
       console.error("Error fetching business details:", businessError?.message);
       // Fallback to cached businesses list
-      const cached = businesses.find(b => b.slug === slug);
+      const cached = businessesRef.current.find(b => b.slug === slug);
       return cached || null;
     }
 
