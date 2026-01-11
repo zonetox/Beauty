@@ -190,7 +190,10 @@ const RegisterPage: React.FC = () => {
             }
 
         } catch (err: any) {
-            setError(err.message || 'An unexpected error occurred during registration.');
+            const errorMessage = err.message || 'An unexpected error occurred during registration.';
+            setError(errorMessage);
+            // Show toast error instead of browser alert
+            toast.error(errorMessage);
         } finally {
             setIsSubmitting(false);
         }
