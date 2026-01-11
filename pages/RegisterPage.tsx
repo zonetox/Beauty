@@ -8,10 +8,12 @@ import { useNavigate, Link } from 'react-router-dom';
 import { MembershipTier, BusinessCategory } from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { createBusinessWithTrial } from '../lib/businessUtils.ts';
+import { useUserSession } from '../contexts/UserSessionContext.tsx';
 import SEOHead from '../components/SEOHead.tsx';
 
 const RegisterPage: React.FC = () => {
     const navigate = useNavigate();
+    const { refreshProfile } = useUserSession();
     const [formData, setFormData] = useState({
         business_name: '',
         email: '',
@@ -83,9 +85,15 @@ const RegisterPage: React.FC = () => {
                 throw new Error('Failed to create business. Please try again.');
             }
 
-            // 4. Wait a bit more to ensure profile is updated with business_id
+            // 4. Refresh profile to ensure business_id is loaded
             // This ensures AccountPageRouter can find the businessId
-            await new Promise(resolve => setTimeout(resolve, 300));
+            try {
+                await refreshProfile();
+            } catch (refreshError) {
+                console.warn('Profile refresh failed, but continuing:', refreshError);
+                // Wait a bit as fallback
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
 
             // 5. Success - redirect to account dashboard
             toast.success('Đăng ký thành công! Tài khoản của bạn đã được tạo với gói dùng thử 30 ngày.');
