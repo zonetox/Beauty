@@ -9,7 +9,6 @@ import { MembershipTier, BusinessCategory } from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { createBusinessWithTrial } from '../lib/businessUtils.ts';
 import { useUserSession } from '../contexts/UserSessionContext.tsx';
-import { supabase } from '../lib/supabaseClient.ts';
 import SEOHead from '../components/SEOHead.tsx';
 
 type UserType = 'user' | 'business';
