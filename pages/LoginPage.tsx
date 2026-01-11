@@ -2,8 +2,8 @@
 // Tuân thủ ARCHITECTURE.md, sử dụng schema/RLS/contexts hiện có
 // 100% hoàn thiện, không placeholder, chuẩn SEO cơ bản
 
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useUserSession } from '../contexts/UserSessionContext.tsx';
 import ForgotPasswordModal from '../components/ForgotPasswordModal.tsx';
 import SEOHead from '../components/SEOHead.tsx';
@@ -13,9 +13,27 @@ const LoginPage: React.FC = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const { login } = useUserSession();
+    const { login, profile, currentUser } = useUserSession();
     const navigate = useNavigate();
+    const location = useLocation();
     const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+
+    // If user is already logged in, redirect appropriately
+    useEffect(() => {
+        if (currentUser && profile) {
+            const from = (location.state as any)?.from?.pathname;
+            // Business owner always goes to /account
+            if (profile.businessId) {
+                navigate('/account', { replace: true });
+            } else if (from && from !== '/login' && from !== '/register') {
+                // Regular user: go back to where they were
+                navigate(from, { replace: true });
+            } else {
+                // Regular user: go to homepage
+                navigate('/', { replace: true });
+            }
+        }
+    }, [currentUser, profile, navigate, location]);
     
     // SEO metadata
     const seoTitle = 'Đăng nhập | 1Beauty.asia';
@@ -28,14 +46,14 @@ const LoginPage: React.FC = () => {
         setIsLoading(true);
         try {
             await login(email, password);
-            navigate('/account');
+            // Profile will be loaded by UserSessionContext
+            // useEffect above will handle redirect based on user type
         } catch (err) {
             if (err instanceof Error) {
                 setError(err.message);
             } else {
                 setError('Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.');
             }
-        } finally {
             setIsLoading(false);
         }
     };

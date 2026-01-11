@@ -131,7 +131,7 @@ const RegisterPage: React.FC = () => {
 
                 // Redirect to business dashboard
                 toast.success('Đăng ký thành công! Tài khoản doanh nghiệp của bạn đã được tạo với gói dùng thử 30 ngày.');
-                navigate('/account');
+                navigate('/account', { replace: true });
             } else {
                 // User registration - profile already created by trigger with business_id = NULL
                 // Just refresh profile and redirect to homepage
@@ -144,7 +144,7 @@ const RegisterPage: React.FC = () => {
                 }
 
                 toast.success('Đăng ký thành công! Chào mừng bạn đến với 1Beauty.asia.');
-                navigate('/'); // Redirect to homepage for regular users
+                navigate('/', { replace: true }); // Redirect to homepage for regular users
             }
 
         } catch (err: any) {

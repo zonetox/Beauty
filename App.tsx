@@ -10,6 +10,7 @@ import Breadcrumbs from './components/Breadcrumbs.tsx';
 import Chatbot from './components/Chatbot.tsx';
 import BackToTopButton from './components/BackToTopButton.tsx';
 import ErrorBoundary from './components/ErrorBoundary.tsx';
+import AuthRedirectHandler from './components/AuthRedirectHandler.tsx';
 
 // Import new consolidated providers
 import { UserSessionProvider, useUserSession } from './contexts/UserSessionContext.tsx';
@@ -60,6 +61,7 @@ const AppLayout: React.FC = () => {
 
     return (
         <div className="flex flex-col min-h-screen font-sans text-neutral-dark bg-background">
+            <AuthRedirectHandler />
             <Header />
             <main className="flex-grow">
                 {!isHomepage && <Breadcrumbs />}
