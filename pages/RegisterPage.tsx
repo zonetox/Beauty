@@ -9,6 +9,7 @@ import { MembershipTier, BusinessCategory } from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { createBusinessWithTrial } from '../lib/businessUtils.ts';
 import { useUserSession } from '../contexts/UserSessionContext.tsx';
+import { supabase } from '../lib/supabaseClient.ts';
 import SEOHead from '../components/SEOHead.tsx';
 
 type UserType = 'user' | 'business';
@@ -102,11 +103,30 @@ const RegisterPage: React.FC = () => {
                 }
 
                 // Refresh profile to ensure business_id is loaded
-                try {
-                    await refreshProfile();
-                } catch (refreshError) {
-                    console.warn('Profile refresh failed, but continuing:', refreshError);
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                // Wait a bit longer to ensure profile is updated with business_id
+                let retries = 3;
+                let profileUpdated = false;
+                while (retries > 0 && !profileUpdated) {
+                    try {
+                        await refreshProfile();
+                        // Verify profile has business_id
+                        const { data: updatedProfile } = await supabase
+                            .from('profiles')
+                            .select('business_id')
+                            .eq('id', authData.user.id)
+                            .single();
+                        
+                        if (updatedProfile?.business_id === business.id) {
+                            profileUpdated = true;
+                        } else {
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                            retries--;
+                        }
+                    } catch (refreshError) {
+                        console.warn('Profile refresh failed, retrying...', refreshError);
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        retries--;
+                    }
                 }
 
                 // Redirect to business dashboard
@@ -117,6 +137,8 @@ const RegisterPage: React.FC = () => {
                 // Just refresh profile and redirect to homepage
                 try {
                     await refreshProfile();
+                    // Small delay to ensure profile is loaded
+                    await new Promise(resolve => setTimeout(resolve, 300));
                 } catch (refreshError) {
                     console.warn('Profile refresh failed, but continuing:', refreshError);
                 }

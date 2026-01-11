@@ -74,14 +74,30 @@ const AppLayout: React.FC = () => {
 
 // This component intelligently routes the user to their business dashboard or personal account page.
 const AccountPageRouter: React.FC = () => {
-    const { profile, loading: profileLoading } = useUserSession();
+    const { profile, loading: profileLoading, currentUser } = useUserSession();
 
-    if (profileLoading) {
+    // Show loading only if we have a user but profile is still loading
+    // If no user, ProtectedRoute will handle redirect
+    if (profileLoading && currentUser) {
         return (
             <div className="flex items-center justify-center h-[50vh]">
                 <div className="text-center">
-                    <p className="text-lg font-semibold">Loading your account...</p>
-                    <p className="text-gray-500">Please wait.</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-lg font-semibold">Đang tải tài khoản...</p>
+                    <p className="text-gray-500">Vui lòng đợi.</p>
+                </div>
+            </div>
+        );
+    }
+
+    // If profile is null but we have a user, profile might not exist yet
+    // Wait a bit more or show error
+    if (currentUser && !profile && !profileLoading) {
+        return (
+            <div className="flex items-center justify-center h-[50vh]">
+                <div className="text-center">
+                    <p className="text-lg font-semibold text-red-600">Lỗi tải thông tin tài khoản</p>
+                    <p className="text-gray-500">Vui lòng thử đăng nhập lại.</p>
                 </div>
             </div>
         );
@@ -93,7 +109,19 @@ const AccountPageRouter: React.FC = () => {
     }
 
     // If a profile exists but is not linked to a business, show user account page (regular user)
-    return <UserAccountPage />;
+    if (profile) {
+        return <UserAccountPage />;
+    }
+
+    // Fallback: should not reach here, but show loading
+    return (
+        <div className="flex items-center justify-center h-[50vh]">
+            <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-lg font-semibold">Đang tải...</p>
+            </div>
+        </div>
+    );
 };
 
 
