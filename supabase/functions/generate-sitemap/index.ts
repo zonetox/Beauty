@@ -21,7 +21,11 @@ serve(async (req) => {
   try {
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    // Priority: Use new SECRET_KEY if available, fallback to SUPABASE_SERVICE_ROLE_KEY (reserved)
+    // Note: Supabase doesn't allow secrets with SUPABASE_ prefix, so we use SECRET_KEY
+    const supabaseServiceKey = Deno.env.get('SECRET_KEY') ?? 
+                               Deno.env.get('SUPABASE_SECRET') ?? 
+                               Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get current date in ISO format

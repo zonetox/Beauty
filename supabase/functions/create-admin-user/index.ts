@@ -24,8 +24,12 @@ Deno.serve(async (req: Request) => {
       throw new Error("Missing required fields for admin creation.");
     }
 
+    // Priority: Use new SECRET_KEY if available, fallback to SUPABASE_SERVICE_ROLE_KEY (reserved)
+    // Note: Supabase doesn't allow secrets with SUPABASE_ prefix, so we use SECRET_KEY
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SECRET_KEY') ?? 
+      Deno.env.get('SUPABASE_SECRET') ?? 
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 

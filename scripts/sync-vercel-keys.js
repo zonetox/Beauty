@@ -93,15 +93,18 @@ function writeEnvFile(filePath, env, header = '') {
 function main() {
   console.log('🔄 Syncing Supabase keys from Vercel...\n');
   
-  // 1. Đọc keys từ .env.vercel
-  if (!fs.existsSync(envVercelPath)) {
-    console.error('❌ File .env.vercel không tồn tại!');
+  // 1. Đọc keys từ .env.vercel (force read even if in .gitignore)
+  let vercelEnv = {};
+  try {
+    const content = fs.readFileSync(envVercelPath, 'utf-8');
+    vercelEnv = parseEnvFile(envVercelPath);
+  } catch (error) {
+    console.error('❌ Không thể đọc file .env.vercel!');
     console.log('\n📝 Tạo file .env.vercel và paste keys từ Vercel Storage integration vào đó.');
     console.log('   File path:', envVercelPath);
+    console.log('   Error:', error.message);
     process.exit(1);
   }
-  
-  const vercelEnv = parseEnvFile(envVercelPath);
   console.log(`✅ Đọc được ${Object.keys(vercelEnv).length} keys từ .env.vercel\n`);
   
   // 2. Đọc .env.local hiện tại (nếu có)
@@ -121,12 +124,16 @@ function main() {
   }
   
   // Priority: Secret Key > Service Role Key
+  // NOTE: SUPABASE_SERVICE_ROLE_KEY trong Supabase Secrets là RESERVED - không thể sửa
+  // Nếu có Secret Key mới, cần tạo secret mới tên SUPABASE_SECRET_KEY trong Supabase
   if (vercelEnv.SUPABASE_SECRET_KEY) {
-    newLocalEnv.SUPABASE_SERVICE_ROLE_KEY = vercelEnv.SUPABASE_SECRET_KEY;
-    console.log('✅ Updated SUPABASE_SERVICE_ROLE_KEY với Secret Key mới');
+    // Secret Key mới - dùng cho Edge Functions
+    console.log('✅ Tìm thấy SUPABASE_SECRET_KEY mới');
+    console.log('   ⚠️  Lưu ý: Tạo secret mới tên SUPABASE_SECRET_KEY trong Supabase Secrets');
+    console.log('   ⚠️  SUPABASE_SERVICE_ROLE_KEY là RESERVED - không thể sửa');
   } else if (vercelEnv.SUPABASE_SERVICE_ROLE_KEY) {
-    newLocalEnv.SUPABASE_SERVICE_ROLE_KEY = vercelEnv.SUPABASE_SERVICE_ROLE_KEY;
-    console.log('✅ Updated SUPABASE_SERVICE_ROLE_KEY với Service Role Key');
+    console.log('✅ Tìm thấy SUPABASE_SERVICE_ROLE_KEY (legacy)');
+    console.log('   ⚠️  Key này là RESERVED trong Supabase - không thể sửa');
   }
   
   // Supabase URL
