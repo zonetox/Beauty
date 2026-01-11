@@ -104,21 +104,32 @@ const RegisterPage: React.FC = () => {
 
                 // Refresh profile to ensure business_id is loaded
                 // Wait a bit longer to ensure profile is updated with business_id
-                let retries = 3;
+                let retries = 5; // Increase retries
                 let profileUpdated = false;
                 while (retries > 0 && !profileUpdated) {
                     try {
-                        await refreshProfile();
-                        // Verify profile has business_id
-                        const { data: updatedProfile } = await supabase
+                        // First, verify directly from database
+                        const { data: updatedProfile, error: fetchError } = await supabase
                             .from('profiles')
                             .select('business_id')
                             .eq('id', authData.user.id)
                             .single();
                         
+                        if (fetchError) {
+                            console.warn('Error fetching profile:', fetchError);
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                            retries--;
+                            continue;
+                        }
+                        
                         if (updatedProfile?.business_id === business.id) {
+                            // Profile is updated in DB, now refresh context
+                            await refreshProfile();
+                            // Wait a bit more to ensure context is updated
+                            await new Promise(resolve => setTimeout(resolve, 500));
                             profileUpdated = true;
                         } else {
+                            console.log(`Profile not updated yet. Retries left: ${retries - 1}. Expected business_id: ${business.id}, Got: ${updatedProfile?.business_id}`);
                             await new Promise(resolve => setTimeout(resolve, 1000));
                             retries--;
                         }
@@ -129,9 +140,41 @@ const RegisterPage: React.FC = () => {
                     }
                 }
 
+                if (!profileUpdated) {
+                    console.error('Profile update verification failed after retries. Business was created but profile link may be delayed.');
+                    // Still redirect - the profile will be updated eventually
+                    // User can refresh if needed
+                    toast.warning('Tài khoản doanh nghiệp đã được tạo. Đang cập nhật thông tin...');
+                } else {
+                    toast.success('Đăng ký thành công! Tài khoản doanh nghiệp của bạn đã được tạo với gói dùng thử 30 ngày.');
+                }
+
                 // Redirect to business dashboard
-                toast.success('Đăng ký thành công! Tài khoản doanh nghiệp của bạn đã được tạo với gói dùng thử 30 ngày.');
-                navigate('/account', { replace: true });
+                // Force a small delay to ensure navigation happens after state updates
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Force refresh profile one more time before navigating
+                if (isSupabaseConfigured) {
+                    await refreshProfile();
+                    // Verify one final time
+                    const { data: finalCheck } = await supabase
+                        .from('profiles')
+                        .select('business_id')
+                        .eq('id', authData.user.id)
+                        .single();
+                    
+                    if (finalCheck?.business_id === business.id) {
+                        // Profile is confirmed updated, navigate
+                        navigate('/account', { replace: true });
+                    } else {
+                        // Still not updated, but navigate anyway - will show loading in AccountPageRouter
+                        // User can refresh if needed
+                        console.warn('Profile business_id not yet synced, but navigating anyway');
+                        navigate('/account', { replace: true });
+                    }
+                } else {
+                    navigate('/account', { replace: true });
+                }
             } else {
                 // User registration - profile already created by trigger with business_id = NULL
                 // Just refresh profile and redirect to homepage
