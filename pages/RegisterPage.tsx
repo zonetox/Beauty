@@ -83,7 +83,11 @@ const RegisterPage: React.FC = () => {
                 throw new Error('Failed to create business. Please try again.');
             }
 
-            // 4. Success - redirect to account dashboard
+            // 4. Wait a bit more to ensure profile is updated with business_id
+            // This ensures AccountPageRouter can find the businessId
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            // 5. Success - redirect to account dashboard
             toast.success('Đăng ký thành công! Tài khoản của bạn đã được tạo với gói dùng thử 30 ngày.');
             navigate('/account'); // Redirect to account dashboard (route is /account, not /dashboard)
 
