@@ -125,7 +125,8 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   useEffect(() => {
     fetchHomepageData();
-  }, [fetchHomepageData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
 
   const updateHomepageData = async (newData: HomepageData) => {
     setHomepageData(newData);

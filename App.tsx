@@ -37,6 +37,7 @@ const AdminLoginPage = lazy(() => import('./pages/AdminLoginPage.tsx'));
 const AdminProtectedRoute = lazy(() => import('./components/AdminProtectedRoute.tsx'));
 const PartnerRegistrationPage = lazy(() => import('./pages/PartnerRegistrationPage.tsx'));
 const UserBusinessDashboardPage = lazy(() => import('./pages/UserBusinessDashboardPage.tsx'));
+const UserAccountPage = lazy(() => import('./pages/UserAccountPage.tsx'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.tsx'));
 const LoginPage = lazy(() => import('./pages/LoginPage.tsx'));
 const ProtectedRoute = lazy(() => import('./components/ProtectedRoute.tsx'));
@@ -79,28 +80,20 @@ const AccountPageRouter: React.FC = () => {
         return (
             <div className="flex items-center justify-center h-[50vh]">
                 <div className="text-center">
-                    <p className="text-lg font-semibold">Loading your dashboard...</p>
+                    <p className="text-lg font-semibold">Loading your account...</p>
                     <p className="text-gray-500">Please wait.</p>
                 </div>
             </div>
         );
     }
 
-    // If a user has a business, route to the business dashboard. This is the only valid path for a logged-in user.
+    // If a user has a business, route to the business dashboard
     if (profile?.businessId) {
         return <UserBusinessDashboardPage />;
     }
 
-    // If a profile exists but is not linked to a business, or if the profile failed to load, show an error.
-    return (
-        <div className="flex items-center justify-center h-[50vh]">
-            <div className="text-center">
-                <p className="text-lg font-semibold text-red-600">Account Error</p>
-                <p className="text-gray-500">Could not load your business profile or your account is not linked to a business.</p>
-                <p className="text-gray-500">Please contact support for assistance.</p>
-            </div>
-        </div>
-    );
+    // If a profile exists but is not linked to a business, show user account page (regular user)
+    return <UserAccountPage />;
 };
 
 

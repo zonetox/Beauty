@@ -129,18 +129,76 @@ const Header: React.FC = () => {
               </button>
             )}
             {currentUser ? (
-              <div className="flex items-center ml-2">
-                <span className="text-sm text-neutral-dark mr-2 hidden lg:block">Chào, {currentUser.user_metadata?.full_name || currentUser.email}!</span>
-                {/* Dashboard Doanh nghiệp chỉ hiển thị cho business owner */}
-                {isBusinessOwner && (
-                  <NavLink to="/account" className={({ isActive }) => `${navLinkClass({ isActive })} flex items-center gap-2`}>
-                    <UserIcon className="w-5 h-5" />
-                    <span className="hidden lg:inline">Dashboard Doanh nghiệp</span>
-                  </NavLink>
-                )}
-                <button onClick={handleLogout} className="ml-2 px-3 py-2 text-sm font-medium text-neutral-dark hover:bg-primary/10 rounded-md">
-                  Đăng xuất
-                </button>
+              <div className="flex items-center ml-2 gap-2">
+                {/* User Avatar & Dropdown */}
+                <div className="relative group">
+                  <button className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-primary/10 transition-colors">
+                    {profile?.avatarUrl ? (
+                      <img 
+                        src={profile.avatarUrl} 
+                        alt={profile.fullName || currentUser.email || 'User'} 
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-semibold">
+                        {(profile?.fullName || currentUser.user_metadata?.full_name || currentUser.email || 'U').charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <span className="text-sm text-neutral-dark hidden lg:block">
+                      {profile?.fullName || currentUser.user_metadata?.full_name || currentUser.email}
+                    </span>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-neutral-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  
+                  {/* Dropdown Menu */}
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div className="py-2">
+                      <div className="px-4 py-2 border-b border-gray-200">
+                        <p className="text-sm font-semibold text-neutral-dark">
+                          {profile?.fullName || currentUser.user_metadata?.full_name || 'User'}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">{currentUser.email}</p>
+                      </div>
+                      <Link
+                        to="/account"
+                        className="block px-4 py-2 text-sm text-neutral-dark hover:bg-primary/10 transition-colors"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <UserIcon className="w-4 h-4" />
+                          <span>{isBusinessOwner ? 'Dashboard Doanh nghiệp' : 'Tài khoản của tôi'}</span>
+                        </div>
+                      </Link>
+                      {!isBusinessOwner && (
+                        <Link
+                          to="/register"
+                          className="block px-4 py-2 text-sm text-neutral-dark hover:bg-primary/10 transition-colors"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <div className="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                            <span>Đăng ký doanh nghiệp</span>
+                          </div>
+                        </Link>
+                      )}
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                          </svg>
+                          <span>Đăng xuất</span>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
               <>
