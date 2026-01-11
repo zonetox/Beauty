@@ -628,11 +628,25 @@ All frontend queries comply with RLS policies. No RLS bypasses are used.
   - `membership_expiry_date` set to `now() + package.durationMonths`
   - `is_active = true`
 
+### User Types
+
+**Regular User:**
+- `profiles.business_id = NULL`
+- Can browse businesses, create reviews, make appointments
+- Redirected to homepage after registration
+- Cannot access business dashboard
+
+**Business Owner:**
+- `profiles.business_id` links to `businesses.id`
+- Has access to business dashboard (`/account`)
+- Business created with 30-day Premium trial
+- Can manage business profile, services, bookings, etc.
+
 ### Email Verification
 
 **Status:** ❌ **DISABLED**
-- Direct registration skips email verification entirely
-- Users go directly to dashboard after signup
+- All registration types skip email verification entirely
+- Users go directly to their destination after signup
 - No confirmation email sent
 
 ### Payment Flow
