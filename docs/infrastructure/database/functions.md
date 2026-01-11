@@ -121,7 +121,7 @@ END;
 
 ---
 
-### `search_businesses_advanced` (Recommended)
+### `search_businesses_advanced` (Recommended - With Ranking)
 
 **Return Type:** `TABLE`
 
@@ -148,24 +148,58 @@ END;
 - `membership_tier` (membership_tier)
 - `is_active` (boolean)
 
-**Description:** Advanced search function for businesses with full-text search, category/city/district/tags filters, and pagination. Returns active businesses only. Results are ordered by membership tier (VIP > Premium > Free), then by rating and review count.
+**Description:** Advanced search function with **deterministic, explainable ranking**. Returns active businesses only, sorted by relevance score.
+
+**Ranking Formula (final_score):**
+
+Results are ranked using a composite score calculated as:
+
+```
+final_score = text_relevance + membership_weight + rating_score + location_bonus
+```
+
+**Components:**
+
+1. **Text Relevance (0-120 scale):**
+   - Uses PostgreSQL full-text search (`ts_rank_cd`) with weighted vectors
+   - Business name (weight A) > Description (weight B) > Address/Tags (weight C)
+   - Exact name match (ILIKE) adds +20 bonus
+   - If no search text: defaults to 50.0
+
+2. **Membership Weight:**
+   - VIP: +30 points
+   - Premium: +15 points
+   - Free: +0 points
+
+3. **Rating Score:**
+   - Formula: `rating * ln(review_count + 1) * 5`
+   - Logarithmic scaling ensures businesses with many reviews rank higher
+   - Businesses with 0 reviews get 0 (not negative)
+
+4. **Location Bonus:**
+   - City match: +10 points
+   - District match: +5 points
+   - No match: +0 points
+
+**Sorting:**
+- Results are sorted by `final_score DESC, id ASC`
+- **Frontend MUST NOT sort results** - ranking is database-controlled
+
+**Example Ranking Behavior:**
+- VIP business with lower rating ranks above Free business with same text relevance
+- High-rating business with many reviews outranks low-review business
+- Exact name match ranks at top
+- Location match boosts but does not dominate text relevance
 
 **Function Definition:**
 ```sql
-CREATE OR REPLACE FUNCTION public.search_businesses_advanced(
-    p_search_text TEXT DEFAULT NULL,
-    p_category business_category DEFAULT NULL,
-    p_city TEXT DEFAULT NULL,
-    p_district TEXT DEFAULT NULL,
-    p_tags TEXT[] DEFAULT NULL,
-    p_limit INTEGER DEFAULT 20,
-    p_offset INTEGER DEFAULT 0
-)
-RETURNS TABLE (...)
--- Full definition in database/migrations/add_search_businesses_advanced.sql
+-- Full definition in database/migrations/update_search_businesses_advanced_ranking.sql
+-- Uses CTE (ranked_businesses) to calculate final_score before sorting
 ```
 
 **Used by:** Frontend search functionality (BusinessDataContext)
+
+**Important:** Frontend code must NOT apply client-side sorting to search results. Ranking is deterministic and database-controlled.
 
 ---
 

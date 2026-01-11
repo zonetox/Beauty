@@ -405,7 +405,7 @@ This document specifies the exact contract between frontend code and the Supabas
 
 ## 🔧 RPC FUNCTIONS CALLED BY FRONTEND
 
-### `search_businesses_advanced` (Primary Search Function)
+### `search_businesses_advanced` (Primary Search Function - With Ranking)
 
 **Frontend Usage:**
 - `contexts/BusinessDataContext.tsx` - Called via `supabase.rpc()` for business search
@@ -421,7 +421,13 @@ This document specifies the exact contract between frontend code and the Supabas
 
 **Returns:**
 - Partial business data (id, name, slug, description, categories, city, district, address, rating, review_count, membership_tier, is_active)
+- **Results are pre-sorted by database ranking algorithm**
 - Frontend then fetches full business data using `.in('id', businessIds)`
+
+**Ranking (Database-Controlled):**
+- Results are ranked using composite score: `text_relevance + membership_weight + rating_score + location_bonus`
+- **Frontend MUST NOT sort search results** - ranking is deterministic and database-controlled
+- Sorting order: `final_score DESC, id ASC`
 
 **Note:** This is the primary search function. The legacy `search_businesses` function is no longer used by frontend.
 

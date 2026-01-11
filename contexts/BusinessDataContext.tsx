@@ -133,19 +133,25 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
         // Fallback to regular query
       } else if (searchData && searchData.length > 0) {
         // search_businesses_advanced returns partial data, fetch full business data
+        // IMPORTANT: Preserve database ranking order - do NOT sort results
+        // Results from search_businesses_advanced are already sorted by final_score DESC
         const businessIds = searchData.map((b: any) => b.id);
         const { data: fullData, error: fetchError } = await supabase
           .from('businesses')
           .select('*', { count: 'exact' })
-          .in('id', businessIds)
-          .order('is_featured', { ascending: false })
-          .order('id', { ascending: true });
+          .in('id', businessIds);
+        
+        // Preserve order from search_businesses_advanced (ranked by final_score)
+        // Map results in the same order as searchData
+        const orderedFullData = businessIds.map(id => 
+          fullData?.find(b => b.id === id)
+        ).filter(Boolean);
 
         if (fetchError) {
           console.error('Error fetching business details:', fetchError.message);
           toast.error('Failed to load businesses');
-        } else if (fullData) {
-          const mapped = snakeToCamel(fullData).map((b: any) => ({
+        } else if (orderedFullData && orderedFullData.length > 0) {
+          const mapped = snakeToCamel(orderedFullData).map((b: any) => ({
             ...b,
             services: [],
             gallery: [],

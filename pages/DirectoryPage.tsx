@@ -153,6 +153,8 @@ const DirectoryPage: React.FC = () => {
     }, [businessMarkers]);
 
     // Apply client-side filters (deals, verified, open now, sort)
+    // IMPORTANT: If search text exists, results are already ranked by database
+    // Only apply client-side sorting if no search text (user browsing, not searching)
     const filteredBusinesses = useMemo(() => {
         let filtered = [...businesses];
 
@@ -174,8 +176,10 @@ const DirectoryPage: React.FC = () => {
             filtered = filtered.filter(b => checkIfOpen(b.workingHours));
         }
 
-        // Sort
-        switch (activeFilters.sort) {
+        // Sort - ONLY if no search text (preserve database ranking for search results)
+        const hasSearchText = activeFilters.keyword && activeFilters.keyword.trim() !== '';
+        if (!hasSearchText) {
+            switch (activeFilters.sort) {
             case 'rating':
                 filtered.sort((a, b) => {
                     const ratingA = a.reviews && a.reviews.length > 0
@@ -205,7 +209,9 @@ const DirectoryPage: React.FC = () => {
                     }
                     return a.id - b.id;
                 });
+            }
         }
+        // If has search text, preserve database ranking order (no client-side sort)
 
         return filtered;
     }, [businesses, activeFilters.hasDeals, activeFilters.isVerified, activeFilters.isOpenNow, activeFilters.sort]);
