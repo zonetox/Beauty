@@ -114,77 +114,78 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
     const from = (page - 1) * PAGE_SIZE;
 
     try {
-      // Use RPC function for full-text search if search text is provided
-      if (options.search && options.search.trim()) {
-        const { data: searchData, error: searchError } = await supabase
-          .rpc('search_businesses', {
-            p_search_text: options.search.trim(),
-            p_category: options.category || null,
-            p_city: options.location || null,
-            p_district: options.district || null,
-            p_tags: null,
-            p_limit: PAGE_SIZE,
-            p_offset: from
-          });
+      // Use advanced RPC function for search with filters and pagination
+      // This function supports: search text, category, city, district, tags, limit, offset
+      const { data: searchData, error: searchError } = await supabase
+        .rpc('search_businesses_advanced', {
+          p_search_text: options.search && options.search.trim() ? options.search.trim() : null,
+          p_category: options.category || null,
+          p_city: options.location || null,
+          p_district: options.district || null,
+          p_tags: null, // Tags filter not used in current frontend, but supported
+          p_limit: PAGE_SIZE,
+          p_offset: from
+        });
 
-        if (searchError) {
-          console.error('Error searching businesses:', searchError.message);
-          // Fallback to regular query
-        } else if (searchData && searchData.length > 0) {
-          // Fetch full business data for search results
-          const businessIds = searchData.map((b: any) => b.id);
-          const { data: fullData, error: fetchError } = await supabase
-            .from('businesses')
-            .select('*', { count: 'exact' })
-            .in('id', businessIds)
-            .order('is_featured', { ascending: false })
-            .order('id', { ascending: true });
+      if (searchError) {
+        console.error('Error searching businesses:', searchError.message);
+        toast.error('Lỗi tìm kiếm: ' + searchError.message);
+        // Fallback to regular query
+      } else if (searchData && searchData.length > 0) {
+        // search_businesses_advanced returns partial data, fetch full business data
+        const businessIds = searchData.map((b: any) => b.id);
+        const { data: fullData, error: fetchError } = await supabase
+          .from('businesses')
+          .select('*', { count: 'exact' })
+          .in('id', businessIds)
+          .order('is_featured', { ascending: false })
+          .order('id', { ascending: true });
 
-          if (fetchError) {
-            console.error('Error fetching business details:', fetchError.message);
-            toast.error('Failed to load businesses');
-          } else if (fullData) {
-            const mapped = snakeToCamel(fullData).map((b: any) => ({
-              ...b,
-              services: [],
-              gallery: [],
-              team: [],
-              deals: [],
-              reviews: []
-            })) as Business[];
+        if (fetchError) {
+          console.error('Error fetching business details:', fetchError.message);
+          toast.error('Failed to load businesses');
+        } else if (fullData) {
+          const mapped = snakeToCamel(fullData).map((b: any) => ({
+            ...b,
+            services: [],
+            gallery: [],
+            team: [],
+            deals: [],
+            reviews: []
+          })) as Business[];
 
-            setBusinesses(mapped);
-            // Get total count using count function
-            const { count: searchCount } = await supabase
-              .rpc('get_business_count', {
-                p_category: options.category || null,
-                p_city: options.location || null,
-                p_district: options.district || null
-              });
-            
-            // If search text provided, we need to count search results
-            // For now, use mapped length as approximation (can be improved with separate count query)
-            if (options.search && options.search.trim()) {
-              // Use a separate count query for search results
-              const { data: countData } = await supabase
-                .rpc('search_businesses', {
-                  p_search_text: options.search.trim(),
-                  p_category: options.category || null,
-                  p_city: options.location || null,
-                  p_district: options.district || null,
-                  p_tags: null,
-                  p_limit: 10000,
-                  p_offset: 0
-                });
-              setTotalBusinesses(countData?.length || mapped.length);
-            } else {
-              setTotalBusinesses(searchCount || mapped.length);
-            }
-            setCurrentPage(page);
-            setBusinessLoading(false);
-            return;
+          setBusinesses(mapped);
+          
+          // Get total count - call function again with large limit to count all results
+          const { data: countData, error: countError } = await supabase
+            .rpc('search_businesses_advanced', {
+              p_search_text: options.search && options.search.trim() ? options.search.trim() : null,
+              p_category: options.category || null,
+              p_city: options.location || null,
+              p_district: options.district || null,
+              p_tags: null,
+              p_limit: 10000, // Large limit to get all matching results for count
+              p_offset: 0
+            });
+          
+          if (!countError && countData) {
+            setTotalBusinesses(countData.length);
+          } else {
+            // Fallback to mapped length if count query fails
+            setTotalBusinesses(mapped.length);
           }
+          
+          setCurrentPage(page);
+          setBusinessLoading(false);
+          return;
         }
+      } else {
+        // No search results found (including when no search text but filters applied)
+        setBusinesses([]);
+        setTotalBusinesses(0);
+        setCurrentPage(page);
+        setBusinessLoading(false);
+        return;
       }
 
       // Regular query (fallback or no search text)

@@ -11,7 +11,7 @@
 This document specifies the exact contract between frontend code and the Supabase database. All frontend queries must comply with this contract.
 
 **Total Tables Used by Frontend:** 18  
-**Total RPC Functions Called:** 2  
+**Total RPC Functions Called:** 2 (updated to use search_businesses_advanced)  
 **Status:** ✅ Aligned with database schema
 
 ---
@@ -405,7 +405,29 @@ This document specifies the exact contract between frontend code and the Supabas
 
 ## 🔧 RPC FUNCTIONS CALLED BY FRONTEND
 
-### `search_businesses`
+### `search_businesses_advanced` (Primary Search Function)
+
+**Frontend Usage:**
+- `contexts/BusinessDataContext.tsx` - Called via `supabase.rpc()` for business search
+
+**Parameters Used:**
+- `p_search_text` (text, nullable) - Search keyword
+- `p_category` (business_category, nullable) - Filter by category
+- `p_city` (text, nullable) - Filter by city
+- `p_district` (text, nullable) - Filter by district
+- `p_tags` (text[], nullable) - Filter by tags (currently not used in frontend)
+- `p_limit` (integer) - Pagination limit (default: 20)
+- `p_offset` (integer) - Pagination offset
+
+**Returns:**
+- Partial business data (id, name, slug, description, categories, city, district, address, rating, review_count, membership_tier, is_active)
+- Frontend then fetches full business data using `.in('id', businessIds)`
+
+**Note:** This is the primary search function. The legacy `search_businesses` function is no longer used by frontend.
+
+---
+
+### `search_businesses` (Legacy - Not Used)
 
 **Location:** `contexts/BusinessDataContext.tsx:120`
 
@@ -556,8 +578,8 @@ All frontend queries comply with RLS policies. No RLS bypasses are used.
 - `blog_categories` (used indirectly via blog_posts.category)
 - `notifications` (trigger-based, not directly queried)
 
-**RPC Functions Used:** 2 of 15 functions
-- `search_businesses`
+**RPC Functions Used:** 2 of 16 functions
+- `search_businesses_advanced` (primary search function)
 - `increment_business_blog_view_count`
 
 **RPC Functions NOT Used:**

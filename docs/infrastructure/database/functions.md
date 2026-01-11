@@ -106,17 +106,66 @@ END;
 
 ---
 
-### `search_businesses`
+### `search_businesses` (Legacy - Simple Search)
 
 **Return Type:** `record`
 
-**Parameters:** (implied from function definition)
-- `search_query` (text)
-- Other parameters may exist (function returns query with multiple columns)
+**Parameters:**
+- `search_query` (text) - Search text for full-text search
 
-**Description:** Full-text search for businesses. Returns query result with columns: id, name, slug, rating, review_count, city, district, categories, rank.
+**Description:** Simple full-text search for businesses. Returns query result with columns: id, name, slug, rating, review_count, city, district, categories, rank. Limited to 50 results, no pagination or advanced filters.
 
 **Function Definition:** (abbreviated - full definition contains SELECT query with ts_rank)
+
+**Note:** This is a legacy function. For advanced search with filters and pagination, use `search_businesses_advanced`.
+
+---
+
+### `search_businesses_advanced` (Recommended)
+
+**Return Type:** `TABLE`
+
+**Parameters:**
+- `p_search_text` (text, nullable) - Search text for full-text search
+- `p_category` (business_category, nullable) - Filter by category
+- `p_city` (text, nullable) - Filter by city
+- `p_district` (text, nullable) - Filter by district
+- `p_tags` (text[], nullable) - Filter by tags (array overlap)
+- `p_limit` (integer, default: 20) - Maximum number of results
+- `p_offset` (integer, default: 0) - Pagination offset
+
+**Returns:**
+- `id` (bigint)
+- `name` (text)
+- `slug` (text)
+- `description` (text)
+- `categories` (business_category[])
+- `city` (text)
+- `district` (text)
+- `address` (text)
+- `rating` (double precision)
+- `review_count` (integer)
+- `membership_tier` (membership_tier)
+- `is_active` (boolean)
+
+**Description:** Advanced search function for businesses with full-text search, category/city/district/tags filters, and pagination. Returns active businesses only. Results are ordered by membership tier (VIP > Premium > Free), then by rating and review count.
+
+**Function Definition:**
+```sql
+CREATE OR REPLACE FUNCTION public.search_businesses_advanced(
+    p_search_text TEXT DEFAULT NULL,
+    p_category business_category DEFAULT NULL,
+    p_city TEXT DEFAULT NULL,
+    p_district TEXT DEFAULT NULL,
+    p_tags TEXT[] DEFAULT NULL,
+    p_limit INTEGER DEFAULT 20,
+    p_offset INTEGER DEFAULT 0
+)
+RETURNS TABLE (...)
+-- Full definition in database/migrations/add_search_businesses_advanced.sql
+```
+
+**Used by:** Frontend search functionality (BusinessDataContext)
 
 ---
 
