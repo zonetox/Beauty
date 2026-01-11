@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
-import { BusinessBlogPost, Review, ReviewStatus, BusinessAnalytics, Appointment, AppointmentStatus, Order, OrderStatus, Profile, BusinessBlogPostStatus, MembershipTier } from '../types.ts';
+import { BusinessBlogPost, Review, ReviewStatus, BusinessAnalytics, Appointment, AppointmentStatus, Order, OrderStatus, Profile, BusinessBlogPostStatus, MembershipTier, MembershipPackage } from '../types.ts';
 import { supabase } from '../lib/supabaseClient.ts';
+import { activateBusinessFromOrder } from '../lib/businessUtils.ts';
 import toast from 'react-hot-toast';
 import { snakeToCamel } from '../lib/utils.ts';
 
@@ -247,38 +248,24 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
     const { error: updateError } = await supabase.from('orders').update(updates).eq('id', orderId);
 
     if (!updateError) {
-      // 3. Trigger Business Activation if Completed
+      // 3. Trigger Business Activation if Completed (using centralized function)
       if (newStatus === OrderStatus.COMPLETED) {
-        // Logic repeated from BusinessContext (centralize later if possible)
-        // Need to fetch package duration
-        // Assumption: packageId in Order is actually a UUID or code that maps to membership_packages table?
-        // The Order type has packageId: string.
-        // Let's fetch the package to get duration.
+        // Fetch package and business data
+        const [packageRes, businessRes] = await Promise.all([
+          supabase.from('membership_packages').select('*').eq('id', order.packageId).single(),
+          supabase.from('businesses').select('id, name, email').eq('id', order.businessId).single()
+        ]);
 
-        // Ideally we should use a Database Trigger for this to avoid code duplication and race conditions.
-        // But sticking to frontend logic for now as requested "avoid too many changes".
-
-        // We need to fetch the business first to activate it.
-        const { data: businessData } = await supabase.from('businesses').select('*').eq('id', order.businessId).single();
-
-        // We assume there's a hardcoded list of packages on backend or we fetch from 'membership_packages' table if existing.
-        // For now, let's just default to 12 months if package lookup fails, or try to parse package.
-
-        if (businessData) {
-          const expiryDate = new Date();
-          expiryDate.setFullYear(expiryDate.getFullYear() + 1); // Default to 1 year for now as Admin likely confirms annual plans.
-
-          await supabase.from('businesses').update({
-            membership_tier: MembershipTier.PREMIUM, // Default upgrade or parse from order.packageId
-            membership_expiry_date: expiryDate.toISOString(),
-            is_active: true
-          }).eq('id', order.businessId);
-
-          // Notify Business
-          if (businessData.email) {
-            // Call Cloud Function or just basic log
-            console.log(`Business ${businessData.name} activated until ${expiryDate.toISOString()}`);
-          }
+        if (packageRes.data && businessRes.data) {
+          const packagePurchased = snakeToCamel(packageRes.data) as MembershipPackage;
+          
+          // Use centralized activation function (removes duplicate logic)
+          await activateBusinessFromOrder(
+            order.businessId,
+            packagePurchased,
+            businessRes.data.email,
+            businessRes.data.name
+          );
         }
       }
       await fetchAllData();

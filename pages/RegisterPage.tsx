@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { useNavigate, Link } from 'react-router-dom';
 import { MembershipTier, BusinessCategory } from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
+import { createBusinessWithTrial } from '../lib/businessUtils.ts';
 import SEOHead from '../components/SEOHead.tsx';
 
 const RegisterPage: React.FC = () => {
@@ -47,10 +48,12 @@ const RegisterPage: React.FC = () => {
         }
         
         try {
-            const { error: signUpError } = await supabase.auth.signUp({
+            // 1. Create Supabase Auth user (NO email verification - skip entirely)
+            const { data: authData, error: signUpError } = await supabase.auth.signUp({
                 email: formData.email,
                 password: formData.password,
                 options: {
+                    emailRedirectTo: undefined, // Skip email verification
                     data: {
                         full_name: formData.business_name,
                         phone: formData.phone,
@@ -58,14 +61,31 @@ const RegisterPage: React.FC = () => {
                 }
             });
 
-            if (signUpError) {
-                throw signUpError;
+            if (signUpError || !authData.user) {
+                throw signUpError || new Error('Failed to create user account.');
             }
-            
-            // On success, Supabase sends a confirmation email. 
-            // The user is logged in, and the trigger will create their business/profile.
-            toast.success('Registration successful! Please check your email to confirm your account.');
-            navigate('/account'); // Redirect to dashboard
+
+            // 2. Wait for profile to be created by trigger (handle_new_user)
+            // The trigger creates profile automatically, but we need to wait a bit
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // 3. Create business immediately with trial (Premium, 30 days)
+            const business = await createBusinessWithTrial({
+                name: formData.business_name.trim(),
+                owner_id: authData.user.id,
+                email: formData.email,
+                phone: formData.phone.trim(),
+                address: '', // Will be filled in onboarding
+                categories: [BusinessCategory.SPA], // Default category, can be changed later
+            });
+
+            if (!business) {
+                throw new Error('Failed to create business. Please try again.');
+            }
+
+            // 4. Success - redirect to dashboard
+            toast.success('Đăng ký thành công! Tài khoản của bạn đã được tạo với gói dùng thử 30 ngày.');
+            navigate('/dashboard'); // Redirect to dashboard
 
         } catch (err: any) {
             setError(err.message || 'An unexpected error occurred during registration.');

@@ -81,16 +81,24 @@ Deno.serve(async (req: Request) => {
     }
 
     // 2. Create a new business record based on the request.
+    // TRIAL LOGIC: Always start with Premium tier, 30 days trial (ignore requested tier)
     const slug = request.business_name.toLowerCase().replace(/\s+/g, '-') + `-${Date.now()}`;
+    
+    // Calculate trial expiry date (30 days from now)
+    const trialExpiryDate = new Date();
+    trialExpiryDate.setDate(trialExpiryDate.getDate() + 30);
+    
     const { data: newBusiness, error: businessError } = await supabaseAdmin
       .from('businesses')
       .insert({
         name: request.business_name,
         email: request.email,
         phone: request.phone,
-        address: request.address,
+        address: request.address || '',
         categories: [request.category],
-        membership_tier: request.tier,
+        // TRIAL: Always Premium, 30 days (ignore request.tier)
+        membership_tier: 'Premium',
+        membership_expiry_date: trialExpiryDate.toISOString(),
         slug: slug,
         // Default values for a new business
         is_active: true,

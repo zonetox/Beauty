@@ -1,7 +1,8 @@
 
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useBusinessAuth } from '../contexts/BusinessContext.tsx';
+import { checkAndHandleTrialExpiry } from '../lib/businessUtils.ts';
 import BusinessDashboardSidebar from '../components/BusinessDashboardSidebar.tsx';
 import DashboardOverview from '../components/DashboardOverview.tsx';
 import BusinessProfileEditor from '../components/BusinessProfileEditor.tsx';
@@ -25,6 +26,18 @@ import BusinessOnboardingWizard from '../components/BusinessOnboardingWizard.tsx
 const UserBusinessDashboardPage: React.FC = () => {
     const { currentBusiness } = useBusinessAuth();
     const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
+
+    // TASK 5: Trial expiry handling - Check on dashboard access (lazy check)
+    useEffect(() => {
+        if (currentBusiness?.id) {
+            checkAndHandleTrialExpiry(currentBusiness.id).then((downgraded) => {
+                if (downgraded) {
+                    // Refresh business data to reflect downgrade
+                    window.location.reload();
+                }
+            });
+        }
+    }, [currentBusiness?.id]);
 
     // If logged in but no business => ONBOARDING
     if (!currentBusiness) {

@@ -6,6 +6,7 @@ import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { useUserSession } from './UserSessionContext.tsx';
 import { useBusinessData, useMembershipPackageData } from './BusinessDataContext.tsx';
 import { useAdmin } from './AdminContext.tsx';
+import { activateBusinessFromOrder } from '../lib/businessUtils.ts';
 import toast from 'react-hot-toast';
 import { snakeToCamel } from '../lib/utils.ts';
 
@@ -432,22 +433,34 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
         const packagePurchased = packages.find(p => p.id === order.packageId);
 
         if (businessToUpdate && packagePurchased) {
+          // Calculate expiry date for notification
           const expiryDate = new Date();
           expiryDate.setMonth(expiryDate.getMonth() + packagePurchased.durationMonths);
 
-          await updateBusiness({
-            ...businessToUpdate,
-            membershipTier: packagePurchased.tier,
-            membershipExpiryDate: expiryDate.toISOString(),
-            isActive: true, // Activate the business!
-          });
-          localStorage.removeItem(`expiry_notification_sent_${businessToUpdate.id}`);
-
-          await addNotification(
-            businessToUpdate.email || '',
-            `Your ${packagePurchased.name} Plan is Active!`,
-            `Hello ${businessToUpdate.name},\n\nYour payment has been confirmed and your ${packagePurchased.name} membership plan is now active. Your business is now public on our directory! It will be valid until ${expiryDate.toLocaleDateString('vi-VN')}.\n\nThank you for partnering with us!\nThe BeautyDir Team`
+          // Use centralized activation function (removes duplicate logic)
+          const activated = await activateBusinessFromOrder(
+            order.businessId,
+            packagePurchased,
+            businessToUpdate.email,
+            businessToUpdate.name
           );
+
+          if (activated) {
+            // Refresh business data
+            await updateBusiness({
+              ...businessToUpdate,
+              membershipTier: packagePurchased.tier,
+              membershipExpiryDate: expiryDate.toISOString(),
+              isActive: true,
+            });
+
+            // Send notification
+            await addNotification(
+              businessToUpdate.email || '',
+              `Your ${packagePurchased.name} Plan is Active!`,
+              `Hello ${businessToUpdate.name},\n\nYour payment has been confirmed and your ${packagePurchased.name} membership plan is now active. Your business is now public on our directory! It will be valid until ${expiryDate.toLocaleDateString('vi-VN')}.\n\nThank you for partnering with us!\nThe BeautyDir Team`
+            );
+          }
         }
       }
       await fetchAllData(); // Refetch all data to ensure UI is consistent

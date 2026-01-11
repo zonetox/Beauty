@@ -569,4 +569,69 @@ All frontend queries comply with RLS policies. No RLS bypasses are used.
 
 ---
 
+---
+
+## 🎯 BUSINESS LIFECYCLE & TRIAL MANAGEMENT
+
+### Business Creation Flow
+
+**Direct Registration (`/register`):**
+1. User signs up via `supabase.auth.signUp()` (NO email verification)
+2. Profile created automatically via `handle_new_user` trigger
+3. Business created immediately via `createBusinessWithTrial()` utility
+4. Trial initialized: `membership_tier = 'Premium'`, `membership_expiry_date = now() + 30 days`
+5. User redirected to `/dashboard`
+
+**Registration Request Flow (`approve-registration` Edge Function):**
+1. Admin approves registration request
+2. Business created with trial (Premium, 30 days) - **ignores requested tier**
+3. User invited via email
+4. Profile linked to business
+
+**Centralized Functions:**
+- `lib/businessUtils.ts::createBusinessWithTrial()` - Creates business with trial
+- `lib/businessUtils.ts::initializeTrial()` - Initializes trial for existing business
+- `lib/businessUtils.ts::checkAndHandleTrialExpiry()` - Checks and downgrades expired trials
+- `lib/businessUtils.ts::activateBusinessFromOrder()` - Activates business when paid order completes
+
+### Trial Rules
+
+**Trial Initialization:**
+- All new businesses start with `membership_tier = 'Premium'`
+- Trial duration: **30 days** from creation date
+- `membership_expiry_date` set to `now() + 30 days`
+- `is_active = true` (business is immediately active)
+
+**Trial Expiry Handling:**
+- Checked on dashboard access (lazy check in `UserBusinessDashboardPage`)
+- If `membership_tier = 'Premium'` AND `membership_expiry_date < now()`:
+  - Downgrade to `membership_tier = 'Free'`
+  - Set `membership_expiry_date = null`
+  - **Do NOT** set `is_active = false` (business remains active)
+  - **Do NOT** block login or access
+
+**Paid Package Activation:**
+- When order status changes to `COMPLETED`:
+  - Business activated via `activateBusinessFromOrder()`
+  - `membership_tier` set to package tier
+  - `membership_expiry_date` set to `now() + package.durationMonths`
+  - `is_active = true`
+
+### Email Verification
+
+**Status:** ❌ **DISABLED**
+- Direct registration skips email verification entirely
+- Users go directly to dashboard after signup
+- No confirmation email sent
+
+### Payment Flow
+
+**Status:** Manual payment only
+- No payment gateway integration
+- Orders created with status `Pending` or `Awaiting Confirmation`
+- Admin manually confirms payment → order status → `Completed`
+- Business activated when order is `Completed`
+
+---
+
 **END OF FRONTEND-DB CONTRACT DOCUMENTATION**
