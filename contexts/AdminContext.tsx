@@ -144,7 +144,15 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           .select('id, username, email, role, permissions, is_locked, last_login')
           .order('id');
         if (error || !data || data.length === 0) {
-            console.warn("Could not fetch admin users from DB or table is empty. Falling back to dev users.", error?.message);
+            // Only log warning if there's an actual error (not just empty table)
+            if (error) {
+                console.warn("Could not fetch admin users from DB:", error.message);
+            } else if (data && data.length === 0) {
+                // Empty table is expected in new installations - use info level instead of warn
+                console.info("Admin users table is empty. Using fallback dev users for development.");
+            } else {
+                console.warn("Could not fetch admin users from DB. Falling back to dev users.");
+            }
             const fallback = DEV_ADMIN_USERS;
             setAdminUsers(fallback);
             return fallback;
@@ -159,9 +167,14 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         let mounted = true;
 
         // Safety timeout: logic must resolve within 10 seconds or we force loading=false
+        // Only log warning if there's an actual issue (e.g., Supabase configured but not responding)
         const safetyTimeout = setTimeout(() => {
             if (mounted && loading) {
-                console.warn('AdminContext: Auth check timed out after 10s. Forcing loading=false.');
+                // Only warn if Supabase is configured (indicates a real issue)
+                // If not configured, timeout is expected behavior
+                if (isSupabaseConfigured) {
+                    console.warn('AdminContext: Auth check timed out after 10s. This may indicate a connection issue.');
+                }
                 setLoading(false);
             }
         }, 10000);

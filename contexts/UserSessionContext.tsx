@@ -33,9 +33,14 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
     let mounted = true;
 
     // Safety timeout: logic must resolve within 10 seconds or we force loading=false
+    // Only log warning if there's an actual issue (e.g., Supabase configured but not responding)
     const safetyTimeout = setTimeout(() => {
       if (mounted && loading) {
-        console.warn('UserSessionContext: Auth check timed out after 10s. Forcing loading=false.');
+        // Only warn if Supabase is configured (indicates a real issue)
+        // If not configured, timeout is expected behavior
+        if (isSupabaseConfigured) {
+          console.warn('UserSessionContext: Auth check timed out after 10s. This may indicate a connection issue.');
+        }
         setLoading(false);
       }
     }, 10000);
