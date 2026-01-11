@@ -12,6 +12,22 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// PHASE 2: Standardized error response helper
+// Helper function to create standardized error responses
+function createErrorResponse(message: string, statusCode: number, code?: string): Response {
+  const errorResponse: { error: string; code?: string; statusCode?: number } = {
+    error: message,
+    statusCode,
+  };
+  if (code) {
+    errorResponse.code = code;
+  }
+  return new Response(JSON.stringify(errorResponse), {
+    status: statusCode,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
 interface TemplateData {
   [key: string]: string | number | boolean;
 }
@@ -412,9 +428,6 @@ Deno.serve(async (req: Request) => {
     });
 
   } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return createErrorResponse(error.message || 'An unexpected error occurred', 400, 'BAD_REQUEST');
   }
 });

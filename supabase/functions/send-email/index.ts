@@ -13,6 +13,22 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// PHASE 2: Standardized error response helper
+// Helper function to create standardized error responses
+function createErrorResponse(message: string, statusCode: number, code?: string): Response {
+  const errorResponse: { error: string; code?: string; statusCode?: number } = {
+    error: message,
+    statusCode,
+  };
+  if (code) {
+    errorResponse.code = code;
+  }
+  return new Response(JSON.stringify(errorResponse), {
+    status: statusCode,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
 // Fix: Add explicit Request type for the handler's parameter for better type safety.
 Deno.serve(async (req: Request) => {
   // Handle the preflight CORS request, which is essential for browser security.
@@ -64,12 +80,6 @@ Deno.serve(async (req: Request) => {
 
   } catch (error: any) { // Fix: Add explicit type for the catch clause variable to align with modern TypeScript standards.
     // Handle any errors that occur during the process and return a helpful message.
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json',
-      },
-    });
+    return createErrorResponse(error.message || 'An unexpected error occurred', 400, 'BAD_REQUEST');
   }
 });

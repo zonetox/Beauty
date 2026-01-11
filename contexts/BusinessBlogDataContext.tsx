@@ -73,10 +73,17 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
     setReviewsLoading(true);
     setOrdersLoading(true);
 
+    // PHASE 3: Optimize queries - select only needed columns (matching BusinessContext optimization)
     const [postsRes, reviewsRes, ordersRes] = await Promise.all([
-      supabase.from('business_blog_posts').select('*').order('created_at', { ascending: false }),
-      supabase.from('reviews').select('*').order('submitted_at', { ascending: false }),
-      supabase.from('orders').select('*').order('submitted_at', { ascending: false })
+      supabase.from('business_blog_posts')
+        .select('id, business_id, slug, title, excerpt, image_url, content, author, created_date, published_date, status, view_count, is_featured, seo')
+        .order('created_date', { ascending: false }),
+      supabase.from('reviews')
+        .select('id, user_id, business_id, user_name, user_avatar_url, rating, comment, submitted_date, status, reply')
+        .order('submitted_date', { ascending: false }),
+      supabase.from('orders')
+        .select('id, business_id, package_id, customer_name, customer_email, customer_phone, total_amount, status, submitted_at, notes')
+        .order('submitted_at', { ascending: false })
     ]);
 
     if (postsRes.data) setPosts(snakeToCamel(postsRes.data) as BusinessBlogPost[]);

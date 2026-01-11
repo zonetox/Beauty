@@ -34,7 +34,10 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
   // Fetch blog posts from Supabase
   const fetchBlogPosts = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.from('blog_posts').select('*').order('date', { ascending: false });
+    // PHASE 3: Optimize query - select only needed columns
+    const { data, error } = await supabase.from('blog_posts')
+      .select('id, slug, title, image_url, excerpt, author, date, category, content, view_count')
+      .order('date', { ascending: false });
     if (error) {
       console.error("Error fetching blog posts:", error);
     } else if (data) {

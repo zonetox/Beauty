@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, useContext, ReactNode, useCa
 import { AdminLogEntry, Notification, Announcement, SupportTicket, TicketReply, TicketStatus, AppSettings, LayoutItem, RegistrationRequest } from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { DEFAULT_PAGE_CONTENT } from './PageContentContext.tsx';
+import { useErrorHandler } from '../lib/useErrorHandler.ts';
 
 type PageName = 'about' | 'contact' | 'homepage';
 interface PageData { layout: LayoutItem[]; visibility: { [key: string]: boolean }; }
@@ -52,6 +53,7 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
   const [registrationRequests, setRegistrationRequests] = useState<RegistrationRequest[]>([]);
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [pageContent, setPageContent] = useState<{ [key in PageName]?: PageData }>(DEFAULT_PAGE_CONTENT);
+  const { handleEdgeFunctionError } = useErrorHandler();
 
   const fetchAllAdminData = useCallback(async () => {
     if (!isSupabaseConfigured) {
@@ -142,9 +144,10 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
     }
 
     try {
+      // PHASE 3: Optimize query - select only needed columns
       const { data, error } = await supabase
         .from('admin_activity_logs')
-        .select('*')
+        .select('id, timestamp, admin_username, action, details')
         .order('timestamp', { ascending: false })
         .limit(100);
 
@@ -330,7 +333,10 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
         const { error: emailError } = await supabase.functions.invoke('send-email', {
           body: { to: recipientEmail, subject, html: body.replace(/\n/g, '<br>') }
         });
-        if (emailError) console.error('Error sending email:', emailError);
+        if (emailError) {
+          // FINAL PHASE FIX: Use standardized error handling
+          handleEdgeFunctionError(emailError, 'addNotification');
+        }
       }
     }
 
@@ -498,7 +504,11 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
     const { data, error } = await supabase.functions.invoke('approve-registration', {
       body: { requestId }
     });
-    if (error) throw error;
+    if (error) {
+      // FINAL PHASE FIX: Use standardized error handling
+      handleEdgeFunctionError(error, 'approveRegistrationRequest');
+      throw error; // Still throw for caller handling (existing behavior preserved)
+    }
     // Data will refetch via real-time subscription
     return data;
   };

@@ -42,9 +42,10 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
 
     const fetchProfile = async (user: User) => {
       try {
+        // PHASE 3: Optimize query - select only needed columns
         const { data, error } = await supabase
           .from('profiles')
-          .select('*')
+          .select('id, full_name, email, avatar_url, business_id')
           .eq('id', user.id)
           .single();
 

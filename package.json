@@ -12,7 +12,10 @@
     "test:watch": "jest --watch --config jest.config.cjs",
     "test:coverage": "jest --coverage --config jest.config.cjs",
     "env:sync": "node scripts/sync-env.js",
-    "env:verify": "node scripts/verify-env-complete.js"
+    "env:verify": "node scripts/verify-env-complete.js",
+    "fix:env": "node scripts/auto-fix-all.js",
+    "security:audit": "node scripts/security-audit.js",
+    "verify:connections": "node scripts/verify-connections.js"
   },
   "dependencies": {
     "@google/genai": "^1.26.0",

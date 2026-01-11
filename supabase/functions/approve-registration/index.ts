@@ -1,5 +1,5 @@
 // supabase/functions/approve-registration/index.ts
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // Fix: Declare the Deno global object to satisfy TypeScript in environments where Deno types are not globally available.
 declare const Deno: any;
@@ -9,6 +9,22 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// PHASE 2: Standardized error response helper
+// Helper function to create standardized error responses
+function createErrorResponse(message: string, statusCode: number, code?: string): Response {
+  const errorResponse: { error: string; code?: string; statusCode?: number } = {
+    error: message,
+    statusCode,
+  };
+  if (code) {
+    errorResponse.code = code;
+  }
+  return new Response(JSON.stringify(errorResponse), {
+    status: statusCode,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
 
 // Define a type for the expected request body for clarity.
 interface ApproveRequestBody {
@@ -22,9 +38,18 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    // PHASE 1 FIX: Input validation
     const { requestId }: ApproveRequestBody = await req.json();
-    if (!requestId) {
-      throw new Error("Request ID is required.");
+    
+    // Validate requestId
+    if (!requestId || typeof requestId !== 'string' || requestId.trim().length === 0) {
+      return createErrorResponse('Invalid request ID. Request ID is required and must be a non-empty string.', 400, 'VALIDATION_ERROR');
+    }
+
+    // Validate UUID format (requestId should be UUID)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(requestId)) {
+      return createErrorResponse('Invalid request ID format. Must be a valid UUID.', 400, 'VALIDATION_ERROR');
     }
 
     // Initialize Supabase admin client to perform privileged operations.
@@ -173,9 +198,6 @@ Deno.serve(async (req: Request) => {
     });
 
   } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 500,
-    });
+    return createErrorResponse(error.message || 'An unexpected error occurred', 500, 'INTERNAL_ERROR');
   }
 });

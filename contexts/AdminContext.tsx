@@ -7,6 +7,7 @@ import { Session, User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 import { DEFAULT_PAGE_CONTENT } from './PageContentContext.tsx';
 import { snakeToCamel } from '../lib/utils.ts';
+import { useErrorHandler } from '../lib/useErrorHandler.ts';
 
 // --- Hardcoded fallback users for Developer Quick Login ---
 const DEV_ADMIN_USERS: AdminUser[] = [
@@ -121,6 +122,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const [currentUser, setCurrentUser] = useState<AuthenticatedAdmin | null>(null);
     const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
     const [loading, setLoading] = useState(true);
+    const { handleEdgeFunctionError } = useErrorHandler();
 
     // --- PLATFORM STATES ---
     const [logs, setLogs] = useState<AdminLogEntry[]>([]);
@@ -137,7 +139,10 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             setAdminUsers(DEV_ADMIN_USERS);
             return DEV_ADMIN_USERS;
         }
-        const { data, error } = await supabase.from('admin_users').select('*').order('id');
+        // PHASE 3: Optimize query - select only needed columns
+        const { data, error } = await supabase.from('admin_users')
+          .select('id, username, email, role, permissions, is_locked, last_login')
+          .order('id');
         if (error || !data || data.length === 0) {
             console.warn("Could not fetch admin users from DB or table is empty. Falling back to dev users.", error?.message);
             const fallback = DEV_ADMIN_USERS;
@@ -287,6 +292,8 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             body: newUser
         });
         if (error) {
+            // FINAL PHASE FIX: Use standardized error handling
+            handleEdgeFunctionError(error, 'addAdminUser');
             throw new Error(`Failed to create admin user: ${error.message}`);
         }
         // Re-fetch all users to get the new one.
