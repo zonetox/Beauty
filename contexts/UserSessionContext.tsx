@@ -129,8 +129,24 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
       setSession(null);
       return;
     }
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Logout error:', error);
+        throw error;
+      }
+      // Clear local state immediately
+      setCurrentUser(null);
+      setProfile(null);
+      setSession(null);
+    } catch (error) {
+      console.error('Exception during logout:', error);
+      // Still clear local state even if signOut fails
+      setCurrentUser(null);
+      setProfile(null);
+      setSession(null);
+      throw error;
+    }
   };
 
   const requestPasswordReset = async (email: string): Promise<void> => {

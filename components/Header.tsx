@@ -44,9 +44,17 @@ const Header: React.FC = () => {
   const isBusinessOwner = !!profile?.businessId;
 
   const handleLogout = async () => {
-    await logout();
-    setIsMenuOpen(false); // Close menu on logout
-    navigate('/');
+    try {
+      setIsMenuOpen(false); // Close menu on logout
+      await logout();
+      // Wait a bit to ensure session is cleared
+      await new Promise(resolve => setTimeout(resolve, 300));
+      navigate('/', { replace: true });
+      toast.success('Đã đăng xuất thành công');
+    } catch (error: any) {
+      console.error('Logout error:', error);
+      toast.error('Lỗi khi đăng xuất: ' + (error.message || 'Vui lòng thử lại'));
+    }
   };
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
