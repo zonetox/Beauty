@@ -245,18 +245,57 @@ const Header: React.FC = () => {
           <div className="pt-4 pb-3 border-t border-gray-200">
             {currentUser ? (
               <div className="px-2 space-y-1">
-                {/* Dashboard Doanh nghiệp chỉ hiển thị cho business owner */}
-                {isBusinessOwner && (
-                  <NavLink to="/account" className={({ isActive }) => `${mobileNavLinkClass({ isActive })} flex items-center gap-3`} onClick={() => setIsMenuOpen(false)}>
-                    <UserIcon className="w-6 h-6" />
+                {/* User Info */}
+                <div className="px-3 py-2 mb-2">
+                  <div className="flex items-center gap-3">
+                    {profile?.avatarUrl ? (
+                      <img 
+                        src={profile.avatarUrl} 
+                        alt={profile.fullName || currentUser.email || 'User'} 
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-semibold">
+                        {(profile?.fullName || currentUser.user_metadata?.full_name || currentUser.email || 'U').charAt(0).toUpperCase()}
+                      </div>
+                    )}
                     <div>
-                      <p className="font-medium">{currentUser.user_metadata?.full_name || currentUser.email}</p>
-                      <p className="text-sm text-gray-500">Quản lý doanh nghiệp</p>
+                      <p className="font-medium text-neutral-dark">{profile?.fullName || currentUser.user_metadata?.full_name || currentUser.email}</p>
+                      <p className="text-xs text-gray-500 truncate">{currentUser.email}</p>
                     </div>
-                  </NavLink>
+                  </div>
+                </div>
+                {/* Account Link */}
+                <NavLink 
+                  to="/account" 
+                  className={({ isActive }) => `${mobileNavLinkClass({ isActive })} flex items-center gap-3`} 
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <UserIcon className="w-6 h-6" />
+                  <span>{isBusinessOwner ? 'Dashboard Doanh nghiệp' : 'Tài khoản của tôi'}</span>
+                </NavLink>
+                {/* Register Business Link (only for regular users) */}
+                {!isBusinessOwner && (
+                  <Link
+                    to="/register"
+                    className="block px-3 py-2 rounded-md text-base font-medium text-neutral-dark hover:bg-primary/10"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                      <span>Đăng ký doanh nghiệp</span>
+                    </div>
+                  </Link>
                 )}
-                <button onClick={handleLogout} className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-neutral-dark hover:bg-primary/10">
-                  Đăng xuất
+                <button onClick={handleLogout} className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50">
+                  <div className="flex items-center gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    <span>Đăng xuất</span>
+                  </div>
                 </button>
               </div>
             ) : (
