@@ -33,97 +33,116 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [blogCategories, setBlogCategories] = useState<BlogCategory[]>([]);
 
   // Fetch blog posts from Supabase
-  const fetchBlogPosts = useCallback(async () => {
-    setLoading(true);
-    // PHASE 3: Optimize query - select only needed columns
-    const { data, error } = await supabase.from('blog_posts')
-      .select('id, slug, title, image_url, excerpt, author, date, category, content, view_count')
-      .order('date', { ascending: false });
-    if (error) {
-      console.error("Error fetching blog posts:", error);
-    } else if (data) {
-      // Map snake_case to camelCase
-      setBlogPosts(data.map((post: any) => ({
-        id: post.id,
-        slug: post.slug,
-        title: post.title,
-        imageUrl: post.image_url || post.imageUrl,
-        excerpt: post.excerpt,
-        author: post.author,
-        date: post.date,
-        category: post.category,
-        content: post.content,
-        viewCount: post.view_count || post.viewCount || 0,
-      })));
-    }
-    setLoading(false);
-  }, []);
-
   useEffect(() => {
+    let cancelled = false;
+    
+    const fetchBlogPosts = async () => {
+      setLoading(true);
+      // PHASE 3: Optimize query - select only needed columns
+      const { data, error } = await supabase.from('blog_posts')
+        .select('id, slug, title, image_url, excerpt, author, date, category, content, view_count')
+        .order('date', { ascending: false });
+      if (error) {
+        console.error("Error fetching blog posts:", error);
+      } else if (data && !cancelled) {
+        // Map snake_case to camelCase
+        setBlogPosts(data.map((post: any) => ({
+          id: post.id,
+          slug: post.slug,
+          title: post.title,
+          imageUrl: post.image_url || post.imageUrl,
+          excerpt: post.excerpt,
+          author: post.author,
+          date: post.date,
+          category: post.category,
+          content: post.content,
+          viewCount: post.view_count || post.viewCount || 0,
+        })));
+      }
+      if (!cancelled) {
+        setLoading(false);
+      }
+    };
+    
     fetchBlogPosts();
-  }, [fetchBlogPosts]);
+    
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Fetch comments from database (C2.4: Migrated from localStorage)
-  const fetchComments = useCallback(async () => {
-    if (!isSupabaseConfigured) {
-      // Fallback to localStorage if Supabase not configured
-      try {
-        const savedCommentsJSON = localStorage.getItem('blog_comments');
-        if (savedCommentsJSON) {
-          setComments(JSON.parse(savedCommentsJSON));
-        }
-      } catch (error) {
-        console.error('Failed to parse comments from localStorage:', error);
-        setComments([]);
-      }
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('blog_comments')
-        .select('*')
-        .order('date', { ascending: true });
-
-      if (error) {
-        console.error('Error fetching blog comments:', error);
-        // Fallback to localStorage
+  useEffect(() => {
+    let cancelled = false;
+    
+    const fetchComments = async () => {
+      if (!isSupabaseConfigured) {
+        // Fallback to localStorage if Supabase not configured
         try {
           const savedCommentsJSON = localStorage.getItem('blog_comments');
-          if (savedCommentsJSON) {
+          if (savedCommentsJSON && !cancelled) {
             setComments(JSON.parse(savedCommentsJSON));
           }
-        } catch (e) {
-          console.error('Failed to parse comments from localStorage:', e);
+        } catch (error) {
+          console.error('Failed to parse comments from localStorage:', error);
+          if (!cancelled) {
+            setComments([]);
+          }
         }
-      } else if (data) {
-        const mappedComments: BlogComment[] = data.map(comment => ({
-          id: comment.id,
-          postId: comment.post_id,
-          authorName: comment.author_name,
-          authorAvatarUrl: `https://picsum.photos/seed/${comment.author_name.replace(/\s+/g, '-')}/100/100`,
-          content: comment.content,
-          date: comment.date || comment.created_at,
-        }));
-        setComments(mappedComments);
+        return;
       }
-    } catch (error) {
-      console.error('Error in fetchComments:', error);
-    }
-  }, []);
 
-  useEffect(() => {
+      try {
+        const { data, error } = await supabase
+          .from('blog_comments')
+          .select('*')
+          .order('date', { ascending: true });
+
+        if (error) {
+          console.error('Error fetching blog comments:', error);
+          // Fallback to localStorage
+          try {
+            const savedCommentsJSON = localStorage.getItem('blog_comments');
+            if (savedCommentsJSON && !cancelled) {
+              setComments(JSON.parse(savedCommentsJSON));
+            }
+          } catch (e) {
+            console.error('Failed to parse comments from localStorage:', e);
+          }
+        } else if (data && !cancelled) {
+          const mappedComments: BlogComment[] = data.map(comment => ({
+            id: comment.id,
+            postId: comment.post_id,
+            authorName: comment.author_name,
+            authorAvatarUrl: `https://picsum.photos/seed/${comment.author_name.replace(/\s+/g, '-')}/100/100`,
+            content: comment.content,
+            date: comment.date || comment.created_at,
+          }));
+          setComments(mappedComments);
+        }
+      } catch (error) {
+        console.error('Error in fetchComments:', error);
+      }
+    };
+    
     fetchComments();
-  }, [fetchComments]);
+    
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   
+  // Load blog categories from localStorage on mount
   useEffect(() => {
     try {
       const savedCategoriesJSON = localStorage.getItem(CATEGORIES_LOCAL_STORAGE_KEY);
-      setBlogCategories(savedCategoriesJSON ? JSON.parse(savedCategoriesJSON) : initialBlogCategories);
+      const categories = savedCategoriesJSON ? JSON.parse(savedCategoriesJSON) : initialBlogCategories;
+      setBlogCategories(categories);
     } catch (error) {
       console.error(`Failed to parse blog categories from localStorage:`, error);
       setBlogCategories(initialBlogCategories);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const updateCategoriesLocalStorage = (categoriesToSave: BlogCategory[]) => {

@@ -127,7 +127,7 @@ const ConnectionTestPage: React.FC = () => {
 
             <div style={{ marginTop: '30px', borderTop: '2px solid #333', paddingTop: '20px' }}>
                 <h3>🛠️ Công cụ sửa lỗi (Troubleshooting)</h3>
-                <p>Nếu bạn thấy "Clean Client Worked" nhưng SDK chính bị lỗi, hãy bấm nút dưới đây để xóa bộ nhớ đệm bị lỗi.</p>
+                <p>Nếu bạn thấy &quot;Clean Client Worked&quot; nhưng SDK chính bị lỗi, hãy bấm nút dưới đây để xóa bộ nhớ đệm bị lỗi.</p>
                 <button
                     onClick={() => {
                         console.log('Clearing storage...');

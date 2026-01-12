@@ -1,3 +1,4 @@
+/* eslint-env node */
 /**
  * Run All Checks Script
  * Runs all validation checks in sequence

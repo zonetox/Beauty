@@ -1,6 +1,6 @@
 # Foreign Key Relations
 
-**Last Updated:** 2025-01-11  
+**Last Updated:** 2025-01-12  
 **Source:** Supabase Database (read via MCP)  
 **Note:** This document lists ONLY foreign key constraints that actually exist in the database. No assumed relations.
 
@@ -120,6 +120,50 @@
 | Column | References | Constraint Name |
 |--------|------------|-----------------|
 | `business_id` | `businesses.id` | `team_members_business_id_fkey` |
+
+---
+
+### `business_staff`
+
+| Column | References | Constraint Name |
+|--------|------------|-----------------|
+| `business_id` | `businesses.id` | `business_staff_business_id_fkey` |
+| `user_id` | `auth.users.id` | `business_staff_user_id_fkey` |
+
+**Note:** `auth.users` is in the `auth` schema, not `public` schema.
+
+---
+
+### `abuse_reports`
+
+| Column | References | Constraint Name |
+|--------|------------|-----------------|
+| `review_id` | `reviews.id` | `abuse_reports_review_id_fkey` |
+| `reporter_id` | `auth.users.id` | `abuse_reports_reporter_id_fkey` |
+| `reviewed_by` | `auth.users.id` | `abuse_reports_reviewed_by_fkey` |
+
+**Note:** `auth.users` is in the `auth` schema, not `public` schema.
+
+---
+
+### `page_views`
+
+| Column | References | Constraint Name |
+|--------|------------|-----------------|
+| `user_id` | `auth.users.id` | `page_views_user_id_fkey` |
+
+**Note:** `auth.users` is in the `auth` schema, not `public` schema.
+
+---
+
+### `conversions`
+
+| Column | References | Constraint Name |
+|--------|------------|-----------------|
+| `business_id` | `businesses.id` | `conversions_business_id_fkey` |
+| `user_id` | `auth.users.id` | `conversions_user_id_fkey` |
+
+**Note:** `auth.users` is in the `auth` schema, not `public` schema.
 
 ---
 

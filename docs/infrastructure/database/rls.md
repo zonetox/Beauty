@@ -363,6 +363,66 @@ For each table, policies are listed by operation type: SELECT, INSERT, UPDATE, D
 
 ---
 
+## Table: `business_staff`
+
+**RLS Enabled:** Yes
+
+| Operation | Policy Name | Allowed Roles | Condition |
+|-----------|-------------|---------------|-----------|
+| SELECT | `business_staff_select_owner_or_staff` | public | `business_id IN (SELECT profiles.business_id FROM profiles WHERE profiles.id = auth.uid()) OR user_id = auth.uid()` |
+| INSERT | `business_staff_insert_owner` | public | `business_id IN (SELECT profiles.business_id FROM profiles WHERE profiles.id = auth.uid())` |
+| UPDATE | `business_staff_update_owner` | public | `business_id IN (SELECT profiles.business_id FROM profiles WHERE profiles.id = auth.uid())` |
+| DELETE | `business_staff_delete_owner` | public | `business_id IN (SELECT profiles.business_id FROM profiles WHERE profiles.id = auth.uid())` |
+
+**Summary:** SELECT for business owners and staff members. INSERT/UPDATE/DELETE for business owners only.
+
+---
+
+## Table: `abuse_reports`
+
+**RLS Enabled:** Yes
+
+| Operation | Policy Name | Allowed Roles | Condition |
+|-----------|-------------|---------------|-----------|
+| SELECT | `abuse_reports_select_own_or_admin` | public | `reporter_id = auth.uid() OR auth.email() IN (SELECT admin_users.email FROM admin_users WHERE admin_users.is_locked = false)` |
+| INSERT | `abuse_reports_insert_authenticated` | authenticated | `auth.uid() IS NOT NULL` |
+| UPDATE | `abuse_reports_update_admin` | public | `auth.email() IN (SELECT admin_users.email FROM admin_users WHERE admin_users.is_locked = false)` |
+| DELETE | NOT PRESENT | - | No DELETE policy |
+
+**Summary:** SELECT for reporters and admins. INSERT for authenticated users. UPDATE for admins only. No DELETE.
+
+---
+
+## Table: `page_views`
+
+**RLS Enabled:** Yes
+
+| Operation | Policy Name | Allowed Roles | Condition |
+|-----------|-------------|---------------|-----------|
+| SELECT | `page_views_select_admin_or_owner` | public | `auth.email() IN (SELECT admin_users.email FROM admin_users WHERE admin_users.is_locked = false) OR (page_type = 'business' AND page_id IN (SELECT slug FROM businesses WHERE id IN (SELECT profiles.business_id FROM profiles WHERE profiles.id = auth.uid())))` |
+| INSERT | `page_views_insert_public` | public | `true` (public INSERT) |
+| UPDATE | NOT PRESENT | - | No UPDATE policy |
+| DELETE | NOT PRESENT | - | No DELETE policy |
+
+**Summary:** SELECT for admins and business owners (own business views). Public INSERT (tracking). No UPDATE/DELETE.
+
+---
+
+## Table: `conversions`
+
+**RLS Enabled:** Yes
+
+| Operation | Policy Name | Allowed Roles | Condition |
+|-----------|-------------|---------------|-----------|
+| SELECT | `conversions_select_owner_or_admin` | public | `business_id IN (SELECT profiles.business_id FROM profiles WHERE profiles.id = auth.uid()) OR auth.email() IN (SELECT admin_users.email FROM admin_users WHERE admin_users.is_locked = false)` |
+| INSERT | `conversions_insert_public` | public | `true` (public INSERT) |
+| UPDATE | NOT PRESENT | - | No UPDATE policy |
+| DELETE | NOT PRESENT | - | No DELETE policy |
+
+**Summary:** SELECT for business owners and admins. Public INSERT (tracking). No UPDATE/DELETE.
+
+---
+
 ## Notes
 
 - All tables have RLS enabled

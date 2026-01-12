@@ -116,8 +116,10 @@ const BlogListPage: React.FC = () => {
     return results;
   }, [searchQuery, allPosts, selectedCategory]);
   
+  // Reset to page 1 when search or category changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-      setCurrentPage(1);
+    setCurrentPage(1);
   }, [searchQuery, selectedCategory]);
 
   // Pagination logic

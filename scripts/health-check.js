@@ -1,3 +1,4 @@
+/* eslint-env node */
 /**
  * Comprehensive Health Check Script
  * Automatically verifies all critical paths and configurations

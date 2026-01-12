@@ -86,7 +86,7 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ business }) => {
                     {visibleReviews.slice(0, 3).map(review => (
                         <div key={review.id} className="bg-white p-6 rounded-lg border border-gray-100 shadow-lg flex flex-col">
                             <StarRating rating={review.rating} />
-                            <p className="text-gray-600 mt-4 italic flex-grow">"{review.comment}"</p>
+                            <p className="text-gray-600 mt-4 italic flex-grow">&quot;{review.comment}&quot;</p>
                             <div className="mt-6 flex items-center">
                                 <img src={review.user_avatar_url} alt={review.user_name} className="w-12 h-12 rounded-full object-cover" />
                                 <div className="ml-4">

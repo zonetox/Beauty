@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-env node */
 /**
  * Script tự động sắp xếp và fix file .env.vercel
  * 

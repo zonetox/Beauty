@@ -1,8 +1,8 @@
 # Database Schema
 
-**Last Updated:** 2025-01-11  
+**Last Updated:** 2025-01-12  
 **Source:** Supabase Database (read via MCP)  
-**Total Tables:** 23  
+**Total Tables:** 27  
 **Note:** This document reflects EXACTLY what exists in the database. No assumptions made.
 
 ---
@@ -431,6 +431,78 @@
 - Primary keys are explicitly listed for each table
 - Default values are shown as they exist in the database
 - NULL constraints are explicitly noted
+
+---
+
+## Table: `business_staff`
+
+**Primary Key:** `id` (uuid)
+
+| Column | Data Type | Nullable | Default | Notes |
+|--------|-----------|----------|---------|-------|
+| `id` | uuid | NOT NULL | `uuid_generate_v4()` | Primary key |
+| `business_id` | bigint | NOT NULL | - | Foreign key to `businesses.id` |
+| `user_id` | uuid | NOT NULL | - | Foreign key to `auth.users.id` |
+| `role` | staff_member_role | NOT NULL | `'Editor'::staff_member_role` | Enum type: Editor, Admin |
+| `permissions` | jsonb | NULL | `'{}'::jsonb` | JSONB permissions: canEditLandingPage, canEditBlog, canManageMedia, canManageServices |
+| `created_at` | timestamp with time zone | NULL | `now()` | - |
+| `updated_at` | timestamp with time zone | NULL | `now()` | - |
+
+**Unique Constraint:** `(business_id, user_id)`
+
+---
+
+## Table: `abuse_reports`
+
+**Primary Key:** `id` (uuid)
+
+| Column | Data Type | Nullable | Default | Notes |
+|--------|-----------|----------|---------|-------|
+| `id` | uuid | NOT NULL | `uuid_generate_v4()` | Primary key |
+| `review_id` | uuid | NOT NULL | - | Foreign key to `reviews.id` |
+| `reporter_id` | uuid | NULL | - | Foreign key to `auth.users.id` |
+| `reason` | text | NOT NULL | - | - |
+| `status` | text | NOT NULL | `'Pending'` | CHECK: Pending, Reviewed, Resolved, Dismissed |
+| `admin_notes` | text | NULL | - | - |
+| `reviewed_by` | uuid | NULL | - | Foreign key to `auth.users.id` |
+| `reviewed_at` | timestamp with time zone | NULL | - | - |
+| `created_at` | timestamp with time zone | NULL | `now()` | - |
+| `updated_at` | timestamp with time zone | NULL | `now()` | - |
+
+---
+
+## Table: `page_views`
+
+**Primary Key:** `id` (uuid)
+
+| Column | Data Type | Nullable | Default | Notes |
+|--------|-----------|----------|---------|-------|
+| `id` | uuid | NOT NULL | `uuid_generate_v4()` | Primary key |
+| `page_type` | text | NOT NULL | - | Type: homepage, business, blog, directory |
+| `page_id` | text | NULL | - | Identifier: business slug, blog slug, etc. |
+| `user_id` | uuid | NULL | - | Foreign key to `auth.users.id` |
+| `session_id` | text | NULL | - | - |
+| `ip_address` | text | NULL | - | - |
+| `user_agent` | text | NULL | - | - |
+| `referrer` | text | NULL | - | - |
+| `viewed_at` | timestamp with time zone | NULL | `now()` | - |
+
+---
+
+## Table: `conversions`
+
+**Primary Key:** `id` (uuid)
+
+| Column | Data Type | Nullable | Default | Notes |
+|--------|-----------|----------|---------|-------|
+| `id` | uuid | NOT NULL | `uuid_generate_v4()` | Primary key |
+| `business_id` | bigint | NULL | - | Foreign key to `businesses.id` |
+| `conversion_type` | text | NOT NULL | - | Type: click, booking, contact, call |
+| `source` | text | NULL | - | Source: landing_page, directory, search |
+| `user_id` | uuid | NULL | - | Foreign key to `auth.users.id` |
+| `session_id` | text | NULL | - | - |
+| `metadata` | jsonb | NULL | - | - |
+| `converted_at` | timestamp with time zone | NULL | `now()` | - |
 
 ---
 

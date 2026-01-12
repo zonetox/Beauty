@@ -66,7 +66,7 @@ VITE_SUPABASE_ANON_KEY="your-public-anon-key"`;
         <div className="mt-6 p-4 bg-orange-50 border-l-4 border-orange-400">
             <h3 className="font-bold text-orange-800">Lưu ý quan trọng</h3>
             <p className="text-sm text-orange-700">
-                Trang này sẽ xuất hiện nếu các biến môi trường <strong>chưa được đặt</strong>, hoặc nếu chúng được đặt bằng <strong>giá trị placeholder mặc định</strong> (ví dụ: "your-project-url"). Hãy chắc chắn rằng bạn đã thay thế chúng bằng khóa Supabase thực tế của mình.
+                Trang này sẽ xuất hiện nếu các biến môi trường <strong>chưa được đặt</strong>, hoặc nếu chúng được đặt bằng <strong>giá trị placeholder mặc định</strong> (ví dụ: &quot;your-project-url&quot;). Hãy chắc chắn rằng bạn đã thay thế chúng bằng khóa Supabase thực tế của mình.
             </p>
         </div>
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-env node */
 /**
  * Script kiểm tra kết nối Frontend - Database sau khi đổi password
  * 

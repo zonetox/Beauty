@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
+import React, { createContext, useMemo, useContext, ReactNode } from 'react';
 import { Business } from '../types.ts';
 import { useBusinessData } from './BusinessDataContext.tsx';
 import { useUserData } from './UserDataContext.tsx';
@@ -10,19 +10,15 @@ interface BusinessAuthContextType {
 const BusinessAuthContext = createContext<BusinessAuthContextType | undefined>(undefined);
 
 export const BusinessAuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [currentBusiness, setCurrentBusiness] = useState<Business | null>(null);
   const { businesses } = useBusinessData();
   const { profile } = useUserData(); // Get the currently logged-in user's profile
 
-  useEffect(() => {
-    // This effect now dynamically finds the business linked to the logged-in user.
+  // Use useMemo to compute currentBusiness instead of useEffect to avoid setState in effect
+  const currentBusiness = useMemo(() => {
     if (profile && profile.businessId && businesses.length > 0) {
-      const userBusiness = businesses.find(b => b.id === profile.businessId);
-      setCurrentBusiness(userBusiness || null);
-    } else {
-      // If there's no profile or no linked business, there's no current business.
-      setCurrentBusiness(null);
+      return businesses.find(b => b.id === profile.businessId) || null;
     }
+    return null;
   }, [profile, businesses]);
 
   return (

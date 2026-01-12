@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-env node */
 /**
  * Security Audit Script - Kiểm tra bảo mật trước khi push
  * 

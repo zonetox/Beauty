@@ -10,6 +10,20 @@ interface BookingModalProps {
     business: Business;
 }
 
+// Move StepIndicator outside component to avoid creating it during render
+const StepIndicator: React.FC<{ current: number; total: number }> = ({ current, total }) => (
+    <div className="flex justify-center items-center mb-4">
+        {Array.from({ length: total }, (_, i) => i + 1).map(num => (
+            <React.Fragment key={num}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${num <= current ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}`}>
+                    {num}
+                </div>
+                {num < total && <div className={`flex-1 h-1 ${num < current ? 'bg-primary' : 'bg-gray-200'}`} />}
+            </React.Fragment>
+        ))}
+    </div>
+);
+
 const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }) => {
     const { appointments, addAppointment } = useBookingData();
     const { currentUser } = useUserSession();
@@ -122,19 +136,6 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
     };
 
     if (!isOpen) return null;
-    
-    const StepIndicator: React.FC<{ current: number; total: number }> = ({ current, total }) => (
-        <div className="flex justify-center items-center mb-4">
-            {Array.from({ length: total }, (_, i) => i + 1).map(num => (
-                <React.Fragment key={num}>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${num <= current ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}`}>
-                        {num}
-                    </div>
-                    {num < total && <div className={`flex-1 h-1 ${num < current ? 'bg-primary' : 'bg-gray-200'}`} />}
-                </React.Fragment>
-            ))}
-        </div>
-    );
 
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={resetBooking}>
