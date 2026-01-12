@@ -4,11 +4,12 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { DEFAULT_PAGE_CONTENT } from './PageContentContext.tsx';
+import { LayoutItem } from '../types.ts';
 
 type PageName = 'about' | 'contact';
 
 interface PageData {
-  layout: { id: string; type: string; key?: string; content?: string }[];
+  layout: LayoutItem[];
   visibility: { [key: string]: boolean };
 }
 

@@ -259,7 +259,7 @@ const DirectoryPage: React.FC = () => {
 
     const hasActiveFilters = useMemo(() => {
         return Object.entries(activeFilters).some(([key, value]) => 
-            key !== 'page' && value && value !== 'default' && value !== false
+            key !== 'page' && value !== null && value !== undefined && value !== '' && value !== 'default' && value !== false
         );
     }, [activeFilters]);
 

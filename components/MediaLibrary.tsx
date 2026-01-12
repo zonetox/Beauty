@@ -134,11 +134,10 @@ const MediaLibrary: React.FC = () => {
             try {
                 // Simulate progress (actual upload doesn't provide progress in current implementation)
                 const progressInterval = setInterval(() => {
-                    uploadProgress.set(file.name, prev => {
-                        const newProgress = Math.min(prev + 10, 90);
-                        setUploadingFiles(new Map(uploadProgress));
-                        return newProgress;
-                    });
+                    const currentProgress = uploadProgress.get(file.name) || 0;
+                    const newProgress = Math.min(currentProgress + 10, 90);
+                    uploadProgress.set(file.name, newProgress);
+                    setUploadingFiles(new Map(uploadProgress));
                 }, 200);
 
                 await addMediaItem(file, currentBusiness.id);

@@ -162,7 +162,7 @@ const RegisterPage: React.FC = () => {
                     console.error('Profile update verification failed after retries. Business was created but profile link may be delayed.');
                     // Still redirect - the profile will be updated eventually
                     // User can refresh if needed
-                    toast.warning('Tài khoản doanh nghiệp đã được tạo. Đang cập nhật thông tin...');
+                    toast('Tài khoản doanh nghiệp đã được tạo. Đang cập nhật thông tin...', { icon: '⚠️' });
                 } else {
                     toast.success('Đăng ký thành công! Tài khoản doanh nghiệp của bạn đã được tạo với gói dùng thử 30 ngày.');
                 }

@@ -1,7 +1,7 @@
 
 
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
-import { Business, BusinessBlogPost, Review, ReviewStatus, BusinessAnalytics, Appointment, Order, OrderStatus, AppointmentStatus, Profile, Deal } from '../types.ts';
+import { Business, BusinessBlogPost, Review, ReviewStatus, BusinessAnalytics, Appointment, Order, OrderStatus, AppointmentStatus, Profile, Deal, AnalyticsDataPoint, TrafficSource } from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { useUserSession } from './UserSessionContext.tsx';
 import { useBusinessData, useMembershipPackageData } from './BusinessDataContext.tsx';
@@ -34,9 +34,11 @@ interface BusinessContextType {
   addReply: (reviewId: string, replyContent: string) => Promise<void>;
   toggleReviewVisibility: (reviewId: string) => Promise<void>;
   // Analytics
+  analyticsLoading: boolean;
   getAnalyticsByBusinessId: (businessId: number) => BusinessAnalytics | undefined;
   // Bookings
   appointments: Appointment[];
+  appointmentsLoading: boolean;
   getAppointmentsForBusiness: (businessId: number) => Appointment[];
   addAppointment: (newAppointmentData: Omit<Appointment, 'id' | 'createdAt'>) => Promise<void>;
   updateAppointmentStatus: (appointmentId: string, status: AppointmentStatus) => Promise<void>;

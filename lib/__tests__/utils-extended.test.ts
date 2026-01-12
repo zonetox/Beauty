@@ -41,7 +41,7 @@ describe('mapPostgrestResponse', () => {
   });
 
   it('should preserve error', () => {
-    const error = { message: 'Database error', code: 'PGRST116' };
+    const error: any = { message: 'Database error', code: 'PGRST116', details: '', hint: null, name: 'PostgrestError' };
     const response: PostgrestResponse<any> = {
       data: null,
       error,

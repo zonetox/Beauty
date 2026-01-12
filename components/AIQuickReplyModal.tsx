@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
-import { Appointment } from '../../types.ts';
+import { Appointment } from '../types.ts';
 
 interface AIQuickReplyModalProps {
     isOpen: boolean;

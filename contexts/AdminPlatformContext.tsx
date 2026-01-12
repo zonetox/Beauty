@@ -83,9 +83,45 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
         .select('page_name, content_data')
     ]);
 
-    if (announcementsRes.data) setAnnouncements(announcementsRes.data);
-    if (ticketsRes.data) setTickets(ticketsRes.data);
-    if (requestsRes.data) setRegistrationRequests(requestsRes.data as RegistrationRequest[]);
+    if (announcementsRes.data) {
+      // Map snake_case to camelCase
+      setAnnouncements(announcementsRes.data.map((a: any) => ({
+        id: a.id,
+        title: a.title,
+        content: a.content,
+        type: a.type,
+        createdAt: a.created_at || a.createdAt,
+        created_at: a.created_at, // Keep for compatibility
+      })));
+    }
+    if (ticketsRes.data) {
+      // Map snake_case to camelCase
+      setTickets(ticketsRes.data.map((t: any) => ({
+        id: t.id,
+        businessId: t.business_id,
+        businessName: t.business_name || '',
+        subject: t.subject,
+        message: t.message,
+        status: t.status,
+        createdAt: t.created_at || t.createdAt,
+        lastReplyAt: t.last_reply_at || t.lastReplyAt,
+        replies: t.replies || [],
+      })));
+    }
+    if (requestsRes.data) {
+      // Map snake_case to camelCase
+      setRegistrationRequests(requestsRes.data.map((r: any) => ({
+        id: r.id,
+        businessName: r.business_name,
+        email: r.email,
+        phone: r.phone,
+        address: r.address,
+        category: r.category,
+        tier: r.tier,
+        status: r.status,
+        submittedAt: r.submitted_at || r.submittedAt,
+      })));
+    }
     if (settingsRes.data) setSettings(settingsRes.data.settings_data as AppSettings);
 
     // Merge database page content with local defaults

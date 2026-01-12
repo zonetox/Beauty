@@ -276,8 +276,8 @@ const AccountSettings: React.FC = () => {
 
             <SectionCard title="Change Password">
                 <p className="text-sm text-gray-600 mb-4">
-                    Password changes are managed through your main login page. If you've forgotten your password, 
-                    please log out and use the "Forgot Password" link on the login page.
+                    Password changes are managed through your main login page. If you&apos;ve forgotten your password, 
+                    please log out and use the &quot;Forgot Password&quot; link on the login page.
                 </p>
                 <button 
                     type="button" 

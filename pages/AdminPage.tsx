@@ -28,6 +28,7 @@ import AdminDashboardOverview from '../components/AdminDashboardOverview.tsx';
 import AdminAnalyticsDashboard from '../components/AdminAnalyticsDashboard.tsx';
 import AdminGlobalSearch from '../components/AdminGlobalSearch.tsx';
 import AdminNotifications from '../components/AdminNotifications.tsx';
+import PermissionGuard from '../components/PermissionGuard.tsx';
 import AdminActivityLog from '../components/AdminActivityLog.tsx';
 import AdminNotificationLog from '../components/AdminNotificationLog.tsx';
 import AdminAnnouncementsManager from '../components/AdminAnnouncementsManager.tsx';

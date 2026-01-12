@@ -78,6 +78,7 @@ interface FormErrors {
     phone?: string;
     email?: string;
     categories?: string;
+    imageUrl?: string;
 }
 
 const BusinessProfileEditor: React.FC = () => {

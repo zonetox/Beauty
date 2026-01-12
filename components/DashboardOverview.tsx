@@ -3,7 +3,7 @@
 // Không tạo hệ thống mới, không refactor kiến trúc
 
 import React, { useMemo, useEffect, useState } from 'react';
-import { useBusinessAuth, useAnalyticsData } from '../contexts/BusinessContext.tsx';
+import { useBusiness, useAnalyticsData } from '../contexts/BusinessContext.tsx';
 import { MembershipTier, AnalyticsDataPoint, Announcement, AppointmentStatus, OrderStatus } from '../types.ts';
 import { ActiveTab } from '../pages/UserBusinessDashboardPage';
 import { useAdmin } from '../contexts/AdminContext.tsx';
@@ -74,7 +74,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
         reviewsLoading,
         getAppointmentsForBusiness,
         getReviewsByBusinessId 
-    } = useBusinessAuth();
+    } = useBusiness();
     const { getAnalyticsByBusinessId } = useAnalyticsData();
     const { addNotification, getUnreadAnnouncements, markAnnouncementAsRead } = useAdmin();
 

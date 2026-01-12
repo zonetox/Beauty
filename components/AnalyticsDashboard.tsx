@@ -99,18 +99,9 @@ const AnalyticsDashboard: React.FC = () => {
     const { getAnalyticsByBusinessId, loading } = useAnalyticsData();
     const [timeRange, setTimeRange] = useState<TimeRange>('7d');
 
-    if (!currentBusiness) {
-        return (
-            <div className="p-8">
-                <EmptyState
-                    title="No business found"
-                    message="Please select a business to view analytics."
-                />
-            </div>
-        );
-    }
-
+    // Move hooks before early return to follow Rules of Hooks
     const analytics = useMemo(() => {
+        if (!currentBusiness) return undefined;
         return getAnalyticsByBusinessId(currentBusiness.id);
     }, [currentBusiness, getAnalyticsByBusinessId]);
 

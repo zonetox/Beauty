@@ -39,6 +39,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     },
     global: {
         // Explicitly bind the global fetch to ensure it works in all environments (especially Vite/Edge)
-        fetch: (...args) => fetch(...args)
+        fetch: (input: RequestInfo | URL, init?: RequestInit) => fetch(input, init)
     }
 });

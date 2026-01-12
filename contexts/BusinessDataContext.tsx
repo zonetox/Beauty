@@ -852,9 +852,9 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
     }
   };
 
-  const addBlogCategory = async (name: string) => {
+  const addBlogCategory = async (name: string): Promise<void> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add category."); return; }
-    if (name.trim() === '' || blogCategories.some(c => c.name.toLowerCase() === name.toLowerCase())) { return toast.error("Category name cannot be empty or duplicate."); }
+    if (name.trim() === '' || blogCategories.some(c => c.name.toLowerCase() === name.toLowerCase())) { toast.error("Category name cannot be empty or duplicate."); return; }
     const { error } = await supabase.from('blog_categories').insert({ name });
     if (!error) { await fetchAllPublicData(); toast.success("Category added."); }
     else { toast.error(`Failed to add category: ${error.message}`); }
@@ -930,7 +930,7 @@ export const useBusinessData = () => {
   } = usePublicData();
 
   return {
-    businesses, businessMarkers, loading: businessLoading, totalBusinesses, currentPage, fetchBusinesses,
+    businesses, businessMarkers, businessLoading, loading: businessLoading, totalBusinesses, currentPage, fetchBusinesses,
     addBusiness, updateBusiness, deleteBusiness, getBusinessBySlug,
     fetchBusinessBySlug, incrementBusinessViewCount, addService, updateService,
     deleteService, updateServicesOrder, addMediaItem, updateMediaItem,
@@ -941,7 +941,7 @@ export const useBusinessData = () => {
 
 export const useBlogData = () => {
   const { blogPosts, blogLoading, addBlogPost, updateBlogPost, deleteBlogPost, getPostBySlug, incrementBlogViewCount, comments, getCommentsByPostId, addComment, blogCategories, addBlogCategory, updateBlogCategory, deleteBlogCategory } = usePublicData();
-  return { blogPosts, loading: blogLoading, addBlogPost, updateBlogPost, deleteBlogPost, getPostBySlug, incrementViewCount: incrementBlogViewCount, comments, getCommentsByPostId, addComment, blogCategories, addBlogCategory, updateBlogCategory, deleteBlogCategory };
+  return { blogPosts, blogLoading, loading: blogLoading, addBlogPost, updateBlogPost, deleteBlogPost, getPostBySlug, incrementViewCount: incrementBlogViewCount, comments, getCommentsByPostId, addComment, blogCategories, addBlogCategory, updateBlogCategory, deleteBlogCategory };
 };
 
 export const useMembershipPackageData = () => {

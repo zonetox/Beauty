@@ -155,7 +155,7 @@ const BusinessDetailPage: React.FC = () => {
         address: {
             streetAddress: business.address,
             addressLocality: business.city,
-            addressRegion: business.province,
+            addressRegion: business.district,
             addressCountry: 'VN',
         },
         geo: business.latitude && business.longitude ? {
@@ -163,7 +163,6 @@ const BusinessDetailPage: React.FC = () => {
             longitude: business.longitude,
         } : undefined,
         telephone: business.phone,
-        priceRange: business.priceRange || undefined,
         aggregateRating: visibleReviews.length > 0 ? {
             ratingValue: averageRating,
             reviewCount: visibleReviews.length,

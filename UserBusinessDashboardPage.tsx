@@ -1,20 +1,20 @@
 
 
 import React, { useState } from 'react';
-import { useBusinessAuth } from '../contexts/BusinessContext.tsx';
-import BusinessDashboardSidebar from '../components/BusinessDashboardSidebar.tsx';
-import DashboardOverview from '../components/DashboardOverview.tsx';
-import BusinessProfileEditor from '../components/BusinessProfileEditor.tsx';
-import MembershipAndBilling from '../components/MembershipAndBilling.tsx';
-import MediaLibrary from '../components/MediaLibrary.tsx';
-import ServicesManager from '../components/ServicesManager.tsx';
-import DealsManager from '../components/DealsManager.tsx';
-import BlogManager from '../components/BlogManager.tsx';
-import ReviewsManager from '../components/ReviewsManager.tsx';
-import AnalyticsDashboard from '../components/AnalyticsDashboard.tsx';
-import AccountSettings from '../components/AccountSettings.tsx';
-import BookingsManager from '../components/BookingsManager.tsx';
-import BusinessSupportCenter from '../components/BusinessSupportCenter.tsx';
+import { useBusinessAuth } from './contexts/BusinessContext';
+import BusinessDashboardSidebar from './components/BusinessDashboardSidebar';
+import DashboardOverview from './components/DashboardOverview';
+import BusinessProfileEditor from './components/BusinessProfileEditor';
+import MembershipAndBilling from './components/MembershipAndBilling';
+import MediaLibrary from './components/MediaLibrary';
+import ServicesManager from './components/ServicesManager';
+import DealsManager from './components/DealsManager';
+import BlogManager from './components/BlogManager';
+import ReviewsManager from './components/ReviewsManager';
+import AnalyticsDashboard from './components/AnalyticsDashboard';
+import AccountSettings from './components/AccountSettings';
+import BookingsManager from './components/BookingsManager';
+import BusinessSupportCenter from './components/BusinessSupportCenter';
 
 export type ActiveTab = 'dashboard' | 'profile' | 'services' | 'billing' | 'blog' | 'gallery' | 'reviews' | 'stats' | 'settings' | 'bookings' | 'support' | 'deals';
 

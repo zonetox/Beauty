@@ -41,7 +41,19 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
     if (error) {
       console.error("Error fetching blog posts:", error);
     } else if (data) {
-      setBlogPosts(data as BlogPost[]);
+      // Map snake_case to camelCase
+      setBlogPosts(data.map((post: any) => ({
+        id: post.id,
+        slug: post.slug,
+        title: post.title,
+        imageUrl: post.image_url || post.imageUrl,
+        excerpt: post.excerpt,
+        author: post.author,
+        date: post.date,
+        category: post.category,
+        content: post.content,
+        viewCount: post.view_count || post.viewCount || 0,
+      })));
     }
     setLoading(false);
   }, []);

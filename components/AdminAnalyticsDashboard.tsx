@@ -38,42 +38,49 @@ const Leaderboard: React.FC<{ title: string; data: { name: string; value: string
     </div>
 );
 
+// Move components outside to avoid "created during render" error
+interface FunnelStageData {
+    label: string;
+    value: number;
+    color: string;
+}
+
+const FunnelStage: React.FC<{ stage: FunnelStageData, baseValue: number }> = ({ stage, baseValue }) => {
+    const percentage = baseValue > 0 ? (stage.value / baseValue) * 100 : 0;
+    return (
+        <div className="flex items-center justify-center">
+            <div className={`relative ${stage.color} text-white font-bold py-4 text-center`} style={{ width: `${Math.max(percentage, 10)}%` }}>
+                <div className="px-2">
+                    <p className="text-lg">{stage.value}</p>
+                    <p className="text-xs opacity-90">{stage.label}</p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const ConversionRate: React.FC<{ from: number, to: number }> = ({ from, to }) => {
+    const rate = from > 0 ? ((to / from) * 100).toFixed(1) : '0.0';
+    return (
+         <div className="flex items-center justify-center my-2">
+            <div className="flex items-center gap-2 text-sm font-semibold text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+                <span>{rate}%</span>
+            </div>
+        </div>
+    );
+};
+
 const ConversionFunnel: React.FC<{ requests: RegistrationRequest[], orders: Order[] }> = ({ requests, orders }) => {
     const totalRequests = requests.length;
     const approvedRequests = requests.filter(r => r.status === 'Approved').length;
     const completedPayments = orders.filter(o => o.status === OrderStatus.COMPLETED).length;
 
-    const stages = [
+    const stages: FunnelStageData[] = [
         { label: 'Submitted Requests', value: totalRequests, color: 'bg-indigo-500' },
         { label: 'Approved Requests', value: approvedRequests, color: 'bg-blue-500' },
         { label: 'Completed Payments', value: completedPayments, color: 'bg-green-500' },
     ];
-
-    const FunnelStage: React.FC<{ stage: typeof stages[0], baseValue: number }> = ({ stage, baseValue }) => {
-        const percentage = baseValue > 0 ? (stage.value / baseValue) * 100 : 0;
-        return (
-            <div className="flex items-center justify-center">
-                <div className={`relative ${stage.color} text-white font-bold py-4 text-center`} style={{ width: `${Math.max(percentage, 10)}%` }}>
-                    <div className="px-2">
-                        <p className="text-lg">{stage.value}</p>
-                        <p className="text-xs opacity-90">{stage.label}</p>
-                    </div>
-                </div>
-            </div>
-        );
-    };
-    
-    const ConversionRate: React.FC<{ from: number, to: number }> = ({ from, to }) => {
-        const rate = from > 0 ? ((to / from) * 100).toFixed(1) : '0.0';
-        return (
-             <div className="flex items-center justify-center my-2">
-                <div className="flex items-center gap-2 text-sm font-semibold text-gray-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
-                    <span>{rate}%</span>
-                </div>
-            </div>
-        );
-    };
 
     return (
         <div className="bg-white p-6 rounded-lg shadow h-full">

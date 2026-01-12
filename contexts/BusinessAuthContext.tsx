@@ -16,8 +16,8 @@ export const BusinessAuthProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   useEffect(() => {
     // This effect now dynamically finds the business linked to the logged-in user.
-    if (profile && profile.business_id && businesses.length > 0) {
-      const userBusiness = businesses.find(b => b.id === profile.business_id);
+    if (profile && profile.businessId && businesses.length > 0) {
+      const userBusiness = businesses.find(b => b.id === profile.businessId);
       setCurrentBusiness(userBusiness || null);
     } else {
       // If there's no profile or no linked business, there's no current business.

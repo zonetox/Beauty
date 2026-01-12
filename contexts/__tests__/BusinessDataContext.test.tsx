@@ -203,7 +203,7 @@ describe('BusinessDataContext', () => {
     });
 
     // Should call RPC function for search
-    expect(supabase.rpc).toHaveBeenCalledWith('search_businesses', expect.objectContaining({
+    expect(supabase.rpc).toHaveBeenCalledWith('search_businesses_advanced', expect.objectContaining({
       p_search_text: 'test query',
     }));
   });
