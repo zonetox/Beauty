@@ -165,19 +165,23 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     useEffect(() => {
         let mounted = true;
+        let hasAttemptedAuth = false;
 
-        // Safety timeout: logic must resolve within 10 seconds or we force loading=false
-        // Only log warning if there's an actual issue (e.g., Supabase configured but not responding)
+        // Safety timeout: logic must resolve within 15 seconds or we force loading=false
+        // Only log warning if we've attempted auth check but it's taking too long
         const safetyTimeout = setTimeout(() => {
-            if (mounted && loading) {
-                // Only warn if Supabase is configured (indicates a real issue)
-                // If not configured, timeout is expected behavior
+            if (mounted && loading && hasAttemptedAuth) {
+                // Only warn if Supabase is configured AND we've attempted auth check
+                // This means there's likely a connection issue
                 if (isSupabaseConfigured) {
-                    console.warn('AdminContext: Auth check timed out after 10s. This may indicate a connection issue.');
+                    console.warn('AdminContext: Auth check timed out after 15s. This may indicate a connection issue.');
                 }
                 setLoading(false);
+            } else if (mounted && loading && !hasAttemptedAuth) {
+                // If we haven't even attempted auth check yet, just set loading to false silently
+                setLoading(false);
             }
-        }, 10000);
+        }, 15000);
 
         const handleAuthChange = async (allAdmins: AdminUser[], user: User | null) => {
             if (!mounted) return;
@@ -222,6 +226,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
         const initialize = async () => {
             try {
+                hasAttemptedAuth = true;
                 const allAdmins = await fetchAdminUsers();
                 if (isSupabaseConfigured) {
                     const { data: { session }, error } = await supabase.auth.getSession();

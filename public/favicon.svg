@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="petalGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#BFA16A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#A98C5A;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="centerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#A98C5A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B6F47;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="50" cy="50" r="48" fill="#FDFCF9"/>
+  
+  <!-- Outer petals (8 petals) - Simplified lotus design -->
+  <g transform="translate(50, 50)">
+    <!-- Top petal -->
+    <path d="M 0,-28 Q -8,-20 -8,-10 Q -8,0 0,0 Q 8,0 8,-10 Q 8,-20 0,-28 Z" fill="url(#petalGradient)" opacity="0.95"/>
+    <!-- Top-right petal -->
+    <path d="M 20,-20 Q 28,-12 28,-2 Q 28,8 20,8 Q 12,8 12,-2 Q 12,-12 20,-20 Z" fill="url(#petalGradient)" opacity="0.95" transform="rotate(45)"/>
+    <!-- Right petal -->
+    <path d="M 28,0 Q 20,8 10,8 Q 0,8 0,0 Q 0,-8 10,-8 Q 20,-8 28,0 Z" fill="url(#petalGradient)" opacity="0.95" transform="rotate(90)"/>
+    <!-- Bottom-right petal -->
+    <path d="M 20,20 Q 28,12 28,2 Q 28,-8 20,-8 Q 12,-8 12,2 Q 12,12 20,20 Z" fill="url(#petalGradient)" opacity="0.95" transform="rotate(135)"/>
+    <!-- Bottom petal -->
+    <path d="M 0,28 Q -8,20 -8,10 Q -8,0 0,0 Q 8,0 8,10 Q 8,20 0,28 Z" fill="url(#petalGradient)" opacity="0.95" transform="rotate(180)"/>
+    <!-- Bottom-left petal -->
+    <path d="M -20,20 Q -28,12 -28,2 Q -28,-8 -20,-8 Q -12,-8 -12,2 Q -12,12 -20,20 Z" fill="url(#petalGradient)" opacity="0.95" transform="rotate(225)"/>
+    <!-- Left petal -->
+    <path d="M -28,0 Q -20,-8 -10,-8 Q 0,-8 0,0 Q 0,8 -10,8 Q -20,8 -28,0 Z" fill="url(#petalGradient)" opacity="0.95" transform="rotate(270)"/>
+    <!-- Top-left petal -->
+    <path d="M -20,-20 Q -28,-12 -28,-2 Q -28,8 -20,8 Q -12,8 -12,-2 Q -12,-12 -20,-20 Z" fill="url(#petalGradient)" opacity="0.95" transform="rotate(315)"/>
+  </g>
+  
+  <!-- Inner petals (4 petals) -->
+  <g transform="translate(50, 50)">
+    <!-- Top inner petal -->
+    <ellipse cx="0" cy="-14" rx="5" ry="9" fill="url(#petalGradient)" opacity="0.85" transform="rotate(0)"/>
+    <!-- Right inner petal -->
+    <ellipse cx="14" cy="0" rx="5" ry="9" fill="url(#petalGradient)" opacity="0.85" transform="rotate(90)"/>
+    <!-- Bottom inner petal -->
+    <ellipse cx="0" cy="14" rx="5" ry="9" fill="url(#petalGradient)" opacity="0.85" transform="rotate(180)"/>
+    <!-- Left inner petal -->
+    <ellipse cx="-14" cy="0" rx="5" ry="9" fill="url(#petalGradient)" opacity="0.85" transform="rotate(270)"/>
+  </g>
+  
+  <!-- Center circle (lotus seed pod) -->
+  <circle cx="50" cy="50" r="7" fill="url(#centerGradient)"/>
+  <circle cx="50" cy="50" r="5" fill="#8B6F47" opacity="0.7"/>
+  <!-- Small dots in center -->
+  <circle cx="48" cy="48" r="1.5" fill="#6B5535" opacity="0.8"/>
+  <circle cx="52" cy="48" r="1.5" fill="#6B5535" opacity="0.8"/>
+  <circle cx="50" cy="52" r="1.5" fill="#6B5535" opacity="0.8"/>
+</svg>

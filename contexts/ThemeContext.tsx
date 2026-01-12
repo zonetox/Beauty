@@ -3,7 +3,7 @@ import { ThemeSettings } from '../types.ts';
 
 // Default theme settings that match the initial index.html
 const DEFAULT_THEME: ThemeSettings = {
-  logoUrl: '', // Default to text logo
+  logoUrl: '/logo.svg', // Logo with "1Beauty.Asia" text
   faviconUrl: '/favicon.svg',
   colors: {
     primary: '#BFA16A',

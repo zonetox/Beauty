@@ -22,6 +22,7 @@ import { ThemeProvider } from './contexts/ThemeContext.tsx';
 import { BusinessDashboardProvider } from './contexts/BusinessBlogDataContext.tsx';
 import { AdminPlatformProvider } from './contexts/AdminPlatformContext.tsx';
 import { PublicPageContentProvider } from './contexts/PublicPageContentContext.tsx';
+import { ErrorLoggerProvider } from './contexts/ErrorLoggerContext.tsx';
 
 // Lazy load all page components for performance
 const HomePage = lazy(() => import('./pages/HomePage.tsx'));
@@ -170,13 +171,14 @@ const App: React.FC = () => {
         <ErrorBoundary>
             <Router>
                 <Toaster position="top-center" reverseOrder={false} />
-                <ThemeProvider>
-                    <UserSessionProvider>
-                        <AdminProvider>
-                            <PublicDataProvider>
-                                <HomepageDataProvider>
-                                    <BusinessProvider>
-                                        <PublicPageContentProvider>
+                <ErrorLoggerProvider>
+                    <ThemeProvider>
+                        <UserSessionProvider>
+                            <AdminProvider>
+                                <PublicDataProvider>
+                                    <HomepageDataProvider>
+                                        <BusinessProvider>
+                                            <PublicPageContentProvider>
                                             <Suspense fallback={<LoadingSpinner />}>
                                                 <Routes>
                                                 {/* Routes WITH standard layout (Header, Footer, etc.) */}
@@ -227,9 +229,10 @@ const App: React.FC = () => {
                             </AdminProvider>
                         </UserSessionProvider>
                     </ThemeProvider>
+                </ErrorLoggerProvider>
                 </Router>
             </ErrorBoundary>
-    );
-};
+        );
+    };
 
 export default App;
