@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, ReactNode, useCallback, useEffect } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useCallback, useEffect, useRef } from 'react';
 
 export interface ErrorLog {
   id: string;
@@ -30,6 +30,16 @@ const MAX_ERRORS = 100; // Giới hạn số lỗi lưu trữ
 
 export const ErrorLoggerProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [errors, setErrors] = useState<ErrorLog[]>([]);
+  
+  // Lưu original console functions để tránh vòng lặp vô hạn
+  const originalConsoleRef = useRef<{
+    error: typeof console.error;
+    warn: typeof console.warn;
+    info: typeof console.info;
+  } | null>(null);
+  
+  // Flag để tránh vòng lặp khi log từ interceptor
+  const isLoggingRef = useRef(false);
 
   // Load errors from localStorage on mount
   useEffect(() => {
@@ -37,6 +47,15 @@ export const ErrorLoggerProvider: React.FC<{ children: ReactNode }> = ({ childre
       const savedErrors = localStorage.getItem('app_error_logs');
       if (savedErrors) {
         const parsed = JSON.parse(savedErrors);
+        
+        // Kiểm tra nếu có quá nhiều lỗi (có thể do vòng lặp vô hạn trước đó)
+        if (parsed.length > MAX_ERRORS * 2) {
+          // Xóa logs cũ nếu phát hiện quá nhiều lỗi
+          localStorage.removeItem('app_error_logs');
+          console.warn('Detected excessive error logs, cleared localStorage');
+          return;
+        }
+        
         // Convert timestamp strings back to Date objects
         const errorsWithDates = parsed.map((e: any) => ({
           ...e,
@@ -45,7 +64,9 @@ export const ErrorLoggerProvider: React.FC<{ children: ReactNode }> = ({ childre
         setErrors(errorsWithDates);
       }
     } catch (err) {
-      console.error('Failed to load error logs from localStorage:', err);
+      // Sử dụng original console.error để tránh vòng lặp khi load
+      const originalError = originalConsoleRef.current?.error || console.error;
+      originalError.call(console, 'Failed to load error logs from localStorage:', err);
     }
   }, []);
 
@@ -54,7 +75,9 @@ export const ErrorLoggerProvider: React.FC<{ children: ReactNode }> = ({ childre
     try {
       localStorage.setItem('app_error_logs', JSON.stringify(errors));
     } catch (err) {
-      console.error('Failed to save error logs to localStorage:', err);
+      // Sử dụng original console.error để tránh vòng lặp khi save
+      const originalError = originalConsoleRef.current?.error || console.error;
+      originalError.call(console, 'Failed to save error logs to localStorage:', err);
     }
   }, [errors]);
 
@@ -81,12 +104,17 @@ export const ErrorLoggerProvider: React.FC<{ children: ReactNode }> = ({ childre
     });
 
     // Vẫn log ra console để developer có thể thấy
+    // Sử dụng original console functions để tránh vòng lặp vô hạn
+    const originalError = originalConsoleRef.current?.error || console.error;
+    const originalWarn = originalConsoleRef.current?.warn || console.warn;
+    const originalInfo = originalConsoleRef.current?.info || console.info;
+    
     if (severity === 'error') {
-      console.error(`[${source || 'App'}]`, error);
+      originalError.call(console, `[${source || 'App'}]`, error);
     } else if (severity === 'warning') {
-      console.warn(`[${source || 'App'}]`, error);
+      originalWarn.call(console, `[${source || 'App'}]`, error);
     } else {
-      console.info(`[${source || 'App'}]`, error);
+      originalInfo.call(console, `[${source || 'App'}]`, error);
     }
   }, []);
 
@@ -122,23 +150,46 @@ export const ErrorLoggerProvider: React.FC<{ children: ReactNode }> = ({ childre
 
   // Intercept console.error, console.warn
   useEffect(() => {
-    const originalError = console.error;
-    const originalWarn = console.warn;
+    // Lưu original functions vào ref trước khi intercept
+    if (!originalConsoleRef.current) {
+      originalConsoleRef.current = {
+        error: console.error.bind(console),
+        warn: console.warn.bind(console),
+        info: console.info.bind(console),
+      };
+    }
+
+    const originalError = originalConsoleRef.current.error;
+    const originalWarn = originalConsoleRef.current.warn;
 
     console.error = (...args: any[]) => {
       originalError.apply(console, args);
-      const message = args.map(arg => 
-        typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
-      ).join(' ');
-      logError(message, 'Console', 'error');
+      if (!isLoggingRef.current) {
+        isLoggingRef.current = true;
+        try {
+          const message = args.map(arg => 
+            typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+          ).join(' ');
+          logError(message, 'Console', 'error');
+        } finally {
+          isLoggingRef.current = false;
+        }
+      }
     };
 
     console.warn = (...args: any[]) => {
       originalWarn.apply(console, args);
-      const message = args.map(arg => 
-        typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
-      ).join(' ');
-      logWarning(message, 'Console');
+      if (!isLoggingRef.current) {
+        isLoggingRef.current = true;
+        try {
+          const message = args.map(arg => 
+            typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+          ).join(' ');
+          logWarning(message, 'Console');
+        } finally {
+          isLoggingRef.current = false;
+        }
+      }
     };
 
     // Intercept unhandled errors
@@ -154,8 +205,10 @@ export const ErrorLoggerProvider: React.FC<{ children: ReactNode }> = ({ childre
     window.addEventListener('unhandledrejection', handleRejection);
 
     return () => {
-      console.error = originalError;
-      console.warn = originalWarn;
+      if (originalConsoleRef.current) {
+        console.error = originalConsoleRef.current.error;
+        console.warn = originalConsoleRef.current.warn;
+      }
       window.removeEventListener('error', handleError);
       window.removeEventListener('unhandledrejection', handleRejection);
     };
