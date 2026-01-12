@@ -158,10 +158,12 @@ const RegisterPage: React.FC = () => {
                     }
                 }
 
+                // Mark registration time for AccountPageRouter to detect and auto-refresh
+                sessionStorage.setItem('registration_time', Date.now().toString());
+                
                 if (!profileUpdated) {
                     console.error('Profile update verification failed after retries. Business was created but profile link may be delayed.');
-                    // Still redirect - the profile will be updated eventually
-                    // User can refresh if needed
+                    // Still redirect - AccountPageRouter will auto-refresh profile
                     toast('Tài khoản doanh nghiệp đã được tạo. Đang cập nhật thông tin...', { icon: '⚠️' });
                 } else {
                     toast.success('Đăng ký thành công! Tài khoản doanh nghiệp của bạn đã được tạo với gói dùng thử 30 ngày.');
@@ -173,23 +175,30 @@ const RegisterPage: React.FC = () => {
                 
                 // Force refresh profile one more time before navigating
                 if (isSupabaseConfigured) {
-                    await refreshProfile();
-                    // Verify one final time
-                    const { data: finalCheck } = await supabase
-                        .from('profiles')
-                        .select('business_id')
-                        .eq('id', authData.user.id)
-                        .single();
-                    
-                    if (finalCheck?.business_id === business.id) {
-                        // Profile is confirmed updated, navigate
-                        navigate('/account', { replace: true });
-                    } else {
-                        // Still not updated, but navigate anyway - will show loading in AccountPageRouter
-                        // User can refresh if needed
-                        console.warn('Profile business_id not yet synced, but navigating anyway');
-                        navigate('/account', { replace: true });
+                    // Refresh profile multiple times to ensure it's updated
+                    for (let i = 0; i < 3; i++) {
+                        await refreshProfile();
+                        await new Promise(resolve => setTimeout(resolve, 300));
+                        
+                        // Verify from database
+                        const { data: finalCheck } = await supabase
+                            .from('profiles')
+                            .select('business_id')
+                            .eq('id', authData.user.id)
+                            .single();
+                        
+                        if (finalCheck?.business_id === business.id) {
+                            // Profile is confirmed updated, navigate
+                            console.log('Profile business_id confirmed, navigating to dashboard');
+                            navigate('/account', { replace: true });
+                            return; // Exit early
+                        }
                     }
+                    
+                    // If still not updated after retries, navigate anyway
+                    // AccountPageRouter will handle loading state
+                    console.warn('Profile business_id not yet synced after retries, navigating anyway');
+                    navigate('/account', { replace: true });
                 } else {
                     navigate('/account', { replace: true });
                 }

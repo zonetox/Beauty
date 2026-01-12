@@ -22,6 +22,12 @@ const BlogManager: React.FC = () => {
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [showSEOSection, setShowSEOSection] = useState(false);
 
+    // Move hooks before early return to follow Rules of Hooks
+    const businessPosts = useMemo(() => {
+        if (!currentBusiness) return [];
+        return posts.filter(p => p.businessId === currentBusiness.id);
+    }, [posts, currentBusiness]);
+
     if (!currentBusiness) {
         return (
             <div className="p-8">
@@ -32,8 +38,6 @@ const BlogManager: React.FC = () => {
             </div>
         );
     }
-
-    const businessPosts = useMemo(() => posts.filter(p => p.businessId === currentBusiness.id), [posts, currentBusiness.id]);
 
     const validateForm = (postData: Partial<BusinessBlogPost>): boolean => {
         const newErrors: Record<string, string> = {};

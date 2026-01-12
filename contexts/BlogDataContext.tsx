@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { BlogPost, BlogComment, BlogCategory } from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { BLOG_CATEGORIES as initialBlogCategories } from '../constants.ts';
@@ -232,7 +233,7 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
   
   const addBlogCategory = (name: string) => {
     if (name.trim() === '' || blogCategories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
-      alert("Category name cannot be empty or duplicate.");
+      toast.error("Category name cannot be empty or duplicate.");
       return;
     }
     const newCategory: BlogCategory = { id: `cat-${crypto.randomUUID()}`, name };

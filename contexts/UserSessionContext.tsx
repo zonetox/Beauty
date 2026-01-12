@@ -180,9 +180,16 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
 
   const refreshProfile = async () => {
     if (currentUser) {
-      const { data, error } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single();
+      // Explicitly select business_id to ensure it's included
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, email, avatar_url, business_id, favorites')
+        .eq('id', currentUser.id)
+        .single();
       if (!error && data) {
         setProfile(snakeToCamel(data) as Profile);
+      } else if (error) {
+        console.error('Error refreshing profile:', error);
       }
     }
   };

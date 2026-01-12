@@ -1,5 +1,5 @@
 // D2.1 FIX: Move hero slides from localStorage to database (page_content table)
-import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
+import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback, useRef } from 'react';
 import { HomepageData } from '../types.ts';
 import { DEFAULT_HOMEPAGE_DATA } from '../constants.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
@@ -17,6 +17,9 @@ const LOCAL_STORAGE_KEY = 'homepage_content'; // Keep for cache/fallback only
 export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [homepageData, setHomepageData] = useState<HomepageData>(DEFAULT_HOMEPAGE_DATA);
   const [loading, setLoading] = useState(true);
+  
+  // Prevent double fetch in React.StrictMode (development)
+  const hasFetchedRef = useRef(false);
 
   // Fetch homepage data from database
   const fetchHomepageData = useCallback(async () => {
@@ -124,6 +127,9 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
   }, []);
 
   useEffect(() => {
+    // Prevent double fetch in React.StrictMode
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
     fetchHomepageData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once on mount

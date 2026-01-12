@@ -91,12 +91,18 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
   const [totalBusinesses, setTotalBusinesses] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 20;
+  
+  // Prevent double fetch in StrictMode
+  const hasFetchedRef = useRef(false);
 
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [blogLoading, setBlogLoading] = useState(true);
   const [comments, setComments] = useState<BlogComment[]>([]);
   const [blogCategories, setBlogCategories] = useState<BlogCategory[]>([]);
   const [packages, setPackages] = useState<MembershipPackage[]>([]);
+
+  // Prevent double fetch in React.StrictMode (development)
+  const hasFetchedRef = useRef(false);
 
   const { logAdminAction } = useAdmin();
   const { currentUser: currentAdmin } = useAdminAuth();
@@ -276,7 +282,12 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
     else if (pkgRes.data) setPackages(snakeToCamel(pkgRes.data) as MembershipPackage[]);
   }, [fetchBusinesses]);
 
-  useEffect(() => { fetchAllPublicData(); }, [fetchAllPublicData]);
+  useEffect(() => {
+    // Prevent double fetch in React.StrictMode
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+    fetchAllPublicData();
+  }, [fetchAllPublicData]);
 
   // --- BUSINESS LOGIC ---
   const addBusiness = async (newBusiness: Business): Promise<Business | null> => {

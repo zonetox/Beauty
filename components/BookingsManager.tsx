@@ -33,26 +33,21 @@ const BookingsManager: React.FC = () => {
     const [updatingId, setUpdatingId] = useState<string | null>(null);
     const [replyingAppointment, setReplyingAppointment] = useState<{appointment: Appointment, context: 'confirm' | 'cancel' | 'suggest_reschedule'} | null>(null);
 
-    if (!currentBusiness) {
-        return (
-            <div className="p-8">
-                <EmptyState
-                    title="No business found"
-                    message="Please select a business to manage appointments."
-                />
-            </div>
-        );
-    }
-
-    const allAppointments = getAppointmentsForBusiness(currentBusiness.id);
+    // Move hooks before early return to follow Rules of Hooks
+    const allAppointments = useMemo(() => {
+        if (!currentBusiness) return [];
+        return getAppointmentsForBusiness(currentBusiness.id);
+    }, [currentBusiness, getAppointmentsForBusiness]);
 
     // Apply status filter
     const appointments = useMemo(() => {
+        if (!allAppointments.length) return [];
         if (statusFilter === 'all') return allAppointments;
         return allAppointments.filter(a => a.status === statusFilter);
     }, [allAppointments, statusFilter]);
 
     const stats = useMemo(() => {
+        if (!allAppointments.length) return { total: 0, confirmed: 0, pending: 0, cancelled: 0 };
         const now = new Date();
         const todayStr = now.toISOString().split('T')[0];
         
@@ -66,12 +61,25 @@ const BookingsManager: React.FC = () => {
     }, [allAppointments]);
 
     const upcomingAppointments = useMemo(() => {
+        if (!appointments.length) return [];
         return appointments.filter(a => a.status === AppointmentStatus.PENDING || a.status === AppointmentStatus.CONFIRMED);
     }, [appointments]);
     
     const pastAppointments = useMemo(() => {
-         return appointments.filter(a => a.status === AppointmentStatus.COMPLETED || a.status === AppointmentStatus.CANCELLED);
+        if (!appointments.length) return [];
+        return appointments.filter(a => a.status === AppointmentStatus.COMPLETED || a.status === AppointmentStatus.CANCELLED);
     }, [appointments]);
+
+    if (!currentBusiness) {
+        return (
+            <div className="p-8">
+                <EmptyState
+                    title="No business found"
+                    message="Please select a business to manage appointments."
+                />
+            </div>
+        );
+    }
 
     const handleUpdateStatus = async (appointmentId: string, status: AppointmentStatus) => {
         setUpdatingId(appointmentId);

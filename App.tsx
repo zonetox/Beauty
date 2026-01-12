@@ -1,6 +1,6 @@
 
 
-import React, { lazy, Suspense } from 'react';
+import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Outlet } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
@@ -76,7 +76,39 @@ const AppLayout: React.FC = () => {
 
 // This component intelligently routes the user to their business dashboard or personal account page.
 const AccountPageRouter: React.FC = () => {
-    const { profile, loading: profileLoading, currentUser } = useUserSession();
+    const { profile, loading: profileLoading, currentUser, refreshProfile } = useUserSession();
+    const [retryCount, setRetryCount] = useState(0);
+    const maxRetries = 3;
+
+    // Clear registration marker when businessId is confirmed (must be before early returns)
+    useEffect(() => {
+        if (profile?.businessId && sessionStorage.getItem('registration_time')) {
+            sessionStorage.removeItem('registration_time');
+        }
+    }, [profile?.businessId]);
+
+    // Auto-refresh profile if businessId is missing but user just registered (must be before early returns)
+    useEffect(() => {
+        if (currentUser && profile && !profile.businessId && !profileLoading && retryCount < maxRetries) {
+            // Check if user just registered (within last 30 seconds)
+            const registrationTime = sessionStorage.getItem('registration_time');
+            if (registrationTime) {
+                const timeSinceRegistration = Date.now() - parseInt(registrationTime, 10);
+                if (timeSinceRegistration < 30000) { // 30 seconds
+                    // eslint-disable-next-line no-console
+                    console.log(`Profile missing businessId, refreshing... (retry ${retryCount + 1}/${maxRetries})`);
+                    const timer = setTimeout(() => {
+                        refreshProfile();
+                        setRetryCount(prev => prev + 1);
+                    }, 1000); // Wait 1 second between retries
+                    return () => clearTimeout(timer);
+                } else {
+                    // Clear old registration marker
+                    sessionStorage.removeItem('registration_time');
+                }
+            }
+        }
+    }, [currentUser, profile, profileLoading, refreshProfile, retryCount]);
 
     // Show loading only if we have a user but profile is still loading
     // If no user, ProtectedRoute will handle redirect
@@ -112,6 +144,7 @@ const AccountPageRouter: React.FC = () => {
 
     // If a profile exists but is not linked to a business, show user account page (regular user)
     if (profile) {
+        // Clear registration marker after delay (handled in useEffect)
         return <UserAccountPage />;
     }
 

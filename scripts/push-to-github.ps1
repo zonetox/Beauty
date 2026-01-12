@@ -37,6 +37,17 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
+# Hiển thị các file đã thay đổi (nếu có)
+if ($status) {
+    Write-Host "📝 Các file đã thay đổi:" -ForegroundColor Yellow
+    Write-Host $status -ForegroundColor White
+    Write-Host ""
+} else {
+    Write-Host "ℹ️  Không có thay đổi nào để push." -ForegroundColor Yellow
+    Write-Host ""
+    exit 0
+}
+
 # Update remote URL với token
 Write-Host "🔐 Cấu hình remote URL với token..." -ForegroundColor Cyan
 $remoteUrl = "https://zonetox:$Token@github.com/zonetox/Beauty.git"

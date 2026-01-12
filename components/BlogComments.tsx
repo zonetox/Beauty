@@ -1,6 +1,7 @@
 
 // components/BlogComments.tsx
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { useBlogData } from '../contexts/BusinessDataContext.tsx';
 import { useUserSession } from '../contexts/UserSessionContext.tsx';
 
@@ -20,7 +21,7 @@ const BlogComments: React.FC<BlogCommentsProps> = ({ postId }) => {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!commentContent.trim() || !authorName.trim()) {
-            alert('Please provide your name and a comment.');
+            toast.error('Vui lòng nhập tên và nội dung bình luận.');
             return;
         }
         addComment(postId, authorName, commentContent);

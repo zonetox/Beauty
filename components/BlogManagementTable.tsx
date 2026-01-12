@@ -1,7 +1,7 @@
 
 
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { BlogPost } from '../types.ts';
 
 interface BlogManagementTableProps {
@@ -12,28 +12,42 @@ interface BlogManagementTableProps {
 }
 
 const BlogManagementTable: React.FC<BlogManagementTableProps> = ({ posts, onEdit, onDelete, onUpdate }) => {
-    const [viewInputs, setViewInputs] = useState<Record<number, string>>({});
-
-    useEffect(() => {
-        // Initialize or update the local input state when the posts prop changes.
-        const initialInputs = posts.reduce((acc, post) => {
+    // Use useMemo instead of useEffect + setState to avoid cascading renders
+    const defaultViewInputs = useMemo(() => {
+        return posts.reduce((acc, post) => {
             acc[post.id] = String(post.viewCount || 0);
             return acc;
         }, {} as Record<number, string>);
-        setViewInputs(initialInputs);
     }, [posts]);
+    
+    const [editedInputs, setEditedInputs] = useState<Record<number, string>>({});
+
+    // Merge default inputs with edited inputs
+    const viewInputs = useMemo(() => {
+        return { ...defaultViewInputs, ...editedInputs };
+    }, [defaultViewInputs, editedInputs]);
 
     const handleViewChange = (postId: number, value: string) => {
-        setViewInputs(prev => ({ ...prev, [postId]: value }));
+        setEditedInputs(prev => ({ ...prev, [postId]: value }));
     };
 
     const handleViewUpdate = (post: BlogPost) => {
         const newViewCount = parseInt(viewInputs[post.id], 10);
         if (!isNaN(newViewCount) && newViewCount !== post.viewCount) {
             onUpdate({ ...post, viewCount: newViewCount });
+            // Remove from editedInputs after update
+            setEditedInputs(prev => {
+                const next = { ...prev };
+                delete next[post.id];
+                return next;
+            });
         } else {
             // If the input is invalid or unchanged, revert it to the original value.
-            handleViewChange(post.id, String(post.viewCount));
+            setEditedInputs(prev => {
+                const next = { ...prev };
+                delete next[post.id];
+                return next;
+            });
         }
     };
 
