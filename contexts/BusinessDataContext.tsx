@@ -92,7 +92,7 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 20;
   
-  // Prevent double fetch in StrictMode
+  // Prevent double fetch in React.StrictMode (development)
   const hasFetchedRef = useRef(false);
 
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
@@ -100,9 +100,6 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
   const [comments, setComments] = useState<BlogComment[]>([]);
   const [blogCategories, setBlogCategories] = useState<BlogCategory[]>([]);
   const [packages, setPackages] = useState<MembershipPackage[]>([]);
-
-  // Prevent double fetch in React.StrictMode (development)
-  const hasFetchedRef = useRef(false);
 
   const { logAdminAction } = useAdmin();
   const { currentUser: currentAdmin } = useAdminAuth();
