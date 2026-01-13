@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Business } from '../../types.ts';
+import { trackConversion } from '../../lib/usePageTracking.ts';
 
 const FacebookIcon = () => <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" /></svg>;
 const InstagramIcon = () => <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fillRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 16c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm4-9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" /></svg>;
@@ -14,7 +15,11 @@ const BusinessFooter: React.FC<{ business: Business }> = ({ business }) => {
                 <h3 className="text-2xl font-bold font-serif text-primary mb-2">{business.name}</h3>
                 <p className="text-gray-300">{business.address}, {business.city}</p>
                 <p className="text-gray-300">
-                    <a href={`tel:${business.phone}`} className="hover:text-primary">{business.phone}</a>
+                    <a 
+                        href={`tel:${business.phone}`} 
+                        className="hover:text-primary"
+                        onClick={() => trackConversion('call', business.id)}
+                    >{business.phone}</a>
                     {business.email && <span> &bull; <a href={`mailto:${business.email}`} className="hover:text-primary">{business.email}</a></span>}
                 </p>
                 <div className="flex justify-center space-x-6 mt-6">

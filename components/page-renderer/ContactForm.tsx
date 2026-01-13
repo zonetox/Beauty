@@ -4,8 +4,11 @@
 
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
+import { trackConversion } from '../../lib/usePageTracking.ts';
+import { useUserSession } from '../../contexts/UserSessionContext.tsx';
 
 const ContactForm: React.FC = () => {
+  const { currentUser } = useUserSession();
   const [isMessageSent, setIsMessageSent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -61,6 +64,12 @@ const ContactForm: React.FC = () => {
       
       setIsMessageSent(true);
       toast.success('Tin nhắn đã được gửi thành công!');
+      
+      // Track conversion
+      trackConversion('contact', undefined, undefined, {
+        name: contactName,
+        email: contactEmail,
+      }, currentUser?.id);
       
       // Reset form after 5 seconds
       setTimeout(() => {

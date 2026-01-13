@@ -34,6 +34,9 @@ import AdminNotificationLog from '../components/AdminNotificationLog.tsx';
 import AdminAnnouncementsManager from '../components/AdminAnnouncementsManager.tsx';
 import AdminSupportTickets from '../components/AdminSupportTickets.tsx';
 import ThemeEditor from '../components/ThemeEditor.tsx';
+import AdminAbuseReports from '../components/AdminAbuseReports.tsx';
+import SystemSettings from '../components/SystemSettings.tsx';
+import AdminLandingPageModeration from '../components/AdminLandingPageModeration.tsx';
 
 const AIBlogIdeaGenerator: React.FC = () => {
   const [topic, setTopic] = useState('');
@@ -151,7 +154,6 @@ const AdminPage: React.FC = () => {
   const { packages, addPackage, updatePackage, deletePackage } = useMembershipPackageData();
   const { orders, loading: ordersLoading, addOrder, updateOrderStatus } = useOrderData();
   const { posts: businessBlogPosts, updatePost: updateBusinessBlogPost } = useBusinessBlogData();
-  const { settings, updateSettings } = useSettings();
   const { addNotification, registrationRequests, approveRegistrationRequest, rejectRegistrationRequest } = useAdminPlatform();
 
   const [activeTab, setActiveTab] = useState<AdminPageTab>('dashboard');
@@ -164,9 +166,6 @@ const AdminPage: React.FC = () => {
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
   const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState<MembershipPackage | null>(null);
-  const [currentSettings, setCurrentSettings] = useState<AppSettings | null>(settings);
-
-  useEffect(() => { setCurrentSettings(settings); }, [settings]);
 
   const filteredBusinesses = useMemo(() => { const q = searchQuery.toLowerCase().trim(); if (!q) return businesses; return businesses.filter(b => b.name.toLowerCase().includes(q)); }, [businesses, searchQuery]);
   const filteredOrders = useMemo(() => { if (orderStatusFilter === 'all') return orders; return orders.filter(o => o.status === orderStatusFilter); }, [orders, orderStatusFilter]);
@@ -246,8 +245,6 @@ const AdminPage: React.FC = () => {
   const handleOpenAddNewPost = () => { setEditingPost({ id: 0, title: 'New Blog Post', slug: '', date: '', author: currentUser?.username || 'Editor', category: 'General', excerpt: '', imageUrl: `https://picsum.photos/seed/new-post-${Date.now()}/400/300`, content: '', viewCount: 0 }); };
   const handleOpenAddNewPackage = () => { handleOpenPackageModal({ id: '', tier: MembershipTier.PREMIUM, name: '', price: 0, durationMonths: 12, description: '', features: [''], permissions: { photoLimit: 10, videoLimit: 2, featuredLevel: 1, customLandingPage: true, privateBlog: false, seoSupport: false, monthlyPostLimit: 5, featuredPostLimit: 0, }, isPopular: false, isActive: true }); };
 
-  const handleSettingsChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => { const { name, value } = e.target; if (!currentSettings) return; const keys = name.split('.'); if (keys.length === 2) { setCurrentSettings(prev => ({ ...prev!, [keys[0]]: { ...(prev as any)[keys[0]], [keys[1]]: value } })); } };
-  const handleSaveSettings = () => { if (currentSettings) { updateSettings(currentSettings); toast.success('Settings saved!'); } };
 
   const handleLogout = async () => {
     await adminLogout();
@@ -343,6 +340,11 @@ const AdminPage: React.FC = () => {
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
       </svg>
+    ),
+    'abuse-reports': (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
     )
   };
   const NavLink = ({ tabId, label, icon, permission }: { tabId: AdminPageTab, label: string, icon: React.ReactNode, permission: boolean }) => { if (!permission) return null; return (<button onClick={() => setActiveTab(tabId)} className={`flex items-center gap-3 w-full px-3 py-3 text-left rounded-lg transition-colors ${activeTab === tabId ? 'bg-primary/90 text-white' : 'hover:bg-neutral-700 text-gray-300'}`}>{icon}<span>{label}</span></button>); };
@@ -423,7 +425,11 @@ const AdminPage: React.FC = () => {
           </div>
         </PermissionGuard>
       );
-      case 'settings': return currentUser.permissions.canManageSystemSettings ? <div className="bg-white p-6 rounded-lg shadow"><h2 className="text-xl font-semibold mb-4">System Settings</h2>{currentSettings && <div className="space-y-4 max-w-2xl"><h3 className="font-semibold">Bank Transfer Info</h3><div><label>Bank Name</label><input name="bankDetails.bankName" value={currentSettings.bankDetails.bankName} onChange={handleSettingsChange} className="mt-1 w-full p-2 border rounded" /></div><div><label>Account Name</label><input name="bankDetails.accountName" value={currentSettings.bankDetails.accountName} onChange={handleSettingsChange} className="mt-1 w-full p-2 border rounded" /></div><div><label>Account Number</label><input name="bankDetails.accountNumber" value={currentSettings.bankDetails.accountNumber} onChange={handleSettingsChange} className="mt-1 w-full p-2 border rounded" /></div><div><label>Transfer Note</label><textarea name="bankDetails.transferNote" value={currentSettings.bankDetails.transferNote} onChange={handleSettingsChange} rows={3} className="mt-1 w-full p-2 border rounded" /><p className="text-xs text-gray-500">Use [Tên doanh nghiệp] and [Mã đơn hàng]</p></div><button type="button" onClick={handleSaveSettings} className="px-4 py-2 bg-secondary text-white rounded-md text-sm">Save</button></div>}</div> : <AccessDenied requiredRole="Manage System Settings" />;
+      case 'settings': return (
+        <PermissionGuard permission="canManageSystemSettings">
+          <SystemSettings />
+        </PermissionGuard>
+      );
       case 'tools': return currentUser.permissions.canUseAdminTools ? (
         <div className="space-y-6">
           <div className="bg-white p-6 rounded-lg shadow">
@@ -443,6 +449,8 @@ const AdminPage: React.FC = () => {
       case 'notifications': return currentUser.permissions.canViewEmailLog ? <AdminNotificationLog /> : <AccessDenied requiredRole="View Email Log" />;
       case 'announcements': return currentUser.permissions.canManageAnnouncements ? <AdminAnnouncementsManager /> : <AccessDenied requiredRole="Manage Announcements" />;
       case 'support': return currentUser.permissions.canManageSupportTickets ? <AdminSupportTickets /> : <AccessDenied requiredRole="Manage Support Tickets" />;
+      case 'abuse-reports': return currentUser.permissions.canManageUsers ? <AdminAbuseReports /> : <AccessDenied requiredRole="Manage Users" />;
+      case 'landing-page-moderation': return currentUser.permissions.canManageBusinesses ? <AdminLandingPageModeration /> : <AccessDenied requiredRole="Manage Businesses" />;
       default: return <p>Select a section.</p>;
     }
   };
@@ -474,6 +482,7 @@ const AdminPage: React.FC = () => {
           <p className="px-3 text-xs uppercase text-gray-400 font-semibold tracking-wider mt-4 mb-1">Communication</p>
           <NavLink tabId="announcements" label="Announcements" icon={ICONS.announcements} permission={currentUser.permissions.canManageAnnouncements} />
           <NavLink tabId="support" label="Support Tickets" icon={ICONS.support} permission={currentUser.permissions.canManageSupportTickets} />
+          <NavLink tabId="abuse-reports" label="Abuse Reports" icon={ICONS['abuse-reports']} permission={currentUser.permissions.canManageUsers} />
           <hr className="border-neutral-700 my-2" />
           <p className="px-3 text-xs uppercase text-gray-400 font-semibold tracking-wider mt-4 mb-1">Site Content</p>
           <NavLink tabId="homepage" label="Homepage Editor" icon={ICONS.settings} permission={currentUser.permissions.canManageSiteContent} />

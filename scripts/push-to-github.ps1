@@ -1,95 +1,113 @@
-# Script để push code lên GitHub với tài khoản zonetox
-# Usage: .\scripts\push-to-github.ps1 [GITHUB_TOKEN]
+# Script để push code lên GitHub
+# Hướng dẫn sử dụng: .\scripts\push-to-github.ps1
 
-param(
-    [string]$Token = ""
-)
-
-Write-Host "=== PUSH CODE LÊN GITHUB (zonetox) ===" -ForegroundColor Cyan
+Write-Host "`n=== PUSH CODE LÊN GITHUB ===" -ForegroundColor Cyan
 Write-Host ""
 
-# Kiểm tra xem có token không
-if ([string]::IsNullOrEmpty($Token)) {
-    Write-Host "⚠️  CHƯA CÓ PERSONAL ACCESS TOKEN" -ForegroundColor Yellow
-    Write-Host ""
-    Write-Host "Để push code, bạn cần:" -ForegroundColor Yellow
-    Write-Host "1. Tạo Personal Access Token tại: https://github.com/settings/tokens" -ForegroundColor White
-    Write-Host "2. Chọn scope: repo (Full control of private repositories)" -ForegroundColor White
-    Write-Host "3. Copy token và chạy lại script với token:" -ForegroundColor White
-    Write-Host "   .\scripts\push-to-github.ps1 -Token YOUR_TOKEN" -ForegroundColor Green
-    Write-Host ""
-    
-    $useToken = Read-Host "Bạn có muốn nhập token ngay bây giờ? (y/n)"
-    if ($useToken -eq "y" -or $useToken -eq "Y") {
-        $Token = Read-Host "Nhập Personal Access Token (token sẽ bị ẩn khi nhập)" -AsSecureString
-        $Token = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($Token))
+# Kiểm tra git đã được cài đặt chưa
+try {
+    $gitVersion = git --version
+    Write-Host "✅ Git đã được cài đặt: $gitVersion" -ForegroundColor Green
+} catch {
+    Write-Host "❌ Git chưa được cài đặt. Vui lòng cài đặt Git trước." -ForegroundColor Red
+    exit 1
+}
+
+# Kiểm tra có phải git repository chưa
+if (-not (Test-Path ".git")) {
+    Write-Host "⚠️  Đây chưa phải là git repository." -ForegroundColor Yellow
+    $init = Read-Host "Bạn có muốn khởi tạo git repository? (y/n)"
+    if ($init -eq "y" -or $init -eq "Y") {
+        git init
+        Write-Host "✅ Đã khởi tạo git repository" -ForegroundColor Green
     } else {
-        Write-Host "❌ Hủy push. Vui lòng tạo token và chạy lại script." -ForegroundColor Red
+        Write-Host "❌ Không thể tiếp tục mà không có git repository." -ForegroundColor Red
         exit 1
     }
 }
 
-# Kiểm tra git status
-Write-Host "📋 Kiểm tra git status..." -ForegroundColor Cyan
-$status = git status --short
+# Kiểm tra remote
+$remoteUrl = git remote get-url origin 2>$null
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "❌ Lỗi: Không thể chạy git status" -ForegroundColor Red
-    exit 1
+    Write-Host "⚠️  Chưa có remote 'origin'." -ForegroundColor Yellow
+    $setupRemote = Read-Host "Bạn có muốn setup remote? (y/n)"
+    if ($setupRemote -eq "y" -or $setupRemote -eq "Y") {
+        $repoUrl = Read-Host "Nhập GitHub repository URL (ví dụ: https://github.com/username/repo.git)"
+        if ($repoUrl) {
+            git remote add origin $repoUrl
+            Write-Host "✅ Đã thêm remote origin: $repoUrl" -ForegroundColor Green
+        } else {
+            Write-Host "❌ Không thể tiếp tục mà không có remote." -ForegroundColor Red
+            exit 1
+        }
+    } else {
+        Write-Host "❌ Không thể push mà không có remote." -ForegroundColor Red
+        exit 1
+    }
+} else {
+    Write-Host "✅ Remote origin: $remoteUrl" -ForegroundColor Green
 }
 
-# Hiển thị các file đã thay đổi (nếu có)
-if ($status) {
-    Write-Host "📝 Các file đã thay đổi:" -ForegroundColor Yellow
-    Write-Host $status -ForegroundColor White
-    Write-Host ""
-} else {
-    Write-Host "ℹ️  Không có thay đổi nào để push." -ForegroundColor Yellow
-    Write-Host ""
+# Kiểm tra trạng thái
+Write-Host "`n📊 Kiểm tra trạng thái git..." -ForegroundColor Cyan
+git status --short
+
+# Hỏi commit message
+Write-Host "`n📝 Commit message:" -ForegroundColor Cyan
+$defaultMessage = "Update: Optimize app performance and mobile experience"
+$commitMessage = Read-Host "Nhập commit message (Enter để dùng mặc định: '$defaultMessage')"
+if ([string]::IsNullOrWhiteSpace($commitMessage)) {
+    $commitMessage = $defaultMessage
+}
+
+# Hỏi branch
+Write-Host "`n🌿 Branch:" -ForegroundColor Cyan
+$currentBranch = git branch --show-current
+Write-Host "Branch hiện tại: $currentBranch" -ForegroundColor Yellow
+$targetBranch = Read-Host "Nhập branch để push (Enter để dùng: $currentBranch)"
+if ([string]::IsNullOrWhiteSpace($targetBranch)) {
+    $targetBranch = $currentBranch
+}
+
+# Xác nhận
+Write-Host "`n⚠️  XÁC NHẬN:" -ForegroundColor Yellow
+Write-Host "  - Commit message: $commitMessage" -ForegroundColor White
+Write-Host "  - Branch: $targetBranch" -ForegroundColor White
+Write-Host "  - Remote: $remoteUrl" -ForegroundColor White
+$confirm = Read-Host "`nBạn có chắc chắn muốn push? (y/n)"
+
+if ($confirm -ne "y" -and $confirm -ne "Y") {
+    Write-Host "❌ Đã hủy." -ForegroundColor Red
     exit 0
 }
 
-# Update remote URL với token
-Write-Host "🔐 Cấu hình remote URL với token..." -ForegroundColor Cyan
-$remoteUrl = "https://zonetox:$Token@github.com/zonetox/Beauty.git"
-git remote set-url origin $remoteUrl
+# Add files
+Write-Host "`n📦 Đang add files..." -ForegroundColor Cyan
+git add .
+
+# Commit
+Write-Host "💾 Đang commit..." -ForegroundColor Cyan
+git commit -m $commitMessage
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "❌ Lỗi: Không thể update remote URL" -ForegroundColor Red
+    Write-Host "❌ Lỗi khi commit. Có thể không có thay đổi nào." -ForegroundColor Red
     exit 1
 }
 
-# Push code
-Write-Host "🚀 Đang push code lên GitHub..." -ForegroundColor Cyan
-git push origin main
+# Push
+Write-Host "🚀 Đang push lên GitHub..." -ForegroundColor Cyan
+git push origin $targetBranch
 
 if ($LASTEXITCODE -eq 0) {
-    Write-Host ""
-    Write-Host "✅ PUSH THÀNH CÔNG!" -ForegroundColor Green
-    Write-Host ""
-    
-    # Reset remote URL về không có token (bảo mật)
-    Write-Host "🔒 Reset remote URL (xóa token khỏi URL)..." -ForegroundColor Cyan
-    git remote set-url origin https://github.com/zonetox/Beauty.git
-    
-    Write-Host ""
-    Write-Host "✅ Hoàn tất! Code đã được push lên GitHub." -ForegroundColor Green
-    Write-Host "📝 Lưu ý: Token đã được xóa khỏi URL để bảo mật." -ForegroundColor Yellow
-    Write-Host "   Lần push tiếp theo sẽ cần đăng nhập lại hoặc dùng token." -ForegroundColor Yellow
+    Write-Host "`n✅ PUSH THÀNH CÔNG!" -ForegroundColor Green
+    Write-Host "`n🔗 Xem code tại: $remoteUrl" -ForegroundColor Cyan
 } else {
-    Write-Host ""
-    Write-Host "❌ PUSH THẤT BẠI!" -ForegroundColor Red
-    Write-Host ""
-    Write-Host "Có thể do:" -ForegroundColor Yellow
-    Write-Host "1. Token không đúng hoặc đã hết hạn" -ForegroundColor White
-    Write-Host "2. Token không có quyền 'repo'" -ForegroundColor White
-    Write-Host "3. Tài khoản zonetox không có quyền push vào repository" -ForegroundColor White
-    Write-Host ""
-    Write-Host "Giải pháp:" -ForegroundColor Yellow
-    Write-Host "1. Tạo token mới tại: https://github.com/settings/tokens" -ForegroundColor White
-    Write-Host "2. Đảm bảo token có quyền 'repo'" -ForegroundColor White
-    Write-Host "3. Kiểm tra bạn có quyền push vào repository" -ForegroundColor White
-    
-    # Reset remote URL
-    git remote set-url origin https://github.com/zonetox/Beauty.git
+    Write-Host "`n❌ Lỗi khi push. Vui lòng kiểm tra lại." -ForegroundColor Red
+    Write-Host "`n💡 Gợi ý:" -ForegroundColor Yellow
+    Write-Host "  - Kiểm tra kết nối internet" -ForegroundColor White
+    Write-Host "  - Kiểm tra quyền truy cập repository" -ForegroundColor White
+    Write-Host "  - Thử pull trước: git pull origin $targetBranch" -ForegroundColor White
     exit 1
 }
+
+Write-Host "`n=== HOÀN THÀNH ===" -ForegroundColor Green

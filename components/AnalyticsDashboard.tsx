@@ -134,16 +134,18 @@ const AnalyticsDashboard: React.FC = () => {
     }, [analytics, timeRange]);
 
     const stats = useMemo(() => {
-        if (!filteredData.timeSeries.length) return { totalViews: 0, totalClicks: 0, conversionRate: 0, avgTime: 0 };
+        if (!filteredData.timeSeries.length) return { totalViews: 0, totalClicks: 0, conversionRate: 0, avgTime: 0, totalConversions: 0 };
         const totalViews = filteredData.timeSeries.reduce((sum, item) => sum + item.pageViews, 0);
         const totalClicks = filteredData.timeSeries.reduce((sum, item) => sum + item.callClicks + item.contactClicks + item.directionClicks, 0);
+        // Conversion rate: (Total Conversions / Total Page Views) * 100
         const conversionRate = totalViews > 0 ? (totalClicks / totalViews) * 100 : 0;
         const avgTime = analytics?.averageTimeOnPage || 0;
         return {
             totalViews,
             totalClicks,
             conversionRate,
-            avgTime
+            avgTime: avgTime,
+            totalConversions: totalClicks
         };
     }, [filteredData, analytics]);
     

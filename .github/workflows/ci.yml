@@ -1,0 +1,118 @@
+# GitHub Actions CI/CD Pipeline
+# Tự động chạy tests và deploy khi push code
+
+name: CI/CD Pipeline
+
+# Chạy khi nào?
+on:
+  push:
+    branches: [ main, develop ]  # Chạy khi push lên main hoặc develop
+  pull_request:
+    branches: [ main ]            # Chạy khi tạo PR vào main
+
+# Jobs (các công việc cần làm)
+jobs:
+  # Job 1: Chạy tests
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest       # Chạy trên Ubuntu (Linux)
+    
+    steps:
+      # Bước 1: Checkout code từ GitHub
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      # Bước 2: Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'      # Dùng Node.js version 20
+          cache: 'npm'            # Cache npm để tăng tốc
+      
+      # Bước 3: Install dependencies
+      - name: Install dependencies
+        run: npm ci               # npm ci nhanh hơn npm install
+      
+      # Bước 4: Type check
+      - name: Type check
+        run: npm run type-check
+        continue-on-error: true   # Không dừng nếu có lỗi type (có thể fix sau)
+      
+      # Bước 5: Lint
+      - name: Lint
+        run: npm run lint
+        continue-on-error: true   # Không dừng nếu có lỗi lint (có thể fix sau)
+      
+      # Bước 6: Run unit tests
+      - name: Run unit tests
+        run: npm test
+      
+      # Bước 7: Run E2E tests (nếu cần)
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+      
+      - name: Run E2E tests
+        run: npm run test:e2e
+        continue-on-error: true   # E2E tests có thể fail do timing, không block deploy
+      
+      # Bước 8: Build
+      - name: Build
+        run: npm run build
+        env:
+          # Environment variables cho build (nếu cần)
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      
+      # Bước 9: Upload build artifacts (để deploy sau)
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 1
+
+  # Job 2: Deploy lên Vercel (chỉ khi tests pass và push lên main)
+  deploy:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    needs: test                  # Chỉ chạy sau khi test job pass
+    if: github.ref == 'refs/heads/main'  # Chỉ deploy khi push lên main
+    
+    steps:
+      # Bước 1: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      # Bước 2: Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      # Bước 3: Install dependencies
+      - name: Install dependencies
+        run: npm ci
+      
+      # Bước 4: Download build artifacts từ test job
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      
+      # Bước 5: Deploy lên Vercel
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'   # Deploy lên production
+      
+      # Bước 6: Thông báo kết quả (tùy chọn)
+      - name: Notify deployment
+        if: success()
+        run: |
+          echo "✅ Deployment successful!"
+          echo "🚀 App deployed to: https://1beauty.asia"

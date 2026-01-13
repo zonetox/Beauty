@@ -1,7 +1,9 @@
-import React, { useState, useMemo } from 'react';
-import { Business, Order, OrderStatus, MembershipTier, ChartDataPoint, RegistrationRequest } from '../types.ts';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Business, Order, OrderStatus, MembershipTier, ChartDataPoint, RegistrationRequest, PageView } from '../types.ts';
 import AdminStatCard from './AdminStatCard.tsx';
 import AnalyticsChart from './AnalyticsChart.tsx';
+import { supabase } from '../lib/supabaseClient.ts';
+import { snakeToCamel } from '../lib/utils.ts';
 
 type TimeRange = '7d' | '30d' | 'month';
 
@@ -99,6 +101,8 @@ const ConversionFunnel: React.FC<{ requests: RegistrationRequest[], orders: Orde
 
 const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[], registrationRequests: RegistrationRequest[] }> = ({ businesses, orders, registrationRequests }) => {
     const [timeRange, setTimeRange] = useState<TimeRange>('30d');
+    const [pageViews, setPageViews] = useState<PageView[]>([]);
+    const [loadingPageViews, setLoadingPageViews] = useState(true);
 
     const { startDate, endDate } = useMemo(() => {
         const end = new Date();
@@ -118,6 +122,33 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
         return { startDate: start, endDate: end };
     }, [timeRange]);
 
+    // Fetch page views
+    useEffect(() => {
+        const fetchPageViews = async () => {
+            setLoadingPageViews(true);
+            try {
+                const { data, error } = await supabase
+                    .from('page_views')
+                    .select('*')
+                    .order('viewed_at', { ascending: false });
+
+                if (error) {
+                    console.error('Error fetching page views:', error);
+                    setPageViews([]);
+                } else {
+                    setPageViews(snakeToCamel(data) as PageView[]);
+                }
+            } catch (err) {
+                console.error('Error in fetchPageViews:', err);
+                setPageViews([]);
+            } finally {
+                setLoadingPageViews(false);
+            }
+        };
+
+        fetchPageViews();
+    }, []);
+
     const filteredData = useMemo(() => {
         const filteredOrders = orders.filter(o => {
             const date = new Date(o.confirmedAt || o.submittedAt);
@@ -127,18 +158,33 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
             const date = new Date(b.joinedDate);
             return date >= startDate && date <= endDate;
         });
-        return { orders: filteredOrders, businesses: filteredBusinesses };
-    }, [orders, businesses, startDate, endDate]);
+        const filteredPageViews = pageViews.filter(pv => {
+            const date = new Date(pv.viewed_at);
+            return date >= startDate && date <= endDate;
+        });
+        return { orders: filteredOrders, businesses: filteredBusinesses, pageViews: filteredPageViews };
+    }, [orders, businesses, pageViews, startDate, endDate]);
 
     const stats = useMemo(() => {
         const revenue = filteredData.orders
             .filter(o => o.status === OrderStatus.COMPLETED)
             .reduce((sum, o) => sum + o.amount, 0);
         
+        // Calculate page view stats
+        const totalPageViews = filteredData.pageViews.length;
+        const uniqueSessions = new Set(filteredData.pageViews.map(pv => pv.session_id).filter(Boolean)).size;
+        const pageViewsByType = filteredData.pageViews.reduce((acc, pv) => {
+            acc[pv.page_type] = (acc[pv.page_type] || 0) + 1;
+            return acc;
+        }, {} as Record<string, number>);
+        
         return {
             revenue,
             newOrders: filteredData.orders.length,
-            newBusinesses: filteredData.businesses.length
+            newBusinesses: filteredData.businesses.length,
+            totalPageViews,
+            uniqueSessions,
+            pageViewsByType
         };
     }, [filteredData]);
     
@@ -160,6 +206,26 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
                     data[dateKey] += order.amount;
                 }
             });
+        
+        return Object.entries(data).map(([label, value]) => ({ label, value }));
+    }, [filteredData, startDate, endDate]);
+
+    const pageViewsChartData: ChartDataPoint[] = useMemo(() => {
+        const data: { [key: string]: number } = {};
+        let currentDate = new Date(startDate);
+
+        while (currentDate <= endDate) {
+            const dateKey = currentDate.toISOString().split('T')[0];
+            data[dateKey] = 0;
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        filteredData.pageViews.forEach(pv => {
+            const dateKey = new Date(pv.viewed_at).toISOString().split('T')[0];
+            if (data[dateKey] !== undefined) {
+                data[dateKey] += 1;
+            }
+        });
         
         return Object.entries(data).map(([label, value]) => ({ label, value }));
     }, [filteredData, startDate, endDate]);
@@ -211,6 +277,48 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
                 <AdminStatCard title="Total Revenue" value={new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(stats.revenue)} icon={<RevenueIcon />} />
                 <AdminStatCard title="New Orders" value={stats.newOrders} icon={<OrderIcon />} />
                 <AdminStatCard title="New Businesses" value={stats.newBusinesses} icon={<BusinessIcon />} />
+            </div>
+
+            {/* Traffic Analytics Section */}
+            <div className="bg-white p-6 rounded-lg shadow">
+                <h3 className="text-lg font-semibold text-neutral-dark mb-4">Traffic Analytics</h3>
+                {loadingPageViews ? (
+                    <div className="text-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                        <p className="text-sm text-gray-500">Loading traffic data...</p>
+                    </div>
+                ) : (
+                    <>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                            <AdminStatCard title="Total Page Views" value={stats.totalPageViews.toLocaleString()} icon={<EyeIcon />} />
+                            <AdminStatCard title="Unique Sessions" value={stats.uniqueSessions.toLocaleString()} icon={<BusinessIcon />} />
+                            <AdminStatCard title="Avg. Views/Day" value={Math.round(stats.totalPageViews / Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)))).toLocaleString()} icon={<EyeIcon />} />
+                        </div>
+
+                        <div className="mb-6">
+                            <AnalyticsChart data={pageViewsChartData} title="Page Views Over Time" />
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                                <p className="text-sm text-gray-600 mb-1">Homepage</p>
+                                <p className="text-2xl font-bold text-neutral-dark">{stats.pageViewsByType.homepage || 0}</p>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                                <p className="text-sm text-gray-600 mb-1">Business Pages</p>
+                                <p className="text-2xl font-bold text-neutral-dark">{stats.pageViewsByType.business || 0}</p>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                                <p className="text-sm text-gray-600 mb-1">Blog</p>
+                                <p className="text-2xl font-bold text-neutral-dark">{stats.pageViewsByType.blog || 0}</p>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                                <p className="text-sm text-gray-600 mb-1">Directory</p>
+                                <p className="text-2xl font-bold text-neutral-dark">{stats.pageViewsByType.directory || 0}</p>
+                            </div>
+                        </div>
+                    </>
+                )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

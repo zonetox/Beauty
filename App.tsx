@@ -22,6 +22,9 @@ import { BusinessDashboardProvider } from './contexts/BusinessBlogDataContext.ts
 import { AdminPlatformProvider } from './contexts/AdminPlatformContext.tsx';
 import { PublicPageContentProvider } from './contexts/PublicPageContentContext.tsx';
 import { ErrorLoggerProvider } from './contexts/ErrorLoggerContext.tsx';
+import { StaffProvider } from './contexts/StaffContext.tsx';
+import { useWebVitals } from './hooks/usePerformanceMonitoring.ts';
+import { usePageTracking } from './lib/usePageTracking.ts';
 
 // Lazy load all page components for performance
 const HomePage = lazy(() => import('./pages/HomePage.tsx'));
@@ -53,6 +56,18 @@ const LoadingSpinner: React.FC = () => (
     </div>
 );
 
+
+// Web Vitals tracking component
+const WebVitalsTracker: React.FC = () => {
+    useWebVitals();
+    return null;
+};
+
+// Page tracking component
+const PageTracking: React.FC = () => {
+    usePageTracking();
+    return null;
+};
 
 // Layout component for all standard public-facing pages.
 const AppLayout: React.FC = () => {
@@ -168,6 +183,8 @@ const App: React.FC = () => {
 
     return (
         <Router>
+            <WebVitalsTracker />
+            <PageTracking />
             <Toaster position="top-center" reverseOrder={false} />
             <ErrorLoggerProvider>
                 <ThemeProvider>
@@ -176,6 +193,7 @@ const App: React.FC = () => {
                             <PublicDataProvider>
                                 <HomepageDataProvider>
                                     <BusinessProvider>
+                                        <StaffProvider>
                                         <PublicPageContentProvider>
                                         <Suspense fallback={<LoadingSpinner />}>
                                             <Routes>
@@ -221,6 +239,7 @@ const App: React.FC = () => {
                                         </Routes>
                                             </Suspense>
                                         </PublicPageContentProvider>
+                                        </StaffProvider>
                                     </BusinessProvider>
                                 </HomepageDataProvider>
                             </PublicDataProvider>

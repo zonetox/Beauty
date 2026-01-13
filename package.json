@@ -23,14 +23,22 @@
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "health:check": "node scripts/health-check.js",
     "env:sync": "node scripts/sync-env.js",
+    "env:sync:complete": "node scripts/sync-env-from-vercel-complete.js",
+    "env:pull": "node scripts/sync-env-vercel-mcp.js pull",
+    "env:push": "node scripts/sync-env-vercel-mcp.js push",
+    "env:status": "node scripts/sync-env-vercel-mcp.js status",
     "env:verify": "node scripts/verify-env-complete.js",
+    "env:verify:full": "node scripts/verify-env-and-connection.js",
     "fix:env": "node scripts/auto-fix-all.js",
     "security:audit": "node scripts/security-audit.js",
-    "verify:connections": "node scripts/verify-connections.js"
+    "verify:connections": "node scripts/verify-connections.js",
+    "dev:ngrok": "node scripts/start-dev-with-ngrok.js",
+    "ngrok:url": "node scripts/get-ngrok-url.js"
   },
   "dependencies": {
     "@google/genai": "^1.26.0",
     "@supabase/supabase-js": "^2.76.1",
+    "posthog-js": "^1.319.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-hot-toast": "^2.4.1",
@@ -39,6 +47,8 @@
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@playwright/test": "^1.57.0",
+    "@sentry/react": "^10.33.0",
+    "@sentry/vite-plugin": "^4.6.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
     "@testing-library/user-event": "^14.6.1",

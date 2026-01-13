@@ -56,14 +56,32 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
     }
 
     try {
-      // Fetch from database
-      const { data, error } = await supabase
-        .from('page_content')
-        .select('content_data')
-        .eq('page_name', 'homepage')
-        .single();
+      // Fetch from database with timeout protection
+      let data, error;
+      try {
+        const queryPromise = supabase
+          .from('page_content')
+          .select('content_data')
+          .eq('page_name', 'homepage')
+          .single();
+        
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Query timeout after 8 seconds')), 8000)
+        );
+        
+        const result = await Promise.race([queryPromise, timeoutPromise]) as any;
+        data = result.data;
+        error = result.error;
+      } catch (timeoutError: any) {
+        if (timeoutError.message?.includes('timeout')) {
+          console.warn('Homepage data query timeout, using fallback');
+          error = { code: 'TIMEOUT', message: 'Query timeout' };
+        } else {
+          throw timeoutError;
+        }
+      }
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+      if (error && error.code !== 'PGRST116' && error.code !== 'TIMEOUT') { // PGRST116 = no rows returned, TIMEOUT = query timeout
         console.error('Error fetching homepage data:', error);
         // Fallback to localStorage
         const savedDataJSON = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -86,6 +104,37 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
             sections: finalSections,
           };
           setHomepageData(mergedData);
+        } else {
+          setHomepageData(DEFAULT_HOMEPAGE_DATA);
+        }
+      } else if (error && error.code === 'TIMEOUT') {
+        // Timeout - use fallback immediately
+        console.warn('Homepage query timeout, using cached/default data');
+        const savedDataJSON = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (savedDataJSON) {
+          try {
+            const savedData = JSON.parse(savedDataJSON);
+            const defaultSections = DEFAULT_HOMEPAGE_DATA.sections;
+            let finalSections = savedData.sections || [];
+            defaultSections.forEach(defaultSection => {
+              if (!finalSections.find((s: any) => s.type === defaultSection.type)) {
+                finalSections.push(defaultSection);
+              }
+            });
+            finalSections = finalSections.map((section: any) => {
+              const defaultMatch = defaultSections.find(s => s.type === section.type);
+              return { ...defaultMatch, ...section };
+            });
+            const mergedData: HomepageData = {
+              ...DEFAULT_HOMEPAGE_DATA,
+              ...savedData,
+              sections: finalSections,
+            };
+            setHomepageData(mergedData);
+          } catch (e) {
+            console.error('Failed to parse cached data:', e);
+            setHomepageData(DEFAULT_HOMEPAGE_DATA);
+          }
         } else {
           setHomepageData(DEFAULT_HOMEPAGE_DATA);
         }

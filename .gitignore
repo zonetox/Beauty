@@ -1,61 +1,59 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
 # Dependencies
-node_modules
-dist
-dist-ssr
+node_modules/
+package-lock.json
 
-# Environment variables (CRITICAL: Never commit these!)
-*.local
+# Build outputs
+dist/
+build/
+*.log
+
+# Environment variables
 .env
 .env.local
-.env.*.local
+.env.vercel
 .env.production
 .env.development
-.env.test
-.env.staging
-.env.vercel
-docs/.env.vercel
-**/.env.vercel
-# Vercel integration keys - DO NOT COMMIT
-.env.vercel
+.env.*.local
 
-# Secrets and keys (extra protection)
-*.key
-*.pem
-*.p12
-*.pfx
-secrets/
-.secrets
+# Testing
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+*.spec.js.snap
 
-# Database credentials and connection strings
-**/pooler-url
-**/*credentials*
-**/*secrets*
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# OS
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# OS files
 Thumbs.db
-.DS_Store
+
+# Ngrok
+.ngrok-url
+.ngrok/
 
 # Temporary files
 *.tmp
 *.temp
 .cache/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Misc
+.cursor/
+.antigravity/

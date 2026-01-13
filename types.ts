@@ -148,6 +148,66 @@ export interface StaffMember {
   role: StaffMemberRole;
 }
 
+// Business Staff (Sub-user system)
+export interface BusinessStaff {
+  id: string;
+  business_id: number;
+  user_id: string;
+  role: StaffMemberRole;
+  permissions: {
+    canEditLandingPage?: boolean;
+    canEditBlog?: boolean;
+    canManageMedia?: boolean;
+    canManageServices?: boolean;
+  };
+  created_at: string;
+  updated_at: string;
+  // Optional fields from joined profiles
+  user_email?: string;
+  user_name?: string;
+}
+
+// Abuse Report
+export interface AbuseReport {
+  id: string;
+  review_id: string;
+  reporter_id?: string;
+  reason: string;
+  status: 'Pending' | 'Reviewed' | 'Resolved' | 'Dismissed';
+  admin_notes?: string;
+  reviewed_by?: string;
+  reviewed_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Landing Page Configuration
+export interface LandingPageSectionConfig {
+  enabled: boolean;
+  order: number;
+}
+
+export interface LandingPageConfig {
+  sections: {
+    hero: LandingPageSectionConfig;
+    trust: LandingPageSectionConfig;
+    services: LandingPageSectionConfig;
+    gallery: LandingPageSectionConfig;
+    team: LandingPageSectionConfig;
+    reviews: LandingPageSectionConfig;
+    cta: LandingPageSectionConfig;
+    contact: LandingPageSectionConfig;
+  };
+}
+
+// Trust Indicator
+export interface TrustIndicator {
+  type: 'badge' | 'certification' | 'award';
+  title: string;
+  icon?: string;
+  description?: string;
+}
+
 export interface NotificationSettings {
   reviewAlerts: boolean;
   bookingRequests: boolean;
@@ -190,6 +250,9 @@ export interface Business {
   notificationSettings: NotificationSettings; // Kept as JSONB
   heroSlides?: HeroSlide[];
   heroImageUrl?: string;
+  landingPageConfig?: LandingPageConfig;
+  trustIndicators?: TrustIndicator[];
+  landingPageStatus?: 'Pending' | 'Approved' | 'Rejected' | 'Needs Review';
 
   // --- RELATIONAL DATA ---
   // These will be populated by Supabase joins
@@ -335,6 +398,7 @@ export interface Order {
   submittedAt: string;
   confirmedAt?: string;
   notes?: string;
+  paymentProofUrl?: string;
 }
 
 export interface Appointment {
@@ -397,7 +461,7 @@ export interface Notification {
   read: boolean;
 }
 
-export type AdminPageTab = 'dashboard' | 'analytics' | 'businesses' | 'registrations' | 'orders' | 'blog' | 'users' | 'packages' | 'content' | 'homepage' | 'settings' | 'tools' | 'activity' | 'notifications' | 'announcements' | 'support' | 'theme';
+export type AdminPageTab = 'dashboard' | 'analytics' | 'businesses' | 'registrations' | 'orders' | 'blog' | 'users' | 'packages' | 'content' | 'homepage' | 'settings' | 'tools' | 'activity' | 'notifications' | 'announcements' | 'support' | 'theme' | 'abuse-reports' | 'landing-page-moderation';
 
 // FIX: Correct HeroSlideItem to HeroSlide
 export interface HeroSlide {
@@ -428,6 +492,29 @@ export interface BankDetails {
 }
 
 export interface AppSettings {
+  siteName?: string;
+  supportEmail?: string;
+  maintenanceMode?: boolean;
+  logoUrl?: string;
+  faviconUrl?: string;
+  colors?: {
+    primary?: string;
+    primaryDark?: string;
+    secondary?: string;
+    accent?: string;
+    background?: string;
+    neutralDark?: string;
+  };
+  seoDefaults?: {
+    defaultTitle?: string;
+    defaultDescription?: string;
+    defaultKeywords?: string;
+  };
+  emailConfig?: {
+    fromEmail?: string;
+    fromName?: string;
+    replyTo?: string;
+  };
   bankDetails: BankDetails;
 }
 
@@ -487,4 +574,27 @@ export interface ThemeSettings {
     sans: string;
     serif: string;
   };
+}
+
+export interface PageView {
+  id: string;
+  page_type: 'homepage' | 'business' | 'blog' | 'directory';
+  page_id?: string;
+  user_id?: string;
+  session_id?: string;
+  ip_address?: string;
+  user_agent?: string;
+  referrer?: string;
+  viewed_at: string;
+}
+
+export interface Conversion {
+  id: string;
+  business_id?: number;
+  conversion_type: 'click' | 'booking' | 'contact' | 'call';
+  source?: 'landing_page' | 'directory' | 'search';
+  user_id?: string;
+  session_id?: string;
+  metadata?: Record<string, any>;
+  converted_at: string;
 }

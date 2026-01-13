@@ -35,6 +35,11 @@ This directory contains authoritative documentation about the database infrastru
 - **`development-rules.md`** - **REQUIRED READING** - Rules for adding new features
 - **`DATABASE_DEVELOPMENT_WORKFLOW.md`** - **MANDATORY** - Quy trình phát triển database (bắt buộc tuân thủ)
 
+### Related Documentation (in parent directory)
+
+- **`../NGROK_SETUP_GUIDE.md`** - Ngrok setup for webhook testing
+- **`../DEVELOPMENT_WORKFLOW.md`** - Development workflow guide
+
 ---
 
 ## 🚨 CRITICAL RULES

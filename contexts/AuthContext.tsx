@@ -45,16 +45,25 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
           .from('admin_users')
           .select('*')
           .eq('email', user.email)
-          .single();
+          .maybeSingle(); // Use maybeSingle() instead of single() to avoid error when no row found
         
         if (adminProfile && !adminProfile.is_locked) {
           // It's a valid, active admin. Combine auth user with admin profile.
           setCurrentUser({ ...adminProfile, authUser: user });
         } else {
           // Logged in, but not a valid admin or is locked.
-          if (adminProfile?.is_locked) console.warn("Admin user is locked:", user.email);
+          if (error && error.code !== 'PGRST116') {
+            // PGRST116 = no rows returned (expected when user is not admin)
+            console.warn("Error checking admin status:", error.message);
+          }
+          if (adminProfile?.is_locked) {
+            console.warn("Admin user is locked:", user.email);
+          }
           setCurrentUser(null);
-          supabase.auth.signOut(); // Log them out from Supabase Auth session
+          // Only sign out if we're sure they're not an admin (not just because of a query error)
+          if (!error || error.code === 'PGRST116') {
+            supabase.auth.signOut(); // Log them out from Supabase Auth session
+          }
         }
       } else {
         // No user session

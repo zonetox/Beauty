@@ -159,7 +159,7 @@
 - `Editor`
 
 **Used in:**
-- NOT PRESENT IN DATABASE - Enum type exists but no columns use it
+- `business_staff.role` (default: `'Editor'`)
 
 ---
 
@@ -179,7 +179,7 @@
 
 ## Summary
 
-**Total Enum Types:** 13
+**Total Enum Types:** 13 (all are used)
 
 **Enum Types Used in Tables:**
 - `admin_user_role` - Used in 1 column
@@ -193,7 +193,7 @@
 - `notification_type` - Used in 1 column
 - `order_status` - Used in 1 column
 - `review_status` - Used in 1 column
-- `staff_member_role` - **NOT USED** (enum exists but no columns use it)
+- `staff_member_role` - Used in 1 column
 - `ticket_status` - Used in 1 column
 
 ---

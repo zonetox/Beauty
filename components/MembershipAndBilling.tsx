@@ -10,6 +10,8 @@ import { useAdmin } from '../contexts/AdminContext.tsx';
 import { OrderStatus, MembershipPackage, Order } from '../types.ts';
 import LoadingState from './LoadingState.tsx';
 import EmptyState from './EmptyState.tsx';
+import { uploadFile } from '../lib/storage.ts';
+import { supabase } from '../lib/supabaseClient.ts';
 
 const statusStyles: { [key in OrderStatus]: string } = {
     [OrderStatus.PENDING]: 'bg-yellow-100 text-yellow-800',
@@ -39,6 +41,8 @@ const MembershipAndBilling: React.FC = () => {
     const [showPaymentInfo, setShowPaymentInfo] = useState(false);
     const [selectedPackageForPayment, setSelectedPackageForPayment] = useState<MembershipPackage | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isUploadingProof, setIsUploadingProof] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
 
     if (!currentBusiness) {
         return (
@@ -57,6 +61,13 @@ const MembershipAndBilling: React.FC = () => {
             new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
         );
     }, [orders, currentBusiness.id]);
+
+    // Find the latest order awaiting confirmation (for payment proof upload)
+    const latestPendingOrder = useMemo(() => {
+        return businessOrders.find(o => 
+            o.status === OrderStatus.AWAITING_CONFIRMATION || o.status === OrderStatus.PENDING
+        ) || null;
+    }, [businessOrders]);
 
     const handleUpgradeRequest = async (pkg: MembershipPackage) => {
         if (pkg.id === currentPackage?.id) {
@@ -94,6 +105,57 @@ const MembershipAndBilling: React.FC = () => {
     
     const handleScrollToCompare = () => {
         document.getElementById('compare-plans-section')?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    const handlePaymentProofUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || !e.target.files[0] || !latestPendingOrder) return;
+
+        const file = e.target.files[0];
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            toast.error('Please upload an image file');
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error('Image size must be less than 5MB');
+            return;
+        }
+
+        setIsUploadingProof(true);
+        setUploadProgress(0);
+
+        try {
+            // Upload to Supabase Storage
+            const folder = `orders/${latestPendingOrder.id}`;
+            const imageUrl = await uploadFile('business-gallery', file, folder);
+            setUploadProgress(100);
+
+            // Update order with payment proof URL
+            const { error } = await supabase
+                .from('orders')
+                .update({ payment_proof_url: imageUrl })
+                .eq('id', latestPendingOrder.id);
+
+            if (error) {
+                throw error;
+            }
+
+            toast.success('Payment proof uploaded successfully!');
+            
+            // Refresh orders
+            window.location.reload(); // Simple refresh - could be improved with context update
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Failed to upload payment proof';
+            toast.error(message);
+        } finally {
+            setIsUploadingProof(false);
+            setUploadProgress(0);
+            // Reset file input
+            e.target.value = '';
+        }
     };
 
     const formatPrice = (price: number) => {
@@ -191,6 +253,44 @@ const MembershipAndBilling: React.FC = () => {
                         <p><strong>Amount:</strong> <strong className="text-primary">{formatPrice(selectedPackageForPayment.price)}</strong></p>
                         <p><strong>Transfer Note:</strong> {settings.bankDetails.transferNote.replace('[Tên doanh nghiệp]', currentBusiness.name).replace('[Mã đơn hàng]', 'UPGRADE')}</p>
                     </div>
+                    
+                    {/* Payment Proof Upload */}
+                    {latestPendingOrder && (
+                        <div className="mt-4 p-4 bg-white rounded border border-blue-200">
+                            <p className="text-sm font-semibold text-blue-800 mb-2">Upload Payment Proof</p>
+                            <p className="text-xs text-blue-600 mb-3">After completing the bank transfer, please upload a screenshot or photo of the transfer confirmation.</p>
+                            {latestPendingOrder.paymentProofUrl ? (
+                                <div className="flex items-center gap-2 text-sm text-green-700">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                    </svg>
+                                    <span>Payment proof uploaded. Waiting for admin confirmation.</span>
+                                </div>
+                            ) : (
+                                <div>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handlePaymentProofUpload}
+                                        disabled={isUploadingProof}
+                                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark file:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                    />
+                                    {isUploadingProof && (
+                                        <div className="mt-2">
+                                            <div className="w-full bg-gray-200 rounded-full h-2">
+                                                <div 
+                                                    className="bg-primary h-2 rounded-full transition-all duration-300" 
+                                                    style={{ width: `${uploadProgress}%` }}
+                                                ></div>
+                                            </div>
+                                            <p className="text-xs text-gray-600 mt-1">Uploading... {uploadProgress}%</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    
                     <p className="text-xs text-blue-600 mt-2">Your plan will be activated once our team confirms the payment.</p>
                 </div>
             )}

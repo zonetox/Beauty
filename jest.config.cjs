@@ -26,6 +26,9 @@ module.exports = {
     '/\\.vscode/',
     '/dist/',
     '/build/',
+    // Ignore E2E tests (they should be run with Playwright, not Jest)
+    '/tests/e2e/',
+    '/tests/e2e/.*\\.spec\\.ts$',
     // Ignore any path that doesn't contain "Beauty-main"
     '^(?!.*Beauty-main).*$',
     // Explicitly ignore common external directories

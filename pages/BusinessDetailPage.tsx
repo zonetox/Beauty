@@ -26,6 +26,9 @@ import BusinessFooter from '../components/business-landing/BusinessFooter.tsx';
 import BusinessBlogSection from '../components/business-landing/BusinessBlogSection.tsx';
 import BookingModal from '../components/business-landing/BookingModal.tsx';
 import ReviewsSection from '../components/business-landing/ReviewsSection.tsx';
+import TrustIndicatorsSection from '../components/business-landing/TrustIndicatorsSection.tsx';
+import FloatingActionButtons from '../components/FloatingActionButtons.tsx';
+import { LandingPageConfig } from '../types.ts';
 
 const BusinessDetailPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
@@ -198,6 +201,73 @@ const BusinessDetailPage: React.FC = () => {
             .filter((oh): oh is { dayOfWeek: string[]; opens: string; closes: string } => oh !== null) : undefined,
     };
 
+    // Get landing page configuration or use default
+    const landingPageConfig: LandingPageConfig = business.landingPageConfig || {
+        sections: {
+            hero: { enabled: true, order: 1 },
+            trust: { enabled: false, order: 2 },
+            services: { enabled: true, order: 3 },
+            gallery: { enabled: true, order: 4 },
+            team: { enabled: false, order: 5 },
+            reviews: { enabled: true, order: 6 },
+            cta: { enabled: true, order: 7 },
+            contact: { enabled: true, order: 8 },
+        },
+    };
+
+    // Get enabled sections sorted by order
+    const enabledSections = Object.entries(landingPageConfig.sections)
+        .filter(([_, section]) => section.enabled)
+        .map(([key, section]) => ({
+            key: key as keyof LandingPageConfig['sections'],
+            order: section.order,
+        }))
+        .sort((a, b) => a.order - b.order);
+
+    // Map section keys to components
+    const renderSection = (sectionKey: keyof LandingPageConfig['sections']) => {
+        switch (sectionKey) {
+            case 'hero':
+                return <HeroSection key="hero" business={business} onBookNowClick={() => setIsBookingModalOpen(true)} />;
+            case 'services':
+                return (
+                    <div key="services" className="container mx-auto px-4 sm:px-6 lg:px-8">
+                        <ServicesSection business={business} />
+                    </div>
+                );
+            case 'gallery':
+                return (
+                    <div key="gallery" className="container mx-auto px-4 sm:px-6 lg:px-8">
+                        <GallerySection business={business} />
+                    </div>
+                );
+            case 'team':
+                return (
+                    <div key="team" className="container mx-auto px-4 sm:px-6 lg:px-8">
+                        <TeamSection business={business} />
+                    </div>
+                );
+            case 'reviews':
+                return (
+                    <div key="reviews" className="container mx-auto px-4 sm:px-6 lg:px-8">
+                        <ReviewsSection business={business} />
+                    </div>
+                );
+            case 'cta':
+                return <BookingCtaSection key="cta" onBookNowClick={() => setIsBookingModalOpen(true)} businessId={business.id} />;
+            case 'contact':
+                return (
+                    <div key="contact" className="container mx-auto px-4 sm:px-6 lg:px-8">
+                        <LocationSection business={business} />
+                    </div>
+                );
+            case 'trust':
+                return <TrustIndicatorsSection key="trust" business={business} />;
+            default:
+                return null;
+        }
+    };
+
     return (
         <>
             <SEOHead 
@@ -212,23 +282,47 @@ const BusinessDetailPage: React.FC = () => {
             <div className="bg-white">
                 <BusinessHeader business={business} onBookNowClick={() => setIsBookingModalOpen(true)} />
                 <main>
-                    <HeroSection business={business} onBookNowClick={() => setIsBookingModalOpen(true)} />
+                    {/* Render sections based on config */}
+                    {enabledSections.map(({ key }) => {
+                        // Hero is rendered outside container
+                        if (key === 'hero') {
+                            return renderSection(key);
+                        }
+                        return null;
+                    })}
+
+                    {/* About section - always shown (not in config) */}
                     <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                         <AboutSection business={business} />
-                        <ServicesSection business={business} />
-                        <GallerySection business={business} />
-                        <TeamSection business={business} />
-                        <VideoSection business={business} />
-                        <BusinessBlogSection business={business} />
-                        <DealsSection business={business} />
-                        <ReviewsSection business={business} />
                     </div>
-                    <BookingCtaSection onBookNowClick={() => setIsBookingModalOpen(true)} />
-                    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                        <LocationSection business={business} />
-                    </div>
+
+                    {/* Render other enabled sections */}
+                    {enabledSections
+                        .filter(s => s.key !== 'hero') // Hero already rendered
+                        .map(({ key }) => renderSection(key))}
+
+                    {/* Optional sections - shown if business has content (not in config) */}
+                    {business.youtubeUrl && (
+                        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                            <VideoSection business={business} />
+                        </div>
+                    )}
+                    {business.businessBlogPosts && business.businessBlogPosts.length > 0 && (
+                        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                            <BusinessBlogSection business={business} />
+                        </div>
+                    )}
+                    {business.deals && business.deals.length > 0 && (
+                        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                            <DealsSection business={business} />
+                        </div>
+                    )}
                 </main>
                 <BusinessFooter business={business} />
+                <FloatingActionButtons 
+                    business={business} 
+                    onBookNowClick={() => setIsBookingModalOpen(true)} 
+                />
                 {isBookingModalOpen && (
                     <BookingModal
                         isOpen={isBookingModalOpen}

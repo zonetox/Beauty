@@ -7,6 +7,7 @@ import StarRating from '../StarRating.tsx';
 import { useReviewsData } from '../../contexts/BusinessContext.tsx';
 import { useUserSession } from '../../contexts/UserSessionContext.tsx';
 import ReviewForm from '../ReviewForm.tsx';
+import ReportAbuseModal from '../ReportAbuseModal.tsx';
 
 interface ReviewsSectionProps {
     business: Business;
@@ -17,6 +18,8 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ business }) => {
     const { currentUser, profile } = useUserSession();
     
     const [showForm, setShowForm] = useState(false);
+    const [reportingReviewId, setReportingReviewId] = useState<string | null>(null);
+    const [reportingReviewComment, setReportingReviewComment] = useState<string>('');
 
     const allReviewsForBusiness = getReviewsByBusinessId(business.id);
     const visibleReviews = allReviewsForBusiness.filter(r => r.status === ReviewStatus.VISIBLE);
@@ -85,7 +88,21 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ business }) => {
                 <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {visibleReviews.slice(0, 3).map(review => (
                         <div key={review.id} className="bg-white p-6 rounded-lg border border-gray-100 shadow-lg flex flex-col">
-                            <StarRating rating={review.rating} />
+                            <div className="flex justify-between items-start mb-2">
+                                <StarRating rating={review.rating} />
+                                {currentUser && (
+                                    <button
+                                        onClick={() => {
+                                            setReportingReviewId(review.id);
+                                            setReportingReviewComment(review.comment);
+                                        }}
+                                        className="text-xs text-red-600 hover:text-red-800 hover:underline"
+                                        title="Report abuse"
+                                    >
+                                        Report
+                                    </button>
+                                )}
+                            </div>
                             <p className="text-gray-600 mt-4 italic flex-grow">&quot;{review.comment}&quot;</p>
                             <div className="mt-6 flex items-center">
                                 <img src={review.user_avatar_url} alt={review.user_name} className="w-12 h-12 rounded-full object-cover" />
@@ -99,6 +116,18 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ business }) => {
                 </div>
             ) : (
                 !showForm && <p className="text-center text-gray-500 mt-8">Chưa có đánh giá nào. Hãy là người đầu tiên!</p>
+            )}
+
+            {reportingReviewId && (
+                <ReportAbuseModal
+                    isOpen={!!reportingReviewId}
+                    onClose={() => {
+                        setReportingReviewId(null);
+                        setReportingReviewComment('');
+                    }}
+                    reviewId={reportingReviewId}
+                    reviewComment={reportingReviewComment}
+                />
             )}
         </section>
     );

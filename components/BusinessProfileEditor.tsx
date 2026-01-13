@@ -7,10 +7,14 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useBusinessAuth } from '../contexts/BusinessContext.tsx';
 import { useBusinessData } from '../contexts/BusinessDataContext.tsx';
-import { BusinessCategory, HeroSlide } from '../types.ts';
+import { BusinessCategory, HeroSlide, TrustIndicator } from '../types.ts';
 import { uploadFile } from '../lib/storage.ts';
 import LoadingState from './LoadingState.tsx';
 import EmptyState from './EmptyState.tsx';
+import { useStaffPermissions } from '../hooks/useStaffPermissions.ts';
+import LandingPageSectionEditor from './LandingPageSectionEditor.tsx';
+import LandingPagePreview from './LandingPagePreview.tsx';
+import { LandingPageConfig } from '../types.ts';
 
 // Helper to convert blob to base64 (for team member images)
 const blobToBase64 = (blob: Blob): Promise<string> => {
@@ -85,6 +89,7 @@ const BusinessProfileEditor: React.FC = () => {
     const { currentBusiness } = useBusinessAuth();
     const { updateBusiness } = useBusinessData();
     const navigate = useNavigate();
+    const staffPermissions = useStaffPermissions();
 
     const [formData, setFormData] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
@@ -92,6 +97,7 @@ const BusinessProfileEditor: React.FC = () => {
     const [errors, setErrors] = useState<FormErrors>({});
     const [isUploadingLogo, setIsUploadingLogo] = useState(false);
     const [isUploadingCover, setIsUploadingCover] = useState(false);
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     
     const [workingHoursList, setWorkingHoursList] = useState<Array<{ day: string; time: string }>>([]);
 
@@ -112,6 +118,22 @@ const BusinessProfileEditor: React.FC = () => {
             const hours = currentBusiness.workingHours || {};
             const hoursList = Object.entries(hours).map(([day, time]) => ({ day, time: time as string }));
             setWorkingHoursList(hoursList.length > 0 ? hoursList : [{ day: '', time: '' }]);
+            
+            // Initialize landing_page_config if not present
+            if (!businessData.landingPageConfig) {
+                businessData.landingPageConfig = {
+                    sections: {
+                        hero: { enabled: true, order: 1 },
+                        trust: { enabled: false, order: 2 },
+                        services: { enabled: true, order: 3 },
+                        gallery: { enabled: true, order: 4 },
+                        team: { enabled: false, order: 5 },
+                        reviews: { enabled: true, order: 6 },
+                        cta: { enabled: true, order: 7 },
+                        contact: { enabled: true, order: 8 },
+                    },
+                };
+            }
         }
     }, [currentBusiness]);
 
@@ -272,6 +294,10 @@ const BusinessProfileEditor: React.FC = () => {
     const handleSeoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData((prev: any) => ({ ...prev, seo: { ...(prev.seo || {}), [name]: value } }));
+    };
+
+    const handleLandingPageConfigChange = (newConfig: LandingPageConfig) => {
+        setFormData((prev: any) => ({ ...prev, landingPageConfig: newConfig }));
     };
     
     const handleSocialChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -687,7 +713,141 @@ const BusinessProfileEditor: React.FC = () => {
                         </div>
                     </section>
                 )}
+
+                {activeTab === 'landing' && (
+                    <section>
+                        <div className="mb-6 flex justify-between items-center">
+                            <h3 className="text-lg font-semibold text-neutral-dark">Landing Page Builder</h3>
+                            <button
+                                type="button"
+                                onClick={() => setIsPreviewOpen(true)}
+                                className="px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary-dark transition-colors text-sm font-medium"
+                                disabled={!formData.landingPageConfig}
+                            >
+                                Preview Landing Page
+                            </button>
+                        </div>
+                        {formData.landingPageConfig ? (
+                            <LandingPageSectionEditor
+                                config={formData.landingPageConfig}
+                                onChange={handleLandingPageConfigChange}
+                                disabled={!staffPermissions.isOwner && !staffPermissions.canEditLandingPage}
+                            />
+                        ) : (
+                            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                <p className="text-sm text-yellow-800">
+                                    Landing page configuration is being initialized...
+                                </p>
+                            </div>
+                        )}
+                        
+                        {/* Trust Indicators Editor */}
+                        <div className="mt-8 border-t pt-6">
+                            <h3 className="text-lg font-semibold text-neutral-dark mb-4">Trust Indicators</h3>
+                            <p className="text-sm text-gray-600 mb-4">Add badges, certifications, or awards to build trust with your customers.</p>
+                            
+                            <div className="space-y-4">
+                                {(formData.trustIndicators || []).map((indicator: TrustIndicator, index: number) => (
+                                    <div key={index} className="p-4 border border-gray-200 rounded-lg">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                                                <select
+                                                    value={indicator.type}
+                                                    onChange={(e) => {
+                                                        const updated = [...(formData.trustIndicators || [])];
+                                                        updated[index] = { ...updated[index], type: e.target.value as TrustIndicator['type'] };
+                                                        setFormData((prev: any) => ({ ...prev, trustIndicators: updated }));
+                                                    }}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                                >
+                                                    <option value="badge">Badge</option>
+                                                    <option value="certification">Certification</option>
+                                                    <option value="award">Award</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                                                <input
+                                                    type="text"
+                                                    value={indicator.title}
+                                                    onChange={(e) => {
+                                                        const updated = [...(formData.trustIndicators || [])];
+                                                        updated[index] = { ...updated[index], title: e.target.value };
+                                                        setFormData((prev: any) => ({ ...prev, trustIndicators: updated }));
+                                                    }}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                                    placeholder="e.g., Verified Business"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="mb-3">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Icon URL (optional)</label>
+                                            <input
+                                                type="text"
+                                                value={indicator.icon || ''}
+                                                onChange={(e) => {
+                                                    const updated = [...(formData.trustIndicators || [])];
+                                                    updated[index] = { ...updated[index], icon: e.target.value };
+                                                    setFormData((prev: any) => ({ ...prev, trustIndicators: updated }));
+                                                }}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                                placeholder="https://example.com/icon.png"
+                                            />
+                                        </div>
+                                        <div className="mb-3">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Description (optional)</label>
+                                            <textarea
+                                                value={indicator.description || ''}
+                                                onChange={(e) => {
+                                                    const updated = [...(formData.trustIndicators || [])];
+                                                    updated[index] = { ...updated[index], description: e.target.value };
+                                                    setFormData((prev: any) => ({ ...prev, trustIndicators: updated }));
+                                                }}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                                rows={2}
+                                                placeholder="Brief description of this indicator"
+                                            />
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const updated = (formData.trustIndicators || []).filter((_: any, i: number) => i !== index);
+                                                setFormData((prev: any) => ({ ...prev, trustIndicators: updated }));
+                                            }}
+                                            className="text-red-600 hover:text-red-800 text-sm font-medium"
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
+                                ))}
+                                
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const newIndicator: TrustIndicator = { type: 'badge', title: '' };
+                                        setFormData((prev: any) => ({ 
+                                            ...prev, 
+                                            trustIndicators: [...(prev.trustIndicators || []), newIndicator] 
+                                        }));
+                                    }}
+                                    className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-primary hover:text-primary transition-colors"
+                                >
+                                    + Add Trust Indicator
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+                )}
             </div>
+            
+            {isPreviewOpen && formData && currentBusiness && formData.landingPageConfig && (
+                <LandingPagePreview
+                    business={{ ...currentBusiness, landingPageConfig: formData.landingPageConfig }}
+                    config={formData.landingPageConfig}
+                    onClose={() => setIsPreviewOpen(false)}
+                />
+            )}
             
             <div className="p-6 flex justify-end border-t">
                 <button 

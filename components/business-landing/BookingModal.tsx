@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { Business, AppointmentStatus } from '../../types.ts';
 import { useBookingData } from '../../contexts/BusinessContext.tsx';
 import { useUserSession } from '../../contexts/UserSessionContext.tsx';
+import { trackConversion } from '../../lib/usePageTracking.ts';
 
 interface BookingModalProps {
     isOpen: boolean;
@@ -71,6 +72,15 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
         await new Promise(resolve => setTimeout(resolve, 1000));
         
         addAppointment(newAppointment);
+        
+        // Track conversion
+        trackConversion('booking', business.id, 'landing_page', {
+            serviceId: selectedService.id,
+            serviceName: selectedService.name,
+            date: selectedDate.toISOString().split('T')[0],
+            timeSlot: selectedTime,
+        }, currentUser?.id);
+        
         setIsSubmitting(false);
         setStep(4); // Move to confirmation step
     };

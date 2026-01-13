@@ -1,9 +1,15 @@
 # Database Schema
 
-**Last Updated:** 2025-01-12  
+**Last Updated:** 2025-01-13  
 **Source:** Supabase Database (read via MCP)  
 **Total Tables:** 27  
 **Note:** This document reflects EXACTLY what exists in the database. No assumptions made.
+
+**Recent Updates:**
+- 2025-01-12: Added `business_staff`, `abuse_reports`, `page_views`, `conversions` tables
+- 2025-01-12: Added `landing_page_config`, `trust_indicators`, `landing_page_status` to `businesses` table
+- 2025-01-12: Added `payment_proof_url` to `orders` table
+- 2025-01-13: Verified all Phase 3 database columns exist and are properly configured
 
 ---
 
@@ -197,6 +203,9 @@
 | `hero_image_url` | text | NULL | - | - |
 | `owner_id` | uuid | NULL | - | Foreign key to `auth.users.id` |
 | `staff` | jsonb | NULL | `'[]'::jsonb` | - |
+| `landing_page_config` | jsonb | NULL | Default config JSON | Landing page section configuration: visibility and order |
+| `trust_indicators` | jsonb | NULL | `'[]'::jsonb` | Array of trust indicators: [{"type": "badge", "title": "Verified", "icon": "..."}, ...] |
+| `landing_page_status` | text | NULL | `'Approved'` | Landing page moderation status: Pending, Approved, Rejected, Needs Review |
 
 ---
 
@@ -306,6 +315,7 @@
 | `submitted_at` | timestamp with time zone | NULL | `now()` | - |
 | `confirmed_at` | timestamp with time zone | NULL | - | - |
 | `notes` | text | NULL | - | - |
+| `payment_proof_url` | text | NULL | - | URL to payment proof image |
 
 ---
 

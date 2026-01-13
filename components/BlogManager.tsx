@@ -10,10 +10,13 @@ import RichTextEditor from './RichTextEditor.tsx';
 import LoadingState from './LoadingState.tsx';
 import EmptyState from './EmptyState.tsx';
 import { uploadFile, deleteFileByUrl } from '../lib/storage.ts';
+import { useStaffPermissions } from '../hooks/useStaffPermissions.ts';
+import ForbiddenState from './ForbiddenState.tsx';
 
 const BlogManager: React.FC = () => {
     const { currentBusiness } = useBusinessAuth();
     const { posts, loading, addPost, updatePost, deletePost } = useBusinessBlogData();
+    const staffPermissions = useStaffPermissions();
 
     const [editingPost, setEditingPost] = useState<Partial<BusinessBlogPost> | null>(null);
     const [isSaving, setIsSaving] = useState(false);
@@ -34,6 +37,18 @@ const BlogManager: React.FC = () => {
                 <EmptyState
                     title="No business found"
                     message="Please select a business to manage blog posts."
+                />
+            </div>
+        );
+    }
+
+    // Check staff permissions: must be business owner or staff with canEditBlog permission
+    if (!staffPermissions.isBusinessOwner && !staffPermissions.canEditBlog) {
+        return (
+            <div className="p-8">
+                <ForbiddenState
+                    title="Access Denied"
+                    message="You don't have permission to manage blog posts. Only business owners and staff members with blog editing permissions can access this section."
                 />
             </div>
         );

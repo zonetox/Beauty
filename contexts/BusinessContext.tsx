@@ -113,7 +113,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
     setAnalyticsLoading(true);
 
     // F2.1: Optimize queries - select only needed columns
-    const [postsRes, reviewsRes, ordersRes, appointmentsRes, businessesRes] = await Promise.all([
+    const [postsRes, reviewsRes, ordersRes, appointmentsRes, businessesRes, pageViewsRes, conversionsRes] = await Promise.all([
       supabase.from('business_blog_posts')
         .select('id, business_id, slug, title, excerpt, image_url, content, author, created_date, published_date, status, view_count, is_featured, seo')
         .order('created_date', { ascending: false }),
@@ -126,7 +126,13 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
       supabase.from('appointments')
         .select('id, business_id, service_id, service_name, staff_member_id, customer_name, customer_email, customer_phone, date, time_slot, status, notes, created_at')
         .order('created_at', { ascending: false }),
-      supabase.from('businesses').select('id, view_count').order('id')
+      supabase.from('businesses').select('id, view_count').order('id'),
+      supabase.from('page_views')
+        .select('id, page_type, page_id, business_id, viewed_at')
+        .order('viewed_at', { ascending: false }),
+      supabase.from('conversions')
+        .select('id, business_id, conversion_type, source, converted_at')
+        .order('converted_at', { ascending: false })
     ]);
 
     if (postsRes.data) setPosts(snakeToCamel(postsRes.data) as BusinessBlogPost[]);
@@ -143,13 +149,22 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
     if (appointmentsRes.error) console.error("Error fetching appointments:", appointmentsRes.error.message);
 
-    // Calculate analytics from database data (C3.10: Migrated from mock data)
+    // Calculate analytics from database data (C3.10: Migrated from mock data, Phase 2.2: Added conversions)
     if (businessesRes.data && reviewsRes.data && appointmentsRes.data && ordersRes.data) {
       const analytics: BusinessAnalytics[] = businessesRes.data.map((business: any) => {
         const businessId = business.id;
         const businessReviews = reviewsRes.data.filter((r: any) => r.business_id === businessId);
         const businessAppointments = appointmentsRes.data.filter((a: any) => a.business_id === businessId);
         const businessOrders = ordersRes.data.filter((o: any) => o.business_id === businessId);
+        
+        // Get page views for this business (from page_views table where page_id = businessId or page_type = 'business')
+        const businessPageViews = pageViewsRes.data?.filter((pv: any) => 
+          (pv.page_type === 'business' && pv.page_id === String(businessId)) || 
+          (pv.business_id === businessId)
+        ) || [];
+        
+        // Get conversions for this business
+        const businessConversions = conversionsRes.data?.filter((c: any) => c.business_id === businessId) || [];
         
         // Calculate time series for last 30 days
         const timeSeries: AnalyticsDataPoint[] = [];
@@ -162,24 +177,31 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
           date.setHours(0, 0, 0, 0);
           const dateStr = date.toISOString().split('T')[0];
           
-          const dayReviews = businessReviews.filter((r: any) => {
-            const reviewDate = new Date(r.submitted_date);
-            reviewDate.setHours(0, 0, 0, 0);
-            return reviewDate.getTime() === date.getTime();
+          // Count page views for this day
+          const dayPageViews = businessPageViews.filter((pv: any) => {
+            const viewDate = new Date(pv.viewed_at);
+            viewDate.setHours(0, 0, 0, 0);
+            return viewDate.getTime() === date.getTime();
+          }).length;
+          
+          // Count conversions by type for this day
+          const dayConversions = businessConversions.filter((c: any) => {
+            const convDate = new Date(c.converted_at);
+            convDate.setHours(0, 0, 0, 0);
+            return convDate.getTime() === date.getTime();
           });
           
-          const dayAppointments = businessAppointments.filter((a: any) => {
-            const apptDate = new Date(a.created_at);
-            apptDate.setHours(0, 0, 0, 0);
-            return apptDate.getTime() === date.getTime();
-          });
+          const dayCallClicks = dayConversions.filter((c: any) => c.conversion_type === 'call').length;
+          const dayContactClicks = dayConversions.filter((c: any) => c.conversion_type === 'contact').length;
+          const dayBookingClicks = dayConversions.filter((c: any) => c.conversion_type === 'booking').length;
+          const dayCtaClicks = dayConversions.filter((c: any) => c.conversion_type === 'click').length;
           
           timeSeries.push({
             date: dateStr,
-            pageViews: business.view_count || 0, // Simplified: use total views
-            contactClicks: dayAppointments.length,
-            callClicks: 0, // Not tracked in current schema
-            directionClicks: 0, // Not tracked in current schema
+            pageViews: dayPageViews || 0,
+            contactClicks: dayContactClicks + dayBookingClicks, // Combine contact and booking
+            callClicks: dayCallClicks,
+            directionClicks: 0, // Not tracked yet
           });
         }
         

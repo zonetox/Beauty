@@ -244,39 +244,75 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
       return;
     }
 
-    // Load initial page of businesses
-    await fetchBusinesses(1);
+    try {
+      // Load initial page of businesses with timeout
+      const businessesPromise = fetchBusinesses(1);
+      const businessesTimeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Businesses fetch timeout')), 10000)
+      );
+      await Promise.race([businessesPromise, businessesTimeout]).catch(() => {
+        console.warn('Businesses fetch timeout, continuing with other data');
+      });
 
-    // Fetch lightweight markers for the map to support 5000+ scale
-    const { data: markerData } = await supabase.from('businesses')
-      .select('id, name, latitude, longitude, categories, is_active');
+      // Fetch lightweight markers for the map to support 5000+ scale
+      try {
+        const markerPromise = supabase.from('businesses')
+          .select('id, name, latitude, longitude, categories, is_active');
+        const markerTimeout = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Markers timeout')), 8000)
+        );
+        const { data: markerData } = await Promise.race([markerPromise, markerTimeout]) as any;
+        if (markerData) {
+          setBusinessMarkers(snakeToCamel(markerData));
+        }
+      } catch (e) {
+        console.warn('Failed to fetch markers:', e);
+      }
 
-    if (markerData) {
-      setBusinessMarkers(snakeToCamel(markerData));
+      // F2.1: Optimize queries - select only needed columns with timeout
+      let blogRes, catRes, pkgRes;
+      try {
+        const queries = [
+          supabase.from('blog_posts')
+            .select('id, slug, title, image_url, excerpt, author, date, category, content, view_count')
+            .order('date', { ascending: false }),
+          supabase.from('blog_categories')
+            .select('id, name')
+            .order('name'),
+          supabase.from('membership_packages')
+            .select('id, name, description, price, duration_months, features, is_active')
+            .order('price')
+        ];
+        
+        const timeout = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Queries timeout')), 10000)
+        );
+        
+        [blogRes, catRes, pkgRes] = await Promise.race([
+          Promise.all(queries),
+          timeout
+        ]) as any;
+      } catch (timeoutError: any) {
+        console.warn('Public data queries timeout, using empty data');
+        blogRes = { error: { message: 'Timeout' }, data: null };
+        catRes = { error: { message: 'Timeout' }, data: null };
+        pkgRes = { error: { message: 'Timeout' }, data: null };
+      }
+
+      if (blogRes.error) console.error("Error fetching blog posts:", blogRes.error.message);
+      else if (blogRes.data) setBlogPosts(snakeToCamel(blogRes.data) as BlogPost[]);
+      setBlogLoading(false);
+
+      if (catRes.error) console.error("Error fetching blog categories:", catRes.error.message);
+      else if (catRes.data) setBlogCategories(snakeToCamel(catRes.data) as BlogCategory[]);
+
+      if (pkgRes.error) console.error("Error fetching packages:", pkgRes.error.message);
+      else if (pkgRes.data) setPackages(snakeToCamel(pkgRes.data) as MembershipPackage[]);
+    } catch (error: any) {
+      console.error('Error in fetchAllPublicData:', error);
+      setBusinessLoading(false);
+      setBlogLoading(false);
     }
-
-    // F2.1: Optimize queries - select only needed columns
-    const [blogRes, catRes, pkgRes] = await Promise.all([
-      supabase.from('blog_posts')
-        .select('id, slug, title, image_url, excerpt, author, date, category, content, view_count')
-        .order('date', { ascending: false }),
-      supabase.from('blog_categories')
-        .select('id, name')
-        .order('name'),
-      supabase.from('membership_packages')
-        .select('id, name, description, price, duration_months, features, is_active')
-        .order('price')
-    ]);
-
-    if (blogRes.error) console.error("Error fetching blog posts:", blogRes.error.message);
-    else if (blogRes.data) setBlogPosts(snakeToCamel(blogRes.data) as BlogPost[]);
-    setBlogLoading(false);
-
-    if (catRes.error) console.error("Error fetching blog categories:", catRes.error.message);
-    else if (catRes.data) setBlogCategories(snakeToCamel(catRes.data) as BlogCategory[]);
-
-    if (pkgRes.error) console.error("Error fetching packages:", pkgRes.error.message);
-    else if (pkgRes.data) setPackages(snakeToCamel(pkgRes.data) as MembershipPackage[]);
   }, [fetchBusinesses]);
 
   useEffect(() => {

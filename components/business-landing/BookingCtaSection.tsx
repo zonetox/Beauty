@@ -1,10 +1,18 @@
 import React from 'react';
+import { trackConversion } from '../../lib/usePageTracking.ts';
 
 interface BookingCtaSectionProps {
     onBookNowClick: () => void;
+    businessId?: number;
 }
 
-const BookingCtaSection: React.FC<BookingCtaSectionProps> = ({ onBookNowClick }) => {
+const BookingCtaSection: React.FC<BookingCtaSectionProps> = ({ onBookNowClick, businessId }) => {
+    const handleClick = () => {
+        // Track conversion
+        trackConversion('click', businessId);
+        onBookNowClick();
+    };
+
     return (
         <section id="booking-cta" className="py-20 bg-neutral-dark text-white">
             <div className="container mx-auto px-4 text-center">
@@ -15,7 +23,7 @@ const BookingCtaSection: React.FC<BookingCtaSectionProps> = ({ onBookNowClick })
                     Đặt lịch hẹn ngay hôm nay để tận hưởng những phút giây thư giãn và làm đẹp tuyệt vời nhất.
                 </p>
                 <button 
-                    onClick={onBookNowClick}
+                    onClick={handleClick}
                     className="mt-8 bg-primary text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-primary-dark transition-transform transform hover:scale-105 shadow-xl"
                 >
                     Đặt lịch ngay

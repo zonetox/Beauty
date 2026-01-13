@@ -16,8 +16,10 @@ import AnalyticsDashboard from '../components/AnalyticsDashboard.tsx';
 import AccountSettings from '../components/AccountSettings.tsx';
 import BookingsManager from '../components/BookingsManager.tsx';
 import BusinessSupportCenter from '../components/BusinessSupportCenter.tsx';
+import StaffManagement from '../components/StaffManagement.tsx';
+import { useStaffPermissions } from '../hooks/useStaffPermissions.ts';
 
-export type ActiveTab = 'dashboard' | 'profile' | 'services' | 'billing' | 'blog' | 'gallery' | 'reviews' | 'stats' | 'settings' | 'bookings' | 'support' | 'deals';
+export type ActiveTab = 'dashboard' | 'profile' | 'services' | 'billing' | 'blog' | 'gallery' | 'reviews' | 'stats' | 'settings' | 'bookings' | 'support' | 'deals' | 'staff';
 
 import BusinessOnboardingWizard from '../components/BusinessOnboardingWizard.tsx';
 
@@ -25,6 +27,7 @@ import BusinessOnboardingWizard from '../components/BusinessOnboardingWizard.tsx
 
 const UserBusinessDashboardPage: React.FC = () => {
     const { currentBusiness } = useBusinessAuth();
+    const staffPermissions = useStaffPermissions();
     const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
 
     // TASK 5: Trial expiry handling - Check on dashboard access (lazy check)
@@ -70,6 +73,8 @@ const UserBusinessDashboardPage: React.FC = () => {
                 return <AccountSettings />;
             case 'support':
                 return <BusinessSupportCenter />;
+            case 'staff':
+                return <StaffManagement />;
             default:
                 return <DashboardOverview setActiveTab={setActiveTab} />;
         }
