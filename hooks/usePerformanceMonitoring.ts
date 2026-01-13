@@ -177,17 +177,20 @@ export const useWebVitals = () => {
       return;
     }
 
-    // Track Largest Contentful Paint (LCP)
-    const lcpObserver = new PerformanceObserver((list) => {
-      const entries = list.getEntries();
-      const lastEntry = entries[entries.length - 1] as PerformanceEntry & { renderTime?: number; loadTime?: number };
-      
-      if (lastEntry) {
-        const lcp = lastEntry.renderTime || lastEntry.loadTime || 0;
-        trackEvent('web_vital', {
-          metric: 'LCP',
-          value: lcp,
-        });
+    // Small delay to ensure analytics is initialized
+    const initTimeout = setTimeout(() => {
+      // Track Largest Contentful Paint (LCP)
+      const lcpObserver = new PerformanceObserver((list) => {
+        const entries = list.getEntries();
+        const lastEntry = entries[entries.length - 1] as PerformanceEntry & { renderTime?: number; loadTime?: number };
+        
+        if (lastEntry) {
+          const lcp = lastEntry.renderTime || lastEntry.loadTime || 0;
+          // Only track if analytics is ready, otherwise skip silently
+          trackEvent('web_vital', {
+            metric: 'LCP',
+            value: lcp,
+          });
         
         if (lcp > 2500) {
           Sentry.addBreadcrumb({
@@ -264,10 +267,15 @@ export const useWebVitals = () => {
       // CLS not supported
     }
 
+      return () => {
+        lcpObserver.disconnect();
+        fidObserver.disconnect();
+        clsObserver.disconnect();
+      };
+    }, 500); // 500ms delay to ensure analytics is initialized
+
     return () => {
-      lcpObserver.disconnect();
-      fidObserver.disconnect();
-      clsObserver.disconnect();
+      clearTimeout(initTimeout);
     };
   }, []);
 };

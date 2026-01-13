@@ -46,10 +46,19 @@ export const initAnalytics = () => {
 // Track custom events
 export const trackEvent = (eventName: string, properties?: Record<string, any>) => {
   if (!isInitialized) {
-    console.warn('Analytics not initialized. Event not tracked:', eventName);
+    // Only show warning in development mode, and only for non-critical events
+    // Web vitals are non-critical, so we silently skip them if analytics isn't ready
+    if (import.meta.env.MODE === 'development' && !eventName.includes('web_vital') && !eventName.includes('component_')) {
+      console.warn('Analytics not initialized. Event not tracked:', eventName);
+    }
     return;
   }
   posthog.capture(eventName, properties);
+};
+
+// Check if analytics is initialized
+export const isAnalyticsReady = (): boolean => {
+  return isInitialized;
 };
 
 // Identify user

@@ -275,7 +275,10 @@ export const useUserSession = (): UserSessionContextType => {
   const context = useContext(UserSessionContext);
   if (context === undefined) {
     // Return a safe default instead of throwing to prevent app crash
-    console.error('useUserSession must be used within a UserSessionProvider');
+    // Only log in development mode to avoid Error Logger noise
+    if (import.meta.env.MODE === 'development') {
+      console.warn('useUserSession must be used within a UserSessionProvider. Using safe defaults.');
+    }
     return {
       session: null,
       currentUser: null,
