@@ -10,7 +10,10 @@ let isInitialized = false;
 
 export const initAnalytics = () => {
   if (!POSTHOG_API_KEY) {
-    console.warn('PostHog API key not configured. Analytics disabled.');
+    // Only show warning in development mode
+    if (import.meta.env.MODE === 'development') {
+      console.warn('PostHog API key not configured. Analytics disabled.');
+    }
     return;
   }
 

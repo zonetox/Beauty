@@ -8,7 +8,10 @@ const ENVIRONMENT = import.meta.env.MODE || 'development';
 
 export const initSentry = () => {
   if (!SENTRY_DSN) {
-    console.warn('Sentry DSN not configured. Error tracking disabled.');
+    // Only show warning in development mode
+    if (import.meta.env.MODE === 'development') {
+      console.warn('Sentry DSN not configured. Error tracking disabled.');
+    }
     return;
   }
 

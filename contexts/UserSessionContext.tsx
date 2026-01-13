@@ -101,14 +101,61 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
     // Get initial session
     if (isSupabaseConfigured) {
       hasAttemptedAuth = true;
-      supabase.auth.getSession().then(({ data: { session } }) => {
+      supabase.auth.getSession().then(({ data: { session }, error }) => {
+        // Handle invalid refresh token errors
+        if (error && (error.message.includes('Invalid Refresh Token') || error.message.includes('Refresh Token Not Found'))) {
+          // Clear invalid session
+          if (mounted) {
+            setSession(null);
+            setCurrentUser(null);
+            setProfile(null);
+            setLoading(false);
+          }
+          // Clear Supabase session storage
+          supabase.auth.signOut().catch(() => {
+            // Ignore signOut errors
+          });
+          return;
+        }
+        if (error) {
+          console.error('Error getting initial session:', error);
+          if (mounted) setLoading(false);
+          return;
+        }
         handleAuthChange('INITIAL_SESSION', session);
       }).catch(err => {
-        console.error('Error getting initial session:', err);
-        if (mounted) setLoading(false);
+        // Handle network or other errors
+        if (err.message && (err.message.includes('Invalid Refresh Token') || err.message.includes('Refresh Token Not Found'))) {
+          // Clear invalid session
+          if (mounted) {
+            setSession(null);
+            setCurrentUser(null);
+            setProfile(null);
+            setLoading(false);
+          }
+          supabase.auth.signOut().catch(() => {
+            // Ignore signOut errors
+          });
+        } else {
+          console.error('Error getting initial session:', err);
+          if (mounted) setLoading(false);
+        }
       });
 
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        // Handle refresh token errors gracefully
+        if (event === 'TOKEN_REFRESHED' && !session) {
+          // Token refresh failed, clear session
+          if (mounted) {
+            setSession(null);
+            setCurrentUser(null);
+            setProfile(null);
+            setLoading(false);
+          }
+          return;
+        }
+        handleAuthChange(event, session);
+      });
 
       return () => {
         mounted = false;
@@ -224,10 +271,25 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
   );
 };
 
-export const useUserSession = () => {
+export const useUserSession = (): UserSessionContextType => {
   const context = useContext(UserSessionContext);
   if (context === undefined) {
-    throw new Error('useUserSession must be used within a UserSessionProvider');
+    // Return a safe default instead of throwing to prevent app crash
+    console.error('useUserSession must be used within a UserSessionProvider');
+    return {
+      session: null,
+      currentUser: null,
+      profile: null,
+      loading: false,
+      login: async () => { throw new Error('UserSessionProvider not available'); },
+      logout: async () => {},
+      requestPasswordReset: async () => {},
+      resetPassword: async () => {},
+      updateProfile: async () => {},
+      refreshProfile: async () => {},
+      isFavorite: () => false,
+      toggleFavorite: async () => {},
+    };
   }
   return context;
 };
