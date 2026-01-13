@@ -172,8 +172,8 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         const safetyTimeout = setTimeout(() => {
             if (mounted && loading && hasAttemptedAuth) {
                 // Only warn if Supabase is configured AND we've attempted auth check
-                // This means there's likely a connection issue
-                if (isSupabaseConfigured) {
+                // Only show warning in development mode to avoid Error Logger noise
+                if (isSupabaseConfigured && import.meta.env.MODE === 'development') {
                     console.warn('AdminContext: Auth check timed out after 15s. This may indicate a connection issue.');
                 }
                 setLoading(false);
