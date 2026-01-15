@@ -360,13 +360,17 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
 
   // NEW: Async detailed getter
   const fetchBusinessBySlug = useCallback(async (slug: string): Promise<Business | null> => {
+    console.log('[fetchBusinessBySlug] Starting fetch for slug:', slug);
+    
     if (!isSupabaseConfigured) {
+      console.log('[fetchBusinessBySlug] Supabase not configured, using cached data');
       // Fallback to businesses list if available
       const cached = businessesRef.current.find(b => b.slug === slug);
       return cached || null;
     }
 
     // 1. Fetch the main business record
+    console.log('[fetchBusinessBySlug] Fetching business data from database...');
     const { data: businessData, error: businessError } = await supabase
       .from('businesses')
       .select('*')
@@ -374,14 +378,18 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
       .single();
 
     if (businessError || !businessData) {
-      console.error("Error fetching business details:", businessError?.message);
+      console.error("[fetchBusinessBySlug] Error fetching business details:", businessError?.message, businessError);
       // Fallback to cached businesses list
       const cached = businessesRef.current.find(b => b.slug === slug);
+      console.log('[fetchBusinessBySlug] Using cached data:', cached ? cached.name : 'Not found');
       return cached || null;
     }
 
+    console.log('[fetchBusinessBySlug] Business found:', businessData.name, 'ID:', businessData.id);
+
     // 2. Parallel fetch for relations
     const businessId = businessData.id;
+    console.log('[fetchBusinessBySlug] Fetching related data for business ID:', businessId);
     const [servicesRes, mediaRes, teamRes, dealsRes, reviewsRes] = await Promise.all([
       supabase.from('services').select('*').eq('business_id', businessId).order('position', { ascending: true }),
       supabase.from('media_items').select('*').eq('business_id', businessId).order('position', { ascending: true }),
@@ -389,6 +397,21 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
       supabase.from('deals').select('*').eq('business_id', businessId),
       supabase.from('reviews').select('*').eq('business_id', businessId)
     ]);
+
+    // Log any errors in related data
+    if (servicesRes.error) console.error('[fetchBusinessBySlug] Services error:', servicesRes.error.message);
+    if (mediaRes.error) console.error('[fetchBusinessBySlug] Media error:', mediaRes.error.message);
+    if (teamRes.error) console.error('[fetchBusinessBySlug] Team error:', teamRes.error.message);
+    if (dealsRes.error) console.error('[fetchBusinessBySlug] Deals error:', dealsRes.error.message);
+    if (reviewsRes.error) console.error('[fetchBusinessBySlug] Reviews error:', reviewsRes.error.message);
+
+    console.log('[fetchBusinessBySlug] Related data counts:', {
+      services: servicesRes.data?.length || 0,
+      media: mediaRes.data?.length || 0,
+      team: teamRes.data?.length || 0,
+      deals: dealsRes.data?.length || 0,
+      reviews: reviewsRes.data?.length || 0
+    });
 
     // 3. Assemble full object
     const fullBusiness: Business = {
@@ -399,6 +422,13 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
       deals: (dealsRes.data || []).map(d => snakeToCamel(d) as Deal),
       reviews: (reviewsRes.data || []).map(r => snakeToCamel(r) as Review)
     };
+
+    console.log('[fetchBusinessBySlug] Full business object assembled:', fullBusiness.name, {
+      servicesCount: fullBusiness.services?.length || 0,
+      galleryCount: fullBusiness.gallery?.length || 0,
+      dealsCount: fullBusiness.deals?.length || 0,
+      reviewsCount: fullBusiness.reviews?.length || 0
+    });
 
     return fullBusiness;
   }, [isSupabaseConfigured]); // Remove businesses dependency to prevent function recreation

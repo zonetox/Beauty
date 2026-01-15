@@ -56,12 +56,17 @@ const BusinessDetailPage: React.FC = () => {
             }
             
             try {
+                console.log('Loading business with slug:', slug);
                 const data = await fetchBusinessBySlug(slug);
+                console.log('Business data loaded:', data ? 'Success' : 'Not found', data);
+                
                 if (!isMounted) return; // Component unmounted, skip state update
                 
                 if (!data) {
+                    console.warn('Business not found for slug:', slug);
                     setError('Business not found');
                 } else {
+                    console.log('Setting business data:', data.name, 'Services:', data.services?.length, 'Deals:', data.deals?.length, 'Reviews:', data.reviews?.length);
                     setBusiness(data);
                 }
             } catch (err) {
@@ -81,7 +86,7 @@ const BusinessDetailPage: React.FC = () => {
         return () => {
             isMounted = false;
         };
-    }, [slug]); // Remove fetchBusinessBySlug from dependencies to prevent double fetch
+    }, [slug, fetchBusinessBySlug]); // Add fetchBusinessBySlug to dependencies
 
     useEffect(() => {
         if (business) {
@@ -171,27 +176,56 @@ const BusinessDetailPage: React.FC = () => {
             reviewCount: visibleReviews.length,
         } : undefined,
         openingHoursSpecification: business.workingHours ? Object.entries(business.workingHours)
-            .filter(([_, hours]) => hours && !hours.toLowerCase().includes('closed'))
+            .filter(([_, hours]) => {
+                // Handle both old string format and new object format
+                if (typeof hours === 'string') {
+                    return hours && !hours.toLowerCase().includes('closed');
+                }
+                // New format: {open, close, isOpen}
+                if (typeof hours === 'object' && hours !== null) {
+                    return hours.isOpen !== false && hours.open && hours.close;
+                }
+                return false;
+            })
             .map(([day, hours]) => {
                 const dayMap: { [key: string]: string[] } = {
                     'Chủ Nhật': ['Sunday'],
                     'CN': ['Sunday'],
+                    'Sunday': ['Sunday'],
                     'Thứ 2': ['Monday'],
                     'T2': ['Monday'],
+                    'Monday': ['Monday'],
                     'Thứ 3': ['Tuesday'],
                     'T3': ['Tuesday'],
+                    'Tuesday': ['Tuesday'],
                     'Thứ 4': ['Wednesday'],
                     'T4': ['Wednesday'],
+                    'Wednesday': ['Wednesday'],
                     'Thứ 5': ['Thursday'],
                     'T5': ['Thursday'],
+                    'Thursday': ['Thursday'],
                     'Thứ 6': ['Friday'],
                     'T6': ['Friday'],
+                    'Friday': ['Friday'],
                     'Thứ 7': ['Saturday'],
                     'T7': ['Saturday'],
+                    'Saturday': ['Saturday'],
                 };
                 const dayOfWeek = dayMap[day] || [];
-                if (dayOfWeek.length === 0 || !hours.includes('-')) return null;
-                const [opens, closes] = hours.split(' - ').map(s => s.trim());
+                
+                // Handle both formats
+                let opens: string, closes: string;
+                if (typeof hours === 'string') {
+                    if (!hours.includes('-')) return null;
+                    [opens, closes] = hours.split(' - ').map(s => s.trim());
+                } else if (typeof hours === 'object' && hours !== null && 'open' in hours && 'close' in hours) {
+                    opens = hours.open;
+                    closes = hours.close;
+                } else {
+                    return null;
+                }
+                
+                if (dayOfWeek.length === 0) return null;
                 return {
                     dayOfWeek,
                     opens,

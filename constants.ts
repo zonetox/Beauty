@@ -16,10 +16,30 @@ export const POPULAR_SEARCH_SUGGESTIONS: string[] = [
 ];
 
 export const FEATURED_LOCATIONS = [
-    { name: 'TP. Hồ Chí Minh', imageUrl: 'https://picsum.photos/seed/hcm/400/500' },
-    { name: 'Hà Nội', imageUrl: 'https://picsum.photos/seed/hanoi/400/500' },
-    { name: 'Đà Nẵng', imageUrl: 'https://picsum.photos/seed/danang/400/500' },
-    { name: 'Cần Thơ', imageUrl: 'https://picsum.photos/seed/cantho/400/500' },
+    { 
+        name: 'TP. Hồ Chí Minh', 
+        // Ho Chi Minh City - Modern skyline with Bitexco Financial Tower and vibrant cityscape
+        // Reference: saigonvibes.com - The New Ho Chi Minh City (1600x989)
+        imageUrl: 'https://images.unsplash.com/photo-1577702312576-5cf0d7c3d8b4?w=800&h=1000&fit=crop&q=80&auto=format'
+    },
+    { 
+        name: 'Hà Nội', 
+        // Hanoi - Old Quarter with traditional Vietnamese architecture, Hoan Kiem Lake, and historic landmarks
+        // Reference: cellphones.com.vn - Top 18 địa điểm du lịch ở Hà Nội (1200x675)
+        imageUrl: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&h=1000&fit=crop&q=80&auto=format'
+    },
+    { 
+        name: 'Đà Nẵng', 
+        // Da Nang - Dragon Bridge at night, beautiful beaches, and modern coastal cityscape
+        // Reference: ivivu.com - Du lịch Đà Nẵng 2026 (2000x1086)
+        imageUrl: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&h=1000&fit=crop&q=80&auto=format'
+    },
+    { 
+        name: 'Cần Thơ', 
+        // Can Tho - Mekong Delta city with floating markets, traditional boats, and river life
+        // Reference: baocantho.com.vn - TP Cần Thơ phát triển (1000x665)
+        imageUrl: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&h=1000&fit=crop&q=80&auto=format'
+    },
 ];
 
 export const BLOG_CATEGORIES: BlogCategory[] = [

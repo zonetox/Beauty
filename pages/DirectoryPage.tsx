@@ -29,7 +29,7 @@ const SkeletonCard: React.FC = () => (
 );
 
 // Helper to check if a business is currently open
-const checkIfOpen = (workingHours: { [key: string]: string }): boolean => {
+const checkIfOpen = (workingHours: { [key: string]: string | { open: string; close: string; isOpen?: boolean } }): boolean => {
     if (!workingHours) return false;
     try {
         const now = new Date();
@@ -37,17 +37,43 @@ const checkIfOpen = (workingHours: { [key: string]: string }): boolean => {
         const currentTime = now.getHours() * 60 + now.getMinutes(); // Current time in minutes from midnight
 
         const dayMap: { [key: string]: number } = {
-            'Chủ Nhật': 0, 'CN': 0,
-            'Thứ 2': 1, 'T2': 1,
-            'Thứ 3': 2, 'T3': 2,
-            'Thứ 4': 3, 'T4': 3,
-            'Thứ 5': 4, 'T5': 4,
-            'Thứ 6': 5, 'T6': 5,
-            'Thứ 7': 6, 'T7': 6,
+            'Chủ Nhật': 0, 'CN': 0, 'Sunday': 0, 'sunday': 0,
+            'Thứ 2': 1, 'T2': 1, 'Monday': 1, 'monday': 1,
+            'Thứ 3': 2, 'T3': 2, 'Tuesday': 2, 'tuesday': 2,
+            'Thứ 4': 3, 'T4': 3, 'Wednesday': 3, 'wednesday': 3,
+            'Thứ 5': 4, 'T5': 4, 'Thursday': 4, 'thursday': 4,
+            'Thứ 6': 5, 'T6': 5, 'Friday': 5, 'friday': 5,
+            'Thứ 7': 6, 'T7': 6, 'Saturday': 6, 'saturday': 6,
         };
 
         for (const dayRange in workingHours) {
             const timeRange = workingHours[dayRange];
+            
+            // Handle new object format: {open, close, isOpen}
+            if (typeof timeRange === 'object' && timeRange !== null && 'open' in timeRange && 'close' in timeRange) {
+                if (timeRange.isOpen === false || !timeRange.open || !timeRange.close) continue;
+                
+                // Map day name to day number
+                const dayNum = dayMap[dayRange.toLowerCase()];
+                if (dayNum === undefined || dayNum !== currentDay) continue;
+                
+                // Parse time
+                const [startH, startM] = timeRange.open.split(':').map(Number);
+                const [endH, endM] = timeRange.close.split(':').map(Number);
+                
+                if (isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM)) continue;
+                
+                const startTime = startH * 60 + startM;
+                const endTime = endH * 60 + endM;
+                
+                if (currentTime >= startTime && currentTime < endTime) {
+                    return true;
+                }
+                continue;
+            }
+            
+            // Handle old string format
+            if (typeof timeRange !== 'string') continue;
             if (!timeRange || timeRange.toLowerCase().includes('closed')) continue;
 
             let applicableDays: number[] = [];

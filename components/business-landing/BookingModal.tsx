@@ -95,12 +95,33 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
         const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' });
         
         // A very simplified working hours parser. A real app would need a more robust solution.
-        const workingHoursEntry = Object.entries(business.workingHours).find(([day]) => day.includes(dayOfWeek));
-        const workingHoursString: string = workingHoursEntry ? (workingHoursEntry[1] as string) : '9:00 - 18:00';
-        const [start, end] = workingHoursString.split(' - ').map(time => {
+        const workingHoursEntry = Object.entries(business.workingHours || {}).find(([day]) => 
+            day.toLowerCase().includes(dayOfWeek.toLowerCase())
+        );
+        
+        let startTime: string, endTime: string;
+        if (workingHoursEntry) {
+            const hours = workingHoursEntry[1];
+            // Handle new object format: {open, close, isOpen}
+            if (typeof hours === 'object' && hours !== null && 'open' in hours && 'close' in hours) {
+                startTime = hours.open;
+                endTime = hours.close;
+            } else if (typeof hours === 'string') {
+                // Handle old string format: "09:00 - 21:00"
+                [startTime, endTime] = hours.split(' - ').map(s => s.trim());
+            } else {
+                startTime = '9:00';
+                endTime = '18:00';
+            }
+        } else {
+            startTime = '9:00';
+            endTime = '18:00';
+        }
+        
+        const [start, end] = [startTime, endTime].map(time => {
             const [h, m] = time.split(':');
             const d = new Date(date);
-            d.setHours(parseInt(h, 10), parseInt(m, 10), 0, 0);
+            d.setHours(parseInt(h, 10), parseInt(m || '0', 10), 0, 0);
             return d;
         });
         
