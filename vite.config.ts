@@ -40,7 +40,8 @@ export default defineConfig(({ mode }) => {
         rollupOptions: {
           output: {
             manualChunks(id) {
-              // Only split vendor dependencies to avoid circular dependency issues
+              // Only split vendor dependencies - let Vite handle contexts automatically
+              // This prevents initialization order issues with circular dependencies
               if (id.includes('node_modules')) {
                 if (id.includes('react') || id.includes('react-dom')) {
                   return 'react-vendor';
@@ -53,21 +54,8 @@ export default defineConfig(({ mode }) => {
                 }
                 return 'vendor';
               }
-              // Split contexts into separate chunks to avoid circular dependencies
-              if (id.includes('contexts/')) {
-                // Keep contexts separate to prevent circular dependency issues
-                if (id.includes('BusinessContext')) {
-                  return 'context-business';
-                }
-                if (id.includes('BusinessDataContext')) {
-                  return 'context-business-data';
-                }
-                if (id.includes('AdminContext')) {
-                  return 'context-admin';
-                }
-                return 'contexts';
-              }
-              // Let Vite automatically handle code splitting for other application code
+              // Let Vite automatically handle code splitting for all application code
+              // This ensures proper initialization order and prevents circular dependency issues
             },
           },
         },
