@@ -53,8 +53,21 @@ export default defineConfig(({ mode }) => {
                 }
                 return 'vendor';
               }
-              // Let Vite automatically handle code splitting for application code
-              // This prevents circular dependency issues with manual chunks
+              // Split contexts into separate chunks to avoid circular dependencies
+              if (id.includes('contexts/')) {
+                // Keep contexts separate to prevent circular dependency issues
+                if (id.includes('BusinessContext')) {
+                  return 'context-business';
+                }
+                if (id.includes('BusinessDataContext')) {
+                  return 'context-business-data';
+                }
+                if (id.includes('AdminContext')) {
+                  return 'context-admin';
+                }
+                return 'contexts';
+              }
+              // Let Vite automatically handle code splitting for other application code
             },
           },
         },

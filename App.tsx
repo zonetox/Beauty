@@ -16,13 +16,14 @@ import { UserSessionProvider, useUserSession } from './contexts/UserSessionConte
 import { AdminProvider } from './contexts/AdminContext.tsx';
 import { PublicDataProvider } from './contexts/BusinessDataContext.tsx';
 import { HomepageDataProvider } from './contexts/HomepageDataContext.tsx';
-import { BusinessProvider } from './contexts/BusinessContext.tsx';
 import { ThemeProvider } from './contexts/ThemeContext.tsx';
 import { BusinessDashboardProvider } from './contexts/BusinessBlogDataContext.tsx';
 import { AdminPlatformProvider } from './contexts/AdminPlatformContext.tsx';
 import { PublicPageContentProvider } from './contexts/PublicPageContentContext.tsx';
 import { ErrorLoggerProvider } from './contexts/ErrorLoggerContext.tsx';
 import { StaffProvider } from './contexts/StaffContext.tsx';
+
+import { BusinessProvider } from './contexts/BusinessContext.tsx';
 import { useWebVitals } from './hooks/usePerformanceMonitoring.ts';
 import { usePageTracking } from './lib/usePageTracking.ts';
 
