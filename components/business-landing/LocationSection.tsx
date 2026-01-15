@@ -39,9 +39,26 @@ const LocationSection: React.FC<{ business: Business }> = ({ business }) => {
                      <div>
                         <h4 className="font-bold text-xl text-neutral-dark mb-2">Giờ hoạt động</h4>
                         <ul className="text-gray-600 space-y-1">
-                            {business.workingHours && Object.entries(business.workingHours).map(([day, time]) => (
-                                <li key={day}><span className="font-semibold">{day}:</span> {time}</li>
-                            ))}
+                            {business.workingHours && Object.entries(business.workingHours).map(([day, time]) => {
+                                // Handle both old string format and new object format
+                                let timeDisplay: string;
+                                if (typeof time === 'string') {
+                                    timeDisplay = time;
+                                } else if (typeof time === 'object' && time !== null && 'open' in time && 'close' in time) {
+                                    // New format: {open, close, isOpen}
+                                    if (time.isOpen === false) {
+                                        timeDisplay = 'Đóng cửa';
+                                    } else {
+                                        timeDisplay = `${time.open} - ${time.close}`;
+                                    }
+                                } else {
+                                    timeDisplay = 'N/A';
+                                }
+                                
+                                return (
+                                    <li key={day}><span className="font-semibold">{day}:</span> {timeDisplay}</li>
+                                );
+                            })}
                         </ul>
                     </div>
                      <div>
