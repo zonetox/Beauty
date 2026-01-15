@@ -120,88 +120,18 @@ const RegisterPage: React.FC = () => {
                     throw new Error('Failed to create business. Please try again.');
                 }
 
-                // Refresh profile to ensure business_id is loaded
-                // Wait a bit longer to ensure profile is updated with business_id
-                let retries = 5; // Increase retries
-                let profileUpdated = false;
-                while (retries > 0 && !profileUpdated) {
-                    try {
-                        // First, verify directly from database
-                        const { data: updatedProfile, error: fetchError } = await supabase
-                            .from('profiles')
-                            .select('business_id')
-                            .eq('id', authData.user.id)
-                            .single();
-                        
-                        if (fetchError) {
-                            console.warn('Error fetching profile:', fetchError);
-                            await new Promise(resolve => setTimeout(resolve, 1000));
-                            retries--;
-                            continue;
-                        }
-                        
-                        if (updatedProfile?.business_id === business.id) {
-                            // Profile is updated in DB, now refresh context
-                            await refreshProfile();
-                            // Wait a bit more to ensure context is updated
-                            await new Promise(resolve => setTimeout(resolve, 500));
-                            profileUpdated = true;
-                        } else {
-                            console.log(`Profile not updated yet. Retries left: ${retries - 1}. Expected business_id: ${business.id}, Got: ${updatedProfile?.business_id}`);
-                            await new Promise(resolve => setTimeout(resolve, 1000));
-                            retries--;
-                        }
-                    } catch (refreshError) {
-                        console.warn('Profile refresh failed, retrying...', refreshError);
-                        await new Promise(resolve => setTimeout(resolve, 1000));
-                        retries--;
-                    }
+                // createBusinessWithTrial already updates profile.business_id
+                // Just refresh profile once and redirect
+                try {
+                    await refreshProfile();
+                    // Small delay to ensure profile is loaded in context
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                } catch (refreshError) {
+                    console.warn('Profile refresh failed, but continuing:', refreshError);
                 }
 
-                // Mark registration time for AccountPageRouter to detect and auto-refresh
-                sessionStorage.setItem('registration_time', Date.now().toString());
-                
-                if (!profileUpdated) {
-                    console.error('Profile update verification failed after retries. Business was created but profile link may be delayed.');
-                    // Still redirect - AccountPageRouter will auto-refresh profile
-                    toast('Tài khoản doanh nghiệp đã được tạo. Đang cập nhật thông tin...', { icon: '⚠️' });
-                } else {
-                    toast.success('Đăng ký thành công! Tài khoản doanh nghiệp của bạn đã được tạo với gói dùng thử 30 ngày.');
-                }
-
-                // Redirect to business dashboard
-                // Force a small delay to ensure navigation happens after state updates
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-                // Force refresh profile one more time before navigating
-                if (isSupabaseConfigured) {
-                    // Refresh profile multiple times to ensure it's updated
-                    for (let i = 0; i < 3; i++) {
-                        await refreshProfile();
-                        await new Promise(resolve => setTimeout(resolve, 300));
-                        
-                        // Verify from database
-                        const { data: finalCheck } = await supabase
-                            .from('profiles')
-                            .select('business_id')
-                            .eq('id', authData.user.id)
-                            .single();
-                        
-                        if (finalCheck?.business_id === business.id) {
-                            // Profile is confirmed updated, navigate
-                            console.log('Profile business_id confirmed, navigating to dashboard');
-                            navigate('/account', { replace: true });
-                            return; // Exit early
-                        }
-                    }
-                    
-                    // If still not updated after retries, navigate anyway
-                    // AccountPageRouter will handle loading state
-                    console.warn('Profile business_id not yet synced after retries, navigating anyway');
-                    navigate('/account', { replace: true });
-                } else {
-                    navigate('/account', { replace: true });
-                }
+                toast.success('Đăng ký thành công! Tài khoản doanh nghiệp của bạn đã được tạo với gói dùng thử 30 ngày.');
+                navigate('/account', { replace: true });
             } else {
                 // User registration - profile already created by trigger with business_id = NULL
                 // Just refresh profile and redirect to homepage

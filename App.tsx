@@ -91,39 +91,7 @@ const AppLayout: React.FC = () => {
 
 // This component intelligently routes the user to their business dashboard or personal account page.
 const AccountPageRouter: React.FC = () => {
-    const { profile, loading: profileLoading, currentUser, refreshProfile } = useUserSession();
-    const [retryCount, setRetryCount] = useState(0);
-    const maxRetries = 3;
-
-    // Clear registration marker when businessId is confirmed (must be before early returns)
-    useEffect(() => {
-        if (profile?.businessId && sessionStorage.getItem('registration_time')) {
-            sessionStorage.removeItem('registration_time');
-        }
-    }, [profile?.businessId]);
-
-    // Auto-refresh profile if businessId is missing but user just registered (must be before early returns)
-    useEffect(() => {
-        if (currentUser && profile && !profile.businessId && !profileLoading && retryCount < maxRetries) {
-            // Check if user just registered (within last 30 seconds)
-            const registrationTime = sessionStorage.getItem('registration_time');
-            if (registrationTime) {
-                const timeSinceRegistration = Date.now() - parseInt(registrationTime, 10);
-                if (timeSinceRegistration < 30000) { // 30 seconds
-                    // eslint-disable-next-line no-console
-                    console.log(`Profile missing businessId, refreshing... (retry ${retryCount + 1}/${maxRetries})`);
-                    const timer = setTimeout(() => {
-                        refreshProfile();
-                        setRetryCount(prev => prev + 1);
-                    }, 1000); // Wait 1 second between retries
-                    return () => clearTimeout(timer);
-                } else {
-                    // Clear old registration marker
-                    sessionStorage.removeItem('registration_time');
-                }
-            }
-        }
-    }, [currentUser, profile, profileLoading, refreshProfile, retryCount]);
+    const { profile, loading: profileLoading, currentUser } = useUserSession();
 
     // Show loading only if we have a user but profile is still loading
     // If no user, ProtectedRoute will handle redirect
@@ -139,14 +107,15 @@ const AccountPageRouter: React.FC = () => {
         );
     }
 
-    // If profile is null but we have a user, profile might not exist yet
-    // Wait a bit more or show error
+    // If profile is null but we have a user, wait a bit more for profile to load
     if (currentUser && !profile && !profileLoading) {
+        // Profile might still be loading, show loading state
         return (
             <div className="flex items-center justify-center h-[50vh]">
                 <div className="text-center">
-                    <p className="text-lg font-semibold text-red-600">Lỗi tải thông tin tài khoản</p>
-                    <p className="text-gray-500">Vui lòng thử đăng nhập lại.</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-lg font-semibold">Đang tải thông tin tài khoản...</p>
+                    <p className="text-gray-500">Vui lòng đợi.</p>
                 </div>
             </div>
         );
@@ -159,7 +128,6 @@ const AccountPageRouter: React.FC = () => {
 
     // If a profile exists but is not linked to a business, show user account page (regular user)
     if (profile) {
-        // Clear registration marker after delay (handled in useEffect)
         return <UserAccountPage />;
     }
 

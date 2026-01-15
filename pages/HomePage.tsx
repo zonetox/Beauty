@@ -76,9 +76,9 @@ const HomePage: React.FC = () => {
     
     // Validation
     if (!newsletterEmail || !newsletterEmail.includes('@')) {
-        setNewsletterError('Vui lòng nhập một địa chỉ email hợp lệ.');
-        setTimeout(() => setNewsletterError(''), 3000);
-        return;
+      setNewsletterError('Vui lòng nhập một địa chỉ email hợp lệ.');
+      setTimeout(() => setNewsletterError(''), 3000);
+      return;
     }
 
     setIsSubmittingNewsletter(true);

@@ -237,10 +237,21 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
     setBusinessLoading(false);
   }, []);
 
+  // Helper to reset and refetch (for after add/update/delete operations)
+  const refetchAllPublicData = useCallback(async () => {
+    hasFetchedRef.current = false; // Reset to allow refetch
+    await fetchAllPublicData();
+  }, [fetchAllPublicData]);
+
   const fetchAllPublicData = useCallback(async () => {
+    // Prevent double fetch
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+
     if (!isSupabaseConfigured) {
       setBusinessLoading(false);
       setBlogLoading(false);
+      hasFetchedRef.current = false; // Reset on error
       return;
     }
 
@@ -306,21 +317,29 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
       if (catRes.error) console.error("Error fetching blog categories:", catRes.error.message);
       else if (catRes.data) setBlogCategories(snakeToCamel(catRes.data) as BlogCategory[]);
 
-      if (pkgRes.error) console.error("Error fetching packages:", pkgRes.error.message);
-      else if (pkgRes.data) setPackages(snakeToCamel(pkgRes.data) as MembershipPackage[]);
+      if (pkgRes.error) {
+        // Only log as warning if it's a timeout, not a critical error
+        if (pkgRes.error.message === 'Timeout') {
+          console.warn("Packages fetch timeout (non-critical)");
+        } else {
+          console.error("Error fetching packages:", pkgRes.error.message);
+        }
+      } else if (pkgRes.data) {
+        setPackages(snakeToCamel(pkgRes.data) as MembershipPackage[]);
+      }
     } catch (error: any) {
       console.error('Error in fetchAllPublicData:', error);
       setBusinessLoading(false);
       setBlogLoading(false);
+      hasFetchedRef.current = false; // Reset on error
     }
   }, [fetchBusinesses]);
 
   useEffect(() => {
-    // Prevent double fetch in React.StrictMode
-    if (hasFetchedRef.current) return;
-    hasFetchedRef.current = true;
+    // Only fetch once on mount
     fetchAllPublicData();
-  }, [fetchAllPublicData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps - only run once on mount
 
   // --- BUSINESS LOGIC ---
   const addBusiness = async (newBusiness: Business): Promise<Business | null> => {
@@ -330,7 +349,7 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
     if (error) { console.error('Error adding business:', error.message); return null; }
     if (data) {
       const mappedData = snakeToCamel(data);
-      await fetchAllPublicData();
+      await refetchAllPublicData();
       if (currentAdmin) logAdminAction(currentAdmin.username, 'Add Business', `Added new business: ${mappedData.name} (ID: ${mappedData.id}).`);
       return mappedData as Business;
     }
@@ -341,7 +360,11 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update business."); return; }
     const { id, services, gallery, team, deals, reviews, ...businessToUpdate } = updatedBusiness;
     const { error } = await supabase.from('businesses').update(toSnakeCase(businessToUpdate)).eq('id', id);
-    if (error) { console.error('Error updating business:', error.message); } else { await fetchAllPublicData(); }
+    if (error) { 
+      console.error('Error updating business:', error.message); 
+    } else { 
+      await refetchAllPublicData(); 
+    }
   };
 
   const deleteBusiness = async (businessId: number) => {
@@ -460,7 +483,7 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
         toast.error(`Failed to add service: ${error.message}`);
         throw error;
       }
-      await fetchAllPublicData();
+      await refetchAllPublicData();
     } catch (error) {
       throw error;
     }
@@ -479,7 +502,7 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
         toast.error(`Failed to update service: ${error.message}`);
         throw error;
       }
-      await fetchAllPublicData();
+      await refetchAllPublicData();
     } catch (error) {
       throw error;
     }
@@ -584,7 +607,7 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
         toast.error(`Failed to update media: ${error.message}`);
         throw error;
       }
-      await fetchAllPublicData();
+      await refetchAllPublicData();
       toast.success('Media updated successfully!');
     } catch (error) {
       throw error;
@@ -616,7 +639,7 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
         toast.error(`Failed to delete media: ${error.message}`);
         throw error;
       }
-      await fetchAllPublicData();
+      await refetchAllPublicData();
       toast.success('Media deleted successfully!');
     } catch (error) {
       throw error;
@@ -646,20 +669,20 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add team member."); return; }
     const { error } = await supabase.from('team_members').insert(toSnakeCase(newMemberData));
     if (error) console.error("Error adding team member:", error.message);
-    else await fetchAllPublicData();
+    else await refetchAllPublicData();
   };
   const updateTeamMember = async (updatedMember: TeamMember) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update team member."); return; }
     const { id, ...memberToUpdate } = updatedMember;
     const { error } = await supabase.from('team_members').update(toSnakeCase(memberToUpdate)).eq('id', id);
     if (error) console.error("Error updating team member:", error.message);
-    else await fetchAllPublicData();
+    else await refetchAllPublicData();
   };
   const deleteTeamMember = async (memberId: string) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot delete team member."); return; }
     const { error } = await supabase.from('team_members').delete().eq('id', memberId);
     if (error) console.error("Error deleting team member:", error.message);
-    else await fetchAllPublicData();
+    else await refetchAllPublicData();
   };
 
   // --- DEALS LOGIC ---
@@ -675,7 +698,7 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
         toast.error(`Failed to add deal: ${error.message}`);
         throw error;
       }
-      await fetchAllPublicData();
+      await refetchAllPublicData();
       toast.success('Deal added successfully!');
     } catch (error) {
       throw error;
@@ -695,7 +718,7 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
         toast.error(`Failed to update deal: ${error.message}`);
         throw error;
       }
-      await fetchAllPublicData();
+      await refetchAllPublicData();
       toast.success('Deal updated successfully!');
     } catch (error) {
       throw error;
@@ -732,7 +755,7 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
         }
       }
       
-      await fetchAllPublicData();
+      await refetchAllPublicData();
       toast.success('Deal deleted successfully!');
     } catch (error) {
       throw error;
@@ -808,18 +831,18 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
     const slug = newPostData.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-') + `-${Date.now()}`;
     const postToAdd = { ...newPostData, slug, date: new Date().toLocaleDateString('en-GB'), view_count: 0 };
     const { error } = await supabase.from('blog_posts').insert(postToAdd);
-    if (!error) await fetchAllPublicData();
+    if (!error) await refetchAllPublicData();
   };
   const updateBlogPost = async (updatedPost: BlogPost) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update blog post."); return; }
     const { id, ...postToUpdate } = updatedPost;
     const { error } = await supabase.from('blog_posts').update(postToUpdate).eq('id', id);
-    if (!error) await fetchAllPublicData();
+    if (!error) await refetchAllPublicData();
   };
   const deleteBlogPost = async (postId: number) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot delete blog post."); return; }
     const { error } = await supabase.from('blog_posts').delete().eq('id', postId);
-    if (!error) await fetchAllPublicData();
+    if (!error) await refetchAllPublicData();
   };
   const getPostBySlug = (slug: string) => blogPosts.find(p => p.slug === slug);
   // D2.2 FIX: Use safe RPC function for view count increment (already using RPC, just ensure consistency)
@@ -930,19 +953,19 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add category."); return; }
     if (name.trim() === '' || blogCategories.some(c => c.name.toLowerCase() === name.toLowerCase())) { toast.error("Category name cannot be empty or duplicate."); return; }
     const { error } = await supabase.from('blog_categories').insert({ name });
-    if (!error) { await fetchAllPublicData(); toast.success("Category added."); }
+    if (!error) { await refetchAllPublicData(); toast.success("Category added."); }
     else { toast.error(`Failed to add category: ${error.message}`); }
   };
   const updateBlogCategory = async (id: string, name: string) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update category."); return; }
     const { error } = await supabase.from('blog_categories').update({ name }).eq('id', id);
-    if (!error) { await fetchAllPublicData(); toast.success("Category updated."); }
+    if (!error) { await refetchAllPublicData(); toast.success("Category updated."); }
     else { toast.error(`Failed to update category: ${error.message}`); }
   };
   const deleteBlogCategory = async (id: string) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot delete category."); return; }
     const { error } = await supabase.from('blog_categories').delete().eq('id', id);
-    if (!error) { await fetchAllPublicData(); toast.success("Category deleted."); }
+    if (!error) { await refetchAllPublicData(); toast.success("Category deleted."); }
     else { toast.error(`Failed to delete category: ${error.message}`); }
   };
 
@@ -950,19 +973,19 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
   const addPackage = async (newPackage: Omit<MembershipPackage, 'id'>) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add package."); return; }
     const { error } = await supabase.from('membership_packages').insert({ ...newPackage, id: `pkg_${crypto.randomUUID()}` });
-    if (!error) { await fetchAllPublicData(); toast.success("Package added."); }
+    if (!error) { await refetchAllPublicData(); toast.success("Package added."); }
     else { toast.error(`Failed to add package: ${error.message}`); }
   };
   const updatePackage = async (packageId: string, updates: Partial<MembershipPackage>) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update package."); return; }
     const { error } = await supabase.from('membership_packages').update(updates).eq('id', packageId);
-    if (!error) { await fetchAllPublicData(); toast.success("Package updated."); }
+    if (!error) { await refetchAllPublicData(); toast.success("Package updated."); }
     else { toast.error(`Failed to update package: ${error.message}`); }
   };
   const deletePackage = async (packageId: string) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot delete package."); return; }
     const { error } = await supabase.from('membership_packages').delete().eq('id', packageId);
-    if (!error) { await fetchAllPublicData(); toast.success("Package deleted."); }
+    if (!error) { await refetchAllPublicData(); toast.success("Package deleted."); }
     else { toast.error(`Failed to delete package: ${error.message}`); }
   };
 

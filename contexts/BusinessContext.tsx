@@ -1,6 +1,6 @@
 
 
-import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
+import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback, useRef } from 'react';
 import { Business, BusinessBlogPost, Review, ReviewStatus, BusinessAnalytics, Appointment, Order, OrderStatus, AppointmentStatus, Profile, Deal, AnalyticsDataPoint, TrafficSource } from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { useUserSession } from './UserSessionContext.tsx';
@@ -92,7 +92,24 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
   }, [profile, businesses]);
 
   // --- DATA FETCHING (from old BusinessBlogDataContext) ---
+  // Lazy load: only fetch when user has a business (business dashboard)
+  const hasFetchedRef = useRef(false);
+  
   const fetchAllData = useCallback(async () => {
+    // Only fetch if user has a business
+    if (!profile?.businessId) {
+      setBlogLoading(false);
+      setReviewsLoading(false);
+      setOrdersLoading(false);
+      setAppointmentsLoading(false);
+      setAnalyticsLoading(false);
+      return;
+    }
+
+    // Prevent double fetch
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+
     if (!isSupabaseConfigured) {
       console.warn("Supabase is not configured. Serving empty data for preview purposes.");
       setBlogLoading(false);
@@ -103,6 +120,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
       setReviews([]);
       setOrders([]);
       setAppointments([]);
+      hasFetchedRef.current = false; // Reset on error
       return;
     }
 
@@ -230,9 +248,24 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
     setOrdersLoading(false);
     setAppointmentsLoading(false);
     setAnalyticsLoading(false);
-  }, []);
+    // Don't reset hasFetchedRef here - keep it true to prevent re-fetch
+  }, [profile?.businessId]);
 
-  useEffect(() => { fetchAllData(); }, [fetchAllData]);
+  // Only fetch when user has a business
+  useEffect(() => {
+    if (profile?.businessId && !hasFetchedRef.current) {
+      fetchAllData();
+    } else if (!profile?.businessId) {
+      // Reset when user doesn't have business
+      hasFetchedRef.current = false;
+      setPosts([]);
+      setReviews([]);
+      setOrders([]);
+      setAppointments([]);
+      setAnalyticsData([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.businessId]); // Only depend on profile.businessId, not fetchAllData
 
   // --- LOGIC (copied from old BusinessBlogDataContext) ---
   const addPost = async (newPostData: Omit<BusinessBlogPost, 'id' | 'slug' | 'createdDate' | 'viewCount'>) => {
@@ -253,6 +286,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
         toast.error(`Failed to add post: ${error.message}`);
         throw error;
       }
+      hasFetchedRef.current = false; // Reset to allow refetch
       await fetchAllData();
       toast.success("Post added successfully!");
     } catch (error) {
@@ -285,6 +319,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
         toast.error(`Failed to update post: ${error.message}`);
         throw error;
       }
+      hasFetchedRef.current = false; // Reset to allow refetch
       await fetchAllData();
       toast.success("Post updated successfully!");
     } catch (error) {
@@ -316,6 +351,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
         toast.error(`Failed to delete post: ${error.message}`);
         throw error;
       }
+      hasFetchedRef.current = false; // Reset to allow refetch
       await fetchAllData();
       toast.success("Post deleted successfully!");
     } catch (error) {
@@ -346,6 +382,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
       console.error("Error adding review:", error.message);
       throw error;
     } else {
+      hasFetchedRef.current = false; // Reset to allow refetch
       await fetchAllData();
     }
   };
@@ -362,6 +399,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
         toast.error(`Failed to save reply: ${error.message}`);
         throw error;
       }
+      hasFetchedRef.current = false; // Reset to allow refetch
       await fetchAllData();
       toast.success("Reply saved successfully!");
     } catch (error) {
@@ -385,6 +423,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
         toast.error(`Failed to update review visibility: ${error.message}`);
         throw error;
       }
+      hasFetchedRef.current = false; // Reset to allow refetch
       await fetchAllData();
       toast.success(`Review ${newStatus === ReviewStatus.HIDDEN ? 'hidden' : 'shown'} successfully!`);
     } catch (error) {
@@ -402,6 +441,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
       console.error("Error adding appointment:", error.message);
       throw error;
     } else {
+      hasFetchedRef.current = false; // Reset to allow refetch
       await fetchAllData();
     }
   };
@@ -418,6 +458,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
         toast.error(`Failed to update appointment: ${error.message}`);
         throw error;
       }
+      hasFetchedRef.current = false; // Reset to allow refetch
       await fetchAllData();
     } catch (error) {
       throw error;
@@ -433,6 +474,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
       console.error("Error adding order:", error);
       throw new Error("Failed to create order.");
     }
+    hasFetchedRef.current = false; // Reset to allow refetch
     await fetchAllData();
     return data as Order;
   };

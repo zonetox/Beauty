@@ -1,7 +1,7 @@
 
 
 
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useUserSession } from '../contexts/UserSessionContext.tsx';
@@ -34,6 +34,7 @@ const Header: React.FC = () => {
   const { theme } = useTheme();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
   // Safely get admin user (may not be in AdminProvider context for public pages)
   // Use useContext directly to avoid throwing error if not in provider
@@ -47,6 +48,7 @@ const Header: React.FC = () => {
   const handleLogout = async () => {
     try {
       setIsMenuOpen(false); // Close menu on logout
+      setIsDropdownOpen(false); // Close dropdown on logout
       await logout();
       // Wait a bit to ensure session is cleared
       await new Promise(resolve => setTimeout(resolve, 300));
@@ -57,6 +59,20 @@ const Header: React.FC = () => {
       toast.error('Lỗi khi đăng xuất: ' + (error.message || 'Vui lòng thử lại'));
     }
   };
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (isDropdownOpen && !target.closest('.user-dropdown-container')) {
+        setIsDropdownOpen(false);
+      }
+    };
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isDropdownOpen]);
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     `px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive ? 'bg-primary text-white' : 'text-neutral-dark hover:bg-primary/10'
@@ -143,8 +159,13 @@ const Header: React.FC = () => {
             {currentUser ? (
               <div className="flex items-center ml-2 gap-2">
                 {/* User Avatar & Dropdown */}
-                <div className="relative group">
-                  <button className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-primary/10 transition-colors">
+                <div className="relative user-dropdown-container">
+                  <button 
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-primary/10 transition-colors"
+                    aria-expanded={isDropdownOpen}
+                    aria-haspopup="true"
+                  >
                     {profile?.avatarUrl ? (
                       <img 
                         src={profile.avatarUrl} 
@@ -159,13 +180,14 @@ const Header: React.FC = () => {
                     <span className="text-sm text-neutral-dark hidden lg:block">
                       {profile?.fullName || currentUser.user_metadata?.full_name || currentUser.email}
                     </span>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-neutral-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-neutral-dark transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
                   
                   {/* Dropdown Menu */}
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  {isDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                     <div className="py-2">
                       <div className="px-4 py-2 border-b border-gray-200">
                         <p className="text-sm font-semibold text-neutral-dark">
@@ -176,7 +198,10 @@ const Header: React.FC = () => {
                       <Link
                         to="/account"
                         className="block px-4 py-2 text-sm text-neutral-dark hover:bg-primary/10 transition-colors"
-                        onClick={() => setIsMenuOpen(false)}
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          setIsDropdownOpen(false);
+                        }}
                       >
                         <div className="flex items-center gap-2">
                           <UserIcon className="w-4 h-4" />
@@ -187,7 +212,10 @@ const Header: React.FC = () => {
                         <Link
                           to="/register"
                           className="block px-4 py-2 text-sm text-neutral-dark hover:bg-primary/10 transition-colors"
-                          onClick={() => setIsMenuOpen(false)}
+                          onClick={() => {
+                            setIsMenuOpen(false);
+                            setIsDropdownOpen(false);
+                          }}
                         >
                           <div className="flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -210,6 +238,7 @@ const Header: React.FC = () => {
                       </button>
                     </div>
                   </div>
+                  )}
                 </div>
               </div>
             ) : (

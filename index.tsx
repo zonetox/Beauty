@@ -16,8 +16,8 @@ if (!rootElement) {
 }
 
 const root = ReactDOM.createRoot(rootElement);
+// NOTE: React.StrictMode disabled to prevent double render in development
+// This is safe because we already have hasFetchedRef guards in all contexts
 root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+  <App />
 );

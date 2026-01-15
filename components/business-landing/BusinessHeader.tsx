@@ -66,7 +66,7 @@ const BusinessHeader: React.FC<BusinessHeaderProps> = ({ business, onBookNowClic
                         ))}
                          <div className="w-px h-6 bg-gray-300/50"></div>
                          <Link to="/directory" className={navLinkClasses}>
-                            &larr; Back to Directory
+                            &larr; Quay lại Danh mục
                          </Link>
                     </nav>
                     <div className="flex items-center gap-2">
@@ -102,7 +102,7 @@ const BusinessHeader: React.FC<BusinessHeaderProps> = ({ business, onBookNowClic
                     ))}
                     <div className="border-t border-gray-200 pt-4">
                         <Link to="/directory" className={mobileNavLinkClasses} onClick={() => setIsMenuOpen(false)}>
-                            &larr; Back to Directory
+                            &larr; Quay lại Danh mục
                         </Link>
                     </div>
                      <div className="pt-4 border-t border-gray-200">
