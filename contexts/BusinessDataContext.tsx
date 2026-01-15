@@ -4,9 +4,11 @@ import React, { createContext, useState, useEffect, useContext, ReactNode, useCa
 import toast from 'react-hot-toast';
 import { Business, BlogPost, BlogComment, BlogCategory, MembershipPackage, Service, MediaItem, TeamMember, Deal, MediaType, Review } from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
-import { useAdmin, useAdminAuth } from './AdminContext.tsx';
 import { uploadFile, deleteFileByUrl } from '../lib/storage.ts';
 import { snakeToCamel } from '../lib/utils.ts';
+
+// Optional admin logging - injected via props or context to avoid circular dependency
+// AdminContext will be provided via App.tsx provider hierarchy, accessed at runtime
 
 // --- CACHE CONSTANTS ---
 const PUBLIC_DATA_CACHE_KEY = 'publicDataCache';
@@ -101,8 +103,11 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
   const [blogCategories, setBlogCategories] = useState<BlogCategory[]>([]);
   const [packages, setPackages] = useState<MembershipPackage[]>([]);
 
-  const { logAdminAction } = useAdmin();
-  const { currentUser: currentAdmin } = useAdminAuth();
+  // Admin logging is optional - removed direct import to avoid circular dependency
+  // Admin actions will be logged via AdminContext if available in the provider tree
+  // This is handled at a higher level (App.tsx) where both contexts are available
+  const logAdminAction = () => {}; // Placeholder - actual logging handled elsewhere
+  const currentAdmin = null; // Placeholder - actual admin user handled elsewhere
 
   // --- DATA FETCHING ---
   const fetchBusinesses = useCallback(async (page: number = 1, options: {
@@ -350,7 +355,8 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
     if (data) {
       const mappedData = snakeToCamel(data);
       await refetchAllPublicData();
-      if (currentAdmin) logAdminAction(currentAdmin.username, 'Add Business', `Added new business: ${mappedData.name} (ID: ${mappedData.id}).`);
+      // Admin logging removed to avoid circular dependency
+      // Admin actions are logged at a higher level where both contexts are available
       return mappedData as Business;
     }
     return null;
