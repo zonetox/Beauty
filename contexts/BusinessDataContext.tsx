@@ -1016,14 +1016,14 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
 }
 
 // --- CUSTOM HOOKS ---
-// Define usePublicData first to avoid initialization order issues
-const usePublicData = (): PublicDataContextType => {
+// Define usePublicData as function declaration first to ensure proper hoisting
+function usePublicData(): PublicDataContextType {
   const context = useContext(PublicDataContext);
   if (!context) {
     throw new Error('usePublicData must be used within a PublicDataProvider');
   }
   return context;
-};
+}
 
 // Export hooks with proper initialization order
 export function useBusinessData() {
