@@ -85,7 +85,7 @@ const toSnakeCase = (obj: any): any => {
   }, {});
 };
 
-export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export function PublicDataProvider({ children }: { children: ReactNode }) {
   // --- STATES ---
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [businessMarkers, setBusinessMarkers] = useState<{ id: number, name: string, latitude: number, longitude: number, categories: string[], isActive: boolean }[]>([]);
@@ -1013,7 +1013,7 @@ export const PublicDataProvider: React.FC<{ children: ReactNode }> = ({ children
       {children}
     </PublicDataContext.Provider>
   );
-};
+}
 
 // --- CUSTOM HOOKS ---
 // Define usePublicData first to avoid initialization order issues
