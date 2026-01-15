@@ -39,21 +39,22 @@ export default defineConfig(({ mode }) => {
         // Code splitting optimization
         rollupOptions: {
           output: {
-            manualChunks: {
-              // Vendor chunks
-              'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-              'supabase-vendor': ['@supabase/supabase-js'],
-              'ui-vendor': ['react-hot-toast'],
-              // Large components
-              'admin-chunk': [
-                './pages/AdminPage.tsx',
-                './components/AdminAnalyticsDashboard.tsx',
-                './components/AdminLandingPageModeration.tsx',
-              ],
-              'dashboard-chunk': [
-                './pages/UserBusinessDashboardPage.tsx',
-                './components/BusinessProfileEditor.tsx',
-              ],
+            manualChunks(id) {
+              // Only split vendor dependencies to avoid circular dependency issues
+              if (id.includes('node_modules')) {
+                if (id.includes('react') || id.includes('react-dom')) {
+                  return 'react-vendor';
+                }
+                if (id.includes('@supabase')) {
+                  return 'supabase-vendor';
+                }
+                if (id.includes('react-router-dom') || id.includes('react-hot-toast')) {
+                  return 'ui-vendor';
+                }
+                return 'vendor';
+              }
+              // Let Vite automatically handle code splitting for application code
+              // This prevents circular dependency issues with manual chunks
             },
           },
         },
