@@ -61,7 +61,7 @@ const toSnakeCase = (obj: any): any => {
   }, {});
 };
 
-export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export function BusinessProvider({ children }: { children: ReactNode }) {
   // --- PARENT CONTEXTS ---
   const { profile } = useUserSession();
   const { businesses, updateBusiness, addDeal, updateDeal, deleteDeal } = useBusinessData();
@@ -543,39 +543,49 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   return <BusinessContext.Provider value={value}>{children}</BusinessContext.Provider>;
-};
+}
 
 // --- CUSTOM HOOKS ---
-export const useBusiness = () => {
+// Convert all hooks to function declarations for proper hoisting
+export function useBusiness() {
   const context = useContext(BusinessContext);
-  if (!context) throw new Error('useBusiness must be used within a BusinessProvider');
+  if (!context) {
+    throw new Error('useBusiness must be used within a BusinessProvider');
+  }
   return context;
-};
+}
 
 // Sub-hooks for convenience
-export const useBusinessAuth = () => ({ currentBusiness: useBusiness().currentBusiness });
-export const useBusinessBlogData = () => {
-  // FIX: Destructure 'blogLoading' instead of 'loading' to match the context value.
+export function useBusinessAuth() {
+  return { currentBusiness: useBusiness().currentBusiness };
+}
+
+export function useBusinessBlogData() {
   const { posts, blogLoading, getPostBySlug, addPost, updatePost, deletePost, incrementViewCount, getPostsByBusinessId } = useBusiness();
   return { posts, loading: blogLoading, getPostBySlug, addPost, updatePost, deletePost, incrementViewCount, getPostsByBusinessId };
-};
-export const useDealsData = () => {
+}
+
+export function useDealsData() {
   const { addDeal, updateDeal, deleteDeal } = useBusiness();
   return { addDeal, updateDeal, deleteDeal };
-};
-export const useReviewsData = () => {
+}
+
+export function useReviewsData() {
   const { reviews, reviewsLoading, getReviewsByBusinessId, addReview, addReply, toggleReviewVisibility } = useBusiness();
   return { reviews, loading: reviewsLoading, getReviewsByBusinessId, addReview, addReply, toggleReviewVisibility };
-};
-export const useAnalyticsData = () => {
+}
+
+export function useAnalyticsData() {
   const { getAnalyticsByBusinessId, analyticsLoading } = useBusiness();
   return { getAnalyticsByBusinessId, loading: analyticsLoading };
-};
-export const useBookingData = () => {
+}
+
+export function useBookingData() {
   const { appointments, appointmentsLoading, getAppointmentsForBusiness, addAppointment, updateAppointmentStatus } = useBusiness();
   return { appointments, loading: appointmentsLoading, getAppointmentsForBusiness, addAppointment, updateAppointmentStatus };
-};
-export const useOrderData = () => {
+}
+
+export function useOrderData() {
   const { orders, ordersLoading, addOrder, updateOrderStatus } = useBusiness();
   return { orders, loading: ordersLoading, addOrder, updateOrderStatus };
-};
+}
