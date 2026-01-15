@@ -61,8 +61,9 @@ export default defineConfig(({ mode }) => {
         },
         // Chunk size warning limit
         chunkSizeWarningLimit: 600,
-        // Minify options (using esbuild - faster and built-in)
-        minify: 'esbuild',
+        // Minify options - temporarily disable to debug initialization issues
+        // minify: 'esbuild',
+        minify: false, // Temporarily disabled to debug initialization order
         // Note: To use terser, install: npm install -D terser
         // Then change minify to 'terser' and uncomment terserOptions
       },
