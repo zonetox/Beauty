@@ -5,7 +5,7 @@ import { Business, BusinessBlogPost, Review, ReviewStatus, BusinessAnalytics, Ap
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { useUserSession } from './UserSessionContext.tsx';
 import { useBusinessData, useMembershipPackageData } from './BusinessDataContext.tsx';
-import { useAdmin } from './AdminContext.tsx';
+// Removed useAdmin import to avoid circular dependency - admin notifications handled at higher level
 import { activateBusinessFromOrder } from '../lib/businessUtils.ts';
 import toast from 'react-hot-toast';
 import { snakeToCamel } from '../lib/utils.ts';
@@ -66,7 +66,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
   const { profile } = useUserSession();
   const { businesses, updateBusiness, addDeal, updateDeal, deleteDeal } = useBusinessData();
   const { packages } = useMembershipPackageData();
-  const { addNotification } = useAdmin();
+  // Removed useAdmin to avoid circular dependency - admin notifications handled at higher level
 
   // --- STATES ---
   const [currentBusiness, setCurrentBusiness] = useState<Business | null>(null);
@@ -520,12 +520,9 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
               isActive: true,
             });
 
-            // Send notification
-            await addNotification(
-              businessToUpdate.email || '',
-              `Your ${packagePurchased.name} Plan is Active!`,
-              `Hello ${businessToUpdate.name},\n\nYour payment has been confirmed and your ${packagePurchased.name} membership plan is now active. Your business is now public on our directory! It will be valid until ${expiryDate.toLocaleDateString('vi-VN')}.\n\nThank you for partnering with us!\nThe BeautyDir Team`
-            );
+            // Send notification - removed to avoid circular dependency
+            // Admin notifications will be handled at higher level where both contexts are available
+            // TODO: Implement notification via event system or higher-level component
           }
         }
       }
