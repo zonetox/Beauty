@@ -11,7 +11,7 @@ import SEOHead from '../components/SEOHead.tsx';
 import LoadingState from '../components/LoadingState.tsx';
 import EmptyState from '../components/EmptyState.tsx';
 import { CATEGORIES, CITIES, LOCATIONS_HIERARCHY } from '../constants.ts';
-import { Business, MembershipTier } from '../types.ts';
+import { Business, MembershipTier, WorkingHours } from '../types.ts';
 import { useBusinessData } from '../contexts/BusinessDataContext.tsx';
 import FilterTag from '../components/FilterTag.tsx';
 import Pagination from '../components/Pagination.tsx';
@@ -29,7 +29,7 @@ const SkeletonCard: React.FC = () => (
 );
 
 // Helper to check if a business is currently open
-const checkIfOpen = (workingHours: { [key: string]: string | { open: string; close: string; isOpen?: boolean } }): boolean => {
+const checkIfOpen = (workingHours: WorkingHours | null | undefined): boolean => {
     if (!workingHours) return false;
     try {
         const now = new Date();

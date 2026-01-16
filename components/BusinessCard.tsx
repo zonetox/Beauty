@@ -44,11 +44,18 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, highlighted = fal
   return (
     <div 
         id={`business-card-${business.id}`}
-        className={`bg-white rounded-lg overflow-hidden transition-all duration-200 transform hover:-translate-y-1 ${tierStyles[membershipTier]} ${highlightClass}`}
+        className={`bg-white rounded-lg overflow-hidden transition-all duration-200 transform hover:-translate-y-1 cursor-pointer ${tierStyles[membershipTier]} ${highlightClass}`}
+        onClick={() => window.location.href = `/business/${slug}`}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
+        role="link"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            window.location.href = `/business/${slug}`;
+          }
+        }}
     >
-      <Link to={`/business/${slug}`} className="block h-full flex flex-col">
         <div className="relative">
           <img className="w-full h-48 object-cover" src={getOptimizedSupabaseUrl(imageUrl, { width: 400, quality: 75 })} alt={name} loading="lazy" />
           {tierBadge[membershipTier] && (
@@ -109,9 +116,8 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, highlighted = fal
             </div>
           </div>
         </div>
-      </Link>
-    </div>
-  );
+      </div>
+    );
 };
 
 export default React.memo(BusinessCard);

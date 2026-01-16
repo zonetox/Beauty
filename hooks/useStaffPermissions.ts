@@ -2,18 +2,7 @@ import { useState, useEffect } from 'react';
 import { useBusinessAuth } from '../contexts/BusinessContext.tsx';
 import { useUserSession } from '../contexts/UserSessionContext.tsx';
 import { useStaff } from '../contexts/StaffContext.tsx';
-import { BusinessStaff } from '../types.ts';
-
-interface StaffPermissions {
-  canEditLandingPage: boolean;
-  canEditBlog: boolean;
-  canManageMedia: boolean;
-  canManageServices: boolean;
-  isStaffMember: boolean;
-  isBusinessOwner: boolean;
-  isOwner: boolean; // Alias for isBusinessOwner for convenience
-  hasAccess: boolean;
-}
+import { BusinessStaff, StaffPermissions } from '../types.ts';
 
 /**
  * Hook to check if current user has staff permissions for the current business

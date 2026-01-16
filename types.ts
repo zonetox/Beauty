@@ -141,6 +141,31 @@ export interface Review {
   };
 }
 
+// Working hours types
+export interface WorkingHourRange {
+  open: string; // e.g. "09:00"
+  close: string; // e.g. "17:30"
+  isOpen?: boolean;
+}
+
+export type WorkingHour = WorkingHourRange | string | null;
+
+export type WorkingHours = {
+  [day: string]: WorkingHour; // e.g. 'monday', 'tuesday' or 'mon', 'tue'
+};
+
+// Staff permissions shared type for hooks/components
+export interface StaffPermissions {
+  canEditLandingPage?: boolean;
+  canEditBlog?: boolean;
+  canManageMedia?: boolean;
+  canManageServices?: boolean;
+  isStaffMember?: boolean;
+  isBusinessOwner?: boolean;
+  isOwner?: boolean; // alias
+  hasAccess?: boolean;
+}
+
 export interface StaffMember {
   id: string;
   name: string;
@@ -243,7 +268,7 @@ export interface Business {
   isFeatured?: boolean;
   joinedDate: string; // ISO string for sorting by newest
   description: string;
-  workingHours: { [key: string]: string | { open: string; close: string; isOpen?: boolean } };
+  workingHours?: WorkingHours | null;
   socials?: Socials;
   seo?: SEO;
   staff: StaffMember[]; // Kept as JSONB as it's tightly coupled 1-to-1
