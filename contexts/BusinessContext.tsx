@@ -4,7 +4,7 @@ import React, { createContext, useState, useEffect, useContext, ReactNode, useCa
 import { Business, BusinessBlogPost, Review, ReviewStatus, BusinessAnalytics, Appointment, Order, OrderStatus, AppointmentStatus, Profile, Deal, AnalyticsDataPoint, TrafficSource } from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { useUserSession } from './UserSessionContext.tsx';
-import { useBusinessData, useMembershipPackageData } from './BusinessDataContext.tsx';
+import { PublicDataContext } from './BusinessDataContext.tsx';
 // Removed useAdmin import to avoid circular dependency - admin notifications handled at higher level
 import { activateBusinessFromOrder } from '../lib/businessUtils.ts';
 import toast from 'react-hot-toast';
@@ -64,8 +64,14 @@ const toSnakeCase = (obj: any): any => {
 export function BusinessProvider({ children }: { children: ReactNode }) {
   // --- PARENT CONTEXTS ---
   const { profile } = useUserSession();
-  const { businesses, updateBusiness, addDeal, updateDeal, deleteDeal } = useBusinessData();
-  const { packages } = useMembershipPackageData();
+  // Use useContext directly instead of hooks to avoid initialization order issues
+  const publicDataContext = useContext(PublicDataContext);
+  const businesses = publicDataContext?.businesses || [];
+  const updateBusiness = publicDataContext?.updateBusiness || (async () => {});
+  const addDeal = publicDataContext?.addDeal || (async () => {});
+  const updateDeal = publicDataContext?.updateDeal || (async () => {});
+  const deleteDeal = publicDataContext?.deleteDeal || (async () => {});
+  const packages = publicDataContext?.packages || [];
   // Removed useAdmin to avoid circular dependency - admin notifications handled at higher level
 
   // --- STATES ---

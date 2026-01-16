@@ -72,65 +72,58 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
   }, []);
 
   // Fetch comments from database (C2.4: Migrated from localStorage)
-  useEffect(() => {
-    let cancelled = false;
-    
-    const fetchComments = async () => {
-      if (!isSupabaseConfigured) {
-        // Fallback to localStorage if Supabase not configured
-        try {
-          const savedCommentsJSON = localStorage.getItem('blog_comments');
-          if (savedCommentsJSON && !cancelled) {
-            setComments(JSON.parse(savedCommentsJSON));
-          }
-        } catch (error) {
-          console.error('Failed to parse comments from localStorage:', error);
-          if (!cancelled) {
-            setComments([]);
-          }
-        }
-        return;
-      }
-
+  // Move fetchComments outside useEffect so it can be called from other places
+  const fetchComments = useCallback(async () => {
+    if (!isSupabaseConfigured) {
+      // Fallback to localStorage if Supabase not configured
       try {
-        const { data, error } = await supabase
-          .from('blog_comments')
-          .select('*')
-          .order('date', { ascending: true });
-
-        if (error) {
-          console.error('Error fetching blog comments:', error);
-          // Fallback to localStorage
-          try {
-            const savedCommentsJSON = localStorage.getItem('blog_comments');
-            if (savedCommentsJSON && !cancelled) {
-              setComments(JSON.parse(savedCommentsJSON));
-            }
-          } catch (e) {
-            console.error('Failed to parse comments from localStorage:', e);
-          }
-        } else if (data && !cancelled) {
-          const mappedComments: BlogComment[] = data.map(comment => ({
-            id: comment.id,
-            postId: comment.post_id,
-            authorName: comment.author_name,
-            authorAvatarUrl: `https://picsum.photos/seed/${comment.author_name.replace(/\s+/g, '-')}/100/100`,
-            content: comment.content,
-            date: comment.date || comment.created_at,
-          }));
-          setComments(mappedComments);
+        const savedCommentsJSON = localStorage.getItem('blog_comments');
+        if (savedCommentsJSON) {
+          setComments(JSON.parse(savedCommentsJSON));
         }
       } catch (error) {
-        console.error('Error in fetchComments:', error);
+        console.error('Failed to parse comments from localStorage:', error);
+        setComments([]);
       }
-    };
-    
-    fetchComments();
-    
-    return () => {
-      cancelled = true;
-    };
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('blog_comments')
+        .select('*')
+        .order('date', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching blog comments:', error);
+        // Fallback to localStorage
+        try {
+          const savedCommentsJSON = localStorage.getItem('blog_comments');
+          if (savedCommentsJSON) {
+            setComments(JSON.parse(savedCommentsJSON));
+          }
+        } catch (e) {
+          console.error('Failed to parse comments from localStorage:', e);
+        }
+      } else if (data) {
+        const mappedComments: BlogComment[] = data.map(comment => ({
+          id: comment.id,
+          postId: comment.post_id,
+          authorName: comment.author_name,
+          authorAvatarUrl: `https://picsum.photos/seed/${comment.author_name.replace(/\s+/g, '-')}/100/100`,
+          content: comment.content,
+          date: comment.date || comment.created_at,
+        }));
+        setComments(mappedComments);
+      }
+    } catch (error) {
+      console.error('Error in fetchComments:', error);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchComments();
+  }, [fetchComments]);
   
   // Load blog categories from localStorage on mount
   useEffect(() => {

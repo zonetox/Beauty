@@ -66,52 +66,43 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
 
-
-
   // --- DATA LOADING & SAVING ---
-  useEffect(() => {
-    let cancelled = false;
-    
-    const fetchAllData = async () => {
-      setBlogLoading(true);
-      setReviewsLoading(true);
-      setOrdersLoading(true);
+  // Define fetchAllData as a useCallback so it can be called from other functions
+  const fetchAllData = useCallback(async () => {
+    setBlogLoading(true);
+    setReviewsLoading(true);
+    setOrdersLoading(true);
 
-      // PHASE 3: Optimize queries - select only needed columns (matching BusinessContext optimization)
-      const [postsRes, reviewsRes, ordersRes] = await Promise.all([
-        supabase.from('business_blog_posts')
-          .select('id, business_id, slug, title, excerpt, image_url, content, author, created_date, published_date, status, view_count, is_featured, seo')
-          .order('created_date', { ascending: false }),
-        supabase.from('reviews')
-          .select('id, user_id, business_id, user_name, user_avatar_url, rating, comment, submitted_date, status, reply')
-          .order('submitted_date', { ascending: false }),
-        supabase.from('orders')
-          .select('id, business_id, business_name, package_id, package_name, amount, status, payment_method, submitted_at, confirmed_at, notes')
-          .order('submitted_at', { ascending: false })
-      ]);
+    // PHASE 3: Optimize queries - select only needed columns (matching BusinessContext optimization)
+    const [postsRes, reviewsRes, ordersRes] = await Promise.all([
+      supabase.from('business_blog_posts')
+        .select('id, business_id, slug, title, excerpt, image_url, content, author, created_date, published_date, status, view_count, is_featured, seo')
+        .order('created_date', { ascending: false }),
+      supabase.from('reviews')
+        .select('id, user_id, business_id, user_name, user_avatar_url, rating, comment, submitted_date, status, reply')
+        .order('submitted_date', { ascending: false }),
+      supabase.from('orders')
+        .select('id, business_id, business_name, package_id, package_name, amount, status, payment_method, submitted_at, confirmed_at, notes')
+        .order('submitted_at', { ascending: false })
+    ]);
 
-      if (!cancelled) {
-        if (postsRes.data) setPosts(snakeToCamel(postsRes.data) as BusinessBlogPost[]);
-        if (postsRes.error) console.error("Error fetching business blog posts:", postsRes.error);
+    if (postsRes.data) setPosts(snakeToCamel(postsRes.data) as BusinessBlogPost[]);
+    if (postsRes.error) console.error("Error fetching business blog posts:", postsRes.error);
 
-        if (reviewsRes.data) setReviews(snakeToCamel(reviewsRes.data) as Review[]);
-        if (reviewsRes.error) console.error("Error fetching reviews:", reviewsRes.error);
+    if (reviewsRes.data) setReviews(snakeToCamel(reviewsRes.data) as Review[]);
+    if (reviewsRes.error) console.error("Error fetching reviews:", reviewsRes.error);
 
-        if (ordersRes.data) setOrders(snakeToCamel(ordersRes.data) as Order[]);
-        if (ordersRes.error) console.error("Error fetching orders:", ordersRes.error);
+    if (ordersRes.data) setOrders(snakeToCamel(ordersRes.data) as Order[]);
+    if (ordersRes.error) console.error("Error fetching orders:", ordersRes.error);
 
-        setBlogLoading(false);
-        setReviewsLoading(false);
-        setOrdersLoading(false);
-      }
-    };
-    
-    fetchAllData();
-    
-    return () => {
-      cancelled = true;
-    };
+    setBlogLoading(false);
+    setReviewsLoading(false);
+    setOrdersLoading(false);
   }, []);
+
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
 
   // --- BUSINESS BLOG LOGIC ---
   const addPost = async (newPostData: Omit<BusinessBlogPost, 'id' | 'slug' | 'createdDate' | 'viewCount'>) => {

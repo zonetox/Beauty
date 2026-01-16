@@ -7,7 +7,7 @@ import { trackEvent } from '../lib/analytics.ts';
 
 interface PerformanceMetrics {
   componentName: string;
-  renderTime: number;
+  renderTime?: number;
   mountTime?: number;
   apiCallTime?: number;
   interactionTime?: number;
@@ -139,19 +139,19 @@ export const usePerformanceMonitoring = (componentName: string) => {
   // Track page load performance
   useEffect(() => {
     if (typeof window !== 'undefined' && window.performance) {
-      const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-      
+      const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+
       if (navigation) {
         const metrics = {
-          dns: navigation.dnsLookupEnd - navigation.dnsLookupStart,
-          tcp: navigation.connectEnd - navigation.connectStart,
-          request: navigation.responseStart - navigation.requestStart,
-          response: navigation.responseEnd - navigation.responseStart,
-          dom: navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart,
-          load: navigation.loadEventEnd - navigation.loadEventStart,
-          total: navigation.loadEventEnd - navigation.fetchStart,
+          dns: (navigation.domainLookupEnd || 0) - (navigation.domainLookupStart || 0),
+          tcp: (navigation.connectEnd || 0) - (navigation.connectStart || 0),
+          request: (navigation.responseStart || 0) - (navigation.requestStart || 0),
+          response: (navigation.responseEnd || 0) - (navigation.responseStart || 0),
+          dom: (navigation.domContentLoadedEventEnd || 0) - (navigation.domContentLoadedEventStart || 0),
+          load: (navigation.loadEventEnd || 0) - (navigation.loadEventStart || 0),
+          total: (navigation.loadEventEnd || 0) - (navigation.fetchStart || 0),
         };
-        
+
         // Track slow page loads
         if (metrics.total > 3000) {
           trackEvent('slow_page_load', {
@@ -173,109 +173,57 @@ export const usePerformanceMonitoring = (componentName: string) => {
 // Hook for tracking Web Vitals
 export const useWebVitals = () => {
   useEffect(() => {
-    if (typeof window === 'undefined' || !('PerformanceObserver' in window)) {
-      return;
-    }
+    if (typeof window === 'undefined' || !('PerformanceObserver' in window)) return;
 
-    // Small delay to ensure analytics is initialized
     const initTimeout = setTimeout(() => {
-      // Track Largest Contentful Paint (LCP)
-      const lcpObserver = new PerformanceObserver((list) => {
-        const entries = list.getEntries();
-        const lastEntry = entries[entries.length - 1] as PerformanceEntry & { renderTime?: number; loadTime?: number };
-        
-        if (lastEntry) {
-          const lcp = lastEntry.renderTime || lastEntry.loadTime || 0;
-          // Only track if analytics is ready, otherwise skip silently
-          trackEvent('web_vital', {
-            metric: 'LCP',
-            value: lcp,
-          });
-        
-        if (lcp > 2500) {
-          Sentry.addBreadcrumb({
-            category: 'performance',
-            message: 'Poor LCP',
-            level: 'warning',
-            data: { lcp },
-          });
-        }
-      }
-    });
-    
-    try {
-      lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
-    } catch (e) {
-      // LCP not supported
-    }
+      let lcpObserver: PerformanceObserver | null = null;
+      let fidObserver: PerformanceObserver | null = null;
+      let clsObserver: PerformanceObserver | null = null;
 
-    // Track First Input Delay (FID)
-    const fidObserver = new PerformanceObserver((list) => {
-      const entries = list.getEntries();
-      entries.forEach((entry: any) => {
-        const fid = entry.processingStart - entry.startTime;
-        trackEvent('web_vital', {
-          metric: 'FID',
-          value: fid,
+      try {
+        lcpObserver = new PerformanceObserver((list) => {
+          const entries = list.getEntries();
+          const lastEntry = entries[entries.length - 1] as PerformanceEntry | undefined;
+          const lcp = lastEntry && ((lastEntry as any).renderTime ?? (lastEntry as any).startTime) || 0;
+          trackEvent('web_vital', { metric: 'LCP', value: lcp });
+          if (lcp > 2500) Sentry.addBreadcrumb({ category: 'performance', message: 'Poor LCP', level: 'warning', data: { lcp } });
         });
-        
-        if (fid > 100) {
-          Sentry.addBreadcrumb({
-            category: 'performance',
-            message: 'Poor FID',
-            level: 'warning',
-            data: { fid },
+        lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true } as any);
+      } catch (e) {}
+
+      try {
+        fidObserver = new PerformanceObserver((list) => {
+          const entries = list.getEntries() as any[];
+          entries.forEach((entry) => {
+            const fid = (entry as any).processingStart - (entry as any).startTime;
+            trackEvent('web_vital', { metric: 'FID', value: fid });
+            if (fid > 100) Sentry.addBreadcrumb({ category: 'performance', message: 'Poor FID', level: 'warning', data: { fid } });
           });
-        }
-      });
-    });
-    
-    try {
-      fidObserver.observe({ entryTypes: ['first-input'] });
-    } catch (e) {
-      // FID not supported
-    }
-
-    // Track Cumulative Layout Shift (CLS)
-    let clsValue = 0;
-    const clsObserver = new PerformanceObserver((list) => {
-      const entries = list.getEntries() as any[];
-      entries.forEach((entry) => {
-        if (!entry.hadRecentInput) {
-          clsValue += entry.value;
-        }
-      });
-      
-      trackEvent('web_vital', {
-        metric: 'CLS',
-        value: clsValue,
-      });
-      
-      if (clsValue > 0.25) {
-        Sentry.addBreadcrumb({
-          category: 'performance',
-          message: 'Poor CLS',
-          level: 'warning',
-          data: { cls: clsValue },
         });
-      }
-    });
-    
-    try {
-      clsObserver.observe({ entryTypes: ['layout-shift'] });
-    } catch (e) {
-      // CLS not supported
-    }
+        fidObserver.observe({ type: 'first-input', buffered: true } as any);
+      } catch (e) {}
 
+      try {
+        let clsValue = 0;
+        clsObserver = new PerformanceObserver((list) => {
+          const entries = list.getEntries() as any[];
+          entries.forEach((entry) => {
+            if (!entry.hadRecentInput) clsValue += entry.value ?? 0;
+          });
+          trackEvent('web_vital', { metric: 'CLS', value: clsValue });
+          if (clsValue > 0.25) Sentry.addBreadcrumb({ category: 'performance', message: 'Poor CLS', level: 'warning', data: { cls: clsValue } });
+        });
+        clsObserver.observe({ type: 'layout-shift', buffered: true } as any);
+      } catch (e) {}
+
+      // no-op: observers will be cleaned up in cleanup
       return () => {
-        lcpObserver.disconnect();
-        fidObserver.disconnect();
-        clsObserver.disconnect();
+        lcpObserver?.disconnect();
+        fidObserver?.disconnect();
+        clsObserver?.disconnect();
       };
-    }, 500); // 500ms delay to ensure analytics is initialized
+    }, 500);
 
-    return () => {
-      clearTimeout(initTimeout);
-    };
+    return () => clearTimeout(initTimeout);
   }, []);
 };

@@ -11,6 +11,7 @@ interface StaffPermissions {
   canManageServices: boolean;
   isStaffMember: boolean;
   isBusinessOwner: boolean;
+  isOwner: boolean; // Alias for isBusinessOwner for convenience
   hasAccess: boolean;
 }
 
@@ -30,6 +31,7 @@ export const useStaffPermissions = (): StaffPermissions => {
     canManageServices: false,
     isStaffMember: false,
     isBusinessOwner: false,
+    isOwner: false,
     hasAccess: false,
   });
 
@@ -43,6 +45,7 @@ export const useStaffPermissions = (): StaffPermissions => {
           canManageServices: false,
           isStaffMember: false,
           isBusinessOwner: false,
+          isOwner: false,
           hasAccess: false,
         });
         return;
@@ -61,6 +64,7 @@ export const useStaffPermissions = (): StaffPermissions => {
           canManageServices: true,
           isStaffMember: false,
           isBusinessOwner: true,
+          isOwner: true,
           hasAccess: true,
         });
         return;
@@ -77,6 +81,7 @@ export const useStaffPermissions = (): StaffPermissions => {
           canManageServices: false,
           isStaffMember: false,
           isBusinessOwner: false,
+          isOwner: false,
           hasAccess: false,
         });
         return;
@@ -93,6 +98,7 @@ export const useStaffPermissions = (): StaffPermissions => {
           canManageServices: false,
           isStaffMember: true,
           isBusinessOwner: false,
+          isOwner: false,
           hasAccess: false,
         });
         return;
@@ -105,6 +111,7 @@ export const useStaffPermissions = (): StaffPermissions => {
         canManageServices: staffPerms.canManageServices || false,
         isStaffMember: true,
         isBusinessOwner: false,
+        isOwner: false,
         hasAccess: true,
       });
     };

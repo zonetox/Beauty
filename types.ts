@@ -243,7 +243,7 @@ export interface Business {
   isFeatured?: boolean;
   joinedDate: string; // ISO string for sorting by newest
   description: string;
-  workingHours: { [key: string]: string };
+  workingHours: { [key: string]: string | { open: string; close: string; isOpen?: boolean } };
   socials?: Socials;
   seo?: SEO;
   staff: StaffMember[]; // Kept as JSONB as it's tightly coupled 1-to-1
@@ -253,6 +253,7 @@ export interface Business {
   landingPageConfig?: LandingPageConfig;
   trustIndicators?: TrustIndicator[];
   landingPageStatus?: 'Pending' | 'Approved' | 'Rejected' | 'Needs Review';
+  owner_id?: string; // UUID of the business owner (from auth.users)
 
   // --- RELATIONAL DATA ---
   // These will be populated by Supabase joins
@@ -261,6 +262,7 @@ export interface Business {
   gallery?: MediaItem[];
   team?: TeamMember[];
   reviews?: Review[];
+  businessBlogPosts?: BusinessBlogPost[]; // Business blog posts
 }
 
 export interface BlogCategory {

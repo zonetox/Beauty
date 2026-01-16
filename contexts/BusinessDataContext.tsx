@@ -243,12 +243,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     setBusinessLoading(false);
   }, []);
 
-  // Helper to reset and refetch (for after add/update/delete operations)
-  const refetchAllPublicData = useCallback(async () => {
-    hasFetchedRef.current = false; // Reset to allow refetch
-    await fetchAllPublicData();
-  }, [fetchAllPublicData]);
-
+  // Define fetchAllPublicData first, before refetchAllPublicData
   const fetchAllPublicData = useCallback(async () => {
     // Prevent double fetch
     if (hasFetchedRef.current) return;
@@ -340,6 +335,12 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       hasFetchedRef.current = false; // Reset on error
     }
   }, [fetchBusinesses]);
+
+  // Helper to reset and refetch (for after add/update/delete operations)
+  const refetchAllPublicData = useCallback(async () => {
+    hasFetchedRef.current = false; // Reset to allow refetch
+    await fetchAllPublicData();
+  }, [fetchAllPublicData]);
 
   useEffect(() => {
     // Only fetch once on mount

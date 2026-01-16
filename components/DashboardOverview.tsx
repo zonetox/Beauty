@@ -11,7 +11,7 @@ import LoadingState from './LoadingState.tsx';
 import EmptyState from './EmptyState.tsx';
 
 interface DashboardOverviewProps {
-    setActiveTab: (tab: ActiveTab) => void;
+    setActiveTab: React.Dispatch<React.SetStateAction<ActiveTab>>;
 }
 
 const StatCard: React.FC<{ title: string, value: string | number, icon: React.ReactNode, change?: string, onClick?: () => void }> = ({ title, value, icon, change, onClick }) => (

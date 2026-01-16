@@ -6,7 +6,7 @@ type ActiveTab = 'dashboard' | 'profile' | 'services' | 'billing' | 'blog' | 'ga
 
 interface SidebarProps {
   activeTab: ActiveTab;
-  setActiveTab: (tab: ActiveTab) => void;
+  setActiveTab: React.Dispatch<React.SetStateAction<ActiveTab>>;
 }
 
 const NavLink: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode }> = ({ active, onClick, children }) => (
