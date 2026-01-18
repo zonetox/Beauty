@@ -59,19 +59,24 @@ if (typeof global.TextEncoder === 'undefined') {
   global.TextDecoder = TextDecoder;
 }
 
-// Mock import.meta for Jest
-// This is needed because AdminContext.tsx uses import.meta.env
-if (typeof globalThis.import === 'undefined') {
-  (globalThis as any).import = {
-    meta: {
-      env: {
-        VITE_SUPABASE_URL: 'https://test.supabase.co',
-        VITE_SUPABASE_ANON_KEY: 'test-key',
-        MODE: 'test',
-        DEV: false,
-      },
+// Mock import.meta.env for Jest
+// This is needed because UserSessionContext.tsx and other files use import.meta.env
+// We use Object.defineProperty to mock import.meta at the global level
+if (typeof globalThis.process === 'undefined') {
+  // Create a mock import.meta object
+  const mockImportMeta = {
+    env: {
+      VITE_SUPABASE_URL: 'https://test.supabase.co',
+      VITE_SUPABASE_ANON_KEY: 'test-key',
+      MODE: 'test',
+      DEV: false,
+      PROD: false,
     },
   };
+  
+  // Define import.meta as a global property for Node.js environment
+  // Note: This won't work for actual import.meta syntax, but we'll handle it in transform
+  (global as any).import = { meta: mockImportMeta };
 }
 
 // Mock window.matchMedia

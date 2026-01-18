@@ -29,8 +29,6 @@ module.exports = {
     // Ignore E2E tests (they should be run with Playwright, not Jest)
     '/tests/e2e/',
     '/tests/e2e/.*\\.spec\\.ts$',
-    // Ignore any path that doesn't contain "Beauty-main"
-    '^(?!.*Beauty-main).*$',
     // Explicitly ignore common external directories
     '.*Nho-AI-Memory.*',
     '.*themissionoflife.*',
@@ -47,7 +45,9 @@ module.exports = {
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
-    '\\.(css|less|scss|sass)$': 'identity-obj-proxy'
+    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+    // Mock import.meta - this won't work for syntax, but we handle it in setup
+    '^import\\.meta$': '<rootDir>/tests/mocks/import-meta.ts'
   },
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   collectCoverageFrom: [
@@ -91,14 +91,10 @@ module.exports = {
         target: 'ES2020',
         lib: ['ES2020', 'DOM', 'DOM.Iterable'],
         types: ['jest', '@testing-library/jest-dom', 'node'],
-        // Support import.meta
         moduleResolution: 'node'
       },
       isolatedModules: true,
-      useESM: false,
-      babelConfig: {
-        presets: ['@babel/preset-env']
-      }
+      useESM: false
     }]
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],

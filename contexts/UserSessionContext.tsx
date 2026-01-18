@@ -39,7 +39,7 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
       if (mounted && loading && hasAttemptedAuth) {
         // Only warn if Supabase is configured AND we've attempted auth check
         // Only show warning in development mode to avoid Error Logger noise
-        if (isSupabaseConfigured && import.meta.env.MODE === 'development') {
+        if (isSupabaseConfigured && (typeof import.meta !== 'undefined' ? import.meta.env?.MODE === 'development' : process.env.NODE_ENV !== 'production')) {
           console.warn('UserSessionContext: Auth check timed out after 15s. This may indicate a connection issue.');
         }
         setLoading(false);
@@ -276,7 +276,7 @@ export const useUserSession = (): UserSessionContextType => {
   if (context === undefined) {
     // Return a safe default instead of throwing to prevent app crash
     // Only log in development mode to avoid Error Logger noise
-    if (import.meta.env.MODE === 'development') {
+    if (typeof import.meta !== 'undefined' ? import.meta.env?.MODE === 'development' : process.env.NODE_ENV !== 'production') {
       console.warn('useUserSession must be used within a UserSessionProvider. Using safe defaults.');
     }
     return {
