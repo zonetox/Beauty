@@ -131,67 +131,102 @@ const AccountPageRouter: React.FC = () => {
 };
 
 
+// Layout wrapper for routes that need public data (businesses, blog, packages, markers)
+// This provider mounts once and persists across navigation within these routes
+const PublicDataLayout: React.FC = () => {
+    return (
+        <PublicDataProvider>
+            <HomepageDataProvider>
+                <BusinessProvider>
+                    <Outlet /> {/* Child routes render here */}
+                </BusinessProvider>
+            </HomepageDataProvider>
+        </PublicDataProvider>
+    );
+};
+
 // App content (rendered after auth is resolved)
 const AppContent: React.FC = () => {
     return (
         <ErrorLoggerProvider>
             <ThemeProvider>
                 <AdminProvider>
-                                <PublicDataProvider>
-                                    <HomepageDataProvider>
-                                        <BusinessProvider>
-                                            <StaffProvider>
-                                                <PublicPageContentProvider>
-                                                    <Suspense fallback={<LoadingSpinner />}>
-                                                        <Routes>
-                                                            {/* Routes WITH standard layout (Header, Footer, etc.) */}
-                                                            <Route element={<AppLayout />}>
-                                                                <Route index element={<HomePage />} />
-                                                                <Route path="directory" element={<DirectoryPage />} />
-                                                                <Route path="blog" element={<BlogListPage />} />
-                                                                <Route path="blog/:slug" element={<BlogPostPage />} />
-                                                                <Route path="about" element={<AboutPage />} />
-                                                                <Route path="contact" element={<ContactPage />} />
-                                                                <Route path="register" element={<RegisterPage />} />
-                                                                <Route path="/partner-registration" element={<PartnerRegistrationPage />} />
-                                                                <Route path="login" element={<LoginPage />} />
-                                                                <Route path="reset-password" element={<ResetPasswordPage />} />
-                                                                <Route path="account" element={
-                                                                    <ProtectedRoute>
-                                                                        <BusinessDashboardProvider>
-                                                                            <AccountPageRouter />
-                                                                        </BusinessDashboardProvider>
-                                                                    </ProtectedRoute>
-                                                                } />
-                                                            </Route>
+                    <StaffProvider>
+                        <PublicPageContentProvider>
+                            <Suspense fallback={<LoadingSpinner />}>
+                                <Routes>
+                                    {/* Routes WITH standard layout (Header, Footer, etc.) */}
+                                    <Route element={<AppLayout />}>
+                                        {/* Routes that need public data - nested under PublicDataLayout */}
+                                        <Route element={<PublicDataLayout />}>
+                                            <Route index element={<HomePage />} />
+                                            <Route path="directory" element={<DirectoryPage />} />
+                                            <Route path="blog" element={<BlogListPage />} />
+                                            <Route path="blog/:slug" element={<BlogPostPage />} />
+                                            <Route path="account" element={
+                                                <ProtectedRoute>
+                                                    <BusinessDashboardProvider>
+                                                        <AccountPageRouter />
+                                                    </BusinessDashboardProvider>
+                                                </ProtectedRoute>
+                                            } />
+                                        </Route>
+                                        
+                                        {/* Public pages that DON'T need public data */}
+                                        <Route path="about" element={<AboutPage />} />
+                                        <Route path="contact" element={<ContactPage />} />
+                                        <Route path="register" element={<RegisterPage />} />
+                                        <Route path="/partner-registration" element={<PartnerRegistrationPage />} />
+                                        <Route path="login" element={<LoginPage />} />
+                                        <Route path="reset-password" element={<ResetPasswordPage />} />
+                                    </Route>
 
-                                                            {/* Routes WITHOUT standard layout */}
-                                                            <Route path="/admin" element={
-                                                                <AdminProtectedRoute>
-                                                                    <AdminPlatformProvider>
-                                                                        <BusinessDashboardProvider>
-                                                                            <AdminPage />
-                                                                        </BusinessDashboardProvider>
-                                                                    </AdminPlatformProvider>
-                                                                </AdminProtectedRoute>
-                                                            } />
-                                                            <Route path="/admin/login" element={<AdminLoginPage />} />
-                                                            <Route path="business/:slug" element={<BusinessDetailPage />} />
-                                                            <Route path="business/:businessSlug/post/:postSlug" element={<BusinessPostPage />} />
-                                                            <Route path="/connection-test" element={<ConnectionTestPage />} />
+                                    {/* Routes WITHOUT standard layout */}
+                                    <Route path="/admin" element={
+                                        <AdminProtectedRoute>
+                                            <PublicDataProvider>
+                                                <HomepageDataProvider>
+                                                    <BusinessProvider>
+                                                        <AdminPlatformProvider>
+                                                            <BusinessDashboardProvider>
+                                                                <AdminPage />
+                                                            </BusinessDashboardProvider>
+                                                        </AdminPlatformProvider>
+                                                    </BusinessProvider>
+                                                </HomepageDataProvider>
+                                            </PublicDataProvider>
+                                        </AdminProtectedRoute>
+                                    } />
+                                    <Route path="/admin/login" element={<AdminLoginPage />} />
+                                    <Route path="business/:slug" element={
+                                        <PublicDataProvider>
+                                            <HomepageDataProvider>
+                                                <BusinessProvider>
+                                                    <BusinessDetailPage />
+                                                </BusinessProvider>
+                                            </HomepageDataProvider>
+                                        </PublicDataProvider>
+                                    } />
+                                    <Route path="business/:businessSlug/post/:postSlug" element={
+                                        <PublicDataProvider>
+                                            <HomepageDataProvider>
+                                                <BusinessProvider>
+                                                    <BusinessPostPage />
+                                                </BusinessProvider>
+                                            </HomepageDataProvider>
+                                        </PublicDataProvider>
+                                    } />
+                                    <Route path="/connection-test" element={<ConnectionTestPage />} />
 
-                                                            {/* Catch-all route must be at the top level */}
-                                                            <Route path="*" element={<NotFoundPage />} />
-                                                        </Routes>
-                                                    </Suspense>
-                                                </PublicPageContentProvider>
-                                            </StaffProvider>
-                                        </BusinessProvider>
-                                    </HomepageDataProvider>
-                                </PublicDataProvider>
-                            </AdminProvider>
-                        </ThemeProvider>
-                    </ErrorLoggerProvider>
+                                    {/* Catch-all route must be at the top level */}
+                                    <Route path="*" element={<NotFoundPage />} />
+                                </Routes>
+                            </Suspense>
+                        </PublicPageContentProvider>
+                    </StaffProvider>
+                </AdminProvider>
+            </ThemeProvider>
+        </ErrorLoggerProvider>
     );
 };
 

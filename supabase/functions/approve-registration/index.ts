@@ -4,15 +4,31 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 // Fix: Declare the Deno global object to satisfy TypeScript in environments where Deno types are not globally available.
 declare const Deno: any;
 
-// CORS headers for security.
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// CORS headers for security - only allow specific origins
+function getCorsHeaders(origin: string | null) {
+  // Allowed origins from env or fallback to production domain
+  const allowedOrigins = Deno.env.get('ALLOWED_ORIGINS')?.split(',') || [
+    'https://1beauty.asia',
+    'https://beauty-red.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000',
+  ];
+  
+  const allowedOrigin = origin && allowedOrigins.includes(origin) 
+    ? origin 
+    : allowedOrigins[0]; // Default to first allowed origin (production)
+  
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  };
+}
 
 // PHASE 2: Standardized error response helper
 // Helper function to create standardized error responses
-function createErrorResponse(message: string, statusCode: number, code?: string): Response {
+function createErrorResponse(message: string, statusCode: number, origin: string | null, code?: string): Response {
+  const corsHeaders = getCorsHeaders(origin);
   const errorResponse: { error: string; code?: string; statusCode?: number } = {
     error: message,
     statusCode,
@@ -32,6 +48,8 @@ interface ApproveRequestBody {
 }
 
 Deno.serve(async (req: Request) => {
+  const corsHeaders = getCorsHeaders(req.headers.get('origin'));
+  
   // Handle preflight CORS request.
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -43,13 +61,13 @@ Deno.serve(async (req: Request) => {
     
     // Validate requestId
     if (!requestId || typeof requestId !== 'string' || requestId.trim().length === 0) {
-      return createErrorResponse('Invalid request ID. Request ID is required and must be a non-empty string.', 400, 'VALIDATION_ERROR');
+      return createErrorResponse('Invalid request ID. Request ID is required and must be a non-empty string.', 400, req.headers.get('origin'), 'VALIDATION_ERROR');
     }
 
     // Validate UUID format (requestId should be UUID)
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(requestId)) {
-      return createErrorResponse('Invalid request ID format. Must be a valid UUID.', 400, 'VALIDATION_ERROR');
+      return createErrorResponse('Invalid request ID format. Must be a valid UUID.', 400, req.headers.get('origin'), 'VALIDATION_ERROR');
     }
 
     // Initialize Supabase admin client to perform privileged operations.
@@ -206,6 +224,6 @@ Deno.serve(async (req: Request) => {
     });
 
   } catch (error: any) {
-    return createErrorResponse(error.message || 'An unexpected error occurred', 500, 'INTERNAL_ERROR');
+    return createErrorResponse(error.message || 'An unexpected error occurred', 500, req.headers.get('origin'), 'INTERNAL_ERROR');
   }
 });

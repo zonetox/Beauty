@@ -3,14 +3,31 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 declare const Deno: any;
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// CORS headers for security - only allow specific origins
+function getCorsHeaders(origin: string | null) {
+  // Allowed origins from env or fallback to production domain
+  const allowedOrigins = Deno.env.get('ALLOWED_ORIGINS')?.split(',') || [
+    'https://1beauty.asia',
+    'https://beauty-red.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000',
+  ];
+  
+  const allowedOrigin = origin && allowedOrigins.includes(origin) 
+    ? origin 
+    : allowedOrigins[0]; // Default to first allowed origin (production)
+  
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  };
+}
 
 // PHASE 2: Standardized error response helper
 // Helper function to create standardized error responses
-function createErrorResponse(message: string, statusCode: number, code?: string): Response {
+function createErrorResponse(message: string, statusCode: number, origin: string | null, code?: string): Response {
+  const corsHeaders = getCorsHeaders(origin);
   const errorResponse: { error: string; code?: string; statusCode?: number } = {
     error: message,
     statusCode,
@@ -25,6 +42,8 @@ function createErrorResponse(message: string, statusCode: number, code?: string)
 }
 
 Deno.serve(async (req: Request) => {
+  const corsHeaders = getCorsHeaders(req.headers.get('origin'));
+  
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -33,7 +52,7 @@ Deno.serve(async (req: Request) => {
     // PHASE 1 FIX: Authorization check - ensure only existing admins can call this function
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return createErrorResponse('Unauthorized: Missing Authorization header', 401, 'UNAUTHORIZED');
+      return createErrorResponse('Unauthorized: Missing Authorization header', 401, req.headers.get('origin'), 'UNAUTHORIZED');
     }
 
     // Priority: Use new SECRET_KEY if available, fallback to SUPABASE_SERVICE_ROLE_KEY (reserved)
@@ -50,7 +69,7 @@ Deno.serve(async (req: Request) => {
     const { data: { user }, error: tokenError } = await supabaseAdmin.auth.getUser(token);
     
     if (tokenError || !user) {
-      return createErrorResponse('Unauthorized: Invalid token', 401, 'UNAUTHORIZED');
+      return createErrorResponse('Unauthorized: Invalid token', 401, req.headers.get('origin'), 'UNAUTHORIZED');
     }
 
     // Verify user is an admin
@@ -62,7 +81,7 @@ Deno.serve(async (req: Request) => {
       .single();
 
     if (adminError || !adminUser) {
-      return createErrorResponse('Forbidden: Admin access required', 403, 'FORBIDDEN');
+      return createErrorResponse('Forbidden: Admin access required', 403, req.headers.get('origin'), 'FORBIDDEN');
     }
 
     // PHASE 1 FIX: Input validation
@@ -71,28 +90,28 @@ Deno.serve(async (req: Request) => {
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email || !emailRegex.test(email)) {
-      return createErrorResponse('Invalid email format', 400, 'VALIDATION_ERROR');
+      return createErrorResponse('Invalid email format', 400, req.headers.get('origin'), 'VALIDATION_ERROR');
     }
 
     // Validate password
     if (!password || password.length < 8) {
-      return createErrorResponse('Password must be at least 8 characters', 400, 'VALIDATION_ERROR');
+      return createErrorResponse('Password must be at least 8 characters', 400, req.headers.get('origin'), 'VALIDATION_ERROR');
     }
 
     // Validate username
     if (!username || username.length < 3) {
-      return createErrorResponse('Username must be at least 3 characters', 400, 'VALIDATION_ERROR');
+      return createErrorResponse('Username must be at least 3 characters', 400, req.headers.get('origin'), 'VALIDATION_ERROR');
     }
 
     // Validate role
     const validRoles = ['Admin', 'Moderator', 'Editor'];
     if (!role || !validRoles.includes(role)) {
-      return createErrorResponse(`Invalid role. Must be one of: ${validRoles.join(', ')}`, 400, 'VALIDATION_ERROR');
+      return createErrorResponse(`Invalid role. Must be one of: ${validRoles.join(', ')}`, 400, req.headers.get('origin'), 'VALIDATION_ERROR');
     }
 
     // Validate permissions
     if (!permissions || typeof permissions !== 'object') {
-      return createErrorResponse('Permissions must be an object', 400, 'VALIDATION_ERROR');
+      return createErrorResponse('Permissions must be an object', 400, req.headers.get('origin'), 'VALIDATION_ERROR');
     }
 
     // 1. Create the user in auth.users
@@ -129,6 +148,6 @@ Deno.serve(async (req: Request) => {
     });
 
   } catch (error: any) {
-    return createErrorResponse(error.message || 'An unexpected error occurred', 500, 'INTERNAL_ERROR');
+    return createErrorResponse(error.message || 'An unexpected error occurred', 500, req.headers.get('origin'), 'INTERNAL_ERROR');
   }
 });

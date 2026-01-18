@@ -1,7 +1,7 @@
 /**
- * Client-Side Cache with Safe Invalidation
+ * Client-Side Cache with Safe Invalidation (localStorage-based)
  * 
- * Implements caching for blog, markers, packages with TTL and invalidation
+ * Implements persistent caching for blog, markers, packages with TTL and invalidation
  */
 
 export interface CacheEntry<T> {
@@ -11,68 +11,138 @@ export interface CacheEntry<T> {
 }
 
 class CacheManager {
-  private cache = new Map<string, CacheEntry<any>>();
+  private prefix = 'app_cache_';
   private defaultTTL = 5 * 60 * 1000; // 5 minutes default
 
   /**
-   * Get cached data if valid
+   * Get cached data from localStorage if valid
    */
   get<T>(key: string): T | null {
-    const entry = this.cache.get(key);
-    if (!entry) return null;
+    try {
+      const cached = localStorage.getItem(`${this.prefix}${key}`);
+      if (!cached) return null;
 
-    const now = Date.now();
-    if (now - entry.timestamp > entry.ttl) {
-      // Expired, remove it
-      this.cache.delete(key);
+      const entry: CacheEntry<T> = JSON.parse(cached);
+      const now = Date.now();
+
+      // Check if expired
+      if (now - entry.timestamp > entry.ttl) {
+        // Expired, remove it
+        localStorage.removeItem(`${this.prefix}${key}`);
+        return null;
+      }
+
+      return entry.data;
+    } catch (error) {
+      // Invalid cache entry, remove it
+      try {
+        localStorage.removeItem(`${this.prefix}${key}`);
+      } catch (e) {
+        // Ignore errors during cleanup
+      }
       return null;
     }
-
-    return entry.data as T;
   }
 
   /**
-   * Set cache entry
+   * Set cache entry in localStorage
    */
   set<T>(key: string, data: T, ttl?: number): void {
-    this.cache.set(key, {
-      data,
-      timestamp: Date.now(),
-      ttl: ttl || this.defaultTTL
-    });
+    try {
+      const entry: CacheEntry<T> = {
+        data,
+        timestamp: Date.now(),
+        ttl: ttl || this.defaultTTL
+      };
+      localStorage.setItem(`${this.prefix}${key}`, JSON.stringify(entry));
+    } catch (error) {
+      // localStorage quota exceeded or disabled
+      console.warn(`Failed to cache ${key}:`, error);
+    }
+  }
+
+  /**
+   * Check if cache exists and is valid (without getting data)
+   */
+  has(key: string): boolean {
+    return this.get(key) !== null;
   }
 
   /**
    * Invalidate cache by key
    */
   invalidate(key: string): void {
-    this.cache.delete(key);
+    try {
+      localStorage.removeItem(`${this.prefix}${key}`);
+    } catch (error) {
+      // Ignore errors
+    }
   }
 
   /**
    * Invalidate all cache entries matching pattern
    */
   invalidatePattern(pattern: string | RegExp): void {
-    const regex = typeof pattern === 'string' ? new RegExp(pattern) : pattern;
-    for (const key of this.cache.keys()) {
-      if (regex.test(key)) {
-        this.cache.delete(key);
+    try {
+      const regex = typeof pattern === 'string' ? new RegExp(pattern) : pattern;
+      const keys: string[] = [];
+      
+      // Get all localStorage keys
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(this.prefix)) {
+          const cacheKey = key.replace(this.prefix, '');
+          if (regex.test(cacheKey)) {
+            keys.push(key);
+          }
+        }
       }
+
+      // Remove matching keys
+      keys.forEach(key => localStorage.removeItem(key));
+    } catch (error) {
+      // Ignore errors
     }
   }
 
   /**
-   * Clear all cache
+   * Clear all cache entries
    */
   clear(): void {
-    this.cache.clear();
+    try {
+      const keys: string[] = [];
+      
+      // Get all cache keys
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(this.prefix)) {
+          keys.push(key);
+        }
+      }
+
+      // Remove all cache keys
+      keys.forEach(key => localStorage.removeItem(key));
+    } catch (error) {
+      // Ignore errors
+    }
   }
 
   /**
-   * Get cache size
+   * Get cache size (number of cached entries)
    */
   size(): number {
-    return this.cache.size;
+    try {
+      let count = 0;
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(this.prefix)) {
+          count++;
+        }
+      }
+      return count;
+    } catch (error) {
+      return 0;
+    }
   }
 }
 
@@ -87,9 +157,10 @@ export const CACHE_KEYS = {
   BLOG_CATEGORIES: 'blog:categories',
 } as const;
 
-// Cache TTLs (in milliseconds)
+// Cache TTLs (in milliseconds) - MANDATORY client-side cache
 export const CACHE_TTL = {
-  BLOG: 10 * 60 * 1000, // 10 minutes
-  MARKERS: 15 * 60 * 1000, // 15 minutes
-  PACKAGES: 30 * 60 * 1000, // 30 minutes
+  BLOG_POSTS: 10 * 60 * 1000,      // 10 minutes
+  BLOG_CATEGORIES: 30 * 60 * 1000,  // 30 minutes
+  MARKERS: 60 * 60 * 1000,          // 1 hour
+  PACKAGES: 60 * 60 * 1000,         // 1 hour
 } as const;

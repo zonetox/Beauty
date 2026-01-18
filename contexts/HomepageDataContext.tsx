@@ -65,8 +65,9 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
           .eq('page_name', 'homepage')
           .single();
         
+        // Homepage critical data timeout: 8 seconds
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Query timeout after 12 seconds')), 12000)
+          setTimeout(() => reject(new Error('Query timeout after 8 seconds')), 8000)
         );
         
         // Performance logging
@@ -80,7 +81,7 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
         error = result.error;
       } catch (timeoutError: any) {
         if (timeoutError.message?.includes('timeout')) {
-          console.warn('Homepage data query timeout, using fallback');
+          // Silent timeout - has fallback to cache/default data
           error = { code: 'TIMEOUT', message: 'Query timeout' };
         } else {
           throw timeoutError;
@@ -114,8 +115,7 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
           setHomepageData(DEFAULT_HOMEPAGE_DATA);
         }
       } else if (error && error.code === 'TIMEOUT') {
-        // Timeout - use fallback immediately
-        console.warn('Homepage query timeout, using cached/default data');
+        // Timeout - use fallback immediately (silent in production)
         const savedDataJSON = localStorage.getItem(LOCAL_STORAGE_KEY);
         if (savedDataJSON) {
           try {
@@ -173,8 +173,11 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
       } else {
         setHomepageData(DEFAULT_HOMEPAGE_DATA);
       }
-    } catch (error) {
-      console.error('Error in fetchHomepageData:', error);
+    } catch (error: any) {
+      // Only log unhandled exceptions (not timeouts with fallbacks)
+      if (!error?.message?.includes('timeout') && !error?.message?.includes('Timeout')) {
+        console.error('Error in fetchHomepageData (unhandled exception):', error);
+      }
       setHomepageData(DEFAULT_HOMEPAGE_DATA);
     } finally {
       setLoading(false);

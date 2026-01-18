@@ -54,9 +54,14 @@ const sanitizeNode = (node: Node): Node | null => {
   for (const attr of Array.from(element.attributes)) {
     if (allowedAttributes.includes(attr.name.toLowerCase())) {
         if (attr.name.toLowerCase() === 'href') {
-            // Ensure links are safe
-            if (attr.value.startsWith('http:') || attr.value.startsWith('https:') || attr.value.startsWith('mailto:')) {
-                 newElement.setAttribute(attr.name, attr.value);
+            // SECURITY: Only allow safe URL schemes (block javascript:, data:, vbscript:, etc.)
+            const hrefValue = attr.value.trim().toLowerCase();
+            const safeSchemes = ['http:', 'https:', 'mailto:', '#', '/'];
+            const isSafeUrl = safeSchemes.some(scheme => hrefValue.startsWith(scheme));
+            
+            // Also allow relative URLs (starting with / or #)
+            if (isSafeUrl && !hrefValue.startsWith('javascript:') && !hrefValue.startsWith('data:') && !hrefValue.startsWith('vbscript:')) {
+                newElement.setAttribute(attr.name, attr.value);
             }
         } else if (attr.name.toLowerCase() === 'style' && tagName === 'IMG') {
             // Only allow specific safe styles for images

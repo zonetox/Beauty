@@ -6,6 +6,7 @@ import { useParams, Navigate } from 'react-router-dom';
 import { useBlogData } from '../contexts/BlogDataContext.tsx';
 import SEOHead from '../components/SEOHead.tsx';
 import LoadingState from '../components/LoadingState.tsx';
+import SafeHtmlRenderer from '../components/SafeHtmlRenderer.tsx';
 
 const BlogPostPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -89,11 +90,10 @@ const BlogPostPage: React.FC = () => {
               </div>
             )}
 
-            {/* Content */}
-            <div
-              className="prose prose-lg max-w-none"
-              dangerouslySetInnerHTML={{ __html: post.content || '' }}
-            />
+            {/* Content - SECURITY FIX: Use SafeHtmlRenderer to prevent XSS */}
+            <div className="prose prose-lg max-w-none">
+              <SafeHtmlRenderer html={post.content || ''} />
+            </div>
           </article>
         </div>
       </div>

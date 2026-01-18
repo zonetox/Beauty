@@ -3,12 +3,29 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 declare const Deno: any;
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// CORS headers for security - only allow specific origins
+function getCorsHeaders(origin: string | null) {
+  // Allowed origins from env or fallback to production domain
+  const allowedOrigins = Deno.env.get('ALLOWED_ORIGINS')?.split(',') || [
+    'https://1beauty.asia',
+    'https://beauty-red.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000',
+  ];
+  
+  const allowedOrigin = origin && allowedOrigins.includes(origin) 
+    ? origin 
+    : allowedOrigins[0]; // Default to first allowed origin (production)
+  
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  };
+}
 
-function createErrorResponse(message: string, statusCode: number, code?: string): Response {
+function createErrorResponse(message: string, statusCode: number, origin: string | null, code?: string): Response {
+  const corsHeaders = getCorsHeaders(origin);
   const errorResponse: { error: string; code?: string; statusCode?: number } = {
     error: message,
     statusCode,
@@ -36,6 +53,8 @@ interface InviteStaffRequestBody {
 }
 
 Deno.serve(async (req: Request) => {
+  const corsHeaders = getCorsHeaders(req.headers.get('origin'));
+  
   // Handle preflight CORS request
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -46,15 +65,15 @@ Deno.serve(async (req: Request) => {
     const { email, businessId, role, permissions, businessName }: InviteStaffRequestBody = await req.json();
     
     if (!email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return createErrorResponse('Invalid email address', 400, 'VALIDATION_ERROR');
+      return createErrorResponse('Invalid email address', 400, req.headers.get('origin'), 'VALIDATION_ERROR');
     }
 
     if (!businessId || typeof businessId !== 'number') {
-      return createErrorResponse('Invalid business ID', 400, 'VALIDATION_ERROR');
+      return createErrorResponse('Invalid business ID', 400, req.headers.get('origin'), 'VALIDATION_ERROR');
     }
 
     if (!role || (role !== 'Editor' && role !== 'Admin')) {
-      return createErrorResponse('Invalid role. Must be Editor or Admin', 400, 'VALIDATION_ERROR');
+      return createErrorResponse('Invalid role. Must be Editor or Admin', 400, req.headers.get('origin'), 'VALIDATION_ERROR');
     }
 
     // Initialize Supabase admin client
@@ -73,7 +92,7 @@ Deno.serve(async (req: Request) => {
       .single();
 
     if (businessError || !business) {
-      return createErrorResponse(`Business with ID ${businessId} not found`, 404, 'BUSINESS_NOT_FOUND');
+      return createErrorResponse(`Business with ID ${businessId} not found`, 404, req.headers.get('origin'), 'BUSINESS_NOT_FOUND');
     }
 
     // 2. Check if user already exists
@@ -101,7 +120,7 @@ Deno.serve(async (req: Request) => {
       );
 
       if (inviteError || !inviteData || !inviteData.user) {
-        return createErrorResponse(`Failed to invite user: ${inviteError?.message || 'Unknown error'}`, 500, 'INVITE_ERROR');
+        return createErrorResponse(`Failed to invite user: ${inviteError?.message || 'Unknown error'}`, 500, req.headers.get('origin'), 'INVITE_ERROR');
       }
 
       userId = inviteData.user.id;
@@ -120,7 +139,7 @@ Deno.serve(async (req: Request) => {
       if (profileCreateError) {
         // Rollback: delete user if profile creation fails
         await supabaseAdmin.auth.admin.deleteUser(userId);
-        return createErrorResponse(`Failed to create profile: ${profileCreateError.message}`, 500, 'PROFILE_ERROR');
+        return createErrorResponse(`Failed to create profile: ${profileCreateError.message}`, 500, req.headers.get('origin'), 'PROFILE_ERROR');
       }
 
       // Send invitation email if new user
@@ -153,7 +172,7 @@ Deno.serve(async (req: Request) => {
       .maybeSingle();
 
     if (existingStaff) {
-      return createErrorResponse('This user is already a staff member for this business', 400, 'ALREADY_STAFF');
+      return createErrorResponse('This user is already a staff member for this business', 400, req.headers.get('origin'), 'ALREADY_STAFF');
     }
 
     // 4. Add staff member to business_staff table
@@ -169,7 +188,7 @@ Deno.serve(async (req: Request) => {
       .single();
 
     if (staffError || !newStaff) {
-      return createErrorResponse(`Failed to add staff member: ${staffError?.message || 'Unknown error'}`, 500, 'STAFF_ERROR');
+      return createErrorResponse(`Failed to add staff member: ${staffError?.message || 'Unknown error'}`, 500, req.headers.get('origin'), 'STAFF_ERROR');
     }
 
     return new Response(JSON.stringify({ 
@@ -184,6 +203,6 @@ Deno.serve(async (req: Request) => {
     });
 
   } catch (error: any) {
-    return createErrorResponse(error.message || 'An unexpected error occurred', 500, 'INTERNAL_ERROR');
+    return createErrorResponse(error.message || 'An unexpected error occurred', 500, req.headers.get('origin'), 'INTERNAL_ERROR');
   }
 });

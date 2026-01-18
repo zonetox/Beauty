@@ -6,6 +6,7 @@ import { Business, BlogPost, BlogComment, BlogCategory, MembershipPackage, Servi
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { uploadFile, deleteFileByUrl } from '../lib/storage.ts';
 import { snakeToCamel } from '../lib/utils.ts';
+import { cacheManager, CACHE_KEYS, CACHE_TTL } from '../lib/cache.ts';
 
 // Optional admin logging - injected via props or context to avoid circular dependency
 // AdminContext will be provided via App.tsx provider hierarchy, accessed at runtime
@@ -245,27 +246,103 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     setBusinessLoading(false);
   }, []);
 
-  // Define fetchAllPublicData first, before refetchAllPublicData
-  const fetchAllPublicData = useCallback(async () => {
-    // Prevent double fetch
-    if (hasFetchedRef.current) return;
-    hasFetchedRef.current = true;
-
+  // CRITICAL DATA: Fetch only featured businesses for homepage initial render
+  const fetchCriticalData = useCallback(async () => {
     if (!isSupabaseConfigured) {
       setBusinessLoading(false);
-      setBlogLoading(false);
-      hasFetchedRef.current = false; // Reset on error
       return;
     }
 
     try {
-      // ✅ FIX CĂN CỐT: Execute ALL queries in PARALLEL using Promise.allSettled
-      // This prevents sequential blocking - all queries run simultaneously
-      // Total time = max(individual query times), not sum of all query times
+      setBusinessLoading(true);
+      
+      // Only fetch featured businesses for homepage initial render (limit to 10-20 for performance)
+      const { data, error } = await supabase.from('businesses')
+        .select('*', { count: 'exact' })
+        .eq('is_active', true)
+        .eq('is_featured', true)
+        .order('id', { ascending: true })
+        .limit(20); // Only fetch featured businesses for initial render
 
-      // Create all query promises
-      const businessesPromise = fetchBusinesses(1).catch(e => {
-        console.warn('Businesses fetch error:', e);
+      if (error) {
+        console.error('Error fetching critical businesses:', error);
+        setBusinesses([]);
+        setTotalBusinesses(0);
+      } else if (data) {
+        const mapped = snakeToCamel(data).map((b: any) => ({
+          ...b,
+          services: [],
+          gallery: [],
+          team: [],
+          deals: [],
+          reviews: []
+        })) as Business[];
+        setBusinesses(mapped);
+        
+        // Get total count for featured businesses only
+        const { count } = await supabase.from('businesses')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_active', true)
+          .eq('is_featured', true);
+        setTotalBusinesses(count || 0);
+      }
+    } catch (error: any) {
+      console.error('Error in fetchCriticalData:', error);
+      setBusinesses([]);
+    } finally {
+      setBusinessLoading(false);
+    }
+  }, []);
+
+  // NON-CRITICAL DATA: Lazy-load blog posts, categories, markers, packages, and all businesses
+  // MANDATORY: If cached data exists → NEVER fetch on page load, only refresh in background
+  const fetchNonCriticalData = useCallback(async (backgroundRefresh = false) => {
+    if (!isSupabaseConfigured) {
+      setBlogLoading(false);
+      return;
+    }
+
+    // MANDATORY RULE: If cached data exists and not background refresh → use cache, skip fetch
+    const cachedBlogPosts = cacheManager.get<BlogPost[]>(CACHE_KEYS.BLOG_POSTS);
+    const cachedCategories = cacheManager.get<BlogCategory[]>(CACHE_KEYS.BLOG_CATEGORIES);
+    const cachedMarkers = cacheManager.get<any[]>(CACHE_KEYS.MARKERS);
+    const cachedPackages = cacheManager.get<MembershipPackage[]>(CACHE_KEYS.PACKAGES);
+
+    // Use cached data immediately if available (not background refresh)
+    if (!backgroundRefresh) {
+      if (cachedBlogPosts) {
+        setBlogPosts(cachedBlogPosts);
+        setBlogLoading(false);
+      }
+      if (cachedCategories) {
+        setBlogCategories(cachedCategories);
+      }
+      if (cachedMarkers) {
+        setBusinessMarkers(cachedMarkers);
+      }
+      if (cachedPackages) {
+        setPackages(cachedPackages);
+      }
+
+      // If all cached, return early (no fetch on page load)
+      if (cachedBlogPosts && cachedCategories && cachedMarkers && cachedPackages) {
+        // Background refresh in next tick (non-blocking)
+        setTimeout(() => {
+          fetchNonCriticalData(true);
+        }, 0);
+        return;
+      }
+    }
+
+    // Fetch data (either no cache, or background refresh)
+    try {
+      if (!backgroundRefresh) {
+        setBlogLoading(true);
+      }
+
+      // Create all query promises for non-critical data
+      const allBusinessesPromise = fetchBusinesses(1).catch(e => {
+        console.warn('All businesses fetch error:', e);
         return null;
       });
 
@@ -274,7 +351,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
         .eq('is_active', true)
         .not('latitude', 'is', null)
         .not('longitude', 'is', null)
-        .limit(2000); // Limit to first 2000 markers for performance (can be paginated later if needed)
+        .limit(2000);
 
       const blogPromise = supabase.from('blog_posts')
         .select('id, slug, title, image_url, excerpt, author, date, category, content, view_count')
@@ -290,105 +367,169 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
         .eq('is_active', true)
         .order('price');
 
-      // Add 12s timeout for cold start (Supabase cold start ~3-5s + network ~1-2s + query ~2-5s = 8-12s)
-      const createTimeoutPromise = (rejectMsg: string) => 
-        new Promise((_, reject) => setTimeout(() => reject(new Error(rejectMsg)), 12000));
+      // Timeout policy: Each request has its own specific timeout (no shared timeout)
+      const TIMEOUTS = {
+        BUSINESSES: 10000,  // 10 seconds
+        BLOG: 10000,        // 10 seconds
+        MARKERS: 12000,     // 12 seconds
+        PACKAGES: 8000,     // 8 seconds
+      };
 
-      // Performance logging wrapper
-      const measureQuery = async (name: string, queryPromise: Promise<any>) => {
+      const createTimeoutPromise = (timeoutMs: number, rejectMsg: string) => 
+        new Promise((_, reject) => setTimeout(() => reject(new Error(rejectMsg)), timeoutMs));
+
+      const measureQuery = async (name: string, queryPromise: Promise<any>, timeoutMs: number) => {
         const startTime = performance.now();
         try {
-          const result = await Promise.race([queryPromise, createTimeoutPromise(`${name} timeout`)]);
+          const result = await Promise.race([queryPromise, createTimeoutPromise(timeoutMs, `${name} timeout`)]);
           const duration = performance.now() - startTime;
           console.log(`[PERF] ${name}: ${duration.toFixed(2)}ms`);
           return result;
-        } catch (error) {
-          const duration = performance.now() - startTime;
-          console.warn(`[PERF] ${name}: TIMEOUT after ${duration.toFixed(2)}ms`);
+        } catch (error: any) {
+          // Silent timeout - has fallback to cache/empty data
+          // Only log if not a timeout error
+          if (!error?.message?.includes('timeout')) {
+            const duration = performance.now() - startTime;
+            console.warn(`[PERF] ${name}: ERROR after ${duration.toFixed(2)}ms`, error);
+          }
           throw error;
         }
       };
 
-      // Execute all queries in parallel with individual timeouts and performance logging
+      // Execute all non-critical queries in parallel with specific timeouts
       const [businessesResult, markersResult, blogResult, catResult, pkgResult] = await Promise.allSettled([
-        measureQuery('Businesses', businessesPromise),
-        measureQuery('Markers', markerPromise),
-        measureQuery('Blog Posts', blogPromise),
-        measureQuery('Categories', catPromise),
-        measureQuery('Packages', pkgPromise)
+        measureQuery('All Businesses', allBusinessesPromise, TIMEOUTS.BUSINESSES),
+        measureQuery('Markers', markerPromise, TIMEOUTS.MARKERS),
+        measureQuery('Blog Posts', blogPromise, TIMEOUTS.BLOG),
+        measureQuery('Categories', catPromise, TIMEOUTS.BLOG), // Same timeout as blog
+        measureQuery('Packages', pkgPromise, TIMEOUTS.PACKAGES)
       ]);
 
-      // Process businesses result
+      // Helper to check if error is a timeout
+      const isTimeoutError = (error: any): boolean => {
+        if (!error) return false;
+        const msg = error.message || error.toString() || '';
+        return msg.toLowerCase().includes('timeout') || msg.includes('TIMEOUT');
+      };
+
+      // Process all businesses (expand from featured only)
       if (businessesResult.status === 'fulfilled' && businessesResult.value !== null) {
-        // Businesses already set in fetchBusinesses, no action needed
+        // fetchBusinesses already sets businesses and totalBusinesses
       } else if (businessesResult.status === 'rejected') {
-        console.warn('Businesses fetch failed or timed out');
+        // Silent timeout - has fallback (cache or empty data)
+        if (!isTimeoutError(businessesResult.reason)) {
+          // Only log non-timeout errors (unhandled exceptions)
+          console.error('All businesses fetch failed:', businessesResult.reason);
+        }
       }
 
-      // Process markers result
+      // Process markers
       if (markersResult.status === 'fulfilled') {
         const markerData = markersResult.value as any;
         if (markerData?.data) {
-          setBusinessMarkers(snakeToCamel(markerData.data));
+          const markers = snakeToCamel(markerData.data);
+          setBusinessMarkers(markers);
+          // Cache markers: 1 hour
+          cacheManager.set(CACHE_KEYS.MARKERS, markers, CACHE_TTL.MARKERS);
         }
       } else {
-        console.warn('Failed to fetch markers:', markersResult.reason);
+        // Silent timeout - has fallback (cache or empty data)
+        if (!isTimeoutError(markersResult.reason)) {
+          console.error('Failed to fetch markers:', markersResult.reason);
+        }
       }
 
-      // Process blog posts result
+      // Process blog posts
       let blogRes: any = { error: null, data: null };
       if (blogResult.status === 'fulfilled') {
         const result = blogResult.value as any;
         blogRes = result;
       } else {
-        console.warn('Blog posts fetch failed or timed out:', blogResult.reason);
+        // Silent timeout - has fallback (cache or empty data)
         blogRes = { error: { message: 'Timeout' }, data: null };
       }
 
-      // Process categories result
+      if (blogRes.error) {
+        // Only log non-timeout errors (schema mismatch, auth failure, unhandled exception)
+        if (!isTimeoutError(blogRes.error)) {
+          console.error("Error fetching blog posts:", blogRes.error.message);
+        }
+      } else if (blogRes.data) {
+        const posts = snakeToCamel(blogRes.data) as BlogPost[];
+        setBlogPosts(posts);
+        // Cache blog posts: 10 minutes
+        cacheManager.set(CACHE_KEYS.BLOG_POSTS, posts, CACHE_TTL.BLOG_POSTS);
+      }
+      if (!backgroundRefresh) {
+        setBlogLoading(false);
+      }
+
+      // Process categories
       let catRes: any = { error: null, data: null };
       if (catResult.status === 'fulfilled') {
         const result = catResult.value as any;
         catRes = result;
       } else {
-        console.warn('Blog categories fetch failed or timed out:', catResult.reason);
+        // Silent timeout - has fallback (cache or empty data)
         catRes = { error: { message: 'Timeout' }, data: null };
       }
 
-      // Process packages result
+      if (catRes.error) {
+        // Only log non-timeout errors (schema mismatch, auth failure, unhandled exception)
+        if (!isTimeoutError(catRes.error)) {
+          console.error("Error fetching blog categories:", catRes.error.message);
+        }
+      } else if (catRes.data) {
+        const categories = snakeToCamel(catRes.data) as BlogCategory[];
+        setBlogCategories(categories);
+        // Cache categories: 30 minutes
+        cacheManager.set(CACHE_KEYS.BLOG_CATEGORIES, categories, CACHE_TTL.BLOG_CATEGORIES);
+      }
+
+      // Process packages
       let pkgRes: any = { error: null, data: null };
       if (pkgResult.status === 'fulfilled') {
         const result = pkgResult.value as any;
         pkgRes = result;
       } else {
-        console.warn('Packages fetch failed or timed out:', pkgResult.reason);
+        // Silent timeout - has fallback (cache or empty data)
         pkgRes = { error: { message: 'Timeout' }, data: null };
       }
 
-      if (blogRes.error) console.error("Error fetching blog posts:", blogRes.error.message);
-      else if (blogRes.data) setBlogPosts(snakeToCamel(blogRes.data) as BlogPost[]);
-      setBlogLoading(false);
-
-      if (catRes.error) console.error("Error fetching blog categories:", catRes.error.message);
-      else if (catRes.data) setBlogCategories(snakeToCamel(catRes.data) as BlogCategory[]);
-
       if (pkgRes.error) {
-        // Only log as warning if it's a timeout, not a critical error
-        if (pkgRes.error.message === 'Timeout') {
-          console.warn("Packages fetch timeout (non-critical)");
-        } else {
+        // Only log non-timeout errors (schema mismatch, auth failure, unhandled exception)
+        if (!isTimeoutError(pkgRes.error)) {
           console.error("Error fetching packages:", pkgRes.error.message);
         }
       } else if (pkgRes.data) {
-        setPackages(snakeToCamel(pkgRes.data) as MembershipPackage[]);
+        const packages = snakeToCamel(pkgRes.data) as MembershipPackage[];
+        setPackages(packages);
+        // Cache packages: 1 hour
+        cacheManager.set(CACHE_KEYS.PACKAGES, packages, CACHE_TTL.PACKAGES);
       }
     } catch (error: any) {
-      console.error('Error in fetchAllPublicData:', error);
-      setBusinessLoading(false);
-      setBlogLoading(false);
-      hasFetchedRef.current = false; // Reset on error
+      // Only log unhandled exceptions (not timeouts with fallbacks)
+      if (!error?.message?.includes('timeout') && !error?.message?.includes('Timeout')) {
+        console.error('Error in fetchNonCriticalData (unhandled exception):', error);
+      }
+      if (!backgroundRefresh) {
+        setBlogLoading(false);
+      }
     }
   }, [fetchBusinesses]);
+
+  // Legacy: fetchAllPublicData for backwards compatibility (admin, other pages)
+  // This fetches ALL data (critical + non-critical)
+  const fetchAllPublicData = useCallback(async () => {
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+
+    // Fetch both critical and non-critical in parallel
+    await Promise.all([
+      fetchCriticalData(),
+      fetchNonCriticalData()
+    ]);
+  }, [fetchCriticalData, fetchNonCriticalData]);
 
   // Helper to reset and refetch (for after add/update/delete operations)
   const refetchAllPublicData = useCallback(async () => {
@@ -396,11 +537,24 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     await fetchAllPublicData();
   }, [fetchAllPublicData]);
 
+  // CRITICAL DATA: Fetch only on mount (featured businesses for homepage initial render)
   useEffect(() => {
-    // Only fetch once on mount
-    fetchAllPublicData();
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+    fetchCriticalData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty deps - only run once on mount
+  }, []); // Only fetch critical data on mount
+
+  // NON-CRITICAL DATA: Lazy-load after initial render (blog posts, categories, markers, packages)
+  useEffect(() => {
+    // Delay non-critical data fetching until after initial render
+    const timer = setTimeout(() => {
+      fetchNonCriticalData();
+    }, 100); // Small delay to let initial render complete
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Lazy-load non-critical data after render
 
   // --- BUSINESS LOGIC ---
   const addBusiness = async (newBusiness: Business): Promise<Business | null> => {

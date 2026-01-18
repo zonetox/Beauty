@@ -7,15 +7,31 @@ declare const Deno: any;
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 
-// Define CORS headers for security. This allows your web app to call the function.
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+// CORS headers for security - only allow specific origins
+function getCorsHeaders(origin: string | null) {
+  // Allowed origins from env or fallback to production domain
+  const allowedOrigins = Deno.env.get('ALLOWED_ORIGINS')?.split(',') || [
+    'https://1beauty.asia',
+    'https://beauty-red.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000',
+  ];
+  
+  const allowedOrigin = origin && allowedOrigins.includes(origin) 
+    ? origin 
+    : allowedOrigins[0]; // Default to first allowed origin (production)
+  
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  };
+}
 
 // PHASE 2: Standardized error response helper
 // Helper function to create standardized error responses
-function createErrorResponse(message: string, statusCode: number, code?: string): Response {
+function createErrorResponse(message: string, statusCode: number, origin: string | null, code?: string): Response {
+  const corsHeaders = getCorsHeaders(origin);
   const errorResponse: { error: string; code?: string; statusCode?: number } = {
     error: message,
     statusCode,
@@ -31,6 +47,8 @@ function createErrorResponse(message: string, statusCode: number, code?: string)
 
 // Fix: Add explicit Request type for the handler's parameter for better type safety.
 Deno.serve(async (req: Request) => {
+  const corsHeaders = getCorsHeaders(req.headers.get('origin'));
+  
   // Handle the preflight CORS request, which is essential for browser security.
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -80,6 +98,6 @@ Deno.serve(async (req: Request) => {
 
   } catch (error: any) { // Fix: Add explicit type for the catch clause variable to align with modern TypeScript standards.
     // Handle any errors that occur during the process and return a helpful message.
-    return createErrorResponse(error.message || 'An unexpected error occurred', 400, 'BAD_REQUEST');
+    return createErrorResponse(error.message || 'An unexpected error occurred', 400, req.headers.get('origin'), 'BAD_REQUEST');
   }
 });
