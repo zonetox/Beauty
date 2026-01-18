@@ -297,21 +297,21 @@ When building a new feature:
 
 | File | Purpose |
 |------|---------|
-| [../ARCHITECTURE.md](../ARCHITECTURE.md) | Immutable architecture philosophy |
-| [../database/schema_v1.0_FINAL.sql](../database/schema_v1.0_FINAL.sql) | Database source of truth |
-| [../types.ts](../types.ts) | Global TypeScript types & enums |
-| [../contexts/](../contexts/) | State management providers |
-| [../components/ProtectedRoute.tsx](../components/ProtectedRoute.tsx) | Auth guard example |
-| [../jest.config.cjs](../jest.config.cjs) | Jest configuration |
-| [../playwright.config.ts](../playwright.config.ts) | E2E test setup |
+| [ARCHITECTURE.md](../ARCHITECTURE.md) | Immutable architecture philosophy |
+| [database/schema_v1.0_FINAL.sql](../database/schema_v1.0_FINAL.sql) | Database source of truth |
+| [types.ts](../types.ts) | Global TypeScript types & enums |
+| [contexts/](../contexts) | State management providers |
+| [components/ProtectedRoute.tsx](../components/ProtectedRoute.tsx) | Auth guard example |
+| [jest.config.cjs](../jest.config.cjs) | Jest configuration |
+| [playwright.config.ts](../playwright.config.ts) | E2E test setup |
 
 ---
 
 ## ❓ WHEN IN DOUBT
 
-1. **Architecture question?** → Read [../ARCHITECTURE.md](../ARCHITECTURE.md)
-2. **Database question?** → Check [../database/schema_v1.0_FINAL.sql](../database/schema_v1.0_FINAL.sql)
-3. **Type question?** → Look at [../types.ts](../types.ts)
+1. **Architecture question?** → Read [ARCHITECTURE.md](../ARCHITECTURE.md)
+2. **Database question?** → Check [database/schema_v1.0_FINAL.sql](../database/schema_v1.0_FINAL.sql)
+3. **Type question?** → Look at [types.ts](../types.ts)
 4. **Component pattern?** → Find similar component in `components/` or `pages/`
 5. **RLS issue?** → Inspect policies in Supabase Studio; verify auth context
 

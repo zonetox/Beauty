@@ -46,8 +46,8 @@ const TicketDetailModal: React.FC<{ ticket: SupportTicket; onClose: () => void; 
                         <textarea value={replyContent} onChange={e => setReplyContent(e.target.value)} rows={3} className="w-full p-2 border rounded-md" placeholder="Type your reply..." required />
                          <div className="flex justify-between items-center mt-2">
                             <div className="flex items-center gap-2">
-                                <label className="text-sm font-medium">Status:</label>
-                                <select value={ticket.status} onChange={e => onStatusChange(ticket.id, e.target.value as TicketStatus)} className="p-1 border rounded-md text-sm">
+                                <label htmlFor="status-select" className="text-sm font-medium">Status:</label>
+                                <select id="status-select" title="Ticket Status" value={ticket.status} onChange={e => onStatusChange(ticket.id, e.target.value as TicketStatus)} className="p-1 border rounded-md text-sm">
                                     {Object.values(TicketStatus).map(s => <option key={s} value={s}>{s}</option>)}
                                 </select>
                             </div>
@@ -89,8 +89,8 @@ const AdminSupportTickets: React.FC = () => {
 
             <h2 className="text-xl font-semibold text-neutral-dark mb-4">Support Tickets</h2>
             <div className="mb-4">
-                <label className="text-sm font-medium">Filter by status: </label>
-                <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as any)} className="p-2 border rounded-md bg-gray-50">
+                <label htmlFor="status-filter-select" className="text-sm font-medium">Filter by status: </label>
+                <select id="status-filter-select" title="Filter tickets by status" value={statusFilter} onChange={e => setStatusFilter(e.target.value as any)} className="p-2 border rounded-md bg-gray-50">
                     <option value="all">All</option>
                     {Object.values(TicketStatus).map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
