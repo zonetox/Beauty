@@ -40,15 +40,17 @@ const BarChart: React.FC<{ data: AnalyticsDataPoint[]; dataKey: 'pageViews' | 't
             <h3 className="font-semibold text-neutral-dark mb-4">{title}</h3>
             <div className="flex justify-around items-end h-64 space-x-2">
                 {data.map((item, index) => (
-                    <div key={item.date} className="flex flex-col items-center flex-1 h-full">
+                    <div key={item?.date ?? `slot-${index}`} className="flex flex-col items-center flex-1 h-full">
                         <div className="flex-grow flex items-end w-full">
+                           {/* eslint-disable jsx-a11y/no-static-element-interactions */}
                            <div
                                 className="w-full bg-primary/20 rounded-t-md hover:bg-primary/40 transition-colors cursor-pointer"
-                                style={{ height: `${(values[index] / maxValue) * 100}%` }}
+                                /* Dynamic height based on data - CSS inline necessary for dynamic calculations */
+                                style={{ height: `${(values[index] / maxValue) * 100}%`, minHeight: '2px' }}
                                 title={`${values[index]} ${dataKey === 'pageViews' ? 'page views' : 'clicks'}`}
                             ></div>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">{new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                        <p className="text-xs text-gray-500 mt-1">{new Date(item?.date ?? new Date()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
                     </div>
                 ))}
             </div>
@@ -83,7 +85,8 @@ const TrafficSources: React.FC<{ sources: TrafficSource[] }> = ({ sources }) => 
                             <span className="text-gray-500">{source.percentage}%</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2.5">
-                            <div className={`${sourceColors[source.source] || 'bg-gray-400'} h-2.5 rounded-full transition-all`} style={{ width: `${source.percentage}%` }}></div>
+                            {/* eslint-disable jsx-a11y/no-static-element-interactions */}
+                            <div className={`${sourceColors[source.source] || 'bg-gray-400'} h-2.5 rounded-full transition-all`} /* Dynamic width based on data - CSS inline necessary for dynamic calculations */ style={{ width: `${Math.max(source.percentage, 0.5)}%`, minWidth: '2px' }}></div>
                         </div>
                     </div>
                 ))}
@@ -177,7 +180,8 @@ const AnalyticsDashboard: React.FC = () => {
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
-            link.setAttribute('download', `analytics-${currentBusiness.name}-${timeRange}-${new Date().toISOString().split('T')[0]}.csv`);
+            const businessName = currentBusiness?.name ?? 'analytics';
+            link.setAttribute('download', `analytics-${businessName}-${timeRange}-${new Date().toISOString().split('T')[0]}.csv`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
@@ -227,7 +231,9 @@ const AnalyticsDashboard: React.FC = () => {
                     <p className="text-gray-500">Measure your landing page performance.</p>
                 </div>
                 <div className="flex items-center gap-2">
+                    <label htmlFor="time-range-select" className="text-sm font-medium text-gray-700">Time Range:</label>
                     <select
+                        id="time-range-select"
                         value={timeRange}
                         onChange={(e) => setTimeRange(e.target.value as TimeRange)}
                         className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5"

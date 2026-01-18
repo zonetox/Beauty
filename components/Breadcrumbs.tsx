@@ -37,30 +37,31 @@ const Breadcrumbs: React.FC = () => {
     };
 
     // --- Dynamic Path Handling ---
-    if (pathnames[0] === 'business' && pathnames.length >= 2) {
+    const firstPath = pathnames[0];
+    if (firstPath === 'business' && pathnames.length >= 2) {
         crumbs.push({ label: 'Danh bạ', path: '/directory' });
-        const business = getBusinessBySlug(pathnames[1]);
-        if (business) {
+        const business = getBusinessBySlug(pathnames[1] ?? '');
+        if (business?.name && business?.slug) {
             crumbs.push({ label: business.name, path: `/business/${business.slug}` });
 
             if (pathnames.length === 4 && pathnames[2] === 'post') {
-                const post = getBusinessPostBySlug(pathnames[3]);
-                if (post) {
+                const post = getBusinessPostBySlug(pathnames[3] ?? '');
+                if (post?.title && post?.slug) {
                     crumbs.push({ label: post.title, path: `/business/${business.slug}/post/${post.slug}` });
                 }
             }
         }
-    } else if (pathnames[0] === 'blog' && pathnames.length === 2) {
+    } else if (firstPath === 'blog' && pathnames.length === 2) {
         crumbs.push({ label: 'Blog', path: '/blog' });
-        const post = getPlatformPostBySlug(pathnames[1]);
-        if (post) {
+        const post = getPlatformPostBySlug(pathnames[1] ?? '');
+        if (post?.title && post?.slug) {
             crumbs.push({ label: post.title, path: `/blog/${post.slug}` });
         }
-    } else {
+    } else if (firstPath) {
         // Handle simple static paths
-        const page = staticPaths[pathnames[0]];
+        const page = staticPaths[firstPath];
         if (page) {
-            crumbs.push({ label: page, path: `/${pathnames[0]}` });
+            crumbs.push({ label: page, path: `/${firstPath}` });
         }
     }
 

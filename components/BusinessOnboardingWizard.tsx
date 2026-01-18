@@ -170,7 +170,7 @@ const BusinessOnboardingWizard: React.FC = () => {
                     Welcome to BeautyDir
                 </h2>
                 <p className="mt-2 text-center text-sm text-gray-600">
-                    Let's set up your business profile to get started.
+                    Let&apos;s set up your business profile to get started.
                 </p>
             </div>
 

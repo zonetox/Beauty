@@ -58,7 +58,7 @@ const AIQuickReplyModal: React.FC<AIQuickReplyModalProps> = ({ isOpen, onClose, 
                 contents: prompt,
             });
 
-            const text = response.text;
+            const text = response.text ?? '';
             const generatedReplies = text.split('\n').filter(line => line.match(/^\d+\./)).map(line => line.replace(/^\d+\.\s*/, '').trim());
             setReplies(generatedReplies);
 

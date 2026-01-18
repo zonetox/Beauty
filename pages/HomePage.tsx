@@ -13,7 +13,7 @@ import SEOHead from '../components/SEOHead.tsx';
 import LoadingState from '../components/LoadingState.tsx';
 import EmptyState from '../components/EmptyState.tsx';
 import { CATEGORIES, CITIES, FEATURED_LOCATIONS } from '../constants.ts';
-import { MembershipTier, DealStatus } from '../types.ts';
+import { MembershipTier, DealStatus, HomepageSection } from '../types.ts';
 import { useBusinessData, useBlogData } from '../contexts/BusinessDataContext.tsx';
 import { useHomepageData } from '../contexts/HomepageDataContext.tsx';
 import { getOptimizedSupabaseUrl } from '../lib/image.ts';
@@ -132,7 +132,7 @@ const HomePage: React.FC = () => {
 
   const isLoading = homepageLoading || businessLoading || blogLoading;
 
-  const renderSection = (section: any) => {
+  const renderSection = (section: HomepageSection) => {
     if (!section.visible) return null;
 
     switch (section.type) {
@@ -308,7 +308,7 @@ const HomePage: React.FC = () => {
                           backgroundImage: `url(${getOptimizedSupabaseUrl(slide.imageUrl, { width: 1920, quality: 85 })})`,
                           opacity: index === currentSlide ? 1 : 0,
                       }}
-                      aria-hidden={index !== currentSlide}
+                      aria-hidden={index !== currentSlide ? 'true' : 'false'}
                   />
               ))}
               <div className="absolute inset-0 bg-black/40"></div>

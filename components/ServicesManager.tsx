@@ -81,7 +81,9 @@ const ServicesManager: React.FC = () => {
 
         const newServices = [...localServices];
         const draggedItemContent = newServices.splice(dragItem.current, 1)[0];
-        newServices.splice(dragOverItem.current, 0, draggedItemContent);
+        if (draggedItemContent) {
+            newServices.splice(dragOverItem.current, 0, draggedItemContent);
+        }
         
         dragItem.current = null;
         dragOverItem.current = null;

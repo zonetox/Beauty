@@ -24,9 +24,11 @@ const StatDisplay: React.FC<{ label: string; value: number; limit: number }> = (
                 </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2.5">
+                {/* eslint-disable jsx-a11y/no-static-element-interactions */}
                 <div 
                     className={`h-2.5 rounded-full ${isOverLimit ? 'bg-red-500' : 'bg-primary'}`} 
-                    style={{ width: `${Math.min(percentage, 100)}%` }}
+                    /* Dynamic width calculation - CSS inline necessary for dynamic percentages */
+                    style={{ width: `${Math.min(percentage, 100)}%`, minWidth: '2px' }}
                 ></div>
             </div>
         </div>
@@ -205,15 +207,21 @@ const MediaLibrary: React.FC = () => {
     
     // --- Drag and Drop Handlers ---
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
-        const originalIndex = localMedia.findIndex(item => item.id === filteredMedia[index].id);
-        dragItem.current = originalIndex;
+        const filteredItem = filteredMedia[index];
+        if (filteredItem?.id) {
+            const originalIndex = localMedia.findIndex(item => item?.id === filteredItem.id);
+            dragItem.current = originalIndex;
+        }
         e.dataTransfer.effectAllowed = 'move';
     };
     
     const handleDragEnter = (e: React.DragEvent<HTMLDivElement>, index: number) => {
         e.preventDefault();
-        const originalIndex = localMedia.findIndex(item => item.id === filteredMedia[index].id);
-        dragOverItem.current = originalIndex;
+        const filteredItem = filteredMedia[index];
+        if (filteredItem?.id) {
+            const originalIndex = localMedia.findIndex(item => item?.id === filteredItem.id);
+            dragOverItem.current = originalIndex;
+        }
     };
     
     const handleDragEnd = async () => {
@@ -225,7 +233,9 @@ const MediaLibrary: React.FC = () => {
 
         const newMedia = [...localMedia];
         const draggedItemContent = newMedia.splice(dragItem.current, 1)[0];
-        newMedia.splice(dragOverItem.current, 0, draggedItemContent);
+        if (draggedItemContent) {
+            newMedia.splice(dragOverItem.current, 0, draggedItemContent);
+        }
         
         dragItem.current = null;
         dragOverItem.current = null;
@@ -319,9 +329,11 @@ const MediaLibrary: React.FC = () => {
                                     <span>{progress}%</span>
                                 </div>
                                 <div className="w-full bg-gray-200 rounded-full h-2">
+                                    {/* eslint-disable jsx-a11y/no-static-element-interactions */}
                                     <div 
                                         className="bg-primary h-2 rounded-full transition-all duration-300" 
-                                        style={{ width: `${progress}%` }}
+                                        /* Dynamic progress - CSS inline necessary for upload progress calculation */
+                                        style={{ width: `${progress}%`, minWidth: '2px' }}
                                     ></div>
                                 </div>
                             </div>

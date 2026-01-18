@@ -58,7 +58,9 @@ const LayoutEditor: React.FC<LayoutEditorProps> = ({ currentLayout, currentVisib
         
         const newLayout = [...layout];
         const draggedItemContent = newLayout.splice(dragItem.current, 1)[0];
-        newLayout.splice(dragOverItem.current, 0, draggedItemContent);
+        if (draggedItemContent) {
+            newLayout.splice(dragOverItem.current, 0, draggedItemContent);
+        }
         
         dragItem.current = null;
         dragOverItem.current = null;
@@ -136,8 +138,10 @@ const LayoutEditor: React.FC<LayoutEditorProps> = ({ currentLayout, currentVisib
                                 {isText && (
                                     <input 
                                         type="text"
+                                        id={`layout-text-${item.id}`}
                                         value={item.content}
                                         onChange={e => handleUpdateText(item.id, e.target.value)}
+                                        placeholder="Nhập nội dung"
                                         className="w-full px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                                     />
                                 )}

@@ -65,7 +65,7 @@ const SystemSettings: React.FC = () => {
 
         if (name.includes('.')) {
             const keys = name.split('.');
-            if (keys.length === 2) {
+            if (keys.length === 2 && keys[0] && keys[1]) {
                 setFormData(prev => ({
                     ...prev!,
                     [keys[0]]: {
@@ -73,7 +73,7 @@ const SystemSettings: React.FC = () => {
                         [keys[1]]: type === 'checkbox' ? checked : value,
                     },
                 }));
-            } else if (keys.length === 3) {
+            } else if (keys.length === 3 && keys[0] && keys[1] && keys[2]) {
                 // For nested objects like colors.primary
                 setFormData(prev => ({
                     ...prev!,

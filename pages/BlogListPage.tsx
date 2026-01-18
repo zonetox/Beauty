@@ -45,9 +45,11 @@ const BlogListPage: React.FC = () => {
   // Get category from URL on mount/location change
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    setSelectedCategory(params.get('category') || '');
-    setCurrentPage(parseInt(params.get('page') || '1', 10));
-  }, [location.search]);
+    const category = params.get('category') || '';
+    const page = parseInt(params.get('page') || '1', 10);
+    setSelectedCategory(category);
+    setCurrentPage(page);
+  }, [location.search, setSelectedCategory, setCurrentPage]);
 
   const allPosts = useMemo((): UnifiedPost[] => {
     // 1. Process platform posts
@@ -117,10 +119,9 @@ const BlogListPage: React.FC = () => {
   }, [searchQuery, allPosts, selectedCategory]);
   
   // Reset to page 1 when search or category changes
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedCategory]);
+  }, [searchQuery, selectedCategory, setCurrentPage]);
 
   // Pagination logic
   const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);

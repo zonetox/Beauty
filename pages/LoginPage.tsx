@@ -21,7 +21,8 @@ const LoginPage: React.FC = () => {
     // If user is already logged in, redirect appropriately
     useEffect(() => {
         if (currentUser && profile) {
-            const from = (location.state as any)?.from?.pathname;
+            const state = location.state as { from?: { pathname?: string } } | null;
+            const from = state?.from?.pathname;
             // Business owner always goes to /account
             if (profile.businessId) {
                 navigate('/account', { replace: true });

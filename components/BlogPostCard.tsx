@@ -19,18 +19,25 @@ interface BlogPostCardProps {
 
 const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
   const { url, title, imageUrl, excerpt, author, date, category, viewCount } = post;
+  const safeTitle = title ?? 'Untitled';
+  const safeAuthor = author ?? 'Unknown';
+  const safeDate = date ?? 'No date';
+  const safeCategory = category ?? 'Uncategorized';
+  const safeExcerpt = excerpt ?? '';
+  const safeImageUrl = imageUrl ?? '';
+  
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden transition-shadow hover:shadow-xl">
       <Link to={url}>
-        <img className="w-full h-56 object-cover" src={getOptimizedSupabaseUrl(imageUrl, { width: 500, quality: 75 })} alt={title} loading="lazy" />
+        <img className="w-full h-56 object-cover" src={getOptimizedSupabaseUrl(safeImageUrl, { width: 500, quality: 75 })} alt={safeTitle} loading="lazy" />
         <div className="p-6">
-          <p className="text-sm text-primary font-semibold">{category}</p>
-          <h3 className="mt-2 text-xl font-bold text-neutral-dark font-serif">{title}</h3>
-          <p className="mt-3 text-base text-gray-500">{excerpt}</p>
+          <p className="text-sm text-primary font-semibold">{safeCategory}</p>
+          <h3 className="mt-2 text-xl font-bold text-neutral-dark font-serif">{safeTitle}</h3>
+          <p className="mt-3 text-base text-gray-500">{safeExcerpt}</p>
           <div className="mt-4 flex items-center text-sm text-gray-500">
-            <span>{author}</span>
+            <span>{safeAuthor}</span>
             <span className="mx-2">&bull;</span>
-            <span>{date}</span>
+            <span>{safeDate}</span>
             {viewCount !== undefined && (
                 <>
                     <span className="mx-2">&bull;</span>

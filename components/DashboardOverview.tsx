@@ -50,9 +50,11 @@ const BarChart: React.FC<{ data: AnalyticsDataPoint[]; dataKey: 'pageViews'; tit
                 {data.map((item) => (
                     <div key={item.date} className="flex flex-col items-center flex-1 h-full">
                          <div className="flex-grow flex items-end w-full">
+                           {/* eslint-disable jsx-a11y/no-static-element-interactions */}
                            <div
                                 className="w-full bg-primary/20 rounded-t-md hover:bg-primary/40 transition-colors"
-                                style={{ height: `${(item[dataKey] / maxValue) * 100}%` }}
+                                /* Dynamic height based on data - CSS inlines unavoidable for dynamic calculations */
+                                style={{ height: `${Math.max((item[dataKey] / maxValue) * 100, 5)}%`, minHeight: '5px' }}
                                 title={`${item[dataKey]} views`}
                             ></div>
                         </div>
@@ -78,16 +80,12 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
     const { getAnalyticsByBusinessId } = useAnalyticsData();
     const { addNotification, getUnreadAnnouncements, markAnnouncementAsRead } = useAdmin();
 
-    const [unreadAnnouncements, setUnreadAnnouncements] = useState<Announcement[]>([]);
+    const [unreadAnnouncements, setUnreadAnnouncements] = useState<Announcement[]>(() => 
+        currentBusiness ? getUnreadAnnouncements(currentBusiness.id) : []
+    );
 
     // Loading state: Check if data is still loading
     const isLoading = !currentBusiness || ordersLoading || reviewsLoading;
-
-    useEffect(() => {
-        if(currentBusiness) {
-            setUnreadAnnouncements(getUnreadAnnouncements(currentBusiness.id));
-        }
-    }, [currentBusiness, getUnreadAnnouncements]);
 
     const handleDismissAnnouncement = (id: string) => {
         if(currentBusiness) {

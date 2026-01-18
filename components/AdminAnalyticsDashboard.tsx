@@ -1,9 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Business, Order, OrderStatus, MembershipTier, ChartDataPoint, RegistrationRequest, PageView } from '../types.ts';
+import { Business, Order, OrderStatus, ChartDataPoint, RegistrationRequest, PageView } from '../types.ts';
 import AdminStatCard from './AdminStatCard.tsx';
 import AnalyticsChart from './AnalyticsChart.tsx';
 import { supabase } from '../lib/supabaseClient.ts';
 import { snakeToCamel } from '../lib/utils.ts';
+import { ensureNumber, ensureArray, safeIndex } from '../lib/typeHelpers.ts';
 
 type TimeRange = '7d' | '30d' | 'month';
 
@@ -51,7 +52,8 @@ const FunnelStage: React.FC<{ stage: FunnelStageData, baseValue: number }> = ({ 
     const percentage = baseValue > 0 ? (stage.value / baseValue) * 100 : 0;
     return (
         <div className="flex items-center justify-center">
-            <div className={`relative ${stage.color} text-white font-bold py-4 text-center`} style={{ width: `${Math.max(percentage, 10)}%` }}>
+            {/* eslint-disable jsx-a11y/no-static-element-interactions */}
+            <div className={`relative ${stage.color} text-white font-bold py-4 text-center transition-all`} style={{ width: `${Math.max(percentage, 10)}%`, minWidth: '60px' }}>
                 <div className="px-2">
                     <p className="text-lg">{stage.value}</p>
                     <p className="text-xs opacity-90">{stage.label}</p>
@@ -74,9 +76,9 @@ const ConversionRate: React.FC<{ from: number, to: number }> = ({ from, to }) =>
 };
 
 const ConversionFunnel: React.FC<{ requests: RegistrationRequest[], orders: Order[] }> = ({ requests, orders }) => {
-    const totalRequests = requests.length;
-    const approvedRequests = requests.filter(r => r.status === 'Approved').length;
-    const completedPayments = orders.filter(o => o.status === OrderStatus.COMPLETED).length;
+    const totalRequests = ensureArray(requests).length;
+    const approvedRequests = ensureArray(requests).filter(r => r?.status === 'Approved').length;
+    const completedPayments = ensureArray(orders).filter(o => o?.status === OrderStatus.COMPLETED).length;
 
     const stages: FunnelStageData[] = [
         { label: 'Submitted Requests', value: totalRequests, color: 'bg-indigo-500' },
@@ -88,11 +90,11 @@ const ConversionFunnel: React.FC<{ requests: RegistrationRequest[], orders: Orde
         <div className="bg-white p-6 rounded-lg shadow h-full">
             <h3 className="text-lg font-semibold text-neutral-dark mb-4">Conversion Funnel</h3>
             <div className="space-y-0">
-                <FunnelStage stage={stages[0]} baseValue={totalRequests} />
-                <ConversionRate from={stages[0].value} to={stages[1].value} />
-                <FunnelStage stage={stages[1]} baseValue={totalRequests} />
-                <ConversionRate from={stages[1].value} to={stages[2].value} />
-                <FunnelStage stage={stages[2]} baseValue={totalRequests} />
+                {stages[0] && <FunnelStage stage={stages[0]} baseValue={totalRequests} />}
+                {stages[0] && stages[1] && <ConversionRate from={stages[0].value} to={stages[1].value} />}
+                {stages[1] && <FunnelStage stage={stages[1]} baseValue={totalRequests} />}
+                {stages[1] && stages[2] && <ConversionRate from={stages[1].value} to={stages[2].value} />}
+                {stages[2] && <FunnelStage stage={stages[2]} baseValue={totalRequests} />}
             </div>
         </div>
     );
@@ -166,22 +168,24 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
     }, [orders, businesses, pageViews, startDate, endDate]);
 
     const stats = useMemo(() => {
-        const revenue = filteredData.orders
-            .filter(o => o.status === OrderStatus.COMPLETED)
-            .reduce((sum, o) => sum + o.amount, 0);
+        const revenue = ensureArray(filteredData?.orders)
+            .filter(o => o?.status === OrderStatus.COMPLETED)
+            .reduce((sum, o) => sum + ensureNumber(o?.amount, 0), 0);
         
         // Calculate page view stats
-        const totalPageViews = filteredData.pageViews.length;
-        const uniqueSessions = new Set(filteredData.pageViews.map(pv => pv.session_id).filter(Boolean)).size;
-        const pageViewsByType = filteredData.pageViews.reduce((acc, pv) => {
-            acc[pv.page_type] = (acc[pv.page_type] || 0) + 1;
+        const pvArray = ensureArray(filteredData?.pageViews);
+        const totalPageViews = pvArray.length;
+        const uniqueSessions = new Set(pvArray.map(pv => pv?.session_id).filter(Boolean)).size;
+        const pageViewsByType = pvArray.reduce((acc, pv) => {
+            const pageType = pv?.page_type ?? 'unknown';
+            acc[pageType] = (acc[pageType] ?? 0) + 1;
             return acc;
         }, {} as Record<string, number>);
         
         return {
             revenue,
-            newOrders: filteredData.orders.length,
-            newBusinesses: filteredData.businesses.length,
+            newOrders: ensureArray(filteredData?.orders).length,
+            newBusinesses: ensureArray(filteredData?.businesses).length,
             totalPageViews,
             uniqueSessions,
             pageViewsByType
@@ -190,7 +194,7 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
     
     const revenueChartData: ChartDataPoint[] = useMemo(() => {
         const data: { [key: string]: number } = {};
-        let currentDate = new Date(startDate);
+        const currentDate = new Date(startDate);
 
         while (currentDate <= endDate) {
             const dateKey = currentDate.toISOString().split('T')[0];
@@ -198,12 +202,12 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
             currentDate.setDate(currentDate.getDate() + 1);
         }
 
-        filteredData.orders
-            .filter(o => o.status === OrderStatus.COMPLETED && o.confirmedAt)
+        ensureArray(filteredData?.orders)
+            .filter(o => o?.status === OrderStatus.COMPLETED && o?.confirmedAt)
             .forEach(order => {
-                const dateKey = new Date(order.confirmedAt!).toISOString().split('T')[0];
-                if (data[dateKey] !== undefined) {
-                    data[dateKey] += order.amount;
+                const dateKey = new Date(order?.confirmedAt ?? new Date()).toISOString().split('T')[0];
+                if (dateKey && Object.prototype.hasOwnProperty.call(data, dateKey)) {
+                    data[dateKey]! += ensureNumber(order?.amount, 0);
                 }
             });
         
@@ -212,7 +216,7 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
 
     const pageViewsChartData: ChartDataPoint[] = useMemo(() => {
         const data: { [key: string]: number } = {};
-        let currentDate = new Date(startDate);
+        const currentDate = new Date(startDate);
 
         while (currentDate <= endDate) {
             const dateKey = currentDate.toISOString().split('T')[0];
@@ -220,10 +224,10 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
             currentDate.setDate(currentDate.getDate() + 1);
         }
 
-        filteredData.pageViews.forEach(pv => {
-            const dateKey = new Date(pv.viewed_at).toISOString().split('T')[0];
-            if (data[dateKey] !== undefined) {
-                data[dateKey] += 1;
+        ensureArray(filteredData?.pageViews).forEach(pv => {
+            const dateKey = new Date(pv?.viewed_at ?? new Date()).toISOString().split('T')[0];
+            if (dateKey && Object.prototype.hasOwnProperty.call(data, dateKey)) {
+                data[dateKey]! += 1;
             }
         });
         
@@ -231,18 +235,18 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
     }, [filteredData, startDate, endDate]);
     
     const topViewed = useMemo(() => 
-        [...businesses]
-            .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))
+        ensureArray(businesses)
+            .sort((a, b) => ensureNumber(b?.viewCount, 0) - ensureNumber(a?.viewCount, 0))
             .slice(0, 5)
-            .map(b => ({ name: b.name, value: `${(b.viewCount || 0).toLocaleString()} views` }))
+            .map(b => ({ name: b?.name ?? 'Unknown', value: `${ensureNumber(b?.viewCount, 0).toLocaleString()} views` }))
     , [businesses]);
 
     const topRated = useMemo(() => 
-        [...businesses]
-            .filter(b => b.reviewCount > 0)
-            .sort((a, b) => b.rating - a.rating)
+        ensureArray(businesses)
+            .filter(b => ensureNumber(b?.reviewCount, 0) > 0)
+            .sort((a, b) => ensureNumber(b?.rating, 0) - ensureNumber(a?.rating, 0))
             .slice(0, 5)
-            .map(b => ({ name: b.name, value: `${b.rating.toFixed(1)} ★ (${b.reviewCount})` }))
+            .map(b => ({ name: b?.name ?? 'Unknown', value: `${ensureNumber(b?.rating, 0).toFixed(1)} ★ (${ensureNumber(b?.reviewCount, 0)})` }))
     , [businesses]);
     
     const handleExport = () => {

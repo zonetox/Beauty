@@ -1,10 +1,32 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
+interface EnvInfo {
+    urlProvided: boolean;
+    urlLength?: number;
+    keyProvided: boolean;
+    keyLength?: number;
+    isDummy: boolean;
+}
+
+interface DbResult {
+    count?: unknown;
+    message?: string;
+    sdk?: string;
+    cleanClient?: string;
+    rawFetch?: string;
+    data?: unknown;
+    [key: string]: unknown;
+}
+
 const ConnectionTestPage: React.FC = () => {
     const [status, setStatus] = useState<string>('Initializing...');
-    const [envInfo, setEnvInfo] = useState<any>({});
-    const [dbResult, setDbResult] = useState<any>(null);
+    const [envInfo, setEnvInfo] = useState<EnvInfo>({
+        urlProvided: false,
+        keyProvided: false,
+        isDummy: false
+    });
+    const [dbResult, setDbResult] = useState<DbResult | null>(null);
 
     useEffect(() => {
         const runTest = async () => {
@@ -38,13 +60,14 @@ const ConnectionTestPage: React.FC = () => {
 
                     if (error) {
                         setStatus(`FAILED: Database connection error. ${error.message}`);
-                        setDbResult(error);
+                        setDbResult({ message: error.message } as DbResult);
                     } else {
                         setStatus('SUCCESS: Connected to Database (SDK)');
                         setDbResult({ count: data, message: 'Read successful' });
                     }
-                } catch (err: any) {
-                    if (err.message === 'SDK_TIMEOUT') {
+                } catch (err: unknown) {
+                    const error = err as Record<string, unknown>;
+                    if (error.message === 'SDK_TIMEOUT') {
                         setStatus('SDK Timed out. Testing Clean Client...');
 
                         // 3. Try Clean Client (No Auth Persistence)
@@ -73,8 +96,9 @@ const ConnectionTestPage: React.FC = () => {
                                 // but let's keep raw fetch as a fallback or just show this success.
                                 return;
                             }
-                        } catch (cleanErr: any) {
-                            setStatus(`Clean Client Failed: ${cleanErr.message}. Trying Raw Fetch...`);
+                        } catch (cleanErr: unknown) {
+                            const cleanError = cleanErr as Record<string, unknown>;
+                            setStatus(`Clean Client Failed: ${cleanError.message}. Trying Raw Fetch...`);
                         }
 
                         // Fallback to Raw Fetch
@@ -91,21 +115,23 @@ const ConnectionTestPage: React.FC = () => {
                             if (res.ok) {
                                 const data = await res.json();
                                 setStatus('SUCCESS: Raw Fetch Worked! (SDK Deep Issue)');
-                                setDbResult((prev: any) => ({ ...prev, rawFetch: 'Success', data }));
+                                setDbResult((prev: DbResult | null) => ({ ...prev, rawFetch: 'Success', data }));
                             } else {
                                 setStatus(`FAILED: Raw Fetch ${res.status}`);
-                                setDbResult((prev: any) => ({ ...prev, rawFetch: 'Error', status: res.status }));
+                                setDbResult((prev: DbResult | null) => ({ ...prev, rawFetch: 'Error', status: res.status }));
                             }
-                        } catch (fetchErr: any) {
-                            setStatus(`CRITICAL: Raw Fetch Failed. ${fetchErr.message}`);
+                        } catch (fetchErr: unknown) {
+                            const fetchError = fetchErr as Record<string, unknown>;
+                            setStatus(`CRITICAL: Raw Fetch Failed. ${fetchError.message}`);
                         }
                     } else {
                         throw err;
                     }
                 }
 
-            } catch (err: any) {
-                setStatus(`CRITICAL FAILURE: ${err.message}`);
+            } catch (err: unknown) {
+                const error = err as Record<string, unknown>;
+                setStatus(`CRITICAL FAILURE: ${error.message}`);
             }
         };
 

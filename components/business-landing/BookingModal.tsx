@@ -1,9 +1,11 @@
 
 import React, { useState, useMemo } from 'react';
+import toast from 'react-hot-toast';
 import { Business, AppointmentStatus } from '../../types.ts';
 import { useBookingData } from '../../contexts/BusinessContext.tsx';
 import { useUserSession } from '../../contexts/UserSessionContext.tsx';
 import { trackConversion } from '../../lib/usePageTracking.ts';
+import { ensureString, ensureNumber, ensureArray } from '../../lib/typeHelpers.ts';
 
 interface BookingModalProps {
     isOpen: boolean;
@@ -42,8 +44,8 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const selectedService = useMemo(() => {
-        return business.services.find(s => s.id === selectedServiceId);
-    }, [selectedServiceId, business.services]);
+        return ensureArray(business?.services).find(s => s?.id === selectedServiceId);
+    }, [selectedServiceId, business?.services]);
 
     const handleCustomerInfoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setCustomerInfo(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -55,17 +57,24 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
 
         setIsSubmitting(true);
         
+        const dateStr = selectedDate instanceof Date ? selectedDate.toISOString().split('T')[0] : (selectedDate ?? '');
+        if (!dateStr) {
+            setIsSubmitting(false);
+            toast.error('Please select a valid date');
+            return;
+        }
+
         const newAppointment = {
             businessId: business.id,
             serviceId: selectedService.id,
             serviceName: selectedService.name,
-            customerName: customerInfo.name,
-            customerEmail: customerInfo.email,
-            customerPhone: customerInfo.phone,
-            date: selectedDate.toISOString().split('T')[0], // YYYY-MM-DD
-            timeSlot: selectedTime,
+            customerName: ensureString(customerInfo.name),
+            customerEmail: ensureString(customerInfo.email),
+            customerPhone: ensureString(customerInfo.phone),
+            date: dateStr,
+            timeSlot: ensureString(selectedTime),
             status: AppointmentStatus.PENDING,
-            notes: customerInfo.notes
+            notes: ensureString(customerInfo.notes)
         };
 
         // Simulate async operation
@@ -77,8 +86,8 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
         trackConversion('booking', business.id, 'landing_page', {
             serviceId: selectedService.id,
             serviceName: selectedService.name,
-            date: selectedDate.toISOString().split('T')[0],
-            timeSlot: selectedTime,
+            date: dateStr,
+            timeSlot: ensureString(selectedTime),
         }, currentUser?.id);
         
         setIsSubmitting(false);
@@ -89,59 +98,61 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
     const generateTimeSlots = (date: Date): string[] => {
         if (!selectedService) return [];
         
-        // FIX: Changed 'durationMinutes' to 'duration_minutes' to match the Service type.
-        const serviceDuration = selectedService.duration_minutes || 60;
+        const serviceDuration = ensureNumber(selectedService?.duration_minutes, 60);
         const slots: string[] = [];
         const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' });
         
-        // A very simplified working hours parser. A real app would need a more robust solution.
-        const workingHoursEntry = Object.entries(business.workingHours || {}).find(([day]) => 
+        const workingHoursEntry = Object.entries(business?.workingHours || {}).find(([day]) => 
             day.toLowerCase().includes(dayOfWeek.toLowerCase())
         );
         
         let startTime: string, endTime: string;
         if (workingHoursEntry) {
             const hours = workingHoursEntry[1];
-            // Handle new object format: {open, close, isOpen}
             if (typeof hours === 'object' && hours !== null && 'open' in hours && 'close' in hours) {
-                startTime = hours.open;
-                endTime = hours.close;
+                startTime = ensureString(hours.open, '09:00');
+                endTime = ensureString(hours.close, '18:00');
             } else if (typeof hours === 'string') {
-                // Handle old string format: "09:00 - 21:00"
-                [startTime, endTime] = hours.split(' - ').map(s => s.trim());
+                const parts = hours.split(' - ').map(s => s.trim());
+                startTime = ensureString(parts[0], '09:00');
+                endTime = ensureString(parts[1], '18:00');
             } else {
-                startTime = '9:00';
+                startTime = '09:00';
                 endTime = '18:00';
             }
         } else {
-            startTime = '9:00';
+            startTime = '09:00';
             endTime = '18:00';
         }
         
-        const [start, end] = [startTime, endTime].map(time => {
-            const [h, m] = time.split(':');
+        const timeArray = [startTime, endTime].map(time => {
+            const parts = time.split(':');
+            const h = parts[0] ?? '9';
+            const m = parts[1] ?? '0';
             const d = new Date(date);
-            d.setHours(parseInt(h, 10), parseInt(m || '0', 10), 0, 0);
+            d.setHours(parseInt(h, 10), parseInt(m, 10), 0, 0);
             return d;
         });
         
-        const existingAppointmentsOnDate = appointments.filter(
-            appt => appt.businessId === business.id && appt.date === date.toISOString().split('T')[0]
+        const start = timeArray[0] ?? new Date();
+        const end = timeArray[1] ?? new Date(start.getTime() + 8 * 60 * 60 * 1000);
+        
+        const dateStr = date.toISOString().split('T')[0];
+        const existingAppointmentsOnDate = ensureArray(appointments).filter(
+            appt => appt?.businessId === business.id && appt?.date === dateStr
         );
 
-        let currentTime = start;
+        let currentTime = new Date(start);
         while (currentTime < end) {
             const slotTime = new Date(currentTime);
             const slotEnd = new Date(slotTime.getTime() + serviceDuration * 60000);
             
             const isBooked = existingAppointmentsOnDate.some(appt => {
-                const apptTime = new Date(`${appt.date}T${appt.timeSlot}`);
-                const apptService = business.services.find(s => s.id === appt.serviceId);
-                // FIX: Changed 'durationMinutes' to 'duration_minutes' to match the Service type.
-                const apptDuration = apptService?.duration_minutes || 60;
+                const apptTime = new Date(`${appt?.date ?? dateStr}T${appt?.timeSlot ?? '00:00'}`);
+                const apptService = ensureArray(business?.services).find(s => s?.id === appt?.serviceId);
+                const apptDuration = ensureNumber(apptService?.duration_minutes, 60);
                 const apptEnd = new Date(apptTime.getTime() + apptDuration * 60000);
 
-                // Check for overlap
                 return (slotTime < apptEnd && slotEnd > apptTime);
             });
 
@@ -266,22 +277,22 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
                             </div>
                             <form onSubmit={handleBookingSubmit} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700">Họ và tên</label>
-                                    <input type="text" name="name" value={customerInfo.name} onChange={handleCustomerInfoChange} required className="mt-1 w-full p-2 border rounded-md" />
+                                    <label htmlFor="customer-name" className="block text-sm font-medium text-gray-700">Họ và tên</label>
+                                    <input type="text" id="customer-name" name="name" value={customerInfo.name} onChange={handleCustomerInfoChange} required placeholder="Nhập họ và tên" className="mt-1 w-full p-2 border rounded-md" />
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700">Email</label>
-                                        <input type="email" name="email" value={customerInfo.email} onChange={handleCustomerInfoChange} required className="mt-1 w-full p-2 border rounded-md" />
+                                        <label htmlFor="customer-email" className="block text-sm font-medium text-gray-700">Email</label>
+                                        <input type="email" id="customer-email" name="email" value={customerInfo.email} onChange={handleCustomerInfoChange} required placeholder="Nhập email" className="mt-1 w-full p-2 border rounded-md" />
                                     </div>
                                      <div>
-                                        <label className="block text-sm font-medium text-gray-700">Số điện thoại</label>
-                                        <input type="tel" name="phone" value={customerInfo.phone} onChange={handleCustomerInfoChange} required className="mt-1 w-full p-2 border rounded-md" />
+                                        <label htmlFor="customer-phone" className="block text-sm font-medium text-gray-700">Số điện thoại</label>
+                                        <input type="tel" id="customer-phone" name="phone" value={customerInfo.phone} onChange={handleCustomerInfoChange} required placeholder="Nhập số điện thoại" className="mt-1 w-full p-2 border rounded-md" />
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700">Ghi chú (tùy chọn)</label>
-                                    <textarea name="notes" value={customerInfo.notes} onChange={handleCustomerInfoChange} rows={3} className="mt-1 w-full p-2 border rounded-md" />
+                                    <label htmlFor="customer-notes" className="block text-sm font-medium text-gray-700">Ghi chú (tùy chọn)</label>
+                                    <textarea id="customer-notes" name="notes" value={customerInfo.notes} onChange={handleCustomerInfoChange} rows={3} placeholder="Nhập ghi chú" className="mt-1 w-full p-2 border rounded-md" />
                                 </div>
                                 <div className="text-right">
                                     <button type="submit" disabled={isSubmitting} className="px-6 py-2 bg-primary text-white rounded-md font-semibold disabled:bg-primary/50">

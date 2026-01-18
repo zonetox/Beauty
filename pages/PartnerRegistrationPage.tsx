@@ -40,9 +40,10 @@ const PartnerRegistrationPage: React.FC = () => {
 
             toast.success('Registration submitted successfully! We will contact you shortly.');
             navigate('/'); // Redirect to home or a thanks page
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const err = error as Record<string, unknown>;
             console.error('Error submitting registration:', error);
-            toast.error(error.message || 'Failed to submit registration.');
+            toast.error((err.message as string) || 'Failed to submit registration.');
         } finally {
             setLoading(false);
         }

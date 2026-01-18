@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useBusinessAuth } from '../contexts/BusinessContext.tsx';
 import { useBusinessData } from '../contexts/BusinessDataContext.tsx';
-import { BusinessCategory, HeroSlide, TrustIndicator } from '../types.ts';
+import { BusinessCategory, HeroSlide, TrustIndicator, Business } from '../types.ts';
 import { uploadFile } from '../lib/storage.ts';
 import LoadingState from './LoadingState.tsx';
 import EmptyState from './EmptyState.tsx';
@@ -91,7 +91,7 @@ const BusinessProfileEditor: React.FC = () => {
     const navigate = useNavigate();
     const staffPermissions = useStaffPermissions();
 
-    const [formData, setFormData] = useState<any>(null);
+    const [formData, setFormData] = useState<Business | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [activeTab, setActiveTab] = useState<'info' | 'media' | 'hours' | 'social' | 'landing'>('info');
     const [errors, setErrors] = useState<FormErrors>({});
@@ -146,7 +146,7 @@ const BusinessProfileEditor: React.FC = () => {
                 }
                 return acc;
             }, {} as { [key: string]: string });
-            setFormData((prev: any) => ({ ...prev, workingHours: workingHoursObject }));
+            setFormData((prev: Business | null) => ({ ...prev, workingHours: workingHoursObject }));
         }
     }, [workingHoursList]);
 
@@ -211,7 +211,7 @@ const BusinessProfileEditor: React.FC = () => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         const isNumeric = type === 'number';
-        setFormData((prev: any) => ({ ...prev, [name]: isNumeric ? parseFloat(value) : value }));
+        setFormData((prev: Business | null) => ({ ...prev, [name]: isNumeric ? parseFloat(value) : value }));
         // Clear error for this field when user starts typing
         if (errors[name as keyof FormErrors]) {
             setErrors((prev) => ({ ...prev, [name]: undefined }));
@@ -222,7 +222,7 @@ const BusinessProfileEditor: React.FC = () => {
         const { value, checked } = e.target;
         const category = value as BusinessCategory;
 
-        setFormData((prev: any) => {
+        setFormData((prev: Business | null) => {
             const currentCategories = prev.categories || [];
             if (checked) {
                 return { ...prev, categories: [...new Set([...currentCategories, category])] };
@@ -253,11 +253,12 @@ const BusinessProfileEditor: React.FC = () => {
             const fileExt = file.name.split('.').pop();
             const folder = `business/${currentBusiness.id}`;
             const publicUrl = await uploadFile('business-logos', file, folder);
-            setFormData((prev: any) => ({ ...prev, logoUrl: publicUrl }));
+            setFormData((prev: Business | null) => ({ ...prev, logoUrl: publicUrl }));
             toast.success('Logo uploaded successfully!');
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const err = error as Record<string, unknown>;
             console.error('Logo upload error:', error);
-            toast.error(error?.message || 'Failed to upload logo. Please try again.');
+            toast.error((err?.message as string) || 'Failed to upload logo. Please try again.');
         } finally {
             setIsUploadingLogo(false);
         }
@@ -277,15 +278,16 @@ const BusinessProfileEditor: React.FC = () => {
             // Use business-gallery bucket with path: business/{business_id}/cover.{ext}
             const folder = `business/${currentBusiness.id}`;
             const publicUrl = await uploadFile('business-gallery', file, folder);
-            setFormData((prev: any) => ({ ...prev, imageUrl: publicUrl }));
+            setFormData((prev: Business | null) => ({ ...prev, imageUrl: publicUrl }));
             toast.success('Cover image uploaded successfully!');
             // Clear error if cover image was missing
             if (errors.imageUrl) {
                 setErrors((prev) => ({ ...prev, imageUrl: undefined }));
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const err = error as Record<string, unknown>;
             console.error('Cover image upload error:', error);
-            toast.error(error?.message || 'Failed to upload cover image. Please try again.');
+            toast.error((err?.message as string) || 'Failed to upload cover image. Please try again.');
         } finally {
             setIsUploadingCover(false);
         }
@@ -293,21 +295,23 @@ const BusinessProfileEditor: React.FC = () => {
     
     const handleSeoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setFormData((prev: any) => ({ ...prev, seo: { ...(prev.seo || {}), [name]: value } }));
+        setFormData((prev: Business | null) => ({ ...prev, seo: { ...(prev.seo || {}), [name]: value } }));
     };
 
     const handleLandingPageConfigChange = (newConfig: LandingPageConfig) => {
-        setFormData((prev: any) => ({ ...prev, landingPageConfig: newConfig }));
+        setFormData((prev: Business | null) => ({ ...prev, landingPageConfig: newConfig }));
     };
     
     const handleSocialChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormData((prev: any) => ({ ...prev, socials: { ...(prev.socials || {}), [name]: value } }));
+        setFormData((prev: Business | null) => ({ ...prev, socials: { ...(prev.socials || {}), [name]: value } }));
     };
     
     const handleWorkingHoursListChange = (index: number, field: 'day' | 'time', value: string) => {
         const newList = [...workingHoursList];
-        newList[index][field] = value;
+        if (newList[index]) {
+            newList[index][field] = value;
+        }
         setWorkingHoursList(newList);
     };
 
@@ -348,9 +352,10 @@ const BusinessProfileEditor: React.FC = () => {
         try {
             await updateBusiness(formData);
             toast.success('Profile saved successfully!');
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const err = error as Record<string, unknown>;
             console.error('Save error:', error);
-            toast.error(error?.message || 'Failed to save profile. Please try again.');
+            toast.error((err?.message as string) || 'Failed to save profile. Please try again.');
         } finally {
             setIsSaving(false);
         }
@@ -751,13 +756,14 @@ const BusinessProfileEditor: React.FC = () => {
                                     <div key={index} className="p-4 border border-gray-200 rounded-lg">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                                                <label htmlFor={`trust-indicator-type-${index}`} className="block text-sm font-medium text-gray-700 mb-1">Type</label>
                                                 <select
+                                                    id={`trust-indicator-type-${index}`}
                                                     value={indicator.type}
                                                     onChange={(e) => {
                                                         const updated = [...(formData.trustIndicators || [])];
                                                         updated[index] = { ...updated[index], type: e.target.value as TrustIndicator['type'] };
-                                                        setFormData((prev: any) => ({ ...prev, trustIndicators: updated }));
+                                                        setFormData((prev: Business | null) => ({ ...prev, trustIndicators: updated }));
                                                     }}
                                                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                                                 >
@@ -774,7 +780,7 @@ const BusinessProfileEditor: React.FC = () => {
                                                     onChange={(e) => {
                                                         const updated = [...(formData.trustIndicators || [])];
                                                         updated[index] = { ...updated[index], title: e.target.value };
-                                                        setFormData((prev: any) => ({ ...prev, trustIndicators: updated }));
+                                                        setFormData((prev: Business | null) => ({ ...prev, trustIndicators: updated }));
                                                     }}
                                                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                                                     placeholder="e.g., Verified Business"
@@ -789,7 +795,7 @@ const BusinessProfileEditor: React.FC = () => {
                                                 onChange={(e) => {
                                                     const updated = [...(formData.trustIndicators || [])];
                                                     updated[index] = { ...updated[index], icon: e.target.value };
-                                                    setFormData((prev: any) => ({ ...prev, trustIndicators: updated }));
+                                                    setFormData((prev: Business | null) => ({ ...prev, trustIndicators: updated }));
                                                 }}
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
                                                 placeholder="https://example.com/icon.png"
@@ -802,7 +808,7 @@ const BusinessProfileEditor: React.FC = () => {
                                                 onChange={(e) => {
                                                     const updated = [...(formData.trustIndicators || [])];
                                                     updated[index] = { ...updated[index], description: e.target.value };
-                                                    setFormData((prev: any) => ({ ...prev, trustIndicators: updated }));
+                                                    setFormData((prev: Business | null) => ({ ...prev, trustIndicators: updated }));
                                                 }}
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
                                                 rows={2}
@@ -812,8 +818,8 @@ const BusinessProfileEditor: React.FC = () => {
                                         <button
                                             type="button"
                                             onClick={() => {
-                                                const updated = (formData.trustIndicators || []).filter((_: any, i: number) => i !== index);
-                                                setFormData((prev: any) => ({ ...prev, trustIndicators: updated }));
+                                                const updated = (formData.trustIndicators || []).filter((_: TrustIndicator, i: number) => i !== index);
+                                                setFormData((prev: Business | null) => ({ ...prev, trustIndicators: updated }));
                                             }}
                                             className="text-red-600 hover:text-red-800 text-sm font-medium"
                                         >
@@ -826,7 +832,7 @@ const BusinessProfileEditor: React.FC = () => {
                                     type="button"
                                     onClick={() => {
                                         const newIndicator: TrustIndicator = { type: 'badge', title: '' };
-                                        setFormData((prev: any) => ({ 
+                                        setFormData((prev: Business | null) => ({ 
                                             ...prev, 
                                             trustIndicators: [...(prev.trustIndicators || []), newIndicator] 
                                         }));

@@ -147,8 +147,9 @@ const RegisterPage: React.FC = () => {
                 navigate('/', { replace: true }); // Redirect to homepage for regular users
             }
 
-        } catch (err: any) {
-            const errorMessage = err.message || 'An unexpected error occurred during registration.';
+        } catch (err: unknown) {
+            const error = err as Record<string, unknown>;
+            const errorMessage = (error.message as string) || 'An unexpected error occurred during registration.';
             setError(errorMessage);
             // Show toast error instead of browser alert
             toast.error(errorMessage);
@@ -237,12 +238,12 @@ const RegisterPage: React.FC = () => {
               {userType === 'business' ? (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Tên doanh nghiệp <span className="text-red-500">*</span></label>
-                    <input type="text" name="business_name" value={formData.business_name} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                    <label htmlFor="business_name" className="block text-sm font-medium text-gray-700">Tên doanh nghiệp <span className="text-red-500">*</span></label>
+                    <input id="business_name" type="text" name="business_name" value={formData.business_name} onChange={handleChange} required title="Tên doanh nghiệp" placeholder="Nhập tên doanh nghiệp" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Lĩnh vực <span className="text-red-500">*</span></label>
-                    <select name="category" value={formData.category} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
+                    <label htmlFor="category" className="block text-sm font-medium text-gray-700">Lĩnh vực <span className="text-red-500">*</span></label>
+                    <select id="category" name="category" value={formData.category} onChange={handleChange} required title="Chọn lĩnh vực doanh nghiệp" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
                       {Object.values(BusinessCategory).map(cat => (
                         <option key={cat} value={cat}>{cat}</option>
                       ))}
@@ -253,43 +254,43 @@ const RegisterPage: React.FC = () => {
                     <input type="text" name="address" value={formData.address} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" placeholder="Nhập địa chỉ đầy đủ của doanh nghiệp" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Email <span className="text-red-500">*</span></label>
-                    <input type="email" name="email" value={formData.email} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                    <label htmlFor="business-email" className="block text-sm font-medium text-gray-700">Email <span className="text-red-500">*</span></label>
+                    <input id="business-email" type="email" name="email" value={formData.email} onChange={handleChange} required title="Email doanh nghiệp" placeholder="Nhập email doanh nghiệp" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Số điện thoại <span className="text-red-500">*</span></label>
-                    <input type="tel" name="phone" value={formData.phone} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                    <label htmlFor="business-phone" className="block text-sm font-medium text-gray-700">Số điện thoại <span className="text-red-500">*</span></label>
+                    <input id="business-phone" type="tel" name="phone" value={formData.phone} onChange={handleChange} required title="Số điện thoại doanh nghiệp" placeholder="0987654321" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Mật khẩu <span className="text-red-500">*</span></label>
-                    <input type="password" name="password" value={formData.password} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                    <label htmlFor="business-password" className="block text-sm font-medium text-gray-700">Mật khẩu <span className="text-red-500">*</span></label>
+                    <input id="business-password" type="password" name="password" value={formData.password} onChange={handleChange} required title="Mật khẩu (tối thiểu 6 ký tự)" placeholder="Nhập mật khẩu" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Xác nhận mật khẩu <span className="text-red-500">*</span></label>
-                    <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                    <label htmlFor="business-confirm-password" className="block text-sm font-medium text-gray-700">Xác nhận mật khẩu <span className="text-red-500">*</span></label>
+                    <input id="business-confirm-password" type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required title="Xác nhận mật khẩu" placeholder="Nhập lại mật khẩu" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
                   </div>
                 </>
               ) : (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Họ và tên <span className="text-red-500">*</span></label>
-                    <input type="text" name="full_name" value={formData.full_name} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                    <label htmlFor="full_name" className="block text-sm font-medium text-gray-700">Họ và tên <span className="text-red-500">*</span></label>
+                    <input id="full_name" type="text" name="full_name" value={formData.full_name} onChange={handleChange} required title="Họ và tên" placeholder="Nhập họ và tên" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Email <span className="text-red-500">*</span></label>
-                    <input type="email" name="email" value={formData.email} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                    <label htmlFor="user-email" className="block text-sm font-medium text-gray-700">Email <span className="text-red-500">*</span></label>
+                    <input id="user-email" type="email" name="email" value={formData.email} onChange={handleChange} required title="Email" placeholder="Nhập email" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Số điện thoại</label>
-                    <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                    <label htmlFor="user-phone" className="block text-sm font-medium text-gray-700">Số điện thoại</label>
+                    <input id="user-phone" type="tel" name="phone" value={formData.phone} onChange={handleChange} title="Số điện thoại" placeholder="0987654321" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Mật khẩu <span className="text-red-500">*</span></label>
-                    <input type="password" name="password" value={formData.password} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                    <label htmlFor="user-password" className="block text-sm font-medium text-gray-700">Mật khẩu <span className="text-red-500">*</span></label>
+                    <input id="user-password" type="password" name="password" value={formData.password} onChange={handleChange} required title="Mật khẩu (tối thiểu 6 ký tự)" placeholder="Nhập mật khẩu" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Xác nhận mật khẩu <span className="text-red-500">*</span></label>
-                    <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                    <label htmlFor="user-confirm-password" className="block text-sm font-medium text-gray-700">Xác nhận mật khẩu <span className="text-red-500">*</span></label>
+                    <input id="user-confirm-password" type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required title="Xác nhận mật khẩu" placeholder="Nhập lại mật khẩu" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
                   </div>
                 </>
               )}

@@ -18,9 +18,10 @@ const tierStyles = {
   [MembershipTier.FREE]: 'border border-gray-200',
 };
 
-const tierBadge = {
+const tierBadge: Record<MembershipTier, { text: string; bg: string; text_color: string }> = {
   [MembershipTier.VIP]: { text: 'VIP', bg: 'bg-accent', text_color: 'text-neutral-dark' },
   [MembershipTier.PREMIUM]: { text: 'Premium', bg: 'bg-primary', text_color: 'text-white' },
+  [MembershipTier.FREE]: { text: 'Free', bg: 'bg-gray-100', text_color: 'text-gray-700' },
 };
 
 const EyeIcon: React.FC<{ className?: string }> = ({ className = '' }) => (
@@ -71,7 +72,7 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, highlighted = fal
             {isVerified && <VerifiedBadge />}
           </div>
           {slogan && (
-            <p className="text-sm text-gray-500 mt-1 italic truncate">"{slogan}"</p>
+            <p className="text-sm text-gray-500 mt-1 italic truncate">&quot;{slogan}&quot;</p>
           )}
            <div className="mt-2 space-y-1 text-sm text-gray-600 flex-grow">
                 <div className="flex items-start">

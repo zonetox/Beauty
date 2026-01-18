@@ -110,7 +110,7 @@ const BusinessDetailPage: React.FC = () => {
                 console.error("Failed to update recently viewed businesses:", error);
             }
         }
-    }, [business?.id]); // Only depend on business.id to prevent unnecessary re-runs
+    }, [business, incrementBusinessViewCount]); // Only depend on business.id to prevent unnecessary re-runs
 
     // Loading state
     if (loading) {

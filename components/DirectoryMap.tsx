@@ -119,7 +119,8 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusi
 
         validBusinesses.forEach(business => {
             const popupContent = ReactDOMServer.renderToString(<MapBusinessCard business={business} />);
-            const icon = getIcon(business.categories[0], false);
+            const category = business?.categories?.[0] ?? BusinessCategory.SPA;
+            const icon = getIcon(category, false);
 
             const marker = L.marker([business.latitude!, business.longitude!], { icon })
                 .addTo(mapRef.current)
@@ -171,7 +172,8 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusi
             const business = businesses.find(b => b.id === id);
             if (business && markersRef.current[id]) {
                 const isHighlighted = id === highlightedBusinessId || id === selectedBusinessId;
-                markersRef.current[id].setIcon(getIcon(business.categories[0], isHighlighted));
+                const category = business?.categories?.[0] ?? BusinessCategory.SPA;
+                markersRef.current[id].setIcon(getIcon(category, isHighlighted));
 
                 // Bring active marker to front. Hovered is on top of selected.
                 if (isHighlighted) {
@@ -185,7 +187,7 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusi
 
     }, [highlightedBusinessId, selectedBusinessId, businesses]);
 
-    return <div ref={mapContainerRef} className="h-full w-full" style={{ zIndex: 1 }} />;
+    return <div ref={mapContainerRef} className="h-full w-full relative z-10" />;
 };
 
 export default DirectoryMap;

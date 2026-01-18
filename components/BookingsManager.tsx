@@ -52,11 +52,11 @@ const BookingsManager: React.FC = () => {
         const todayStr = now.toISOString().split('T')[0];
         
         return {
-            pending: allAppointments.filter(a => a.status === AppointmentStatus.PENDING).length,
-            upcoming: allAppointments.filter(a => a.status === AppointmentStatus.CONFIRMED && new Date(a.date) >= now).length,
-            today: allAppointments.filter(a => a.status === AppointmentStatus.CONFIRMED && a.date === todayStr).length,
-            completed: allAppointments.filter(a => a.status === AppointmentStatus.COMPLETED).length,
-            cancelled: allAppointments.filter(a => a.status === AppointmentStatus.CANCELLED).length,
+            pending: allAppointments.filter(a => a?.status === AppointmentStatus.PENDING).length,
+            upcoming: allAppointments.filter(a => a?.status === AppointmentStatus.CONFIRMED && new Date(a?.date ?? '') >= now).length,
+            today: allAppointments.filter(a => a?.status === AppointmentStatus.CONFIRMED && a?.date === todayStr).length,
+            completed: allAppointments.filter(a => a?.status === AppointmentStatus.COMPLETED).length,
+            cancelled: allAppointments.filter(a => a?.status === AppointmentStatus.CANCELLED).length,
         }
     }, [allAppointments]);
 
@@ -258,8 +258,9 @@ const BookingsManager: React.FC = () => {
             {/* Filters */}
             {allAppointments.length > 0 && (
                 <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Status</label>
+                    <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700 mb-1">Filter by Status</label>
                     <select
+                        id="status-filter"
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value as AppointmentStatus | 'all')}
                         className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"

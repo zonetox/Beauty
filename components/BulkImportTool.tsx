@@ -9,7 +9,7 @@ const BulkImportTool: React.FC = () => {
     const [importLog, setImportLog] = useState<string[]>([]);
 
     const handleImport = () => {
-        let newLog: string[] = [];
+        const newLog: string[] = [];
         try {
             const businessesToImport: Partial<Business>[] = JSON.parse(jsonInput);
             if (!Array.isArray(businessesToImport)) {
@@ -54,7 +54,7 @@ const BulkImportTool: React.FC = () => {
     return (
         <div>
             <h3 className="text-md font-semibold text-neutral-dark mb-2">Bulk Import Businesses</h3>
-            <p className="text-sm text-gray-500 mb-4">Paste a JSON array of business objects to import. Ensure each object has at least 'name', 'address', and 'phone'.</p>
+            <p className="text-sm text-gray-500 mb-4">Paste a JSON array of business objects to import. Ensure each object has at least &apos;name&apos;, &apos;address&apos;, and &apos;phone&apos;.</p>
             <textarea
                 value={jsonInput}
                 onChange={(e) => setJsonInput(e.target.value)}

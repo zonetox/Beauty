@@ -67,6 +67,20 @@ module.exports = {
       statements: 50
     }
   },
+  globals: {
+    'ts-jest': {
+      tsconfig: {
+        jsx: 'react-jsx',
+        module: 'commonjs',
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true,
+        target: 'ES2020',
+        lib: ['ES2020', 'DOM', 'DOM.Iterable'],
+        types: ['jest', '@testing-library/jest-dom', 'node']
+      },
+      useESM: false
+    }
+  },
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
       tsconfig: {
@@ -75,11 +89,16 @@ module.exports = {
         esModuleInterop: true,
         allowSyntheticDefaultImports: true,
         target: 'ES2020',
-        lib: ['ES2020', 'DOM'],
-        types: ['jest', '@testing-library/jest-dom', 'node']
+        lib: ['ES2020', 'DOM', 'DOM.Iterable'],
+        types: ['jest', '@testing-library/jest-dom', 'node'],
+        // Support import.meta
+        moduleResolution: 'node'
       },
-      isolatedModules: false,
-      useESM: false
+      isolatedModules: true,
+      useESM: false,
+      babelConfig: {
+        presets: ['@babel/preset-env']
+      }
     }]
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
@@ -87,5 +106,15 @@ module.exports = {
   transformIgnorePatterns: [
     'node_modules/(?!(react-router-dom|react-router|@supabase|@google/genai)/)'
   ],
-  extensionsToTreatAsEsm: []
+  extensionsToTreatAsEsm: [],
+  // Add globals for import.meta support
+  collectCoverageFrom: [
+    'lib/**/*.{ts,tsx}',
+    'components/**/*.{ts,tsx}',
+    'contexts/**/*.{ts,tsx}',
+    '!**/*.d.ts',
+    '!**/__tests__/**',
+    '!**/node_modules/**',
+    '!**/dist/**'
+  ]
 };

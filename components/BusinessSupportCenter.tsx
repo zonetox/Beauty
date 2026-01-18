@@ -29,6 +29,22 @@ const BusinessSupportCenter: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errors, setErrors] = useState<{ subject?: string; message?: string; reply?: string }>({});
 
+    // Always call hooks, but return early in JSX
+    const myTickets = useMemo(() => {
+        if (!currentBusiness) return [];
+        const filtered = getTicketsForBusiness(currentBusiness.id);
+        if (statusFilter === 'all') return filtered;
+        return filtered.filter(t => t.status === statusFilter);
+    }, [getTicketsForBusiness, currentBusiness?.id, statusFilter, tickets]);
+
+    const sortedTickets = useMemo(() => {
+        return [...myTickets].sort((a, b) => {
+            const dateA = new Date(a.lastReplyAt || a.createdAt).getTime();
+            const dateB = new Date(b.lastReplyAt || b.createdAt).getTime();
+            return dateB - dateA;
+        });
+    }, [myTickets]);
+
     if (!currentBusiness) {
         return (
             <div className="p-8">
@@ -39,20 +55,6 @@ const BusinessSupportCenter: React.FC = () => {
             </div>
         );
     }
-
-    const myTickets = useMemo(() => {
-        const filtered = getTicketsForBusiness(currentBusiness.id);
-        if (statusFilter === 'all') return filtered;
-        return filtered.filter(t => t.status === statusFilter);
-    }, [getTicketsForBusiness, currentBusiness.id, statusFilter, tickets]);
-
-    const sortedTickets = useMemo(() => {
-        return [...myTickets].sort((a, b) => {
-            const dateA = new Date(a.lastReplyAt || a.createdAt).getTime();
-            const dateB = new Date(b.lastReplyAt || b.createdAt).getTime();
-            return dateB - dateA;
-        });
-    }, [myTickets]);
 
     const validateTicket = (): boolean => {
         const newErrors: { subject?: string; message?: string } = {};
@@ -181,8 +183,10 @@ const BusinessSupportCenter: React.FC = () => {
                 <h2 className="text-2xl font-bold font-serif text-neutral-dark">My Support Tickets</h2>
                 <div className="flex gap-3">
                     <select
+                        id="status-filter"
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value as TicketStatus | 'all')}
+                        title="Lọc theo trạng thái ticket"
                         className="px-3 py-2 border rounded-md bg-white text-sm"
                     >
                         <option value="all">All Status</option>
@@ -348,7 +352,7 @@ const BusinessSupportCenter: React.FC = () => {
                 setSelectedTicket(updatedTicket);
             }
         }
-    }, [tickets, selectedTicket?.id, view]);
+    }, [tickets, selectedTicket, view]);
 
     const renderDetailView = () => {
         if (!selectedTicket) {

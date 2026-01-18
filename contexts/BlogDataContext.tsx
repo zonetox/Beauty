@@ -135,7 +135,7 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
       console.error(`Failed to parse blog categories from localStorage:`, error);
       setBlogCategories(initialBlogCategories);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const updateCategoriesLocalStorage = (categoriesToSave: BlogCategory[]) => {

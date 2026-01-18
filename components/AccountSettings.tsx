@@ -198,7 +198,7 @@ const AccountSettings: React.FC = () => {
             if (!prev) return null;
             const updatedStaff = [...(prev.staff || [])];
             if (updatedStaff[index]) {
-                updatedStaff[index] = { ...updatedStaff[index], [field]: value as any };
+                updatedStaff[index] = { ...updatedStaff[index], [field]: value as unknown as string };
             }
             return { ...prev, staff: updatedStaff };
         });
@@ -328,8 +328,10 @@ const AccountSettings: React.FC = () => {
                             </div>
                             <div className="md:col-span-1">
                                 <select 
+                                    id={`staff-role-${index}`}
                                     value={member.role} 
-                                    onChange={e => handleStaffChange(index, 'role', e.target.value)} 
+                                    onChange={e => handleStaffChange(index, 'role', e.target.value)}
+                                    title="Chọn vai trò nhân viên"
                                     className="block w-full px-3 py-2 border border-gray-300 rounded-md"
                                 >
                                     {Object.values(StaffMemberRole).map(role => (

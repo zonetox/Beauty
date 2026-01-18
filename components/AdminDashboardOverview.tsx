@@ -50,7 +50,8 @@ const Chart: React.FC<{data: {label: string, value: number}[]}> = ({data}) => {
                 <div key={item.label} className="flex flex-col items-center flex-1 h-full text-center group">
                      <span className="text-xs font-bold text-neutral-dark opacity-0 group-hover:opacity-100 transition-opacity -mb-1">{item.value}</span>
                     <div className="flex-grow flex items-end w-full">
-                       <div className="w-full bg-primary/20 hover:bg-primary/40 rounded-t" style={{height: `${(item.value / maxValue) * 100}%`}} title={`${item.value} new businesses`}></div>
+                       {/* eslint-disable jsx-a11y/no-static-element-interactions */}
+                       <div className="w-full bg-primary/20 hover:bg-primary/40 rounded-t" /* Dynamic height based on data - CSS inline necessary for dynamic calculations */ style={{height: `${Math.max((item.value / maxValue) * 100, 5)}%`, minHeight: '5px'}} title={`${item.value} new businesses`}></div>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">{item.label}</p>
                 </div>
@@ -112,12 +113,12 @@ const AdminDashboardOverview: React.FC<DashboardOverviewProps> = ({ businesses, 
         sevenDaysAgo.setHours(0, 0, 0, 0);
         
         businesses.forEach(b => {
-            const joinDate = new Date(b.joinedDate);
+            const joinDate = new Date(b?.joinedDate ?? new Date());
             joinDate.setHours(0, 0, 0, 0);
             if (joinDate >= sevenDaysAgo) {
                 const key = joinDate.toISOString().split('T')[0];
-                if (data[key]) {
-                    data[key].value++;
+                if (key && data[key]) {
+                    data[key]!.value++;
                 }
             }
         });

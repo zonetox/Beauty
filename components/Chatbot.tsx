@@ -11,7 +11,11 @@ interface Message {
 
 const Chatbot: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const [messages, setMessages] = useState<Message[]>([]);
+    const [messages, setMessages] = useState<Message[]>([{
+        id: 1,
+        text: "Xin chào! Tôi có thể giúp bạn tìm kiếm địa điểm làm đẹp. Bạn muốn tìm gì hôm nay? (Ví dụ: 'spa ở Hà Nội', 'nail Quận 1', 'nhuộm tóc')",
+        sender: 'bot'
+    }]);
     const [inputValue, setInputValue] = useState('');
     const navigate = useNavigate();
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -26,19 +30,11 @@ const Chatbot: React.FC = () => {
     }, [messages, scrollToBottom]);
     
     useEffect(() => {
-        if (isOpen) {
-            setMessages([{
-                id: 1,
-                text: "Xin chào! Tôi có thể giúp bạn tìm kiếm địa điểm làm đẹp. Bạn muốn tìm gì hôm nay? (Ví dụ: 'spa ở Hà Nội', 'nail Quận 1', 'nhuộm tóc')",
-                sender: 'bot'
-            }]);
-        }
-        
         // Cleanup: Clear all timeouts when component unmounts or chat closes
-        return () => {
+        if (!isOpen) {
             timeoutRefs.current.forEach(timeout => clearTimeout(timeout));
             timeoutRefs.current = [];
-        };
+        }
     }, [isOpen]);
 
     const processUserMessage = (text: string) => {
@@ -47,7 +43,7 @@ const Chatbot: React.FC = () => {
         
         // 1. Find Category
         for (const category of Object.values(BusinessCategory)) {
-            if (lowerText.includes(category.toLowerCase().split(' ')[0])) {
+            if (category && lowerText.includes(category.toLowerCase().split(' ')[0])) {
                 params.set('category', category);
                 break;
             }

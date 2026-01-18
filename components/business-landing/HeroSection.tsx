@@ -33,15 +33,18 @@ const HeroSection: React.FC<HeroSectionProps> = ({ business, onBookNowClick }) =
         return () => clearInterval(timer);
     }, [slides.length]);
 
-    const visibleReviews = business.reviews.filter(r => r.status === ReviewStatus.VISIBLE);
+    const visibleReviews = (business?.reviews ?? []).filter(r => r?.status === ReviewStatus.VISIBLE);
+    const currentSlideData = slides[currentSlide];
     
     return (
         <section className="relative h-[600px] lg:h-[700px] text-white pt-20">
+            {/* eslint-disable jsx-a11y/no-static-element-interactions */}
             {slides.map((slide, index) => (
                 <div
                     key={index}
                     className="absolute inset-0 w-full h-full bg-cover bg-center transition-opacity duration-1000"
-                    style={{ backgroundImage: `url(${getOptimizedSupabaseUrl(slide.imageUrl, { width: 1920, quality: 85 })})`, opacity: index === currentSlide ? 1 : 0 }}
+                    /* Dynamic background image - CSS inline necessary for dynamic URL */
+                    style={{ backgroundImage: `url(${getOptimizedSupabaseUrl(slide?.imageUrl ?? '', { width: 1920, quality: 85 })})`, opacity: index === currentSlide ? 1 : 0 }}
                 />
             ))}
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent"></div>
@@ -49,11 +52,11 @@ const HeroSection: React.FC<HeroSectionProps> = ({ business, onBookNowClick }) =
             <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col justify-end pb-16 lg:pb-24">
                 <div className="max-w-3xl">
                     <p className="text-sm font-semibold uppercase tracking-widest text-primary">{business.categories.join(' / ')}</p>
-                    <h1 className="mt-2 text-4xl md:text-6xl font-bold font-serif" style={{textShadow: '0 2px 4px rgba(0,0,0,0.5)'}}>
-                        {slides[currentSlide].title}
+                    <h1 className="mt-2 text-4xl md:text-6xl font-bold font-serif drop-shadow-lg">
+                        {currentSlideData?.title}
                     </h1>
-                    <p className="mt-4 text-lg md:text-xl max-w-2xl text-gray-200" style={{textShadow: '0 1px 3px rgba(0,0,0,0.5)'}}>
-                        {slides[currentSlide].subtitle}
+                    <p className="mt-4 text-lg md:text-xl max-w-2xl text-gray-200 drop-shadow">
+                        {currentSlideData?.subtitle}
                     </p>
                     <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
                         <div className="flex items-center gap-2">

@@ -6,7 +6,7 @@ import { BusinessCategory } from '../../types.ts';
 // Helper to parse CSV manually to avoid dependencies
 const parseCSV = (text: string) => {
     const lines = text.split('\n').filter(line => line.trim() !== '');
-    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+    const headers = (lines[0] ?? '').split(',').map(h => h.trim().replace(/^"|"$/g, ''));
 
     // Robust CSV line splitter that handles quoted commas
     const splitLine = (line: string) => {
@@ -147,9 +147,12 @@ const BusinessBulkImporter: React.FC = () => {
             <div className="flex items-center gap-4">
                 <input
                     key={fileKey}
+                    id="bulk-import-csv"
                     type="file"
                     accept=".csv"
                     onChange={handleFileUpload}
+                    title="Chọn file CSV để import"
+                    placeholder="Chọn file CSV"
                     className="block w-full text-sm text-gray-500
                         file:mr-4 file:py-2 file:px-4
                         file:rounded-full file:border-0

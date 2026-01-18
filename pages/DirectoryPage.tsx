@@ -134,7 +134,7 @@ const DirectoryPage: React.FC = () => {
     const [mapVisibleBusinesses, setMapVisibleBusinesses] = useState<Business[]>([]);
     const [highlightedBusinessId, setHighlightedBusinessId] = useState<number | null>(null);
     const [selectedBusinessId, setSelectedBusinessId] = useState<number | null>(null);
-    const [mapBounds, setMapBounds] = useState<any | null>(null);
+    const [mapBounds, setMapBounds] = useState<{ contains?: (point: [number, number]) => boolean } | null>(null);
     const [filterByMap, setFilterByMap] = useState(true);
     const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
 
@@ -240,7 +240,7 @@ const DirectoryPage: React.FC = () => {
         // If has search text, preserve database ranking order (no client-side sort)
 
         return filtered;
-    }, [businesses, activeFilters.hasDeals, activeFilters.isVerified, activeFilters.isOpenNow, activeFilters.sort]);
+    }, [businesses, activeFilters.hasDeals, activeFilters.isVerified, activeFilters.isOpenNow, activeFilters.sort, activeFilters.keyword]);
 
     // List View filtering (depends on Map Bounds if enabled)
     useEffect(() => {
@@ -332,7 +332,7 @@ const DirectoryPage: React.FC = () => {
                 {viewMode === 'map' && (
                     <div className="w-full h-[70vh]">
                         <DirectoryMap
-                            businesses={filteredMarkers as any}
+                            businesses={filteredMarkers as Business[]}
                             highlightedBusinessId={highlightedBusinessId}
                             selectedBusinessId={selectedBusinessId}
                             onMarkerClick={(id) => setSelectedBusinessId(prev => prev === id ? null : id)}

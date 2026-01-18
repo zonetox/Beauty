@@ -32,7 +32,8 @@ const BlogManagementTable: React.FC<BlogManagementTableProps> = ({ posts, onEdit
     };
 
     const handleViewUpdate = (post: BlogPost) => {
-        const newViewCount = parseInt(viewInputs[post.id], 10);
+        const viewValue = viewInputs[post.id] ?? '0';
+        const newViewCount = parseInt(viewValue, 10);
         if (!isNaN(newViewCount) && newViewCount !== post.viewCount) {
             onUpdate({ ...post, viewCount: newViewCount });
             // Remove from editedInputs after update

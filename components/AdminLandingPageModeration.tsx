@@ -17,7 +17,7 @@ const AdminLandingPageModeration: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
 
     const filteredBusinesses = useMemo(() => {
-        let filtered = businesses.filter(b => {
+        const filtered = businesses.filter(b => {
             const status = b.landingPageStatus || 'Approved';
             if (statusFilter !== 'all' && status !== statusFilter) return false;
             if (searchQuery && !b.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;

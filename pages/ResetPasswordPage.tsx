@@ -35,8 +35,9 @@ const ResetPasswordPage: React.FC = () => {
         try {
             await resetPassword(password);
             setPageState('success');
-        } catch (err: any) {
-            setError(err.message || 'Failed to reset password. The reset link may have expired, or you are not in a valid recovery session.');
+        } catch (err: unknown) {
+            const error = err as Record<string, unknown>;
+            setError((error.message as string) || 'Failed to reset password. The reset link may have expired, or you are not in a valid recovery session.');
         } finally {
             setLoading(false);
         }
