@@ -1,8 +1,7 @@
 
-// D2.3 FIX: Import standardized loading state
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useUserSession } from '../contexts/UserSessionContext.tsx';
+import { useAuth } from '../providers/AuthProvider.tsx';
 import LoadingState from './LoadingState.tsx';
 
 interface ProtectedRouteProps {
@@ -10,11 +9,11 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-    const { currentUser, loading } = useUserSession();
+    const { state, user } = useAuth();
     const location = useLocation();
 
-    // E1.1 FIX: Use standardized LoadingState component
-    if (loading) {
+    // Auth state should be resolved by AuthGate, but double-check
+    if (state === 'loading') {
         return (
             <div className="flex items-center justify-center h-screen">
                 <LoadingState message="Checking authentication..." />
@@ -22,12 +21,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         );
     }
 
-    if (!currentUser) {
-        // Redirect them to the /login page, but save the current location they were
-        // trying to go to. This allows us to send them along to that page after they login.
+    // Redirect to login if not authenticated
+    if (state === 'unauthenticated' || !user) {
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
+    // User is authenticated
     return <>{children}</>;
 };
 

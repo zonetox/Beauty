@@ -175,29 +175,27 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
   };
 
   const logout = async () => {
+    // ALWAYS clear local state first (best practice - logout should always succeed in UI)
+    // This ensures user is logged out from app perspective even if signOut() fails
+    setCurrentUser(null);
+    setProfile(null);
+    setSession(null);
+
     if (!isSupabaseConfigured) {
-      setCurrentUser(null);
-      setProfile(null);
-      setSession(null);
-      return;
+      return; // Already cleared state above
     }
+
+    // Attempt to sign out from Supabase (fire-and-forget)
+    // If it fails, user is already logged out locally, so we don't throw error
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
-        console.error('Logout error:', error);
-        throw error;
+        console.warn('Supabase signOut error (ignored, user already logged out locally):', error.message);
+        // Don't throw - user is already logged out from app perspective
       }
-      // Clear local state immediately
-      setCurrentUser(null);
-      setProfile(null);
-      setSession(null);
     } catch (error) {
-      console.error('Exception during logout:', error);
-      // Still clear local state even if signOut fails
-      setCurrentUser(null);
-      setProfile(null);
-      setSession(null);
-      throw error;
+      console.warn('Exception during signOut (ignored, user already logged out locally):', error);
+      // Don't throw - user is already logged out from app perspective
     }
   };
 

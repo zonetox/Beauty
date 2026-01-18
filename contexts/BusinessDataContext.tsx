@@ -171,20 +171,22 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
 
           setBusinesses(mapped);
           
-          // Get total count - call function again with large limit to count all results
-          const { data: countData, error: countError } = await supabase
-            .rpc('search_businesses_advanced', {
-              p_search_text: options.search && options.search.trim() ? options.search.trim() : null,
-              p_category: options.category || null,
-              p_city: options.location || null,
-              p_district: options.district || null,
-              p_tags: null,
-              p_limit: 10000, // Large limit to get all matching results for count
-              p_offset: 0
-            });
+          // Get total count using COUNT query instead of calling RPC function twice
+          // This is much faster than fetching 10000 records just to count them
+          const countStartTime = performance.now();
+          let countQuery = supabase.from('businesses').select('*', { count: 'exact', head: true }).eq('is_active', true);
+          if (options.category) countQuery = countQuery.contains('categories', [options.category]);
+          if (options.location) countQuery = countQuery.eq('city', options.location);
+          if (options.district) countQuery = countQuery.eq('district', options.district);
+          if (options.search && options.search.trim()) {
+            countQuery = countQuery.or(`name.ilike.%${options.search.trim()}%,description.ilike.%${options.search.trim()}%`);
+          }
           
-          if (!countError && countData) {
-            setTotalBusinesses(countData.length);
+          const { count, error: countError } = await countQuery;
+          const countDuration = performance.now() - countStartTime;
+          console.log(`[PERF] Businesses Count: ${countDuration.toFixed(2)}ms`);
+          if (!countError && count !== null) {
+            setTotalBusinesses(count);
           } else {
             // Fallback to mapped length if count query fails
             setTotalBusinesses(mapped.length);
@@ -257,57 +259,109 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      // Load initial page of businesses with timeout
-      const businessesPromise = fetchBusinesses(1);
-      const businessesTimeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Businesses fetch timeout')), 10000)
-      );
-      await Promise.race([businessesPromise, businessesTimeout]).catch(() => {
-        console.warn('Businesses fetch timeout, continuing with other data');
+      // ✅ FIX CĂN CỐT: Execute ALL queries in PARALLEL using Promise.allSettled
+      // This prevents sequential blocking - all queries run simultaneously
+      // Total time = max(individual query times), not sum of all query times
+
+      // Create all query promises
+      const businessesPromise = fetchBusinesses(1).catch(e => {
+        console.warn('Businesses fetch error:', e);
+        return null;
       });
 
-      // Fetch lightweight markers for the map to support 5000+ scale
-      try {
-        const markerPromise = supabase.from('businesses')
-          .select('id, name, latitude, longitude, categories, is_active');
-        const markerTimeout = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Markers timeout')), 8000)
-        );
-        const { data: markerData } = await Promise.race([markerPromise, markerTimeout]) as any;
-        if (markerData) {
-          setBusinessMarkers(snakeToCamel(markerData));
+      const markerPromise = supabase.from('businesses')
+        .select('id, name, latitude, longitude, categories, is_active')
+        .eq('is_active', true)
+        .not('latitude', 'is', null)
+        .not('longitude', 'is', null)
+        .limit(2000); // Limit to first 2000 markers for performance (can be paginated later if needed)
+
+      const blogPromise = supabase.from('blog_posts')
+        .select('id, slug, title, image_url, excerpt, author, date, category, content, view_count')
+        .order('date', { ascending: false })
+        .limit(50);
+
+      const catPromise = supabase.from('blog_categories')
+        .select('id, name')
+        .order('name');
+
+      const pkgPromise = supabase.from('membership_packages')
+        .select('id, name, description, price, duration_months, features, is_active')
+        .eq('is_active', true)
+        .order('price');
+
+      // Add 12s timeout for cold start (Supabase cold start ~3-5s + network ~1-2s + query ~2-5s = 8-12s)
+      const createTimeoutPromise = (rejectMsg: string) => 
+        new Promise((_, reject) => setTimeout(() => reject(new Error(rejectMsg)), 12000));
+
+      // Performance logging wrapper
+      const measureQuery = async (name: string, queryPromise: Promise<any>) => {
+        const startTime = performance.now();
+        try {
+          const result = await Promise.race([queryPromise, createTimeoutPromise(`${name} timeout`)]);
+          const duration = performance.now() - startTime;
+          console.log(`[PERF] ${name}: ${duration.toFixed(2)}ms`);
+          return result;
+        } catch (error) {
+          const duration = performance.now() - startTime;
+          console.warn(`[PERF] ${name}: TIMEOUT after ${duration.toFixed(2)}ms`);
+          throw error;
         }
-      } catch (e) {
-        console.warn('Failed to fetch markers:', e);
+      };
+
+      // Execute all queries in parallel with individual timeouts and performance logging
+      const [businessesResult, markersResult, blogResult, catResult, pkgResult] = await Promise.allSettled([
+        measureQuery('Businesses', businessesPromise),
+        measureQuery('Markers', markerPromise),
+        measureQuery('Blog Posts', blogPromise),
+        measureQuery('Categories', catPromise),
+        measureQuery('Packages', pkgPromise)
+      ]);
+
+      // Process businesses result
+      if (businessesResult.status === 'fulfilled' && businessesResult.value !== null) {
+        // Businesses already set in fetchBusinesses, no action needed
+      } else if (businessesResult.status === 'rejected') {
+        console.warn('Businesses fetch failed or timed out');
       }
 
-      // F2.1: Optimize queries - select only needed columns with timeout
-      let blogRes, catRes, pkgRes;
-      try {
-        const queries = [
-          supabase.from('blog_posts')
-            .select('id, slug, title, image_url, excerpt, author, date, category, content, view_count')
-            .order('date', { ascending: false }),
-          supabase.from('blog_categories')
-            .select('id, name')
-            .order('name'),
-          supabase.from('membership_packages')
-            .select('id, name, description, price, duration_months, features, is_active')
-            .order('price')
-        ];
-        
-        const timeout = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Queries timeout')), 10000)
-        );
-        
-        [blogRes, catRes, pkgRes] = await Promise.race([
-          Promise.all(queries),
-          timeout
-        ]) as any;
-      } catch (timeoutError: any) {
-        console.warn('Public data queries timeout, using empty data');
+      // Process markers result
+      if (markersResult.status === 'fulfilled') {
+        const markerData = markersResult.value as any;
+        if (markerData?.data) {
+          setBusinessMarkers(snakeToCamel(markerData.data));
+        }
+      } else {
+        console.warn('Failed to fetch markers:', markersResult.reason);
+      }
+
+      // Process blog posts result
+      let blogRes: any = { error: null, data: null };
+      if (blogResult.status === 'fulfilled') {
+        const result = blogResult.value as any;
+        blogRes = result;
+      } else {
+        console.warn('Blog posts fetch failed or timed out:', blogResult.reason);
         blogRes = { error: { message: 'Timeout' }, data: null };
+      }
+
+      // Process categories result
+      let catRes: any = { error: null, data: null };
+      if (catResult.status === 'fulfilled') {
+        const result = catResult.value as any;
+        catRes = result;
+      } else {
+        console.warn('Blog categories fetch failed or timed out:', catResult.reason);
         catRes = { error: { message: 'Timeout' }, data: null };
+      }
+
+      // Process packages result
+      let pkgRes: any = { error: null, data: null };
+      if (pkgResult.status === 'fulfilled') {
+        const result = pkgResult.value as any;
+        pkgRes = result;
+      } else {
+        console.warn('Packages fetch failed or timed out:', pkgResult.reason);
         pkgRes = { error: { message: 'Timeout' }, data: null };
       }
 

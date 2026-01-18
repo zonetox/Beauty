@@ -66,10 +66,16 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
           .single();
         
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Query timeout after 8 seconds')), 8000)
+          setTimeout(() => reject(new Error('Query timeout after 12 seconds')), 12000)
         );
         
+        // Performance logging
+        const startTime = performance.now();
         const result = await Promise.race([queryPromise, timeoutPromise]) as any;
+        const duration = performance.now() - startTime;
+        if (result.error?.code !== 'TIMEOUT') {
+          console.log(`[PERF] Homepage Content: ${duration.toFixed(2)}ms`);
+        }
         data = result.data;
         error = result.error;
       } catch (timeoutError: any) {

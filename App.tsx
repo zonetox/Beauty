@@ -13,7 +13,7 @@ import AuthRedirectHandler from './components/AuthRedirectHandler.tsx';
 import ErrorBoundary from './components/ErrorBoundary.tsx';
 
 // Import new consolidated providers
-import { UserSessionProvider, useUserSession } from './contexts/UserSessionContext.tsx';
+import { AuthProvider, useAuth } from './providers/AuthProvider.tsx';
 import { AdminProvider } from './contexts/AdminContext.tsx';
 import { PublicDataProvider } from './contexts/BusinessDataContext.tsx';
 import { HomepageDataProvider } from './contexts/HomepageDataContext.tsx';
@@ -23,6 +23,7 @@ import { AdminPlatformProvider } from './contexts/AdminPlatformContext.tsx';
 import { PublicPageContentProvider } from './contexts/PublicPageContentContext.tsx';
 import { ErrorLoggerProvider } from './contexts/ErrorLoggerContext.tsx';
 import { StaffProvider } from './contexts/StaffContext.tsx';
+import AuthLoadingScreen from './components/AuthLoadingScreen.tsx';
 
 import { BusinessProvider } from './contexts/BusinessContext.tsx';
 import { useWebVitals } from './hooks/usePerformanceMonitoring.ts';
@@ -93,25 +94,10 @@ const AppLayout: React.FC = () => {
 
 // This component intelligently routes the user to their business dashboard or personal account page.
 const AccountPageRouter: React.FC = () => {
-    const { profile, loading: profileLoading, currentUser } = useUserSession();
+    const { profile, user } = useAuth();
 
-    // Show loading only if we have a user but profile is still loading
-    // If no user, ProtectedRoute will handle redirect
-    if (profileLoading && currentUser) {
-        return (
-            <div className="flex items-center justify-center h-[50vh]">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                    <p className="text-lg font-semibold">Đang tải tài khoản...</p>
-                    <p className="text-gray-500">Vui lòng đợi.</p>
-                </div>
-            </div>
-        );
-    }
-
-    // If profile is null but we have a user, wait a bit more for profile to load
-    if (currentUser && !profile && !profileLoading) {
-        // Profile might still be loading, show loading state
+    // Show loading if profile is still being fetched
+    if (user && !profile) {
         return (
             <div className="flex items-center justify-center h-[50vh]">
                 <div className="text-center">
@@ -145,22 +131,12 @@ const AccountPageRouter: React.FC = () => {
 };
 
 
-const App: React.FC = () => {
-    // The check for Supabase configuration has been removed to avoid showing the error
-    // page in preview environments where environment variables are not present.
-    // The app will now attempt to connect directly. The 'API Status' button in the
-    // header can be used for diagnostics.
-
+// App content (rendered after auth is resolved)
+const AppContent: React.FC = () => {
     return (
-        <ErrorBoundary>
-            <Router>
-                <WebVitalsTracker />
-                <PageTracking />
-                <Toaster position="top-center" reverseOrder={false} />
-                <ErrorLoggerProvider>
-                    <ThemeProvider>
-                        <UserSessionProvider>
-                            <AdminProvider>
+        <ErrorLoggerProvider>
+            <ThemeProvider>
+                <AdminProvider>
                                 <PublicDataProvider>
                                     <HomepageDataProvider>
                                         <BusinessProvider>
@@ -214,12 +190,41 @@ const App: React.FC = () => {
                                     </HomepageDataProvider>
                                 </PublicDataProvider>
                             </AdminProvider>
-                        </UserSessionProvider>
-                    </ThemeProvider>
-                </ErrorLoggerProvider>
+                        </ThemeProvider>
+                    </ErrorLoggerProvider>
+    );
+};
+
+const App: React.FC = () => {
+    return (
+        <ErrorBoundary>
+            <Router>
+                <WebVitalsTracker />
+                <PageTracking />
+                <Toaster position="top-center" reverseOrder={false} />
+                <AuthProvider>
+                    <AuthGate>
+                        <AppContent />
+                    </AuthGate>
+                </AuthProvider>
             </Router>
         </ErrorBoundary>
     );
+};
+
+// Auth Gate: Shows loading screen while auth is being checked
+// Redirects to login if unauthenticated (for protected routes)
+const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const { state } = useAuth();
+
+    // Show loading screen while checking auth
+    if (state === 'loading') {
+        return <AuthLoadingScreen />;
+    }
+
+    // Auth state is resolved (authenticated or unauthenticated)
+    // Let protected routes handle redirects
+    return <>{children}</>;
 };
 
 export default App;

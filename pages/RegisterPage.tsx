@@ -8,14 +8,14 @@ import { useNavigate, Link } from 'react-router-dom';
 import { MembershipTier, BusinessCategory } from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { createBusinessWithTrial } from '../lib/businessUtils.ts';
-import { useUserSession } from '../contexts/UserSessionContext.tsx';
+import { useAuth } from '../providers/AuthProvider.tsx';
 import SEOHead from '../components/SEOHead.tsx';
 
 type UserType = 'user' | 'business';
 
 const RegisterPage: React.FC = () => {
     const navigate = useNavigate();
-    const { refreshProfile } = useUserSession();
+    const { register, refreshProfile } = useAuth();
     const [userType, setUserType] = useState<UserType>('user');
     const [formData, setFormData] = useState({
         full_name: '',
@@ -83,23 +83,23 @@ const RegisterPage: React.FC = () => {
         }
         
         try {
-            // 1. Create Supabase Auth user (NO email verification - skip entirely)
+            // 1. Create Supabase Auth user using AuthProvider
             const displayName = userType === 'business' ? formData.business_name : formData.full_name;
-            const { data: authData, error: signUpError } = await supabase.auth.signUp({
-                email: formData.email,
-                password: formData.password,
-                options: {
-                    emailRedirectTo: undefined, // Skip email verification
-                    data: {
-                        full_name: displayName,
-                        phone: formData.phone,
-                    }
-                }
+            await register(formData.email, formData.password, {
+                full_name: displayName,
+                phone: formData.phone,
             });
 
-            if (signUpError || !authData.user) {
-                throw signUpError || new Error('Failed to create user account.');
+            // Get the newly created user from auth state
+            // Wait a bit for auth state to update
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Get user from current session
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.user) {
+                throw new Error('Failed to create user account.');
             }
+            const authData = { user: session.user };
 
             // 2. Wait for profile to be created by trigger (handle_new_user)
             // The trigger creates profile automatically with business_id = NULL

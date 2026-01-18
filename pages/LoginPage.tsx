@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useUserSession } from '../contexts/UserSessionContext.tsx';
+import { useAuth } from '../providers/AuthProvider.tsx';
 import ForgotPasswordModal from '../components/ForgotPasswordModal.tsx';
 import SEOHead from '../components/SEOHead.tsx';
 
@@ -13,14 +13,17 @@ const LoginPage: React.FC = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const { login, profile, currentUser } = useUserSession();
+    const { login, profile, user, state } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
 
     // If user is already logged in, redirect appropriately
     useEffect(() => {
-        if (currentUser && profile) {
+        // Wait for auth state to resolve
+        if (state === 'loading') return;
+        
+        if (user && profile) {
             const state = location.state as { from?: { pathname?: string } } | null;
             const from = state?.from?.pathname;
             // Business owner always goes to /account
@@ -34,7 +37,7 @@ const LoginPage: React.FC = () => {
                 navigate('/', { replace: true });
             }
         }
-    }, [currentUser, profile, navigate, location]);
+    }, [user, profile, state, navigate, location]);
     
     // SEO metadata
     const seoTitle = 'Đăng nhập | 1Beauty.asia';
@@ -47,7 +50,7 @@ const LoginPage: React.FC = () => {
         setIsLoading(true);
         try {
             await login(email, password);
-            // Profile will be loaded by UserSessionContext
+            // Auth state will update via subscription
             // useEffect above will handle redirect based on user type
         } catch (err) {
             if (err instanceof Error) {
