@@ -1,27 +1,37 @@
 // AuthRedirectHandler: Handles automatic redirects for authenticated users
-// Business owners are redirected to /account when they visit homepage
-// Regular users stay on homepage
+// Business owners and staff are redirected to /account when they visit homepage
+// Regular users and admins stay on homepage
 
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useUserSession } from '../contexts/UserSessionContext.tsx';
+import { useAuth } from '../providers/AuthProvider.tsx';
+import { useUserRole } from '../hooks/useUserRole.ts';
 
 const AuthRedirectHandler: React.FC = () => {
-    const { currentUser, profile, loading } = useUserSession();
+    const { user, state } = useAuth();
+    const { role, isBusinessOwner, isBusinessStaff, isLoading } = useUserRole();
     const navigate = useNavigate();
     const location = useLocation();
 
     useEffect(() => {
         // Only redirect if:
-        // 1. User is logged in
-        // 2. Profile is loaded
-        // 3. User is a business owner (has businessId)
-        // 4. User is on homepage (/)
-        // 5. Not already loading
-        if (!loading && currentUser && profile?.businessId && location.pathname === '/') {
+        // 1. Auth state is resolved (not loading)
+        // 2. User is logged in
+        // 3. Role is resolved (not loading)
+        // 4. User has business access (owner OR staff)
+        // 5. User is on homepage (/)
+        // 6. Not already on account page (avoid redirect loop)
+        if (
+            state !== 'loading' &&
+            !isLoading &&
+            user &&
+            (isBusinessOwner || isBusinessStaff) &&
+            location.pathname === '/' &&
+            location.pathname !== '/account'
+        ) {
             navigate('/account', { replace: true });
         }
-    }, [currentUser, profile, loading, location.pathname, navigate]);
+    }, [user, state, role, isBusinessOwner, isBusinessStaff, isLoading, location.pathname, navigate]);
 
     // This component doesn't render anything
     return null;

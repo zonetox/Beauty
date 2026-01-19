@@ -2,13 +2,14 @@
 // Tuân thủ ARCHITECTURE.md, sử dụng schema/RLS/contexts hiện có
 // 100% hoàn thiện, không placeholder, chuẩn SEO cơ bản
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate, Link } from 'react-router-dom';
 import { MembershipTier, BusinessCategory } from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { createBusinessWithTrial } from '../lib/businessUtils.ts';
 import { useAuth } from '../providers/AuthProvider.tsx';
+import { useUserRole } from '../hooks/useUserRole.ts';
 import SEOHead from '../components/SEOHead.tsx';
 import { initializeUserProfile } from '../lib/postSignupInitialization';
 import { verifyBusinessLinked } from '../lib/roleResolution';
@@ -17,7 +18,8 @@ type UserType = 'user' | 'business';
 
 const RegisterPage: React.FC = () => {
     const navigate = useNavigate();
-    const { register, refreshProfile } = useAuth();
+    const { register, refreshProfile, user, state } = useAuth();
+    const { role, isBusinessOwner, isBusinessStaff, isLoading: roleLoading } = useUserRole();
     const [userType, setUserType] = useState<UserType>('user');
     const [formData, setFormData] = useState({
         full_name: '',
@@ -32,6 +34,33 @@ const RegisterPage: React.FC = () => {
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
+
+    // BLOCK ACCESS: If user already has business access, redirect to dashboard
+    useEffect(() => {
+        if (state !== 'loading' && !roleLoading && user) {
+            if (isBusinessOwner || isBusinessStaff) {
+                toast.info('Bạn đã có quyền truy cập doanh nghiệp. Đang chuyển đến dashboard...');
+                navigate('/account', { replace: true });
+            }
+        }
+    }, [user, state, roleLoading, isBusinessOwner, isBusinessStaff, navigate]);
+
+    // Show loading state while checking access
+    if (state === 'loading' || roleLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[calc(100vh-128px)]">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-lg font-semibold">Đang kiểm tra quyền truy cập...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Block access if user already has business access
+    if (user && (isBusinessOwner || isBusinessStaff)) {
+        return null; // Will redirect via useEffect
+    }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;

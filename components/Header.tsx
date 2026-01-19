@@ -1,13 +1,13 @@
 
 
 
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { useUserSession } from '../contexts/UserSessionContext.tsx';
+import { useAuth } from '../providers/AuthProvider.tsx';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { useTheme } from '../contexts/ThemeContext.tsx';
-import { AdminContext } from '../contexts/AdminContext.tsx';
+import { useUserRole } from '../hooks/useUserRole.ts';
 import ErrorDisplay from './ErrorDisplay.tsx';
 
 const UserIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -30,20 +30,17 @@ const CloseIcon: React.FC<{ className?: string }> = ({ className }) => (
 
 
 const Header: React.FC = () => {
-  const { currentUser, logout, profile } = useUserSession();
+  const { user, logout, profile } = useAuth();
   const { theme } = useTheme();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
-  // Safely get admin user (may not be in AdminProvider context for public pages)
-  // Use useContext directly to avoid throwing error if not in provider
-  const adminContext = useContext(AdminContext);
-  const adminUser = adminContext?.currentUser || null;
-  const isAdmin = !!adminUser;
+  // Get user role from role resolution (based on actual database state)
+  const { role, isAdmin, isBusinessOwner, isBusinessStaff, businessId, isLoading: roleLoading } = useUserRole();
   
-  // Check if user is business owner
-  const isBusinessOwner = !!profile?.businessId;
+  // Determine if user has business access (owner OR staff)
+  const hasBusinessAccess = isBusinessOwner || isBusinessStaff;
 
   const handleLogout = async () => {
     try {
@@ -156,7 +153,7 @@ const Header: React.FC = () => {
                 API Status
               </button>
             )}
-            {currentUser ? (
+            {user && !roleLoading ? (
               <div className="flex items-center ml-2 gap-2">
                 {/* User Avatar & Dropdown */}
                 <div className="relative user-dropdown-container">
@@ -169,16 +166,16 @@ const Header: React.FC = () => {
                     {profile?.avatarUrl ? (
                       <img 
                         src={profile.avatarUrl} 
-                        alt={profile.fullName || currentUser.email || 'User'} 
+                        alt={profile.fullName || user.email || 'User'} 
                         className="w-8 h-8 rounded-full object-cover"
                       />
                     ) : (
                       <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-semibold">
-                        {(profile?.fullName || currentUser.user_metadata?.full_name || currentUser.email || 'U').charAt(0).toUpperCase()}
+                        {(profile?.fullName || user.user_metadata?.full_name || user.email || 'U').charAt(0).toUpperCase()}
                       </div>
                     )}
                     <span className="text-sm text-neutral-dark hidden lg:block">
-                      {profile?.fullName || currentUser.user_metadata?.full_name || currentUser.email}
+                      {profile?.fullName || user.user_metadata?.full_name || user.email}
                     </span>
                     <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-neutral-dark transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -191,24 +188,42 @@ const Header: React.FC = () => {
                     <div className="py-2">
                       <div className="px-4 py-2 border-b border-gray-200">
                         <p className="text-sm font-semibold text-neutral-dark">
-                          {profile?.fullName || currentUser.user_metadata?.full_name || 'User'}
+                          {profile?.fullName || user.user_metadata?.full_name || 'User'}
                         </p>
-                        <p className="text-xs text-gray-500 truncate">{currentUser.email}</p>
+                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
                       </div>
-                      <Link
-                        to="/account"
-                        className="block px-4 py-2 text-sm text-neutral-dark hover:bg-primary/10 transition-colors"
-                        onClick={() => {
-                          setIsMenuOpen(false);
-                          setIsDropdownOpen(false);
-                        }}
-                      >
-                        <div className="flex items-center gap-2">
-                          <UserIcon className="w-4 h-4" />
-                          <span>{isBusinessOwner ? 'Dashboard Doanh nghiệp' : 'Tài khoản của tôi'}</span>
-                        </div>
-                      </Link>
-                      {!isBusinessOwner && (
+                      {/* Account/Dashboard Link - Show based on role */}
+                      {hasBusinessAccess ? (
+                        <Link
+                          to="/account"
+                          className="block px-4 py-2 text-sm text-neutral-dark hover:bg-primary/10 transition-colors"
+                          onClick={() => {
+                            setIsMenuOpen(false);
+                            setIsDropdownOpen(false);
+                          }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <UserIcon className="w-4 h-4" />
+                            <span>{isBusinessStaff ? 'Dashboard Doanh nghiệp (Staff)' : 'Dashboard Doanh nghiệp'}</span>
+                          </div>
+                        </Link>
+                      ) : (
+                        <Link
+                          to="/account"
+                          className="block px-4 py-2 text-sm text-neutral-dark hover:bg-primary/10 transition-colors"
+                          onClick={() => {
+                            setIsMenuOpen(false);
+                            setIsDropdownOpen(false);
+                          }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <UserIcon className="w-4 h-4" />
+                            <span>Tài khoản của tôi</span>
+                          </div>
+                        </Link>
+                      )}
+                      {/* Register Business Link - Only show for regular users (not owner, not staff, not admin) */}
+                      {role === 'user' && !hasBusinessAccess && (
                         <Link
                           to="/register"
                           className="block px-4 py-2 text-sm text-neutral-dark hover:bg-primary/10 transition-colors"
@@ -284,7 +299,7 @@ const Header: React.FC = () => {
             )}
           </div>
           <div className="pt-4 pb-3 border-t border-gray-200">
-            {currentUser ? (
+            {user && !roleLoading ? (
               <div className="px-2 space-y-1">
                 {/* User Info */}
                 <div className="px-3 py-2 mb-2">
@@ -292,31 +307,42 @@ const Header: React.FC = () => {
                     {profile?.avatarUrl ? (
                       <img 
                         src={profile.avatarUrl} 
-                        alt={profile.fullName || currentUser.email || 'User'} 
+                        alt={profile.fullName || user.email || 'User'} 
                         className="w-10 h-10 rounded-full object-cover"
                       />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-semibold">
-                        {(profile?.fullName || currentUser.user_metadata?.full_name || currentUser.email || 'U').charAt(0).toUpperCase()}
+                        {(profile?.fullName || user.user_metadata?.full_name || user.email || 'U').charAt(0).toUpperCase()}
                       </div>
                     )}
                     <div>
-                      <p className="font-medium text-neutral-dark">{profile?.fullName || currentUser.user_metadata?.full_name || currentUser.email}</p>
-                      <p className="text-xs text-gray-500 truncate">{currentUser.email}</p>
+                      <p className="font-medium text-neutral-dark">{profile?.fullName || user.user_metadata?.full_name || user.email}</p>
+                      <p className="text-xs text-gray-500 truncate">{user.email}</p>
                     </div>
                   </div>
                 </div>
-                {/* Account Link */}
-                <NavLink 
-                  to="/account" 
-                  className={({ isActive }) => `${mobileNavLinkClass({ isActive })} flex items-center gap-3`} 
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <UserIcon className="w-6 h-6" />
-                  <span>{isBusinessOwner ? 'Dashboard Doanh nghiệp' : 'Tài khoản của tôi'}</span>
-                </NavLink>
-                {/* Register Business Link (only for regular users) */}
-                {!isBusinessOwner && (
+                {/* Account/Dashboard Link - Show based on role */}
+                {hasBusinessAccess ? (
+                  <NavLink 
+                    to="/account" 
+                    className={({ isActive }) => `${mobileNavLinkClass({ isActive })} flex items-center gap-3`} 
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <UserIcon className="w-6 h-6" />
+                    <span>{isBusinessStaff ? 'Dashboard Doanh nghiệp (Staff)' : 'Dashboard Doanh nghiệp'}</span>
+                  </NavLink>
+                ) : (
+                  <NavLink 
+                    to="/account" 
+                    className={({ isActive }) => `${mobileNavLinkClass({ isActive })} flex items-center gap-3`} 
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <UserIcon className="w-6 h-6" />
+                    <span>Tài khoản của tôi</span>
+                  </NavLink>
+                )}
+                {/* Register Business Link - Only show for regular users */}
+                {role === 'user' && !hasBusinessAccess && (
                   <Link
                     to="/register"
                     className="block px-3 py-2 rounded-md text-base font-medium text-neutral-dark hover:bg-primary/10"
