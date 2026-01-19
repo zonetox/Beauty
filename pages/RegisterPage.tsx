@@ -10,6 +10,8 @@ import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { createBusinessWithTrial } from '../lib/businessUtils.ts';
 import { useAuth } from '../providers/AuthProvider.tsx';
 import SEOHead from '../components/SEOHead.tsx';
+import { initializeUserProfile } from '../lib/postSignupInitialization';
+import { verifyBusinessLinked } from '../lib/roleResolution';
 
 type UserType = 'user' | 'business';
 
@@ -101,7 +103,6 @@ const RegisterPage: React.FC = () => {
             const newUser = session.user;
 
             // 2. MANDATORY: Initialize and verify profile exists
-            const { initializeUserProfile } = await import('../lib/postSignupInitialization');
             const profileResult = await initializeUserProfile(newUser, 3000);
             
             if (!profileResult.success || !profileResult.profileId) {
@@ -125,7 +126,6 @@ const RegisterPage: React.FC = () => {
                 }
 
                 // MANDATORY: Verify business is linked to profile
-                const { verifyBusinessLinked } = await import('../lib/roleResolution');
                 const businessResult = await verifyBusinessLinked(newUser.id);
                 
                 if (!businessResult.exists || !businessResult.businessId) {

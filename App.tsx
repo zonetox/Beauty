@@ -28,6 +28,7 @@ import AuthLoadingScreen from './components/AuthLoadingScreen.tsx';
 import { BusinessProvider } from './contexts/BusinessContext.tsx';
 import { useWebVitals } from './hooks/usePerformanceMonitoring.ts';
 import { usePageTracking } from './lib/usePageTracking.ts';
+import { resolveUserRole } from './lib/roleResolution';
 
 // Lazy load all page components for performance
 const HomePage = lazy(() => import('./pages/HomePage.tsx'));
@@ -116,7 +117,6 @@ const AccountPageRouter: React.FC = () => {
             }
 
             try {
-                const { resolveUserRole } = await import('../lib/roleResolution');
                 const roleResult = await resolveUserRole(user);
                 
                 if (roleResult.error) {

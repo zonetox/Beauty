@@ -7,6 +7,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../providers/AuthProvider.tsx';
 import ForgotPasswordModal from '../components/ForgotPasswordModal.tsx';
 import SEOHead from '../components/SEOHead.tsx';
+import { resolveUserRole } from '../lib/roleResolution';
 
 const LoginPage: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -26,7 +27,6 @@ const LoginPage: React.FC = () => {
         if (user && profile) {
             const resolveAndRedirect = async () => {
                 try {
-                    const { resolveUserRole } = await import('../lib/roleResolution');
                     const roleResult = await resolveUserRole(user);
                     
                     if (roleResult.error) {
