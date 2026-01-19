@@ -26,7 +26,7 @@ const LoginPage: React.FC = () => {
         if (user && profile) {
             const resolveAndRedirect = async () => {
                 try {
-                    const { resolveUserRole } = await import('../lib/roleResolution.ts');
+                    const { resolveUserRole } = await import('../lib/roleResolution');
                     const roleResult = await resolveUserRole(user);
                     
                     if (roleResult.error) {

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../providers/AuthProvider.tsx';
-import { resolveUserRole } from '../lib/roleResolution.ts';
+import { resolveUserRole } from '../lib/roleResolution';
 import LoadingState from './LoadingState.tsx';
 
 interface AdminProtectedRouteProps {

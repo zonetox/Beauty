@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../providers/AuthProvider.tsx';
 import LoadingState from './LoadingState.tsx';
-import { resolveUserRole } from '../lib/roleResolution.ts';
+import { resolveUserRole } from '../lib/roleResolution';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -60,7 +60,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
                     <p className="text-gray-600 mb-6">{initError}</p>
                     <button
                         onClick={() => {
-                            toast.error('Please contact support or try logging out and back in.');
+                            // Contact support action
+                            window.location.href = '/contact';
                         }}
                         className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark"
                     >
