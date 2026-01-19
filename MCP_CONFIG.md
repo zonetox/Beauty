@@ -8,11 +8,14 @@
 {
   "mcpServers": {
     "supabase": {
-      "url": "https://mcp.supabase.com/mcp?project_ref=fdklazlcbxaiapsnnbqq"
+      "url": "https://mcp.supabase.com/mcp",
+      "headers": {}
     }
   }
 }
 ```
+
+⚠️ **QUAN TRỌNG**: KHÔNG hardcode `project_ref` trong URL. Project sẽ được chọn qua auth flow trong Cursor.
 
 ## Project Reference
 
