@@ -60,8 +60,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
                     <p className="text-gray-600 mb-6">{initError}</p>
                     <button
                         onClick={() => {
-                            // Contact support action
-                            window.location.href = '/contact';
+                            navigate('/contact', { replace: true });
                         }}
                         className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark"
                     >
