@@ -8,14 +8,19 @@
 {
   "mcpServers": {
     "supabase": {
-      "url": "https://mcp.supabase.com/mcp",
-      "headers": {}
+      "url": "https://mcp.supabase.com/mcp?project_ref=fdklazlcbxaiapsnnbqq",
+      "headers": {
+        "Authorization": "Bearer YOUR_PERSONAL_ACCESS_TOKEN_HERE"
+      }
     }
   }
 }
 ```
 
-⚠️ **QUAN TRỌNG**: KHÔNG hardcode `project_ref` trong URL. Project sẽ được chọn qua auth flow trong Cursor.
+⚠️ **QUAN TRỌNG**: 
+- **BẮT BUỘC**: Thay `YOUR_PERSONAL_ACCESS_TOKEN_HERE` bằng Personal Access Token thật từ Supabase Dashboard
+- Headers trống `{}` sẽ **KHÔNG hoạt động** - MCP Supabase cần Authorization header để authenticate
+- Xem hướng dẫn chi tiết trong `docs/FIX_MCP_SUPABASE_CONNECTION.md`
 
 ## Project Reference
 
