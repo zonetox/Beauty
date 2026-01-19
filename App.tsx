@@ -28,7 +28,7 @@ import AuthLoadingScreen from './components/AuthLoadingScreen.tsx';
 import { BusinessProvider } from './contexts/BusinessContext.tsx';
 import { useWebVitals } from './hooks/usePerformanceMonitoring.ts';
 import { usePageTracking } from './lib/usePageTracking.ts';
-import { resolveUserRole } from './lib/roleResolution';
+import { useUserRole } from './hooks/useUserRole.ts';
 
 // Lazy load all page components for performance
 const HomePage = lazy(() => import('./pages/HomePage.tsx'));
@@ -39,6 +39,7 @@ const BlogPostPage = lazy(() => import('./pages/BlogPostPage.tsx'));
 const BusinessPostPage = lazy(() => import('./pages/BusinessPostPage.tsx'));
 const AboutPage = lazy(() => import('./pages/AboutPage.tsx'));
 const ContactPage = lazy(() => import('./pages/ContactPage.tsx'));
+const ForBusinessPage = lazy(() => import('./pages/ForBusinessPage.tsx'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage.tsx'));
 const AdminPage = lazy(() => import('./pages/AdminPage.tsx'));
 const AdminLoginPage = lazy(() => import('./pages/AdminLoginPage.tsx'));
@@ -95,47 +96,13 @@ const AppLayout: React.FC = () => {
 
 // This component intelligently routes the user to their business dashboard or personal account page.
 // MANDATORY: Requires profile and resolves role from database
+// Uses useUserRole hook for consistent role resolution
 const AccountPageRouter: React.FC = () => {
     const { profile, user, state } = useAuth();
-    const [role, setRole] = React.useState<'user' | 'business_owner' | 'admin' | 'loading' | 'error'>('loading');
-    const [error, setError] = React.useState<string | null>(null);
-
-    React.useEffect(() => {
-        const resolveRole = async () => {
-            if (state === 'loading') return;
-            
-            if (!user) {
-                setRole('error');
-                setError('User not authenticated');
-                return;
-            }
-
-            if (!profile) {
-                setRole('error');
-                setError('Profile not found. Account is incomplete.');
-                return;
-            }
-
-            try {
-                const roleResult = await resolveUserRole(user);
-                
-                if (roleResult.error) {
-                    setRole('error');
-                    setError(roleResult.error);
-                } else {
-                    setRole(roleResult.role as 'user' | 'business_owner' | 'admin');
-                }
-            } catch (err: any) {
-                setRole('error');
-                setError(`Role resolution failed: ${err.message}`);
-            }
-        };
-
-        resolveRole();
-    }, [user, profile, state]);
+    const { role, isLoading: roleLoading, error: roleError } = useUserRole();
 
     // Loading state
-    if (state === 'loading' || role === 'loading') {
+    if (state === 'loading' || roleLoading) {
         return (
             <div className="flex items-center justify-center h-[50vh]">
                 <div className="text-center">
@@ -148,13 +115,13 @@ const AccountPageRouter: React.FC = () => {
     }
 
     // Error state - BLOCK access
-    if (role === 'error' || !profile) {
+    if (roleError || !profile || !user) {
         return (
             <div className="flex items-center justify-center h-[50vh]">
                 <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg text-center">
                     <div className="text-red-500 text-5xl mb-4">⚠️</div>
                     <h2 className="text-2xl font-bold text-gray-900 mb-4">Account Setup Incomplete</h2>
-                    <p className="text-gray-600 mb-6">{error || 'Profile not found. Account is incomplete.'}</p>
+                    <p className="text-gray-600 mb-6">{roleError || 'Profile not found. Account is incomplete.'}</p>
                     <p className="text-sm text-gray-500">Please contact support or try logging out and back in.</p>
                 </div>
             </div>
@@ -162,22 +129,18 @@ const AccountPageRouter: React.FC = () => {
     }
 
     // Route based on resolved role - NO DEFAULT REDIRECT
-    if (role === 'business_owner' && profile.businessId) {
-        // Business owner → business dashboard
-        return <UserBusinessDashboardPage />;
-    }
-
-    if (role === 'business_staff' && profile.businessId) {
-        // Business staff → business dashboard (limited access)
+    // Only route to pages that actually exist and are implemented
+    if ((role === 'business_owner' || role === 'business_staff') && profile.businessId) {
+        // Business owner/staff → business dashboard (fully implemented)
         return <UserBusinessDashboardPage />;
     }
 
     if (role === 'admin') {
-        // Admin → account page (can also access /admin)
+        // Admin → account page (can also access /admin via header link)
         return <UserAccountPage />;
     }
 
-    // Regular user
+    // Regular user → account page (only implemented features shown)
     if (role === 'user') {
         return <UserAccountPage />;
     }
@@ -239,6 +202,7 @@ const AppContent: React.FC = () => {
                                         {/* Public pages that DON'T need public data */}
                                         <Route path="about" element={<AboutPage />} />
                                         <Route path="contact" element={<ContactPage />} />
+                                        <Route path="for-business" element={<ForBusinessPage />} />
                                         <Route path="register" element={<RegisterPage />} />
                                         <Route path="/partner-registration" element={<PartnerRegistrationPage />} />
                                         <Route path="login" element={<LoginPage />} />

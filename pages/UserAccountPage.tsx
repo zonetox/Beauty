@@ -8,7 +8,9 @@ import SEOHead from '../components/SEOHead.tsx';
 import { Link } from 'react-router-dom';
 import BusinessCard from '../components/BusinessCard.tsx';
 
-type AccountTab = 'profile' | 'favorites' | 'appointments' | 'reviews';
+// AccountTab: Only include tabs for features that are ACTUALLY implemented
+// Do NOT include incomplete features (appointments, reviews are not implemented for regular users)
+type AccountTab = 'profile' | 'favorites';
 
 const UserAccountPage: React.FC = () => {
     const { currentUser, profile, isFavorite, toggleFavorite } = useUserSession();
@@ -45,7 +47,7 @@ const UserAccountPage: React.FC = () => {
                                 <div className="pt-4 border-t">
                                     <p className="text-sm text-gray-500">
                                         Bạn đang sử dụng tài khoản người dùng. Để trở thành đối tác doanh nghiệp, vui lòng{' '}
-                                        <Link to="/register" className="text-primary hover:underline font-medium">
+                                        <Link to="/for-business" className="text-primary hover:underline font-medium">
                                             đăng ký doanh nghiệp
                                         </Link>.
                                     </p>
@@ -72,26 +74,6 @@ const UserAccountPage: React.FC = () => {
                                 ))}
                             </div>
                         )}
-                    </div>
-                );
-            case 'appointments':
-                return (
-                    <div className="space-y-6">
-                        <h2 className="text-2xl font-bold font-serif text-neutral-dark">Lịch hẹn của tôi</h2>
-                        <div className="bg-white rounded-lg shadow-md p-8 text-center">
-                            <p className="text-gray-500">Tính năng đang được phát triển.</p>
-                            <p className="text-sm text-gray-400 mt-2">Bạn sẽ có thể xem và quản lý lịch hẹn tại đây.</p>
-                        </div>
-                    </div>
-                );
-            case 'reviews':
-                return (
-                    <div className="space-y-6">
-                        <h2 className="text-2xl font-bold font-serif text-neutral-dark">Đánh giá của tôi</h2>
-                        <div className="bg-white rounded-lg shadow-md p-8 text-center">
-                            <p className="text-gray-500">Tính năng đang được phát triển.</p>
-                            <p className="text-sm text-gray-400 mt-2">Bạn sẽ có thể xem và quản lý đánh giá tại đây.</p>
-                        </div>
                     </div>
                 );
             default:
@@ -134,26 +116,8 @@ const UserAccountPage: React.FC = () => {
                                     >
                                         Yêu thích ({favoriteBusinesses.length})
                                     </button>
-                                    <button
-                                        onClick={() => setActiveTab('appointments')}
-                                        className={`w-full text-left px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                                            activeTab === 'appointments'
-                                                ? 'bg-primary text-white'
-                                                : 'text-neutral-dark hover:bg-primary/10'
-                                        }`}
-                                    >
-                                        Lịch hẹn
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('reviews')}
-                                        className={`w-full text-left px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                                            activeTab === 'reviews'
-                                                ? 'bg-primary text-white'
-                                                : 'text-neutral-dark hover:bg-primary/10'
-                                        }`}
-                                    >
-                                        Đánh giá
-                                    </button>
+                                    {/* Removed incomplete features: appointments, reviews */}
+                                    {/* Only show tabs for features that are ACTUALLY implemented */}
                                 </nav>
                             </div>
                         </aside>

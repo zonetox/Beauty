@@ -35,15 +35,20 @@ const RegisterPage: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
 
-    // BLOCK ACCESS: If user already has business access, redirect to dashboard
+    // BLOCK ACCESS: Business owners, staff, and admins should not see registration form
+    // Only anonymous users and regular users (without business access) can register
     useEffect(() => {
         if (state !== 'loading' && !roleLoading && user) {
             if (isBusinessOwner || isBusinessStaff) {
                 toast.info('Bạn đã có quyền truy cập doanh nghiệp. Đang chuyển đến dashboard...');
                 navigate('/account', { replace: true });
+            } else if (role === 'admin') {
+                // Admins should use admin panel to create businesses, not registration form
+                toast.info('Quản trị viên không thể sử dụng form đăng ký. Vui lòng sử dụng admin panel.');
+                navigate('/admin', { replace: true });
             }
         }
-    }, [user, state, roleLoading, isBusinessOwner, isBusinessStaff, navigate]);
+    }, [user, state, roleLoading, role, isBusinessOwner, isBusinessStaff, navigate]);
 
     // Show loading state while checking access
     if (state === 'loading' || roleLoading) {
@@ -57,8 +62,8 @@ const RegisterPage: React.FC = () => {
         );
     }
 
-    // Block access if user already has business access
-    if (user && (isBusinessOwner || isBusinessStaff)) {
+    // Block access if user already has business access or is admin
+    if (user && (isBusinessOwner || isBusinessStaff || role === 'admin')) {
         return null; // Will redirect via useEffect
     }
 

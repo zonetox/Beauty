@@ -38,7 +38,7 @@ const Footer: React.FC = () => {
           <div>
             <h4 className="font-semibold text-lg mb-4">Dành cho doanh nghiệp</h4>
             <ul className="space-y-2 text-sm">
-              <li><Link to="/register" className="text-gray-300 hover:text-primary">Đăng ký</Link></li>
+              <li><Link to="/for-business" className="text-gray-300 hover:text-primary">Đăng ký</Link></li>
               <li><Link to="#" className="text-gray-300 hover:text-primary">Chính sách</Link></li>
               <li><Link to="#" className="text-gray-300 hover:text-primary">Hỗ trợ</Link></li>
             </ul>

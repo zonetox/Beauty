@@ -192,7 +192,7 @@ const Header: React.FC = () => {
                         </p>
                         <p className="text-xs text-gray-500 truncate">{user.email}</p>
                       </div>
-                      {/* Account/Dashboard Link - Show based on role */}
+                      {/* Account/Dashboard Link - Show based on role with finalized naming */}
                       {hasBusinessAccess ? (
                         <Link
                           to="/account"
@@ -204,7 +204,7 @@ const Header: React.FC = () => {
                         >
                           <div className="flex items-center gap-2">
                             <UserIcon className="w-4 h-4" />
-                            <span>{isBusinessStaff ? 'Dashboard Doanh nghiệp (Staff)' : 'Dashboard Doanh nghiệp'}</span>
+                            <span>Dashboard doanh nghiệp</span>
                           </div>
                         </Link>
                       ) : (
@@ -225,7 +225,7 @@ const Header: React.FC = () => {
                       {/* Register Business Link - Only show for regular users (not owner, not staff, not admin) */}
                       {role === 'user' && !hasBusinessAccess && (
                         <Link
-                          to="/register"
+                          to="/for-business"
                           className="block px-4 py-2 text-sm text-neutral-dark hover:bg-primary/10 transition-colors"
                           onClick={() => {
                             setIsMenuOpen(false);
@@ -261,12 +261,15 @@ const Header: React.FC = () => {
                 <NavLink to="/login" className={`${navLinkClass({ isActive: false })} ml-2`}>
                   Đăng nhập
                 </NavLink>
-                <Link
-                  to="/register"
-                  className="ml-4 px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark transition-transform transform hover:scale-105"
-                >
-                  For Business
-                </Link>
+                {/* "For Business" - Only visible to anonymous users */}
+                {role === 'anonymous' && (
+                  <Link
+                    to="/for-business"
+                    className="ml-4 px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark transition-transform transform hover:scale-105"
+                  >
+                    For Business
+                  </Link>
+                )}
               </>
             )}
           </div>
@@ -321,7 +324,7 @@ const Header: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                {/* Account/Dashboard Link - Show based on role */}
+                {/* Account/Dashboard Link - Show based on role with finalized naming */}
                 {hasBusinessAccess ? (
                   <NavLink 
                     to="/account" 
@@ -329,7 +332,7 @@ const Header: React.FC = () => {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <UserIcon className="w-6 h-6" />
-                    <span>{isBusinessStaff ? 'Dashboard Doanh nghiệp (Staff)' : 'Dashboard Doanh nghiệp'}</span>
+                    <span>Dashboard doanh nghiệp</span>
                   </NavLink>
                 ) : (
                   <NavLink 
@@ -344,7 +347,7 @@ const Header: React.FC = () => {
                 {/* Register Business Link - Only show for regular users */}
                 {role === 'user' && !hasBusinessAccess && (
                   <Link
-                    to="/register"
+                    to="/for-business"
                     className="block px-3 py-2 rounded-md text-base font-medium text-neutral-dark hover:bg-primary/10"
                     onClick={() => setIsMenuOpen(false)}
                   >
@@ -368,13 +371,16 @@ const Header: React.FC = () => {
             ) : (
               <div className="px-2 space-y-1">
                 <NavLink to="/login" className={mobileNavLinkClass} onClick={() => setIsMenuOpen(false)}>Đăng nhập</NavLink>
-                <Link
-                  to="/register"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block w-full text-center px-4 py-3 border border-transparent rounded-md shadow-sm font-medium text-white bg-primary hover:bg-primary-dark mt-2"
-                >
-                  Register Business
-                </Link>
+                {/* "For Business" - Only visible to anonymous users */}
+                {role === 'anonymous' && (
+                  <Link
+                    to="/for-business"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block w-full text-center px-4 py-3 border border-transparent rounded-md shadow-sm font-medium text-white bg-primary hover:bg-primary-dark mt-2"
+                  >
+                    For Business
+                  </Link>
+                )}
               </div>
             )}
           </div>

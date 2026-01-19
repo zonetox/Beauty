@@ -9,7 +9,7 @@ const CtaSection: React.FC = () => (
                 Gia nhập mạng lưới của chúng tôi để tiếp cận hàng ngàn khách hàng tiềm năng và phát triển kinh doanh của bạn.
             </p>
             <Link 
-                to="/register" 
+                to="/for-business" 
                 className="mt-8 inline-block bg-primary text-white px-8 py-3 rounded-md font-semibold hover:bg-primary-dark transition-transform transform hover:scale-105"
             >
                 Đăng ký cho Doanh nghiệp

@@ -369,7 +369,7 @@ const HomePage: React.FC = () => {
               Tham gia BeautyDir ngay hôm nay để kết nối với hàng triệu khách hàng tiềm năng, xây dựng một trang landing page chuyên nghiệp, và quản lý hoạt động kinh doanh của bạn một cách dễ dàng, tất cả ở cùng một nơi.
             </p>
             <Link
-              to="/register"
+              to="/for-business"
               className="mt-8 inline-block bg-primary text-white px-10 py-4 rounded-md font-semibold text-lg hover:bg-primary-dark transition-transform transform hover:scale-105 shadow-lg"
             >
               Đăng ký cho Doanh nghiệp
