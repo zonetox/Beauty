@@ -10,6 +10,7 @@ import { MediaItem, MediaCategory, MediaType } from '../types.ts';
 import LoadingState from './LoadingState.tsx';
 import EmptyState from './EmptyState.tsx';
 import EditMediaModal from './EditMediaModal.tsx';
+import ConfirmDialog from './ConfirmDialog.tsx';
 
 // --- Reusable Components ---
 const StatDisplay: React.FC<{ label: string; value: number; limit: number }> = ({ label, value, limit }) => {
@@ -46,6 +47,7 @@ const MediaLibrary: React.FC = () => {
     const [isReordering, setIsReordering] = useState(false);
     const [uploadingFiles, setUploadingFiles] = useState<Map<string, number>>(new Map()); // file name -> progress
     const [isDeleting, setIsDeleting] = useState<string | null>(null);
+    const [confirmDelete, setConfirmDelete] = useState<{ isOpen: boolean; item: MediaItem | null }>({ isOpen: false, item: null });
 
     // Local state for optimistic UI updates during drag-and-drop
     const [localMedia, setLocalMedia] = useState<MediaItem[]>([]);
@@ -181,16 +183,21 @@ const MediaLibrary: React.FC = () => {
     
     // --- Item Actions ---
     const handleDelete = async (item: MediaItem) => {
-        if (window.confirm("Are you sure you want to delete this media item? This action cannot be undone.")) {
-            setIsDeleting(item.id);
-            try {
-                await deleteMediaItem(item);
-                // Success toast is handled in context
-            } catch (error) {
-                // Error already handled in context with toast
-            } finally {
-                setIsDeleting(null);
-            }
+        setConfirmDelete({ isOpen: true, item });
+    };
+
+    const confirmDeleteItem = async () => {
+        if (!confirmDelete.item) return;
+        
+        setIsDeleting(confirmDelete.item.id);
+        try {
+            await deleteMediaItem(confirmDelete.item);
+            // Success toast is handled in context
+        } catch (error) {
+            // Error already handled in context with toast
+        } finally {
+            setIsDeleting(null);
+            setConfirmDelete({ isOpen: false, item: null });
         }
     };
 
@@ -458,6 +465,16 @@ const MediaLibrary: React.FC = () => {
                     ))}
                 </div>
             )}
+            <ConfirmDialog
+                isOpen={confirmDelete.isOpen}
+                title="Delete Media Item"
+                message="Are you sure you want to delete this media item? This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                variant="danger"
+                onConfirm={confirmDeleteItem}
+                onCancel={() => setConfirmDelete({ isOpen: false, item: null })}
+            />
         </div>
     );
 };

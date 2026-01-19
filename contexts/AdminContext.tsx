@@ -9,45 +9,8 @@ import { DEFAULT_PAGE_CONTENT } from './PageContentContext.tsx';
 import { snakeToCamel } from '../lib/utils.ts';
 import { useErrorHandler } from '../lib/useErrorHandler.ts';
 
-// --- Hardcoded fallback users for Developer Quick Login ---
-const DEV_ADMIN_USERS: AdminUser[] = [
-    {
-        id: 1,
-        username: 'superadmin',
-        email: 'admin@beautydir.com',
-        role: AdminUserRole.ADMIN,
-        permissions: {
-            canManageUsers: true, canManageOrders: true, canViewEmailLog: true, canUseAdminTools: true, canViewAnalytics: true, canManagePackages: true,
-            canViewActivityLog: true, canManageBusinesses: true, canManageSiteContent: true, canManagePlatformBlog: true, canManageAnnouncements: true,
-            canManageRegistrations: true, canManageSupportTickets: true, canManageSystemSettings: true
-        },
-        isLocked: false,
-    },
-    {
-        id: 2,
-        username: 'moderator_01',
-        email: 'mod@beautydir.com',
-        role: AdminUserRole.MODERATOR,
-        permissions: {
-            canManageUsers: false, canManageOrders: true, canViewEmailLog: false, canUseAdminTools: false, canViewAnalytics: false, canManagePackages: false,
-            canViewActivityLog: true, canManageBusinesses: true, canManageSiteContent: false, canManagePlatformBlog: true, canManageAnnouncements: false,
-            canManageRegistrations: true, canManageSupportTickets: true, canManageSystemSettings: false
-        },
-        isLocked: false,
-    },
-    {
-        id: 3,
-        username: 'editor_anna',
-        email: 'editor@beautydir.com',
-        role: AdminUserRole.EDITOR,
-        permissions: {
-            canManageUsers: false, canManageOrders: false, canViewEmailLog: false, canUseAdminTools: false, canViewAnalytics: false, canManagePackages: false,
-            canViewActivityLog: false, canManageBusinesses: false, canManageSiteContent: true, canManagePlatformBlog: true, canManageAnnouncements: false,
-            canManageRegistrations: false, canManageSupportTickets: false, canManageSystemSettings: false
-        },
-        isLocked: false,
-    }
-];
+// Admin access is determined ONLY by querying the admin_users table
+// No fallback or dev users - if admin_users query fails or returns empty, treat user as non-admin
 
 
 // --- TYPE DEFINITIONS ---
@@ -62,7 +25,6 @@ interface AdminContextType {
     adminUsers: AdminUser[];
     adminLogin: (email: string, pass: string) => Promise<any>;
     adminLogout: () => Promise<any>;
-    loginAs: (userId: number) => boolean;
     addAdminUser: (newUser: Omit<AdminUser, 'id' | 'lastLogin' | 'isLocked'>) => Promise<void>;
     updateAdminUser: (userId: number, updates: Partial<AdminUser>) => Promise<void>;
     deleteAdminUser: (userId: number) => Promise<void>;
@@ -101,21 +63,6 @@ interface AdminContextType {
 export const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 const ANNOUNCEMENT_READ_KEY = 'read_announcements_by_business';
-const DEV_LOGIN_KEY = 'dev_login_user_id';
-
-// Check if running in development mode (production-safe)
-const isDevelopmentMode = (): boolean => {
-    // Check Vite environment variable first
-    if (typeof import.meta !== 'undefined' && import.meta.env) {
-        return import.meta.env.MODE === 'development' || import.meta.env.DEV === true;
-    }
-    // Fallback to Node.js environment variable
-    if (typeof process !== 'undefined' && process.env) {
-        return process.env.NODE_ENV === 'development';
-    }
-    // Default to false (production-safe)
-    return false;
-};
 
 export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     // --- AUTH STATES ---
@@ -134,33 +81,36 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const [pageContent, setPageContent] = useState<{ [key in PageName]?: PageData }>({});
 
     // --- AUTH LOGIC ---
+    // Admin access is determined ONLY by querying the admin_users table
+    // If query fails or returns empty, return empty array (no fallback)
     const fetchAdminUsers = useCallback(async () => {
         if (!isSupabaseConfigured) {
-            setAdminUsers(DEV_ADMIN_USERS);
-            return DEV_ADMIN_USERS;
+            setAdminUsers([]);
+            return [];
         }
-        // PHASE 3: Optimize query - select only needed columns
+        // Query admin_users table - select only needed columns
         const { data, error } = await supabase.from('admin_users')
           .select('id, username, email, role, permissions, is_locked, last_login')
           .order('id');
-        if (error || !data || data.length === 0) {
-            // Only log warning if there's an actual error (not just empty table)
-            if (error) {
-                console.warn("Could not fetch admin users from DB:", error.message);
-            } else if (data && data.length === 0) {
-                // Empty table is expected in new installations - use info level instead of warn
-                console.info("Admin users table is empty. Using fallback dev users for development.");
-            } else {
-                console.warn("Could not fetch admin users from DB. Falling back to dev users.");
-            }
-            const fallback = DEV_ADMIN_USERS;
-            setAdminUsers(fallback);
-            return fallback;
-        } else {
-            const mappedData = snakeToCamel(data);
-            setAdminUsers(mappedData);
-            return mappedData;
+        
+        if (error) {
+            // Log error but return empty array - treat as no admin users
+            console.warn("Could not fetch admin users from DB:", error.message);
+            setAdminUsers([]);
+            return [];
         }
+        
+        if (!data || data.length === 0) {
+            // Empty table - no admin users exist
+            console.info("Admin users table is empty.");
+            setAdminUsers([]);
+            return [];
+        }
+        
+        // Map snake_case to camelCase and return
+        const mappedData = snakeToCamel(data);
+        setAdminUsers(mappedData);
+        return mappedData;
     }, []);
 
     useEffect(() => {
@@ -186,37 +136,15 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         const handleAuthChange = async (allAdmins: AdminUser[], user: User | null) => {
             if (!mounted) return;
             
-            // D1.1 FIX: Only allow dev quick login in development mode (production-safe)
-            const isDev = isDevelopmentMode();
-            const devLoginId = isDev ? localStorage.getItem(DEV_LOGIN_KEY) : null;
-
-            // Priority 1: Check for active developer login (ONLY in development mode)
-            if (devLoginId && isDev) {
-                const devUser = allAdmins.find(u => u.id === parseInt(devLoginId, 10));
-                if (devUser) {
-                    const fakeAuthUser: User = { id: `dev-${devUser.id}`, email: devUser.email, app_metadata: {}, user_metadata: { username: devUser.username }, aud: 'authenticated', created_at: new Date().toISOString() };
-                    if (mounted) {
-                        setCurrentUser({ ...devUser, authUser: fakeAuthUser });
-                        setLoading(false);
-                    }
-                    return;
-                } else {
-                    localStorage.removeItem(DEV_LOGIN_KEY);
-                }
-            } else if (devLoginId && !isDev) {
-                // Production mode: Remove dev login key if it exists
-                localStorage.removeItem(DEV_LOGIN_KEY);
-            }
-
-            // Priority 2: Check for a real Supabase session
+            // Admin access is determined ONLY by querying the admin_users table
+            // Check for a real Supabase session and match with admin_users table
             if (user) {
                 const adminProfile = allAdmins.find(au => au.email === user.email);
                 if (adminProfile && !adminProfile.isLocked) {
                     if (mounted) setCurrentUser({ ...adminProfile, authUser: user });
                 } else {
                     if (mounted) setCurrentUser(null);
-                    // Do NOT sign out automatically here as it might disrupt the user session context
-                    // if (isSupabaseConfigured) await supabase.auth.signOut();
+                    // User is authenticated but not in admin_users table or is locked - treat as non-admin
                 }
             } else {
                 if (mounted) setCurrentUser(null);
@@ -275,35 +203,18 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
 
     const adminLogout = async () => {
-        // D1.1 FIX: Only remove dev login key in development mode
-        if (isDevelopmentMode()) {
-            localStorage.removeItem(DEV_LOGIN_KEY);
-        }
         if (isSupabaseConfigured) {
             await supabase.auth.signOut();
         }
         setCurrentUser(null); // Manually clear state for instant UI update
     };
 
-    const loginAs = (userId: number): boolean => {
-        // D1.1 FIX: Only allow dev quick login in development mode (production-safe)
-        if (!isDevelopmentMode()) {
-            console.warn('Dev quick login is disabled in production mode.');
-            return false;
-        }
-        const userToLogin = adminUsers.find(u => u.id === userId);
-        if (userToLogin) {
-            const fakeAuthUser: User = { id: `dev-${userId}`, email: userToLogin.email, app_metadata: {}, user_metadata: { username: userToLogin.username }, aud: 'authenticated', created_at: new Date().toISOString() };
-            setCurrentUser({ ...userToLogin, authUser: fakeAuthUser });
-            localStorage.setItem(DEV_LOGIN_KEY, String(userId));
-            return true;
-        }
-        return false;
-    };
+    // loginAs removed - admin access must be determined ONLY by querying admin_users table
+    // No dev quick login fallback
 
     const addAdminUser = async (newUser: Omit<AdminUser, 'id' | 'lastLogin' | 'isLocked'>) => {
         if (!isSupabaseConfigured) {
-            toast.error("Preview Mode: Cannot add a real admin user.");
+            toast.error("Cannot add admin user: Supabase is not configured.");
             return;
         }
         const { error } = await supabase.functions.invoke('create-admin-user', {
@@ -556,7 +467,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const updatePageContent = async (page: PageName, newContent: PageData) => { if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update page content."); return; } /* ... */ };
 
     const value = {
-        currentUser, loading, adminUsers, adminLogin, adminLogout, loginAs, addAdminUser, updateAdminUser, deleteAdminUser,
+        currentUser, loading, adminUsers, adminLogin, adminLogout, addAdminUser, updateAdminUser, deleteAdminUser,
         logs, logAdminAction, clearLogs,
         notifications, addNotification, markNotificationAsRead,
         announcements, addAnnouncement, deleteAnnouncement, getUnreadAnnouncements, markAnnouncementAsRead,
@@ -577,8 +488,8 @@ export const useAdmin = () => {
 };
 
 export const useAdminAuth = () => {
-    const { currentUser, loading, adminUsers, adminLogin, adminLogout, loginAs, addAdminUser, updateAdminUser, deleteAdminUser } = useAdmin();
-    return { currentUser, loading, adminUsers, adminLogin, adminLogout, loginAs, addAdminUser, updateAdminUser, deleteAdminUser };
+    const { currentUser, loading, adminUsers, adminLogin, adminLogout, addAdminUser, updateAdminUser, deleteAdminUser } = useAdmin();
+    return { currentUser, loading, adminUsers, adminLogin, adminLogout, addAdminUser, updateAdminUser, deleteAdminUser };
 };
 export const useAdminPlatform = () => {
     const { logs, logAdminAction, clearLogs, notifications, addNotification, markNotificationAsRead, announcements, addAnnouncement, deleteAnnouncement, getUnreadAnnouncements, markAnnouncementAsRead, tickets, getTicketsForBusiness, addTicket, addReply, updateTicketStatus, registrationRequests, approveRegistrationRequest, rejectRegistrationRequest } = useAdmin();

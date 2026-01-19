@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTheme } from '../contexts/ThemeContext.tsx';
 import { ThemeSettings } from '../types.ts';
+import ConfirmDialog from './ConfirmDialog.tsx';
 
 const ColorInput: React.FC<{ label: string; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; name: string; }> = ({ label, value, onChange, name }) => (
     <div>
@@ -16,6 +17,7 @@ const ColorInput: React.FC<{ label: string; value: string; onChange: (e: React.C
 const ThemeEditor: React.FC = () => {
     const { theme, updateTheme, availableFonts } = useTheme();
     const [formData, setFormData] = useState<ThemeSettings>(JSON.parse(JSON.stringify(theme)));
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
 
     const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -39,20 +41,23 @@ const ThemeEditor: React.FC = () => {
     };
     
     const handleReset = () => {
-        if (window.confirm("Are you sure you want to reset all theme settings to default? This action cannot be undone.")) {
-             const defaultTheme: ThemeSettings = {
-              logoUrl: '',
-              faviconUrl: '/favicon.svg',
-              colors: {
-                primary: '#BFA16A', primaryDark: '#A98C5A', secondary: '#4A4A4A',
-                accent: '#EAE0D1', background: '#FDFCF9', neutralDark: '#2D2D2D',
-              },
-              fonts: { sans: 'Inter', serif: 'Playfair Display' },
-            };
-            setFormData(defaultTheme);
-            updateTheme(defaultTheme);
-            toast.success('Theme has been reset to default.');
-        }
+        setShowResetConfirm(true);
+    };
+
+    const confirmReset = () => {
+        setShowResetConfirm(false);
+        const defaultTheme: ThemeSettings = {
+          logoUrl: '',
+          faviconUrl: '/favicon.svg',
+          colors: {
+            primary: '#BFA16A', primaryDark: '#A98C5A', secondary: '#4A4A4A',
+            accent: '#EAE0D1', background: '#FDFCF9', neutralDark: '#2D2D2D',
+          },
+          fonts: { sans: 'Inter', serif: 'Playfair Display' },
+        };
+        setFormData(defaultTheme);
+        updateTheme(defaultTheme);
+        toast.success('Theme has been reset to default.');
     };
 
     return (
@@ -109,6 +114,16 @@ const ThemeEditor: React.FC = () => {
                     </div>
                  </div>
              </div>
+            <ConfirmDialog
+                isOpen={showResetConfirm}
+                title="Reset Theme Settings"
+                message="Are you sure you want to reset all theme settings to default? This action cannot be undone."
+                confirmText="Reset"
+                cancelText="Cancel"
+                variant="warning"
+                onConfirm={confirmReset}
+                onCancel={() => setShowResetConfirm(false)}
+            />
         </form>
     );
 };

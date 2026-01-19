@@ -2,7 +2,7 @@
 // Tuân thủ ARCHITECTURE.md, sử dụng schema/RLS/contexts hiện có
 // 100% hoàn thiện, không placeholder, 100% database connection
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAdminAuth } from '../contexts/AdminContext.tsx';
 import SEOHead from '../components/SEOHead.tsx';
@@ -12,18 +12,8 @@ const AdminLoginPage: React.FC = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const { adminLogin, currentUser, adminUsers, loginAs } = useAdminAuth();
+    const { adminLogin, currentUser } = useAdminAuth();
     const navigate = useNavigate();
-    
-    const [selectedUserId, setSelectedUserId] = useState<string>('');
-
-    useEffect(() => {
-        // When the list of admin users loads, set the default selected user in the dropdown.
-        if (adminUsers.length > 0 && !selectedUserId) {
-            setSelectedUserId(String(adminUsers[0].id));
-        }
-    }, [adminUsers, selectedUserId]);
-
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -40,39 +30,11 @@ const AdminLoginPage: React.FC = () => {
             setLoading(false);
         }
     };
-    
-    const handleQuickLogin = () => {
-        if (!selectedUserId) {
-            setError("Please select a user to log in as.");
-            return;
-        }
-        setError('');
-        const success = loginAs(Number(selectedUserId));
-        if (success) {
-            navigate('/admin');
-        } else {
-            setError("Could not log in as the selected user.");
-        }
-    };
 
     // If already logged in as an admin, redirect to the dashboard
     if (currentUser) {
         return <Navigate to="/admin" replace />;
     }
-
-    // D1.1 FIX: Safely check for development mode (production-safe)
-    const isDev = (() => {
-        // Check Vite environment variable first
-        if (typeof import.meta !== 'undefined' && import.meta.env) {
-            return import.meta.env.MODE === 'development' || import.meta.env.DEV === true;
-        }
-        // Fallback to Node.js environment variable
-        if (typeof process !== 'undefined' && process.env) {
-            return process.env.NODE_ENV === 'development';
-        }
-        // Default to false (production-safe)
-        return false;
-    })();
 
     // SEO metadata (noindex for admin pages)
     const seoTitle = 'Admin Login | 1Beauty.asia';
@@ -125,36 +87,6 @@ const AdminLoginPage: React.FC = () => {
                     </div>
                 </form>
 
-                {/* Developer Quick Login - Only show in development mode */}
-                {isDev && adminUsers.length > 0 && (
-                    <div className="pt-6 border-t border-gray-200">
-                        <div className="text-center mb-4">
-                            <h3 className="text-sm font-semibold text-gray-500">🚀 Developer Quick Login</h3>
-                        </div>
-                        <div className="space-y-4">
-                            <div>
-                                <label htmlFor="user-select" className="block text-sm font-medium text-gray-700">Select User</label>
-                                <select 
-                                    id="user-select" 
-                                    value={selectedUserId}
-                                    onChange={(e) => setSelectedUserId(e.target.value)}
-                                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
-                                >
-                                    {adminUsers.map(user => (
-                                        <option key={user.id} value={user.id}>{user.username} ({user.role})</option>
-                                    ))}
-                                </select>
-                            </div>
-                             <button
-                                type="button"
-                                onClick={handleQuickLogin}
-                                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-secondary hover:opacity-90"
-                            >
-                                Login as Selected User
-                            </button>
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
         </>

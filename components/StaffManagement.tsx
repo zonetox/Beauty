@@ -7,6 +7,7 @@ import { BusinessStaff, StaffMemberRole } from '../types.ts';
 import StaffInviteModal from './StaffInviteModal.tsx';
 import LoadingState from './LoadingState.tsx';
 import EmptyState from './EmptyState.tsx';
+import ConfirmDialog from './ConfirmDialog.tsx';
 
 const StaffManagement: React.FC = () => {
   const { currentBusiness } = useBusinessAuth();
@@ -22,6 +23,7 @@ const StaffManagement: React.FC = () => {
 
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [editingStaff, setEditingStaff] = useState<BusinessStaff | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean; staffId: string | null }>({ isOpen: false, staffId: null });
 
   useEffect(() => {
     if (currentBusiness) {
@@ -43,18 +45,22 @@ const StaffManagement: React.FC = () => {
   };
 
   const handleRemoveStaff = async (staffId: string) => {
-    if (!confirm('Are you sure you want to remove this staff member?')) {
-      return;
-    }
+    setConfirmDialog({ isOpen: true, staffId });
+  };
 
+  const confirmRemoveStaff = async () => {
+    if (!confirmDialog.staffId) return;
+    
     try {
-      await removeStaff(staffId);
+      await removeStaff(confirmDialog.staffId);
       toast.success('Staff removed successfully');
       if (currentBusiness) {
         await refreshStaff(currentBusiness.id);
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to remove staff');
+    } finally {
+      setConfirmDialog({ isOpen: false, staffId: null });
     }
   };
 
@@ -186,6 +192,16 @@ const StaffManagement: React.FC = () => {
           onSave={(updates) => handleUpdateStaff(editingStaff.id, updates)}
         />
       )}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title="Remove Staff Member"
+        message="Are you sure you want to remove this staff member? This action cannot be undone."
+        confirmText="Remove"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={confirmRemoveStaff}
+        onCancel={() => setConfirmDialog({ isOpen: false, staffId: null })}
+      />
     </div>
   );
 };

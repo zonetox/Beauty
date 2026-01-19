@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 // FIX: Import the correct `useHomepageData` hook from the dedicated HomepageDataContext.
 import { useHomepageData } from '../contexts/HomepageDataContext.tsx';
 import { HomepageData, HeroSlide } from '../types.ts';
+import toast from 'react-hot-toast';
 
 const HomepageEditor: React.FC = () => {
     const { homepageData, updateHomepageData } = useHomepageData();
@@ -33,7 +34,7 @@ const HomepageEditor: React.FC = () => {
     
     const handleSave = () => {
         updateHomepageData(data);
-        alert('Homepage content saved!');
+        toast.success('Homepage content saved!');
     };
 
     return (

@@ -36,6 +36,7 @@ const DealsManager: React.FC = () => {
     const [editingDeal, setEditingDeal] = useState<Partial<Deal> | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState<string | null>(null);
+    const [confirmDelete, setConfirmDelete] = useState<{ isOpen: boolean; dealId: string | null }>({ isOpen: false, dealId: null });
 
     // Calculate status for each deal and memoize
     const dealsWithStatus = useMemo(() => {
@@ -113,16 +114,21 @@ const DealsManager: React.FC = () => {
     };
 
     const handleDelete = async (id: string) => {
-        if (window.confirm("Are you sure you want to delete this deal? This action cannot be undone.")) {
-            setIsDeleting(id);
-            try {
-                await deleteDeal(id);
-                // Success toast is handled in context
-            } catch (error) {
-                // Error already handled in context with toast
-            } finally {
-                setIsDeleting(null);
-            }
+        setConfirmDelete({ isOpen: true, dealId: id });
+    };
+
+    const confirmDeleteDeal = async () => {
+        if (!confirmDelete.dealId) return;
+        
+        setIsDeleting(confirmDelete.dealId);
+        try {
+            await deleteDeal(confirmDelete.dealId);
+            // Success toast is handled in context
+        } catch (error) {
+            // Error already handled in context with toast
+        } finally {
+            setIsDeleting(null);
+            setConfirmDelete({ isOpen: false, dealId: null });
         }
     };
 
@@ -236,6 +242,16 @@ const DealsManager: React.FC = () => {
                     ))}
                 </div>
             )}
+            <ConfirmDialog
+                isOpen={confirmDelete.isOpen}
+                title="Delete Deal"
+                message="Are you sure you want to delete this deal? This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                variant="danger"
+                onConfirm={confirmDeleteDeal}
+                onCancel={() => setConfirmDelete({ isOpen: false, dealId: null })}
+            />
         </div>
     );
 };

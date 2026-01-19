@@ -105,7 +105,7 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
     // It returns { data: null, error: null } - which is the normal case for non-admin users
     if (adminError) {
       // Log unexpected errors but don't block - user might still be a business owner or regular user
-      console.debug('Admin check error (non-critical):', adminError.message);
+      console.warn('Admin check error (non-critical):', adminError.message);
     }
 
     // If adminUser exists and no error, user is an admin
@@ -171,7 +171,8 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
       isBusinessStaff: false
     };
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return {
       role: 'anonymous',
       profileId: null,
@@ -179,7 +180,7 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
       isAdmin: false,
       isBusinessOwner: false,
       isBusinessStaff: false,
-      error: `Role resolution failed: ${error.message}`
+      error: `Role resolution failed: ${errorMessage}`
     };
   }
 }
@@ -237,10 +238,11 @@ export async function verifyProfileExists(userId: string): Promise<{ exists: boo
     }
 
     return { exists: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return {
       exists: false,
-      error: `Profile verification failed: ${error.message}`
+      error: `Profile verification failed: ${errorMessage}`
     };
   }
 }
@@ -299,11 +301,12 @@ export async function verifyBusinessLinked(userId: string): Promise<{ exists: bo
       exists: true,
       businessId: business.id
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return {
       exists: false,
       businessId: null,
-      error: `Business verification failed: ${error.message}`
+      error: `Business verification failed: ${errorMessage}`
     };
   }
 }
@@ -356,12 +359,13 @@ export async function verifyBusinessAccess(userId: string, businessId: number): 
       isStaff: false,
       error: 'User does not have access to this business. User must be owner or staff member.'
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return {
       hasAccess: false,
       isOwner: false,
       isStaff: false,
-      error: `Business access verification failed: ${error.message}`
+      error: `Business access verification failed: ${errorMessage}`
     };
   }
 }

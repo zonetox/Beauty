@@ -10,6 +10,7 @@ import { Service } from '../types.ts';
 import EditServiceModal from './EditServiceModal.tsx';
 import LoadingState from './LoadingState.tsx';
 import EmptyState from './EmptyState.tsx';
+import ConfirmDialog from './ConfirmDialog.tsx';
 
 const ServicesManager: React.FC = () => {
     const { currentBusiness } = useBusinessAuth();
@@ -18,6 +19,7 @@ const ServicesManager: React.FC = () => {
     const [editingService, setEditingService] = useState<Partial<Service> | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isReordering, setIsReordering] = useState(false);
+    const [confirmDelete, setConfirmDelete] = useState<{ isOpen: boolean; serviceId: string | null }>({ isOpen: false, serviceId: null });
     
     // Local state for optimistic UI updates during drag-and-drop
     const [localServices, setLocalServices] = useState<Service[]>([]);
@@ -51,13 +53,19 @@ const ServicesManager: React.FC = () => {
     };
 
     const handleDelete = async (id: string) => {
-        if (window.confirm("Are you sure you want to delete this service? This action cannot be undone.")) {
-            try {
-                await deleteService(id);
-                // Success toast is handled in context
-            } catch (error) {
-                // Error already handled in context with toast
-            }
+        setConfirmDelete({ isOpen: true, serviceId: id });
+    };
+
+    const confirmDeleteService = async () => {
+        if (!confirmDelete.serviceId) return;
+        
+        try {
+            await deleteService(confirmDelete.serviceId);
+            // Success toast is handled in context
+        } catch (error) {
+            // Error already handled in context with toast
+        } finally {
+            setConfirmDelete({ isOpen: false, serviceId: null });
         }
     };
     
@@ -208,6 +216,16 @@ const ServicesManager: React.FC = () => {
                     ))}
                 </div>
             )}
+            <ConfirmDialog
+                isOpen={confirmDelete.isOpen}
+                title="Delete Service"
+                message="Are you sure you want to delete this service? This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                variant="danger"
+                onConfirm={confirmDeleteService}
+                onCancel={() => setConfirmDelete({ isOpen: false, serviceId: null })}
+            />
         </div>
     );
 };

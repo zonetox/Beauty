@@ -159,8 +159,13 @@ const ConnectionTestPage: React.FC = () => {
                         console.log('Clearing storage...');
                         localStorage.clear();
                         sessionStorage.clear();
-                        alert('Đã xóa dữ liệu đệm! Trang sẽ tự tải lại.');
-                        window.location.reload();
+                        // Use toast notification instead of alert
+                        if (typeof window !== 'undefined' && (window as any).toast) {
+                            (window as any).toast.success('Đã xóa dữ liệu đệm! Trang sẽ tự tải lại.');
+                        }
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
                     }}
                     style={{
                         padding: '10px 20px',

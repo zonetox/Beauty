@@ -7,6 +7,7 @@ import { useBusinessData, useBlogData, useMembershipPackageData } from '../conte
 import { useAdminAuth } from '../contexts/AdminContext.tsx';
 import { useOrderData, useBusinessBlogData } from '../contexts/BusinessBlogDataContext.tsx';
 import { useSettings, useAdminPlatform, usePageContent } from '../contexts/AdminPlatformContext.tsx';
+import ConfirmDialog from '../components/ConfirmDialog.tsx';
 
 // Reusable Components
 import BusinessManagementTable from '../components/BusinessManagementTable.tsx';
@@ -117,7 +118,16 @@ const BlogCategoryManager: React.FC = () => {
 
   const handleAdd = async () => { await addBlogCategory(newCategoryName); setNewCategoryName(''); };
   const handleUpdate = async () => { if (editingCategory) { await updateBlogCategory(editingCategory.id, editingCategory.name); setEditingCategory(null); } };
-  const handleDelete = async (id: string) => { if (window.confirm("Are you sure? This will not delete posts in this category.")) await deleteBlogCategory(id); };
+  const handleDelete = async (id: string) => { 
+    setConfirmDialog({ isOpen: true, type: 'deleteCategory', data: { id } });
+  };
+
+  const confirmDeleteCategory = async () => {
+    if (confirmDialog.type === 'deleteCategory' && confirmDialog.data?.id) {
+      await deleteBlogCategory(confirmDialog.data.id as string);
+    }
+    setConfirmDialog({ isOpen: false, type: null });
+  };
 
   return (
     <div className="mt-6">
@@ -166,18 +176,45 @@ const AdminPage: React.FC = () => {
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
   const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState<MembershipPackage | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    type: 'deleteCategory' | 'deletePost' | 'duplicateBusiness' | 'rejectRequest' | 'deleteUser' | 'deletePackage' | null;
+    data?: { id?: string | number; name?: string; requestId?: string; userId?: number; packageId?: string };
+  }>({ isOpen: false, type: null });
 
   const filteredBusinesses = useMemo(() => { const q = searchQuery.toLowerCase().trim(); if (!q) return businesses; return businesses.filter(b => b.name.toLowerCase().includes(q)); }, [businesses, searchQuery]);
   const filteredOrders = useMemo(() => { if (orderStatusFilter === 'all') return orders; return orders.filter(o => o.status === orderStatusFilter); }, [orders, orderStatusFilter]);
 
   const handleSaveBusiness = async (businessToSave: Business) => { if (businessToSave.id === 0) { const slug = businessToSave.name.toLowerCase().replace(/\s+/g, '-') + `-${Date.now()}`; await addBusiness({ ...businessToSave, slug }); } else { await updateBusiness(businessToSave); } setEditingBusiness(null); };
   const handleSavePost = async (postToSave: BlogPost) => { if (postToSave.id === 0) { const { id, slug, date, viewCount, ...newPostData } = postToSave; await addBlogPost(newPostData); } else { await updateBlogPost(postToSave); } setEditingPost(null); };
-  const handleDeletePost = async (postId: number) => { if (window.confirm('Are you sure?')) { await deleteBlogPost(postId); } };
+  const handleDeletePost = async (postId: number) => { 
+    setConfirmDialog({ isOpen: true, type: 'deletePost', data: { id: postId } });
+  };
+
+  const confirmDeletePost = async () => {
+    if (confirmDialog.type === 'deletePost' && confirmDialog.data?.id) {
+      await deleteBlogPost(confirmDialog.data.id as number);
+    }
+    setConfirmDialog({ isOpen: false, type: null });
+  };
 
   const handleDuplicateBusiness = async (businessToDuplicate: Business) => {
-    if (!window.confirm(`Are you sure you want to duplicate "${businessToDuplicate.name}"?`)) {
+    setConfirmDialog({ isOpen: true, type: 'duplicateBusiness', data: { name: businessToDuplicate.name } });
+  };
+
+  const confirmDuplicateBusiness = async () => {
+    if (confirmDialog.type !== 'duplicateBusiness' || !confirmDialog.data?.name) {
+      setConfirmDialog({ isOpen: false, type: null });
       return;
     }
+    
+    const businessToDuplicate = businesses.find(b => b.name === confirmDialog.data.name);
+    if (!businessToDuplicate) {
+      setConfirmDialog({ isOpen: false, type: null });
+      return;
+    }
+
+    setConfirmDialog({ isOpen: false, type: null });
     const { id, slug, name, ...rest } = businessToDuplicate;
     const newName = `${name} (Copy)`;
     const newSlug = newName.toLowerCase().replace(/\s+/g, '-') + `-${Date.now()}`;
@@ -218,17 +255,32 @@ const AdminPage: React.FC = () => {
       toast.error('Registration request not found.');
       return;
     }
-    if (window.confirm('Are you sure you want to reject this request?')) {
-      const rejectionPromise = rejectRegistrationRequest(requestId).then(() => {
-        addNotification(request.email, 'Your Registration Update', `We regret to inform you that your registration for ${request.businessName} has been rejected at this time.`);
-      });
+    setConfirmDialog({ isOpen: true, type: 'rejectRequest', data: { requestId } });
+  };
 
-      toast.promise(rejectionPromise, {
-        loading: 'Rejecting request...',
-        success: `Rejected registration for ${request.businessName}.`,
-        error: (err) => `Error rejecting request: ${err.message}`,
-      });
+  const confirmRejectRequest = () => {
+    if (confirmDialog.type !== 'rejectRequest' || !confirmDialog.data?.requestId) {
+      setConfirmDialog({ isOpen: false, type: null });
+      return;
     }
+
+    const request = registrationRequests.find(r => r.id === confirmDialog.data.requestId);
+    if (!request) {
+      toast.error('Registration request not found.');
+      setConfirmDialog({ isOpen: false, type: null });
+      return;
+    }
+
+    setConfirmDialog({ isOpen: false, type: null });
+    const rejectionPromise = rejectRegistrationRequest(confirmDialog.data.requestId).then(() => {
+      addNotification(request.email, 'Your Registration Update', `We regret to inform you that your registration for ${request.businessName} has been rejected at this time.`);
+    });
+
+    toast.promise(rejectionPromise, {
+      loading: 'Rejecting request...',
+      success: `Rejected registration for ${request.businessName}.`,
+      error: (err) => `Error rejecting request: ${err.message}`,
+    });
   };
 
   const handleConfirmPayment = (orderId: string) => { updateOrderStatus(orderId, OrderStatus.COMPLETED); };
@@ -236,11 +288,33 @@ const AdminPage: React.FC = () => {
   const handleOpenUserModal = (user: AdminUser | null) => { setEditingUser(user); setIsUserModalOpen(true); };
   const handleCloseUserModal = () => { setEditingUser(null); setIsUserModalOpen(false); };
   const handleSaveUser = (user: AdminUser) => { if (user.id) { const { password, ...updates } = user; updateAdminUser(user.id, updates); } else { addAdminUser(user as any); } handleCloseUserModal(); };
-  const handleDeleteUser = (userId: number) => { if (userId === currentUser?.id) { toast.error("Cannot delete self."); return; } if (window.confirm('Are you sure?')) { deleteAdminUser(userId); } };
+  const handleDeleteUser = (userId: number) => { 
+    if (userId === currentUser?.id) { 
+      toast.error("Cannot delete self."); 
+      return; 
+    } 
+    setConfirmDialog({ isOpen: true, type: 'deleteUser', data: { userId } });
+  };
+
+  const confirmDeleteUser = () => {
+    if (confirmDialog.type === 'deleteUser' && confirmDialog.data?.userId) {
+      deleteAdminUser(confirmDialog.data.userId);
+    }
+    setConfirmDialog({ isOpen: false, type: null });
+  };
   const handleOpenPackageModal = (pkg: MembershipPackage | null) => { setEditingPackage(pkg); setIsPackageModalOpen(true); };
   const handleClosePackageModal = () => { setEditingPackage(null); setIsPackageModalOpen(false); };
   const handleSavePackage = async (pkg: MembershipPackage) => { if (pkg.id) { await updatePackage(pkg.id, pkg); } else { await addPackage(pkg); } handleClosePackageModal(); };
-  const handleDeletePackage = async (packageId: string) => { if (window.confirm('Are you sure?')) { await deletePackage(packageId); } };
+  const handleDeletePackage = async (packageId: string) => { 
+    setConfirmDialog({ isOpen: true, type: 'deletePackage', data: { packageId } });
+  };
+
+  const confirmDeletePackage = async () => {
+    if (confirmDialog.type === 'deletePackage' && confirmDialog.data?.packageId) {
+      await deletePackage(confirmDialog.data.packageId);
+    }
+    setConfirmDialog({ isOpen: false, type: null });
+  };
   const handleOpenAddNewBusiness = () => { setEditingBusiness(NEW_BUSINESS_TEMPLATE); };
   const handleOpenAddNewPost = () => { setEditingPost({ id: 0, title: 'New Blog Post', slug: '', date: '', author: currentUser?.username || 'Editor', category: 'General', excerpt: '', imageUrl: `https://picsum.photos/seed/new-post-${Date.now()}/400/300`, content: '', viewCount: 0 }); };
   const handleOpenAddNewPackage = () => { handleOpenPackageModal({ id: '', tier: MembershipTier.PREMIUM, name: '', price: 0, durationMonths: 12, description: '', features: [''], permissions: { photoLimit: 10, videoLimit: 2, featuredLevel: 1, customLandingPage: true, privateBlog: false, seoSupport: false, monthlyPostLimit: 5, featuredPostLimit: 0, }, isPopular: false, isActive: true }); };
@@ -516,6 +590,66 @@ const AdminPage: React.FC = () => {
         </header>
         {renderContent()}
       </main>
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen && confirmDialog.type === 'deleteCategory'}
+        title="Delete Blog Category"
+        message="Are you sure? This will not delete posts in this category."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="warning"
+        onConfirm={confirmDeleteCategory}
+        onCancel={() => setConfirmDialog({ isOpen: false, type: null })}
+      />
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen && confirmDialog.type === 'deletePost'}
+        title="Delete Blog Post"
+        message="Are you sure you want to delete this post?"
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={confirmDeletePost}
+        onCancel={() => setConfirmDialog({ isOpen: false, type: null })}
+      />
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen && confirmDialog.type === 'duplicateBusiness'}
+        title="Duplicate Business"
+        message={confirmDialog.data?.name ? `Are you sure you want to duplicate "${confirmDialog.data.name}"?` : ''}
+        confirmText="Duplicate"
+        cancelText="Cancel"
+        variant="info"
+        onConfirm={confirmDuplicateBusiness}
+        onCancel={() => setConfirmDialog({ isOpen: false, type: null })}
+      />
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen && confirmDialog.type === 'rejectRequest'}
+        title="Reject Registration Request"
+        message="Are you sure you want to reject this request?"
+        confirmText="Reject"
+        cancelText="Cancel"
+        variant="warning"
+        onConfirm={confirmRejectRequest}
+        onCancel={() => setConfirmDialog({ isOpen: false, type: null })}
+      />
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen && confirmDialog.type === 'deleteUser'}
+        title="Delete Admin User"
+        message="Are you sure you want to delete this admin user?"
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={confirmDeleteUser}
+        onCancel={() => setConfirmDialog({ isOpen: false, type: null })}
+      />
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen && confirmDialog.type === 'deletePackage'}
+        title="Delete Package"
+        message="Are you sure you want to delete this package?"
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={confirmDeletePackage}
+        onCancel={() => setConfirmDialog({ isOpen: false, type: null })}
+      />
     </div>
   );
 };

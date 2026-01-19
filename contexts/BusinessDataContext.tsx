@@ -88,10 +88,30 @@ const toSnakeCase = (obj: any): any => {
 };
 
 export function PublicDataProvider({ children }: { children: ReactNode }) {
+  // Initialize with cached data immediately if available
+  // This ensures page renders immediately without blocking
+  const getInitialCachedData = () => {
+    const cachedBlogPosts = cacheManager.get<BlogPost[]>(CACHE_KEYS.BLOG_POSTS);
+    const cachedCategories = cacheManager.get<BlogCategory[]>(CACHE_KEYS.BLOG_CATEGORIES);
+    const cachedMarkers = cacheManager.get<any[]>(CACHE_KEYS.MARKERS);
+    const cachedPackages = cacheManager.get<MembershipPackage[]>(CACHE_KEYS.PACKAGES);
+    
+    return {
+      blogPosts: cachedBlogPosts || [],
+      categories: cachedCategories || [],
+      markers: cachedMarkers || [],
+      packages: cachedPackages || [],
+      hasCache: !!(cachedBlogPosts || cachedCategories || cachedMarkers || cachedPackages)
+    };
+  };
+
+  const initialCache = getInitialCachedData();
+
   // --- STATES ---
   const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [businessMarkers, setBusinessMarkers] = useState<{ id: number, name: string, latitude: number, longitude: number, categories: string[], isActive: boolean }[]>([]);
-  const [businessLoading, setBusinessLoading] = useState(true);
+  const [businessMarkers, setBusinessMarkers] = useState<{ id: number, name: string, latitude: number, longitude: number, categories: string[], isActive: boolean }[]>(initialCache.markers);
+  // Start with loading false if we have cached data (page can render immediately)
+  const [businessLoading, setBusinessLoading] = useState(!initialCache.hasCache);
   const [totalBusinesses, setTotalBusinesses] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 20;
@@ -99,11 +119,12 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
   // Prevent double fetch in React.StrictMode (development)
   const hasFetchedRef = useRef(false);
 
-  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
-  const [blogLoading, setBlogLoading] = useState(true);
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>(initialCache.blogPosts);
+  // Start with loading false if we have cached data (page can render immediately)
+  const [blogLoading, setBlogLoading] = useState(!initialCache.hasCache);
   const [comments, setComments] = useState<BlogComment[]>([]);
-  const [blogCategories, setBlogCategories] = useState<BlogCategory[]>([]);
-  const [packages, setPackages] = useState<MembershipPackage[]>([]);
+  const [blogCategories, setBlogCategories] = useState<BlogCategory[]>(initialCache.categories);
+  const [packages, setPackages] = useState<MembershipPackage[]>(initialCache.packages);
 
   // Admin logging is optional - removed direct import to avoid circular dependency
   // Admin actions will be logged via AdminContext if available in the provider tree
@@ -296,6 +317,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
 
   // NON-CRITICAL DATA: Lazy-load blog posts, categories, markers, packages, and all businesses
   // MANDATORY: If cached data exists → NEVER fetch on page load, only refresh in background
+  // Cached data is already loaded in initial state, so loading is already false
   const fetchNonCriticalData = useCallback(async (backgroundRefresh = false) => {
     if (!isSupabaseConfigured) {
       setBlogLoading(false);
@@ -303,40 +325,25 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     }
 
     // MANDATORY RULE: If cached data exists and not background refresh → use cache, skip fetch
+    // Note: Cached data is already loaded in initial state, so we only need to check if we should fetch
     const cachedBlogPosts = cacheManager.get<BlogPost[]>(CACHE_KEYS.BLOG_POSTS);
     const cachedCategories = cacheManager.get<BlogCategory[]>(CACHE_KEYS.BLOG_CATEGORIES);
     const cachedMarkers = cacheManager.get<any[]>(CACHE_KEYS.MARKERS);
     const cachedPackages = cacheManager.get<MembershipPackage[]>(CACHE_KEYS.PACKAGES);
 
-    // Use cached data immediately if available (not background refresh)
-    if (!backgroundRefresh) {
-      if (cachedBlogPosts) {
-        setBlogPosts(cachedBlogPosts);
-        setBlogLoading(false);
-      }
-      if (cachedCategories) {
-        setBlogCategories(cachedCategories);
-      }
-      if (cachedMarkers) {
-        setBusinessMarkers(cachedMarkers);
-      }
-      if (cachedPackages) {
-        setPackages(cachedPackages);
-      }
-
-      // If all cached, return early (no fetch on page load)
-      if (cachedBlogPosts && cachedCategories && cachedMarkers && cachedPackages) {
-        // Background refresh in next tick (non-blocking)
-        setTimeout(() => {
-          fetchNonCriticalData(true);
-        }, 0);
-        return;
-      }
+    // If all cached and not background refresh, return early (no fetch on page load)
+    if (!backgroundRefresh && cachedBlogPosts && cachedCategories && cachedMarkers && cachedPackages) {
+      // Background refresh in next tick (non-blocking)
+      setTimeout(() => {
+        fetchNonCriticalData(true);
+      }, 0);
+      return;
     }
 
     // Fetch data (either no cache, or background refresh)
+    // Only set loading if we don't have cached data (to avoid flicker)
     try {
-      if (!backgroundRefresh) {
+      if (!backgroundRefresh && !cachedBlogPosts) {
         setBlogLoading(true);
       }
 

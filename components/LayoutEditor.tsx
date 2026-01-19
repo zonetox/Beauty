@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { LayoutItem } from '../types.ts';
+import ConfirmDialog from './ConfirmDialog.tsx';
 
 interface LayoutEditorProps {
     currentLayout: LayoutItem[];
@@ -38,6 +39,7 @@ const LayoutEditor: React.FC<LayoutEditorProps> = ({ currentLayout, currentVisib
     const [visibility, setVisibility] = useState(currentVisibility);
     const dragItem = useRef<number | null>(null);
     const dragOverItem = useRef<number | null>(null);
+    const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean; itemId: string | null }>({ isOpen: false, itemId: null });
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
         dragItem.current = index;
@@ -88,9 +90,14 @@ const LayoutEditor: React.FC<LayoutEditorProps> = ({ currentLayout, currentVisib
     };
 
     const handleRemoveItem = (id: string) => {
-        if (window.confirm('Are you sure you want to remove this layout element?')) {
-            setLayout(prev => prev.filter(item => item.id !== id));
+        setConfirmDialog({ isOpen: true, itemId: id });
+    };
+
+    const confirmRemoveItem = () => {
+        if (confirmDialog.itemId) {
+            setLayout(prev => prev.filter(item => item.id !== confirmDialog.itemId));
         }
+        setConfirmDialog({ isOpen: false, itemId: null });
     };
 
     return (
@@ -176,6 +183,16 @@ const LayoutEditor: React.FC<LayoutEditorProps> = ({ currentLayout, currentVisib
                     );
                 })}
             </div>
+            <ConfirmDialog
+                isOpen={confirmDialog.isOpen}
+                title="Remove Layout Element"
+                message="Are you sure you want to remove this layout element?"
+                confirmText="Remove"
+                cancelText="Cancel"
+                variant="warning"
+                onConfirm={confirmRemoveItem}
+                onCancel={() => setConfirmDialog({ isOpen: false, itemId: null })}
+            />
         </div>
     );
 };

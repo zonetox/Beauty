@@ -12,6 +12,7 @@ import LoadingState from './LoadingState.tsx';
 import EmptyState from './EmptyState.tsx';
 import { uploadFile } from '../lib/storage.ts';
 import { supabase } from '../lib/supabaseClient.ts';
+import ConfirmDialog from './ConfirmDialog.tsx';
 
 const statusStyles: { [key in OrderStatus]: string } = {
     [OrderStatus.PENDING]: 'bg-yellow-100 text-yellow-800',
@@ -42,6 +43,7 @@ const MembershipAndBilling: React.FC = () => {
     const [selectedPackageForPayment, setSelectedPackageForPayment] = useState<MembershipPackage | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isUploadingProof, setIsUploadingProof] = useState(false);
+    const [confirmUpgrade, setConfirmUpgrade] = useState<{ isOpen: boolean; package: MembershipPackage | null }>({ isOpen: false, package: null });
     const [uploadProgress, setUploadProgress] = useState(0);
 
     if (!currentBusiness) {
@@ -69,15 +71,19 @@ const MembershipAndBilling: React.FC = () => {
         ) || null;
     }, [businessOrders]);
 
-    const handleUpgradeRequest = async (pkg: MembershipPackage) => {
+    const handleUpgradeRequest = (pkg: MembershipPackage) => {
         if (pkg.id === currentPackage?.id) {
             toast.error('This is already your current plan');
             return;
         }
 
-        if (!window.confirm(`Are you sure you want to request ${pkg.price > (currentPackage?.price || 0) ? 'an upgrade' : 'a change'} to the ${pkg.name} package?`)) {
-            return;
-        }
+        setConfirmUpgrade({ isOpen: true, package: pkg });
+    };
+
+    const confirmUpgradeRequest = async () => {
+        if (!confirmUpgrade.package) return;
+        const pkg = confirmUpgrade.package;
+        setConfirmUpgrade({ isOpen: false, package: null });
 
         setIsSubmitting(true);
         try {
@@ -451,6 +457,16 @@ const MembershipAndBilling: React.FC = () => {
                     </div>
                 )}
             </div>
+            <ConfirmDialog
+                isOpen={confirmUpgrade.isOpen}
+                title="Request Package Change"
+                message={confirmUpgrade.package ? `Are you sure you want to request ${confirmUpgrade.package.price > (currentPackage?.price || 0) ? 'an upgrade' : 'a change'} to the ${confirmUpgrade.package.name} package?` : ''}
+                confirmText="Confirm"
+                cancelText="Cancel"
+                variant="info"
+                onConfirm={confirmUpgradeRequest}
+                onCancel={() => setConfirmUpgrade({ isOpen: false, package: null })}
+            />
         </div>
     );
 };

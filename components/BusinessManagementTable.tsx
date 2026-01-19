@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Business, MembershipTier } from '../types.ts';
+import ConfirmDialog from './ConfirmDialog.tsx';
 
 // --- SVG Icons for Sorting ---
 const SortAscIcon: React.FC = () => (
@@ -40,6 +41,13 @@ type SortKey = 'name' | 'rating' | 'viewCount';
 const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ businesses, onEdit, onUpdate, onDelete, onDuplicate }) => {
     const [selectedBusinessIds, setSelectedBusinessIds] = useState<number[]>([]);
     const [sortConfig, setSortConfig] = useState<{ key: SortKey | null; direction: 'asc' | 'desc' }>({ key: null, direction: 'asc' });
+    const [confirmDialog, setConfirmDialog] = useState<{ 
+        isOpen: boolean; 
+        type: 'verify' | 'toggle' | 'delete' | null; 
+        businessId?: number;
+        businessName?: string;
+        count?: number;
+    }>({ isOpen: false, type: null });
 
     const sortedBusinesses = useMemo(() => {
         const sortableItems = [...businesses];
@@ -111,27 +119,37 @@ const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ busin
     };
     
     const handleVerifySelected = () => {
-        if (window.confirm(`Are you sure you want to verify ${selectedBusinessIds.length} selected businesses?`)) {
+        setConfirmDialog({ isOpen: true, type: 'verify', count: selectedBusinessIds.length });
+    };
+
+    const confirmVerifySelected = () => {
+        if (confirmDialog.type === 'verify' && confirmDialog.count) {
             selectedBusinessIds.forEach(id => {
                 const businessToUpdate = businesses.find(b => b.id === id);
                 if (businessToUpdate && !businessToUpdate.isVerified) {
                     onUpdate({ ...businessToUpdate, isVerified: true });
                 }
             });
-            setSelectedBusinessIds([]); // Clear selection after action
+            setSelectedBusinessIds([]);
         }
+        setConfirmDialog({ isOpen: false, type: null });
     };
     
     const handleToggleSelectedStatus = () => {
-        if (window.confirm(`Are you sure you want to toggle the active status for ${selectedBusinessIds.length} selected businesses?`)) {
+        setConfirmDialog({ isOpen: true, type: 'toggle', count: selectedBusinessIds.length });
+    };
+
+    const confirmToggleSelectedStatus = () => {
+        if (confirmDialog.type === 'toggle' && confirmDialog.count) {
             selectedBusinessIds.forEach(id => {
                 const businessToUpdate = businesses.find(b => b.id === id);
                 if (businessToUpdate) {
                     onUpdate({ ...businessToUpdate, isActive: !businessToUpdate.isActive });
                 }
             });
-            setSelectedBusinessIds([]); // Clear selection after action
+            setSelectedBusinessIds([]);
         }
+        setConfirmDialog({ isOpen: false, type: null });
     };
 
     const isAllSelected = businessIds.length > 0 && selectedBusinessIds.length === businessIds.length;
@@ -267,11 +285,7 @@ const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ busin
                                     <button onClick={() => onEdit(business)} className="font-medium text-secondary hover:underline">Edit</button>
                                      <button onClick={() => onDuplicate(business)} className="font-medium text-blue-600 hover:underline">Duplicate</button>
                                     <button 
-                                        onClick={() => {
-                                            if (window.confirm(`Are you sure you want to delete ${business.name}? This action cannot be undone.`)) {
-                                                onDelete(business.id);
-                                            }
-                                        }}
+                                        onClick={() => setConfirmDialog({ isOpen: true, type: 'delete', businessId: business.id, businessName: business.name })}
                                         className="font-medium text-red-600 hover:underline"
                                     >
                                         Delete
@@ -282,6 +296,41 @@ const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ busin
                     </tbody>
                 </table>
             </div>
+            <ConfirmDialog
+                isOpen={confirmDialog.isOpen && confirmDialog.type === 'verify'}
+                title="Verify Businesses"
+                message={confirmDialog.count ? `Are you sure you want to verify ${confirmDialog.count} selected businesses?` : ''}
+                confirmText="Verify"
+                cancelText="Cancel"
+                variant="info"
+                onConfirm={confirmVerifySelected}
+                onCancel={() => setConfirmDialog({ isOpen: false, type: null })}
+            />
+            <ConfirmDialog
+                isOpen={confirmDialog.isOpen && confirmDialog.type === 'toggle'}
+                title="Toggle Active Status"
+                message={confirmDialog.count ? `Are you sure you want to toggle the active status for ${confirmDialog.count} selected businesses?` : ''}
+                confirmText="Toggle"
+                cancelText="Cancel"
+                variant="warning"
+                onConfirm={confirmToggleSelectedStatus}
+                onCancel={() => setConfirmDialog({ isOpen: false, type: null })}
+            />
+            <ConfirmDialog
+                isOpen={confirmDialog.isOpen && confirmDialog.type === 'delete'}
+                title="Delete Business"
+                message={confirmDialog.businessName ? `Are you sure you want to delete ${confirmDialog.businessName}? This action cannot be undone.` : ''}
+                confirmText="Delete"
+                cancelText="Cancel"
+                variant="danger"
+                onConfirm={() => {
+                    if (confirmDialog.businessId) {
+                        onDelete(confirmDialog.businessId);
+                    }
+                    setConfirmDialog({ isOpen: false, type: null });
+                }}
+                onCancel={() => setConfirmDialog({ isOpen: false, type: null })}
+            />
         </>
     );
 };

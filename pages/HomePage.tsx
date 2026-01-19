@@ -130,8 +130,8 @@ const HomePage: React.FC = () => {
     return blogPosts.slice(0, 3);
   }, [blogPosts]);
 
-  const isLoading = homepageLoading || businessLoading || blogLoading;
-
+  // Do NOT block rendering - use skeletons for loading states instead
+  // Homepage must render immediately after auth, regardless of data fetch timing
   const renderSection = (section: HomepageSection) => {
     if (!section.visible) return null;
 
@@ -260,19 +260,8 @@ const HomePage: React.FC = () => {
     ? getOptimizedSupabaseUrl(heroSlides[currentSlide].imageUrl, { width: 1200, quality: 85 })
     : 'https://picsum.photos/seed/beauty/1200/630';
 
-  if (isLoading) {
-    return (
-      <>
-        <SEOHead 
-          title={seoTitle}
-          description={seoDescription}
-          image={seoImage}
-        />
-        <LoadingState message="Đang tải trang chủ..." fullScreen={true} />
-      </>
-    );
-  }
-
+  // Homepage always renders immediately - no blocking loader
+  // Data loading uses skeleton placeholders instead
   return (
     <>
       <SEOHead 

@@ -12,6 +12,7 @@ import EmptyState from './EmptyState.tsx';
 import { uploadFile, deleteFileByUrl } from '../lib/storage.ts';
 import { useStaffPermissions } from '../hooks/useStaffPermissions.ts';
 import ForbiddenState from './ForbiddenState.tsx';
+import ConfirmDialog from './ConfirmDialog.tsx';
 
 const BlogManager: React.FC = () => {
     const { currentBusiness } = useBusinessAuth();
@@ -22,6 +23,7 @@ const BlogManager: React.FC = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState<string | null>(null);
     const [isUploadingImage, setIsUploadingImage] = useState(false);
+    const [confirmDelete, setConfirmDelete] = useState<{ isOpen: boolean; post: BusinessBlogPost | null }>({ isOpen: false, post: null });
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [showSEOSection, setShowSEOSection] = useState(false);
 
@@ -200,10 +202,14 @@ const BlogManager: React.FC = () => {
         }
     };
     
-    const handleDelete = async (post: BusinessBlogPost) => {
-        if (!window.confirm(`Are you sure you want to delete the post "${post.title}"? This action cannot be undone.`)) {
-            return;
-        }
+    const handleDelete = (post: BusinessBlogPost) => {
+        setConfirmDelete({ isOpen: true, post });
+    };
+
+    const confirmDeletePost = async () => {
+        if (!confirmDelete.post) return;
+        const post = confirmDelete.post;
+        setConfirmDelete({ isOpen: false, post: null });
 
         setIsDeleting(post.id);
         try {
@@ -664,6 +670,16 @@ const BlogManager: React.FC = () => {
                     )}
                 </div>
             )}
+            <ConfirmDialog
+                isOpen={confirmDelete.isOpen}
+                title="Delete Blog Post"
+                message={confirmDelete.post ? `Are you sure you want to delete the post "${confirmDelete.post.title}"? This action cannot be undone.` : ''}
+                confirmText="Delete"
+                cancelText="Cancel"
+                variant="danger"
+                onConfirm={confirmDeletePost}
+                onCancel={() => setConfirmDelete({ isOpen: false, post: null })}
+            />
         </div>
     );
 };

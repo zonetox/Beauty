@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useAdminPlatform } from '../contexts/AdminPlatformContext.tsx';
+import ConfirmDialog from './ConfirmDialog.tsx';
 
 const AdminAnnouncementsManager: React.FC = () => {
     const { announcements, addAnnouncement, deleteAnnouncement } = useAdminPlatform();
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [type, setType] = useState<'info' | 'warning' | 'success'>('info');
+    const [confirmDelete, setConfirmDelete] = useState<{ isOpen: boolean; announcementId: string | null }>({ isOpen: false, announcementId: null });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -79,11 +81,7 @@ const AdminAnnouncementsManager: React.FC = () => {
                                 </p>
                             </div>
                             <button
-                                onClick={() => {
-                                    if (window.confirm(`Are you sure you want to delete the announcement "${ann.title}"?`)) {
-                                        deleteAnnouncement(ann.id);
-                                    }
-                                }}
+                                onClick={() => setConfirmDelete({ isOpen: true, announcementId: ann.id })}
                                 className="text-red-500 hover:text-red-700 font-semibold text-sm"
                             >
                                 Delete
@@ -93,6 +91,16 @@ const AdminAnnouncementsManager: React.FC = () => {
                     {announcements.length === 0 && <p className="text-center text-gray-500 py-4">No announcements sent yet.</p>}
                  </div>
             </div>
+            <ConfirmDialog
+                isOpen={confirmDelete.isOpen}
+                title="Delete Announcement"
+                message={confirmDelete.announcementId ? `Are you sure you want to delete this announcement?` : ''}
+                confirmText="Delete"
+                cancelText="Cancel"
+                variant="danger"
+                onConfirm={confirmDeleteAnnouncement}
+                onCancel={() => setConfirmDelete({ isOpen: false, announcementId: null })}
+            />
         </div>
     );
 };

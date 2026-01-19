@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { supabase } from '../../lib/supabaseClient.ts';
 import toast from 'react-hot-toast';
 import { BusinessCategory } from '../../types.ts';
+import ConfirmDialog from '../ConfirmDialog.tsx';
 
 // Helper to parse CSV manually to avoid dependencies
 const parseCSV = (text: string) => {
@@ -43,6 +44,7 @@ const BusinessBulkImporter: React.FC = () => {
     const [isImporting, setIsImporting] = useState(false);
     const [importLog, setImportLog] = useState<string[]>([]);
     const [fileKey, setFileKey] = useState(Date.now()); // Force reset file input
+    const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -64,10 +66,13 @@ const BusinessBulkImporter: React.FC = () => {
         reader.readAsText(file);
     };
 
-    const handleImport = async () => {
+    const handleImport = () => {
         if (!previewData.length) return;
-        if (!window.confirm(`Are you sure you want to import ${previewData.length} businesses?`)) return;
+        setShowConfirmDialog(true);
+    };
 
+    const confirmImport = async () => {
+        setShowConfirmDialog(false);
         setIsImporting(true);
         setImportLog([]);
         const log: string[] = [];
@@ -212,6 +217,16 @@ const BusinessBulkImporter: React.FC = () => {
                     {importLog.map((line, i) => <div key={i}>{line}</div>)}
                 </div>
             )}
+            <ConfirmDialog
+                isOpen={showConfirmDialog}
+                title="Import Businesses"
+                message={`Are you sure you want to import ${previewData.length} businesses?`}
+                confirmText="Import"
+                cancelText="Cancel"
+                variant="info"
+                onConfirm={confirmImport}
+                onCancel={() => setShowConfirmDialog(false)}
+            />
         </div>
     );
 };

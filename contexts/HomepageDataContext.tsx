@@ -15,8 +15,67 @@ const HomepageDataContext = createContext<HomepageDataContextType | undefined>(u
 const LOCAL_STORAGE_KEY = 'homepage_content'; // Keep for cache/fallback only
 
 export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [homepageData, setHomepageData] = useState<HomepageData>(DEFAULT_HOMEPAGE_DATA);
-  const [loading, setLoading] = useState(true);
+  // Initialize with cached data immediately if available, otherwise use default
+  // This ensures page renders immediately without blocking
+  const getInitialData = (): HomepageData => {
+    if (!isSupabaseConfigured) {
+      try {
+        const savedDataJSON = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (savedDataJSON) {
+          const savedData = JSON.parse(savedDataJSON);
+          const defaultSections = DEFAULT_HOMEPAGE_DATA.sections;
+          let finalSections = savedData.sections || [];
+          defaultSections.forEach(defaultSection => {
+            if (!finalSections.find((s: any) => s.type === defaultSection.type)) {
+              finalSections.push(defaultSection);
+            }
+          });
+          finalSections = finalSections.map((section: any) => {
+            const defaultMatch = defaultSections.find(s => s.type === section.type);
+            return { ...defaultMatch, ...section };
+          });
+          return {
+            ...DEFAULT_HOMEPAGE_DATA,
+            ...savedData,
+            sections: finalSections,
+          };
+        }
+      } catch (error) {
+        console.error(`Failed to parse homepage data from localStorage:`, error);
+      }
+    } else {
+      // Check cache first
+      try {
+        const savedDataJSON = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (savedDataJSON) {
+          const savedData = JSON.parse(savedDataJSON);
+          const defaultSections = DEFAULT_HOMEPAGE_DATA.sections;
+          let finalSections = savedData.sections || [];
+          defaultSections.forEach(defaultSection => {
+            if (!finalSections.find((s: any) => s.type === defaultSection.type)) {
+              finalSections.push(defaultSection);
+            }
+          });
+          finalSections = finalSections.map((section: any) => {
+            const defaultMatch = defaultSections.find(s => s.type === section.type);
+            return { ...defaultMatch, ...section };
+          });
+          return {
+            ...DEFAULT_HOMEPAGE_DATA,
+            ...savedData,
+            sections: finalSections,
+          };
+        }
+      } catch (error) {
+        // Ignore cache parse errors, use default
+      }
+    }
+    return DEFAULT_HOMEPAGE_DATA;
+  };
+
+  const [homepageData, setHomepageData] = useState<HomepageData>(getInitialData());
+  // Start with loading false if we have cached/default data (page can render immediately)
+  const [loading, setLoading] = useState(false);
   
   // Prevent double fetch in React.StrictMode (development)
   const hasFetchedRef = useRef(false);
