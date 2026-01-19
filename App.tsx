@@ -93,11 +93,49 @@ const AppLayout: React.FC = () => {
 };
 
 // This component intelligently routes the user to their business dashboard or personal account page.
+// MANDATORY: Requires profile and resolves role from database
 const AccountPageRouter: React.FC = () => {
-    const { profile, user } = useAuth();
+    const { profile, user, state } = useAuth();
+    const [role, setRole] = React.useState<'user' | 'business_owner' | 'admin' | 'loading' | 'error'>('loading');
+    const [error, setError] = React.useState<string | null>(null);
 
-    // Show loading if profile is still being fetched
-    if (user && !profile) {
+    React.useEffect(() => {
+        const resolveRole = async () => {
+            if (state === 'loading') return;
+            
+            if (!user) {
+                setRole('error');
+                setError('User not authenticated');
+                return;
+            }
+
+            if (!profile) {
+                setRole('error');
+                setError('Profile not found. Account is incomplete.');
+                return;
+            }
+
+            try {
+                const { resolveUserRole } = await import('../lib/roleResolution.ts');
+                const roleResult = await resolveUserRole(user);
+                
+                if (roleResult.error) {
+                    setRole('error');
+                    setError(roleResult.error);
+                } else {
+                    setRole(roleResult.role as 'user' | 'business_owner' | 'admin');
+                }
+            } catch (err: any) {
+                setRole('error');
+                setError(`Role resolution failed: ${err.message}`);
+            }
+        };
+
+        resolveRole();
+    }, [user, profile, state]);
+
+    // Loading state
+    if (state === 'loading' || role === 'loading') {
         return (
             <div className="flex items-center justify-center h-[50vh]">
                 <div className="text-center">
@@ -109,22 +147,42 @@ const AccountPageRouter: React.FC = () => {
         );
     }
 
-    // If a user has a business, route to the business dashboard
-    if (profile?.businessId) {
+    // Error state - BLOCK access
+    if (role === 'error' || !profile) {
+        return (
+            <div className="flex items-center justify-center h-[50vh]">
+                <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg text-center">
+                    <div className="text-red-500 text-5xl mb-4">⚠️</div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Account Setup Incomplete</h2>
+                    <p className="text-gray-600 mb-6">{error || 'Profile not found. Account is incomplete.'}</p>
+                    <p className="text-sm text-gray-500">Please contact support or try logging out and back in.</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Route based on resolved role
+    if (role === 'business_owner' && profile.businessId) {
         return <UserBusinessDashboardPage />;
     }
 
-    // If a profile exists but is not linked to a business, show user account page (regular user)
-    if (profile) {
+    if (role === 'admin') {
+        // Admin can access admin panel, but show account page for now
         return <UserAccountPage />;
     }
 
-    // Fallback: should not reach here, but show loading
+    // Regular user
+    if (role === 'user') {
+        return <UserAccountPage />;
+    }
+
+    // Should not reach here
     return (
         <div className="flex items-center justify-center h-[50vh]">
             <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                <p className="text-lg font-semibold">Đang tải...</p>
+                <div className="text-red-500 text-5xl mb-4">⚠️</div>
+                <p className="text-lg font-semibold">Unable to determine account type</p>
+                <p className="text-gray-500">Please contact support.</p>
             </div>
         </div>
     );

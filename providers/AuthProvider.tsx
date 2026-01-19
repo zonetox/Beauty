@@ -51,21 +51,50 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
 
   // Fetch profile for authenticated user
+  // MANDATORY: Profile must exist for authenticated users
   const fetchProfile = useCallback(async (userId: string) => {
     try {
       const { data, error } = await getUserProfile(userId);
       
+      if (error && error.code === 'PGRST116') {
+        // Profile doesn't exist - CRITICAL ERROR
+        // Attempt to create (trigger may have failed)
+        const { data: newProfile, error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            id: userId,
+            email: null, // Will be set by trigger or updated later
+            full_name: null
+          })
+          .select()
+          .single();
+
+        if (insertError || !newProfile) {
+          // Creation failed - profile is required
+          console.error('CRITICAL: Profile creation failed:', insertError);
+          setProfile(null);
+          return;
+        }
+
+        setProfile(snakeToCamel(newProfile) as Profile);
+        return;
+      }
+
       if (error) {
-        // Profile doesn't exist or error - set to null
+        // Other error - log but don't block (may be transient)
+        console.error('Error fetching profile:', error);
         setProfile(null);
         return;
       }
 
       if (data) {
         setProfile(snakeToCamel(data) as Profile);
+      } else {
+        // No data returned - profile missing
+        setProfile(null);
       }
     } catch (error) {
-      // Silent fail - profile is optional
+      console.error('Exception fetching profile:', error);
       setProfile(null);
     }
   }, []);

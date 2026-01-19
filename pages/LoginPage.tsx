@@ -18,24 +18,46 @@ const LoginPage: React.FC = () => {
     const location = useLocation();
     const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
 
-    // If user is already logged in, redirect appropriately
+    // If user is already logged in, redirect based on resolved role
     useEffect(() => {
         // Wait for auth state to resolve
         if (state === 'loading') return;
         
         if (user && profile) {
-            const state = location.state as { from?: { pathname?: string } } | null;
-            const from = state?.from?.pathname;
-            // Business owner always goes to /account
-            if (profile.businessId) {
-                navigate('/account', { replace: true });
-            } else if (from && from !== '/login' && from !== '/register') {
-                // Regular user: go back to where they were
-                navigate(from, { replace: true });
-            } else {
-                // Regular user: go to homepage
-                navigate('/', { replace: true });
-            }
+            const resolveAndRedirect = async () => {
+                try {
+                    const { resolveUserRole } = await import('../lib/roleResolution.ts');
+                    const roleResult = await resolveUserRole(user);
+                    
+                    if (roleResult.error) {
+                        // Role resolution failed - show error but allow login
+                        console.error('Role resolution error:', roleResult.error);
+                    }
+
+                    const state = location.state as { from?: { pathname?: string } } | null;
+                    const from = state?.from?.pathname;
+
+                    // Route based on resolved role
+                    if (roleResult.role === 'business_owner' && roleResult.businessId) {
+                        navigate('/account', { replace: true });
+                    } else if (roleResult.role === 'admin') {
+                        // Admin can go to admin panel or account
+                        navigate('/admin', { replace: true });
+                    } else if (from && from !== '/login' && from !== '/register') {
+                        // Regular user: go back to where they were
+                        navigate(from, { replace: true });
+                    } else {
+                        // Regular user: go to homepage
+                        navigate('/', { replace: true });
+                    }
+                } catch (err) {
+                    console.error('Error resolving role:', err);
+                    // Fallback to homepage
+                    navigate('/', { replace: true });
+                }
+            };
+
+            resolveAndRedirect();
         }
     }, [user, profile, state, navigate, location]);
     

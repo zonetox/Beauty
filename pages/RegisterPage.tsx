@@ -91,25 +91,29 @@ const RegisterPage: React.FC = () => {
             });
 
             // Get the newly created user from auth state
-            // Wait a bit for auth state to update
             await new Promise(resolve => setTimeout(resolve, 500));
             
             // Get user from current session
             const { data: { session } } = await supabase.auth.getSession();
             if (!session?.user) {
-                throw new Error('Failed to create user account.');
+                throw new Error('Failed to create user account. Please try again.');
             }
-            const authData = { user: session.user };
+            const newUser = session.user;
 
-            // 2. Wait for profile to be created by trigger (handle_new_user)
-            // The trigger creates profile automatically with business_id = NULL
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // 2. MANDATORY: Initialize and verify profile exists
+            const { initializeUserProfile } = await import('../lib/postSignupInitialization.ts');
+            const profileResult = await initializeUserProfile(newUser, 3000);
+            
+            if (!profileResult.success || !profileResult.profileId) {
+                // BLOCK access - profile initialization failed
+                throw new Error(profileResult.error || 'Account initialization failed. Please contact support.');
+            }
 
             // 3. Handle business registration if user type is 'business'
             if (userType === 'business') {
                 const business = await createBusinessWithTrial({
                     name: formData.business_name.trim(),
-                    owner_id: authData.user.id,
+                    owner_id: newUser.id,
                     email: formData.email,
                     phone: formData.phone.trim(),
                     address: formData.address.trim(),
@@ -120,31 +124,25 @@ const RegisterPage: React.FC = () => {
                     throw new Error('Failed to create business. Please try again.');
                 }
 
-                // createBusinessWithTrial already updates profile.business_id
-                // Just refresh profile once and redirect
-                try {
-                    await refreshProfile();
-                    // Small delay to ensure profile is loaded in context
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                } catch (refreshError) {
-                    console.warn('Profile refresh failed, but continuing:', refreshError);
+                // MANDATORY: Verify business is linked to profile
+                const { verifyBusinessLinked } = await import('../lib/roleResolution.ts');
+                const businessResult = await verifyBusinessLinked(newUser.id);
+                
+                if (!businessResult.exists || !businessResult.businessId) {
+                    throw new Error(businessResult.error || 'Business account setup incomplete. Please contact support.');
                 }
 
+                // Refresh profile to get business_id
+                await refreshProfile();
+                
                 toast.success('Đăng ký thành công! Tài khoản doanh nghiệp của bạn đã được tạo với gói dùng thử 30 ngày.');
                 navigate('/account', { replace: true });
             } else {
-                // User registration - profile already created by trigger with business_id = NULL
-                // Just refresh profile and redirect to homepage
-                try {
-                    await refreshProfile();
-                    // Small delay to ensure profile is loaded
-                    await new Promise(resolve => setTimeout(resolve, 300));
-                } catch (refreshError) {
-                    console.warn('Profile refresh failed, but continuing:', refreshError);
-                }
-
+                // User registration - profile already created and verified
+                await refreshProfile();
+                
                 toast.success('Đăng ký thành công! Chào mừng bạn đến với 1Beauty.asia.');
-                navigate('/', { replace: true }); // Redirect to homepage for regular users
+                navigate('/', { replace: true });
             }
 
         } catch (err: unknown) {
