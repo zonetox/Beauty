@@ -92,6 +92,7 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
 
     // 2. Check admin status (from admin_users table) - MANDATORY: is_locked = FALSE
     // Use maybeSingle() instead of single() to avoid 406 errors when user is not an admin
+    // maybeSingle() returns { data: null, error: null } when no rows match (not an error condition)
     const { data: adminUser, error: adminError } = await supabase
       .from('admin_users')
       .select('id, is_locked')
@@ -99,16 +100,15 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
       .eq('is_locked', false)
       .maybeSingle();
 
-    // Handle 406 errors gracefully (Not Acceptable - usually means no rows match)
-    if (adminError && adminError.code === '406') {
-      // 406 is expected when user is not an admin - continue to next role check
-      // Do nothing, fall through to business owner check
-    } else if (adminError && adminError.code !== 'PGRST116') {
-      // PGRST116 = no rows returned (expected when user is not admin)
-      // Other errors are unexpected - log but don't block
+    // Handle actual errors (network issues, RLS violations, etc.)
+    // Note: maybeSingle() does NOT return error codes 406 or PGRST116 when no rows exist
+    // It returns { data: null, error: null } - which is the normal case for non-admin users
+    if (adminError) {
+      // Log unexpected errors but don't block - user might still be a business owner or regular user
       console.debug('Admin check error (non-critical):', adminError.message);
     }
 
+    // If adminUser exists and no error, user is an admin
     if (!adminError && adminUser) {
       // User is admin - can also own business
       return {
