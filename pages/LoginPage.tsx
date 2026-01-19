@@ -37,18 +37,32 @@ const LoginPage: React.FC = () => {
                     const state = location.state as { from?: { pathname?: string } } | null;
                     const from = state?.from?.pathname;
 
-                    // Route based on resolved role
-                    if (roleResult.role === 'business_owner' && roleResult.businessId) {
-                        navigate('/account', { replace: true });
-                    } else if (roleResult.role === 'admin') {
-                        // Admin can go to admin panel or account
+                    // Route based on resolved role - NO DEFAULT HOMEPAGE REDIRECT
+                    if (roleResult.error) {
+                        // Role resolution failed - show error but stay on login page
+                        setError(roleResult.error);
+                        return;
+                    }
+
+                    if (roleResult.role === 'admin') {
+                        // Admin → admin panel
                         navigate('/admin', { replace: true });
-                    } else if (from && from !== '/login' && from !== '/register') {
-                        // Regular user: go back to where they were
-                        navigate(from, { replace: true });
+                    } else if (roleResult.role === 'business_owner' && roleResult.businessId) {
+                        // Business owner → business dashboard
+                        navigate('/account', { replace: true });
+                    } else if (roleResult.role === 'business_staff' && roleResult.businessId) {
+                        // Business staff → business dashboard
+                        navigate('/account', { replace: true });
+                    } else if (roleResult.role === 'user') {
+                        // Regular user: go back to where they were OR homepage
+                        if (from && from !== '/login' && from !== '/register') {
+                            navigate(from, { replace: true });
+                        } else {
+                            navigate('/', { replace: true });
+                        }
                     } else {
-                        // Regular user: go to homepage
-                        navigate('/', { replace: true });
+                        // Unknown role or anonymous - should not happen after login
+                        setError('Unable to determine user role. Please contact support.');
                     }
                 } catch (err) {
                     console.error('Error resolving role:', err);

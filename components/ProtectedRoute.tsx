@@ -23,16 +23,27 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
             // MANDATORY: Verify profile exists
             if (!profile) {
-                setInitError('User profile not found. Account is incomplete.');
+                setInitError('User profile not found. Account is incomplete. Profile record is required for all authenticated users.');
                 setRoleResolved(true);
                 return;
             }
 
-            // Resolve role to ensure user type is determined
+            // MANDATORY: Resolve role to ensure operational state
             const roleResult = await resolveUserRole(user);
             
             if (roleResult.error) {
+                // Role resolution failed - BLOCK ACCESS
                 setInitError(roleResult.error);
+                setRoleResolved(true);
+                return;
+            }
+
+            // MANDATORY: Verify operational state
+            // User must be: user, business_owner, business_staff, or admin
+            if (roleResult.role === 'anonymous') {
+                setInitError('User account is not operational. Role resolution returned anonymous state.');
+                setRoleResolved(true);
+                return;
             }
             
             setRoleResolved(true);
@@ -60,7 +71,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
                     <p className="text-gray-600 mb-6">{initError}</p>
                     <button
                         onClick={() => {
-                            navigate('/contact', { replace: true });
+                            // Contact support action
+                            window.location.href = '/contact';
                         }}
                         className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark"
                     >

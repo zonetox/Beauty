@@ -675,12 +675,24 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
   // D2.2 FIX: Use safe RPC function for view count increment
   const incrementBusinessViewCount = async (businessId: number) => {
     if (!isSupabaseConfigured) return; // Silent fail in preview
-    const { error } = await supabase.rpc('increment_business_view_count', { p_business_id: businessId });
-    if (error) {
-      console.error('Error incrementing business view count:', error.message);
-    } else {
-      // Optimistically update UI
-      setBusinesses(prev => prev.map(b => b.id === businessId ? { ...b, viewCount: (b.viewCount || 0) + 1 } : b));
+    try {
+      const { error } = await supabase.rpc('increment_business_view_count', { p_business_id: businessId });
+      if (error) {
+        // CRITICAL: Tracking failures are silent - only debug log in development
+        if (import.meta.env.MODE === 'development') {
+          console.debug('[Tracking] Business view count increment failed (best-effort):', error.message);
+        }
+      } else {
+        // Optimistically update UI
+        setBusinesses(prev => prev.map(b => b.id === businessId ? { ...b, viewCount: (b.viewCount || 0) + 1 } : b));
+      }
+    } catch (error) {
+      // CRITICAL: Catch ALL errors (network, CORS, adblock, etc.) and silently fail
+      if (import.meta.env.MODE === 'development') {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.debug('[Tracking] Business view count increment failed (best-effort):', errorMessage);
+      }
+      // NEVER rethrow - tracking must never affect app flow
     }
   };
 
@@ -1064,12 +1076,24 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
   // D2.2 FIX: Use safe RPC function for view count increment (already using RPC, just ensure consistency)
   const incrementBlogViewCount = async (postId: number) => {
     if (!isSupabaseConfigured) return;
-    const { error } = await supabase.rpc('increment_blog_view_count', { p_post_id: postId });
-    if (error) {
-      console.error('Error incrementing blog view count:', error.message);
-    } else {
-      // Optimistically update UI
-      setBlogPosts(prev => prev.map(p => p.id === postId ? { ...p, viewCount: (p.viewCount || 0) + 1 } : p));
+    try {
+      const { error } = await supabase.rpc('increment_blog_view_count', { p_post_id: postId });
+      if (error) {
+        // CRITICAL: Tracking failures are silent - only debug log in development
+        if (import.meta.env.MODE === 'development') {
+          console.debug('[Tracking] Blog view count increment failed (best-effort):', error.message);
+        }
+      } else {
+        // Optimistically update UI
+        setBlogPosts(prev => prev.map(p => p.id === postId ? { ...p, viewCount: (p.viewCount || 0) + 1 } : p));
+      }
+    } catch (error) {
+      // CRITICAL: Catch ALL errors (network, CORS, adblock, etc.) and silently fail
+      if (import.meta.env.MODE === 'development') {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.debug('[Tracking] Blog view count increment failed (best-effort):', errorMessage);
+      }
+      // NEVER rethrow - tracking must never affect app flow
     }
   };
   const getCommentsByPostId = (postId: number) => comments.filter(c => c.postId === postId).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());

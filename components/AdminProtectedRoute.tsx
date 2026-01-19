@@ -34,7 +34,16 @@ const AdminProtectedRoute: React.FC<AdminProtectedRouteProps> = ({ children }) =
                     return;
                 }
 
-                setIsAdmin(roleResult.isAdmin && roleResult.role === 'admin');
+                // MANDATORY: Admin access ONLY from admin_users table
+                // NO fallbacks. NO dev shortcuts.
+                // Admin must have: admin_users.email = auth.users.email AND is_locked = FALSE
+                const isAdmin = roleResult.isAdmin && roleResult.role === 'admin';
+                
+                if (!isAdmin) {
+                    setError('Admin access denied. Admin privileges are determined from the admin_users table. Your email is not registered as an admin.');
+                }
+                
+                setIsAdmin(isAdmin);
             } catch (err: any) {
                 setError(`Admin verification failed: ${err.message}`);
                 setIsAdmin(false);

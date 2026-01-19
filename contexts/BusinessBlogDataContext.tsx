@@ -152,12 +152,24 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
   };
   // D2.2 FIX: Use safe RPC function for view count increment (RPC function created in migration)
   const incrementViewCount = async (postId: string) => {
-    const { error } = await supabase.rpc('increment_business_blog_view_count', { p_post_id: postId });
-    if (error) {
-      console.error('Error incrementing business blog view count:', error.message);
-    } else {
-      // Optimistically update UI
-      setPosts(prev => prev.map(p => p.id === postId ? { ...p, viewCount: (p.viewCount || 0) + 1 } : p));
+    try {
+      const { error } = await supabase.rpc('increment_business_blog_view_count', { p_post_id: postId });
+      if (error) {
+        // CRITICAL: Tracking failures are silent - only debug log in development
+        if (import.meta.env.MODE === 'development') {
+          console.debug('[Tracking] Business blog view count increment failed (best-effort):', error.message);
+        }
+      } else {
+        // Optimistically update UI
+        setPosts(prev => prev.map(p => p.id === postId ? { ...p, viewCount: (p.viewCount || 0) + 1 } : p));
+      }
+    } catch (error) {
+      // CRITICAL: Catch ALL errors (network, CORS, adblock, etc.) and silently fail
+      if (import.meta.env.MODE === 'development') {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.debug('[Tracking] Business blog view count increment failed (best-effort):', errorMessage);
+      }
+      // NEVER rethrow - tracking must never affect app flow
     }
   };
 

@@ -73,23 +73,26 @@ export async function initializeUserProfile(
     };
   }
 
-  // Step 3: Profile doesn't exist - attempt to create
+  // Step 3: Profile doesn't exist - attempt to create (schema allows this)
+  // MANDATORY: Profile creation is required for all authenticated users
   const { data: newProfile, error: insertError } = await supabase
     .from('profiles')
     .insert({
       id: user.id,
       email: user.email || null,
-      full_name: user.user_metadata?.full_name || user.email || null
+      full_name: user.user_metadata?.full_name || user.email || null,
+      updated_at: new Date().toISOString()
     })
     .select('id')
     .single();
 
   if (insertError || !newProfile) {
     // Step 4: Creation failed - BLOCK access
+    // This is a CRITICAL failure - user cannot proceed without profile
     return {
       success: false,
       profileId: null,
-      error: `Failed to initialize user profile: ${insertError?.message || 'Unknown error'}. Account is incomplete and cannot be used.`
+      error: `Failed to initialize user profile: ${insertError?.message || 'Unknown error'}. Account is incomplete and cannot be used. Please contact support.`
     };
   }
 

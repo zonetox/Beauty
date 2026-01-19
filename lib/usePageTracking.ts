@@ -38,6 +38,7 @@ const getPageId = (pathname: string): string | undefined => {
 };
 
 // Track page view
+// CRITICAL: Tracking is best-effort ONLY. Failures must NEVER surface as errors.
 const trackPageView = async (
   pageType: PageView['page_type'],
   pageId?: string,
@@ -66,13 +67,19 @@ const trackPageView = async (
       viewed_at: new Date().toISOString(),
     });
 
-    if (error) {
-      console.error('Error tracking page view:', error);
-      // Don't throw - tracking failures shouldn't break the app
+    // CRITICAL: Tracking failures are silent - never log as error
+    // Only debug log in development mode
+    if (error && import.meta.env.MODE === 'development') {
+      console.debug('[Tracking] Page view tracking failed (best-effort):', error.message);
     }
   } catch (error) {
-    console.error('Error in trackPageView:', error);
-    // Don't throw - tracking failures shouldn't break the app
+    // CRITICAL: Catch ALL errors (network, CORS, adblock, etc.) and silently fail
+    // Only debug log in development mode
+    if (import.meta.env.MODE === 'development') {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.debug('[Tracking] Page view tracking failed (best-effort):', errorMessage);
+    }
+    // NEVER rethrow - tracking must never affect app flow
   }
 };
 
@@ -170,12 +177,18 @@ export const trackConversion = async (
       converted_at: new Date().toISOString(),
     });
 
-    if (error) {
-      console.error('Error tracking conversion:', error);
-      // Don't throw - tracking failures shouldn't break the app
+    // CRITICAL: Tracking failures are silent - never log as error
+    // Only debug log in development mode
+    if (error && import.meta.env.MODE === 'development') {
+      console.debug('[Tracking] Conversion tracking failed (best-effort):', error.message);
     }
   } catch (error) {
-    console.error('Error in trackConversionManually:', error);
-    // Don't throw - tracking failures shouldn't break the app
+    // CRITICAL: Catch ALL errors (network, CORS, adblock, etc.) and silently fail
+    // Only debug log in development mode
+    if (import.meta.env.MODE === 'development') {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.debug('[Tracking] Conversion tracking failed (best-effort):', errorMessage);
+    }
+    // NEVER rethrow - tracking must never affect app flow
   }
 };

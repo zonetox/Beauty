@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useBusinessAuth } from '../contexts/BusinessContext.tsx';
+import { useAuth } from '../providers/AuthProvider.tsx';
 import { checkAndHandleTrialExpiry } from '../lib/businessUtils.ts';
+import { verifyBusinessAccess } from '../lib/roleResolution.ts';
 import BusinessDashboardSidebar from '../components/BusinessDashboardSidebar.tsx';
 import DashboardOverview from '../components/DashboardOverview.tsx';
 import BusinessProfileEditor from '../components/BusinessProfileEditor.tsx';
@@ -27,12 +29,36 @@ import BusinessOnboardingWizard from '../components/BusinessOnboardingWizard.tsx
 
 const UserBusinessDashboardPage: React.FC = () => {
     const { currentBusiness } = useBusinessAuth();
+    const { user } = useAuth();
     const staffPermissions = useStaffPermissions();
     const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
+    const [accessError, setAccessError] = useState<string | null>(null);
+    const [verifyingAccess, setVerifyingAccess] = useState(true);
+
+    // MANDATORY: Verify business access (owner OR staff)
+    useEffect(() => {
+        const verifyAccess = async () => {
+            if (!user || !currentBusiness?.id) {
+                setVerifyingAccess(false);
+                return;
+            }
+
+            // Verify user has access to this business (owner OR staff)
+            const accessResult = await verifyBusinessAccess(user.id, currentBusiness.id);
+            
+            if (!accessResult.hasAccess) {
+                setAccessError(accessResult.error || 'You do not have access to this business dashboard. You must be the business owner or a staff member.');
+            }
+            
+            setVerifyingAccess(false);
+        };
+
+        verifyAccess();
+    }, [user, currentBusiness?.id]);
 
     // TASK 5: Trial expiry handling - Check on dashboard access (lazy check)
     useEffect(() => {
-        if (currentBusiness?.id) {
+        if (currentBusiness?.id && !accessError) {
             checkAndHandleTrialExpiry(currentBusiness.id).then((downgraded) => {
                 if (downgraded) {
                     // Refresh business data to reflect downgrade
@@ -40,7 +66,33 @@ const UserBusinessDashboardPage: React.FC = () => {
                 }
             });
         }
-    }, [currentBusiness?.id]);
+    }, [currentBusiness?.id, accessError]);
+
+    // Loading state
+    if (verifyingAccess) {
+        return (
+            <div className="flex items-center justify-center h-[50vh]">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-lg font-semibold">Verifying access...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Access denied - BLOCK dashboard
+    if (accessError) {
+        return (
+            <div className="flex items-center justify-center h-[50vh]">
+                <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg text-center">
+                    <div className="text-red-500 text-5xl mb-4">🔒</div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h2>
+                    <p className="text-gray-600 mb-6">{accessError}</p>
+                    <p className="text-sm text-gray-500">Business access is determined from the database. You must be the business owner or a staff member.</p>
+                </div>
+            </div>
+        );
+    }
 
     // If logged in but no business => ONBOARDING
     if (!currentBusiness) {

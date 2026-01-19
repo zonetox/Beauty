@@ -161,13 +161,19 @@ const AccountPageRouter: React.FC = () => {
         );
     }
 
-    // Route based on resolved role
+    // Route based on resolved role - NO DEFAULT REDIRECT
     if (role === 'business_owner' && profile.businessId) {
+        // Business owner → business dashboard
+        return <UserBusinessDashboardPage />;
+    }
+
+    if (role === 'business_staff' && profile.businessId) {
+        // Business staff → business dashboard (limited access)
         return <UserBusinessDashboardPage />;
     }
 
     if (role === 'admin') {
-        // Admin can access admin panel, but show account page for now
+        // Admin → account page (can also access /admin)
         return <UserAccountPage />;
     }
 
