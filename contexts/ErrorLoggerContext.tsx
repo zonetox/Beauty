@@ -28,6 +28,51 @@ const ErrorLoggerContext = createContext<ErrorLoggerContextType | undefined>(und
 
 const MAX_ERRORS = 100; // Giới hạn số lỗi lưu trữ
 
+// Helper function to check if error should be filtered out
+// This filters out non-critical network errors and tracking errors
+const shouldFilterError = (error: Error | string, source?: string): boolean => {
+  const message = error instanceof Error ? error.message : String(error);
+  const lowerMessage = message.toLowerCase();
+  
+  // Filter out non-critical network errors
+  const networkErrorPatterns = [
+    'failed to fetch',
+    'networkerror',
+    'network request failed',
+    'tracking',
+    'page view tracking',
+    'conversion tracking',
+    'best-effort',
+  ];
+  
+  // Filter out tracking-related errors (these are expected to fail sometimes)
+  if (source === 'Tracking' || lowerMessage.includes('tracking')) {
+    return true;
+  }
+  
+  // Filter out network errors that are not critical
+  if (networkErrorPatterns.some(pattern => lowerMessage.includes(pattern))) {
+    // Only filter if it's a network error AND not a critical source
+    const criticalSources = ['Auth', 'Payment', 'Database'];
+    if (!criticalSources.some(cs => source?.includes(cs))) {
+      return true;
+    }
+  }
+  
+  // Filter out browser extension errors
+  if (lowerMessage.includes('chrome-extension://') || 
+      lowerMessage.includes('moz-extension://')) {
+    return true;
+  }
+  
+  // Filter out ResizeObserver errors (common and non-critical)
+  if (lowerMessage.includes('resizeobserver')) {
+    return true;
+  }
+  
+  return false;
+};
+
 export const ErrorLoggerProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [errors, setErrors] = useState<ErrorLog[]>([]);
   
@@ -86,6 +131,16 @@ export const ErrorLoggerProvider: React.FC<{ children: ReactNode }> = ({ childre
     source?: string,
     severity: ErrorLog['severity'] = 'error'
   ) => {
+    // Filter out non-critical errors
+    if (shouldFilterError(error, source)) {
+      // Still log to console in development for debugging
+      if (import.meta.env.MODE === 'development') {
+        const originalWarn = originalConsoleRef.current?.warn || console.warn;
+        originalWarn.call(console, `[${source || 'App'}] (Filtered)`, error);
+      }
+      return;
+    }
+
     const errorLog: ErrorLog = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       timestamp: new Date(),
@@ -170,7 +225,10 @@ export const ErrorLoggerProvider: React.FC<{ children: ReactNode }> = ({ childre
           const message = args.map(arg => 
             typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
           ).join(' ');
-          logError(message, 'Console', 'error');
+          // Check if this is a network/tracking error that should be filtered
+          if (!shouldFilterError(message, 'Console')) {
+            logError(message, 'Console', 'error');
+          }
         } finally {
           isLoggingRef.current = false;
         }
@@ -194,11 +252,19 @@ export const ErrorLoggerProvider: React.FC<{ children: ReactNode }> = ({ childre
 
     // Intercept unhandled errors
     const handleError = (event: ErrorEvent) => {
-      logError(event.error || event.message, 'UnhandledError', 'error');
+      const error = event.error || event.message;
+      // Filter out non-critical errors
+      if (!shouldFilterError(error, 'UnhandledError')) {
+        logError(error, 'UnhandledError', 'error');
+      }
     };
 
     const handleRejection = (event: PromiseRejectionEvent) => {
-      logError(event.reason || 'Unhandled Promise Rejection', 'UnhandledRejection', 'error');
+      const reason = event.reason || 'Unhandled Promise Rejection';
+      // Filter out non-critical errors
+      if (!shouldFilterError(reason, 'UnhandledRejection')) {
+        logError(reason, 'UnhandledRejection', 'error');
+      }
     };
 
     window.addEventListener('error', handleError);

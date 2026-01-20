@@ -58,12 +58,22 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
   }
 
   try {
+    // Add timeout for profile query (5 seconds)
+    const profileTimeout = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Profile query timeout')), 5000);
+    });
+
     // MANDATORY: Verify profile exists first (required for all authenticated users)
-    const { data: profile, error: profileError } = await supabase
+    const profileQuery = supabase
       .from('profiles')
       .select('id, business_id')
       .eq('id', user.id)
       .single();
+
+    const { data: profile, error: profileError } = await Promise.race([
+      profileQuery,
+      profileTimeout
+    ]);
 
     if (profileError && profileError.code === 'PGRST116') {
       // Profile doesn't exist - CRITICAL ERROR - BLOCK ACCESS
@@ -123,12 +133,25 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
 
     // 3. Check business ownership (businesses.owner_id = auth.uid())
     if (profile.business_id) {
-      const { data: business } = await supabase
-        .from('businesses')
-        .select('id, owner_id')
-        .eq('id', profile.business_id)
-        .eq('owner_id', user.id)
-        .single();
+      let business = null;
+      try {
+        const businessTimeout = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('Business check timeout')), 5000);
+        });
+
+        const businessQuery = supabase
+          .from('businesses')
+          .select('id, owner_id')
+          .eq('id', profile.business_id)
+          .eq('owner_id', user.id)
+          .single();
+
+        const result = await Promise.race([businessQuery, businessTimeout]);
+        business = result.data || null;
+      } catch {
+        // Timeout or error - assume not owner (graceful degradation)
+        business = null;
+      }
 
       if (business) {
         return {
@@ -143,12 +166,25 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
     }
 
     // 4. Check business staff relationship (business_staff.user_id = auth.uid())
-    const { data: staffRecord } = await supabase
-      .from('business_staff')
-      .select('business_id')
-      .eq('user_id', user.id)
-      .limit(1)
-      .single();
+    let staffRecord = null;
+    try {
+      const staffTimeout = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Staff check timeout')), 5000);
+      });
+
+      const staffQuery = supabase
+        .from('business_staff')
+        .select('business_id')
+        .eq('user_id', user.id)
+        .limit(1)
+        .single();
+
+      const result = await Promise.race([staffQuery, staffTimeout]);
+      staffRecord = result.data || null;
+    } catch {
+      // Timeout or error - assume not staff (graceful degradation)
+      staffRecord = null;
+    }
 
     if (staffRecord) {
       return {

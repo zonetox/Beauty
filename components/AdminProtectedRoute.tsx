@@ -17,17 +17,49 @@ const AdminProtectedRoute: React.FC<AdminProtectedRouteProps> = ({ children }) =
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const verifyAdmin = async () => {
-            if (state === 'loading') return;
+        let mounted = true;
+        let timeoutId: NodeJS.Timeout | null = null;
 
+        const verifyAdmin = async () => {
+            // Wait for auth to finish loading
+            if (state === 'loading') {
+                return;
+            }
+
+            // If no user or profile, not admin
             if (!user || !profile) {
-                setIsAdmin(false);
+                if (mounted) {
+                    setIsAdmin(false);
+                }
                 return;
             }
 
             try {
-                const roleResult = await resolveUserRole(user);
-                
+                // Add timeout to prevent hanging (10 seconds)
+                timeoutId = setTimeout(() => {
+                    if (mounted) {
+                        setError('Admin verification timed out. Please try refreshing the page.');
+                        setIsAdmin(false);
+                    }
+                }, 10000);
+
+                // Add timeout wrapper for resolveUserRole
+                const roleResolutionTimeout = new Promise<never>((_, reject) => {
+                    setTimeout(() => reject(new Error('Role resolution timeout')), 8000);
+                });
+
+                const roleResult = await Promise.race([
+                    resolveUserRole(user),
+                    roleResolutionTimeout
+                ]);
+
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                    timeoutId = null;
+                }
+
+                if (!mounted) return;
+
                 if (roleResult.error) {
                     setError(roleResult.error);
                     setIsAdmin(false);
@@ -37,21 +69,41 @@ const AdminProtectedRoute: React.FC<AdminProtectedRouteProps> = ({ children }) =
                 // MANDATORY: Admin access ONLY from admin_users table
                 // NO fallbacks. NO dev shortcuts.
                 // Admin must have: admin_users.email = auth.users.email AND is_locked = FALSE
-                const isAdmin = roleResult.isAdmin && roleResult.role === 'admin';
+                const adminStatus = roleResult.isAdmin && roleResult.role === 'admin';
                 
-                if (!isAdmin) {
+                if (!adminStatus) {
                     setError('Admin access denied. Admin privileges are determined from the admin_users table. Your email is not registered as an admin.');
                 }
                 
-                setIsAdmin(isAdmin);
+                setIsAdmin(adminStatus);
             } catch (err: unknown) {
+                // CRITICAL: Always clear loading state, even on error/timeout
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                }
+
+                if (!mounted) return;
+
                 const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-                setError(`Admin verification failed: ${errorMessage}`);
+                
+                if (errorMessage.includes('timeout')) {
+                    setError('Admin verification timed out. Please check your connection and try again.');
+                } else {
+                    setError(`Admin verification failed: ${errorMessage}`);
+                }
+                
                 setIsAdmin(false);
             }
         };
 
         verifyAdmin();
+
+        return () => {
+            mounted = false;
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+        };
     }, [user, profile, state]);
 
     if (state === 'loading' || isAdmin === 'loading') {

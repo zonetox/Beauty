@@ -10,13 +10,14 @@ import BlogPostCard from '../components/BlogPostCard.tsx';
 import DealCard from '../components/DealCard.tsx';
 import RecentlyViewed from '../components/RecentlyViewed.tsx';
 import SEOHead from '../components/SEOHead.tsx';
-import LoadingState from '../components/LoadingState.tsx';
 import EmptyState from '../components/EmptyState.tsx';
 import { CATEGORIES, CITIES, FEATURED_LOCATIONS } from '../constants.ts';
-import { MembershipTier, DealStatus, HomepageSection } from '../types.ts';
-import { useBusinessData, useBlogData } from '../contexts/BusinessDataContext.tsx';
+import { HomepageSection, BlogPost, Deal, DealStatus } from '../types.ts';
+import { useBusinessData } from '../contexts/BusinessDataContext.tsx';
 import { useHomepageData } from '../contexts/HomepageDataContext.tsx';
 import { getOptimizedSupabaseUrl } from '../lib/image.ts';
+import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
+import { snakeToCamel } from '../lib/utils.ts';
 import toast from 'react-hot-toast';
 
 const SkeletonCard: React.FC = () => (
@@ -33,8 +34,7 @@ const SkeletonCard: React.FC = () => (
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { businesses, businessLoading } = useBusinessData();
-  const { blogPosts, blogLoading } = useBlogData();
-  const { homepageData, loading: homepageLoading } = useHomepageData();
+  const { homepageData } = useHomepageData();
   const { heroSlides, sections } = homepageData;
 
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -43,6 +43,62 @@ const HomePage: React.FC = () => {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [newsletterError, setNewsletterError] = useState('');
   const [isSubmittingNewsletter, setIsSubmittingNewsletter] = useState(false);
+  
+  // OPTIMIZED: Only fetch featured blog posts (3 posts) instead of all
+  const [featuredBlogPosts, setFeaturedBlogPosts] = useState<BlogPost[]>([]);
+  const [blogLoading, setBlogLoading] = useState(false);
+
+  // OPTIMIZED: Fetch only 3 featured blog posts for homepage
+  useEffect(() => {
+    let mounted = true;
+    
+    const fetchFeaturedBlogPosts = async () => {
+      if (!isSupabaseConfigured) {
+        setBlogLoading(false);
+        return;
+      }
+
+      try {
+        setBlogLoading(true);
+        
+        // Only fetch 3 latest blog posts for homepage
+        const { data, error } = await supabase
+          .from('blog_posts')
+          .select('id, slug, title, image_url, excerpt, author, date, category, view_count')
+          .order('date', { ascending: false })
+          .limit(3);
+
+        if (error) {
+          console.error('Error fetching featured blog posts:', error);
+          if (mounted) setFeaturedBlogPosts([]);
+        } else if (data && mounted) {
+          const posts = data.map((post) => ({
+            id: post.id,
+            slug: post.slug,
+            title: post.title,
+            imageUrl: post.image_url,
+            excerpt: post.excerpt,
+            author: post.author,
+            date: post.date,
+            category: post.category,
+            viewCount: post.view_count,
+          })) as BlogPost[];
+          setFeaturedBlogPosts(posts);
+        }
+      } catch (error) {
+        console.error('Error fetching featured blog posts:', error);
+        if (mounted) setFeaturedBlogPosts([]);
+      } finally {
+        if (mounted) setBlogLoading(false);
+      }
+    };
+
+    fetchFeaturedBlogPosts();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
       const viewedRaw = localStorage.getItem('recently_viewed_businesses');
@@ -52,7 +108,7 @@ const HomePage: React.FC = () => {
               if (viewedIds && viewedIds.length > 0) {
                   setHasRecentlyViewed(true);
               }
-          } catch (e) {
+          } catch {
               setHasRecentlyViewed(false);
           }
       }
@@ -108,27 +164,86 @@ const HomePage: React.FC = () => {
     }
   };
 
-  // Memoize featured data to avoid recalculation
+  // OPTIMIZED: Only use featured businesses (already filtered by fetchCriticalData)
   const featuredBusinesses = useMemo(() => {
-    return businesses
-      .filter(b => b.isFeatured && b.isActive)
-      .slice(0, 4);
+    return businesses.slice(0, 4);
   }, [businesses]);
 
-  const featuredDeals = useMemo(() => {
-    return businesses
-      .filter(b => b.isActive && (b.membershipTier === MembershipTier.VIP || b.membershipTier === MembershipTier.PREMIUM) && b.deals && b.deals.length > 0)
-      .flatMap(b => 
-          b.deals!
-            .filter(deal => deal.status === DealStatus.ACTIVE)
-            .map(deal => ({ ...deal, businessName: b.name, businessSlug: b.slug }))
-      )
-      .slice(0, 4);
-  }, [businesses]);
+  // OPTIMIZED: Fetch deals only from featured businesses
+  interface FeaturedDeal extends Deal {
+    businessName: string;
+    businessSlug: string;
+  }
+  
+  const [featuredDeals, setFeaturedDeals] = useState<FeaturedDeal[]>([]);
+  
+  useEffect(() => {
+    let mounted = true;
+    
+    const fetchFeaturedDeals = async () => {
+      if (!isSupabaseConfigured || businesses.length === 0) {
+        return;
+      }
 
+      try {
+        // Only fetch deals from featured businesses (limit to 4 businesses)
+        const featuredBusinessIds = businesses.slice(0, 4).map(b => b.id);
+        
+        if (featuredBusinessIds.length === 0) {
+          if (mounted) setFeaturedDeals([]);
+          return;
+        }
+
+        // Fetch active deals from featured businesses
+        const { data, error } = await supabase
+          .from('deals')
+          .select('id, business_id, title, description, discount_percentage, original_price, deal_price, start_date, end_date, status, image_url')
+          .in('business_id', featuredBusinessIds)
+          .eq('status', 'Active')
+          .gte('end_date', new Date().toISOString())
+          .order('start_date', { ascending: false })
+          .limit(4);
+
+        if (error) {
+          console.error('Error fetching featured deals:', error);
+          if (mounted) setFeaturedDeals([]);
+        } else if (data && mounted) {
+          const dealsWithBusiness: FeaturedDeal[] = data
+            .map(deal => {
+              const business = businesses.find(b => b.id === deal.business_id);
+              if (!business) return null;
+              
+              const camelDeal = snakeToCamel(deal) as Deal;
+              return {
+                ...camelDeal,
+                businessName: business.name,
+                businessSlug: business.slug,
+              } as FeaturedDeal;
+            })
+            .filter((deal): deal is FeaturedDeal => deal !== null);
+          
+          setFeaturedDeals(dealsWithBusiness);
+        }
+      } catch (error) {
+        console.error('Error fetching featured deals:', error);
+        if (mounted) setFeaturedDeals([]);
+      }
+    };
+
+    // Only fetch deals if we have featured businesses
+    if (businesses.length > 0 && !businessLoading) {
+      fetchFeaturedDeals();
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, [businesses, businessLoading]);
+
+  // OPTIMIZED: Use featured blog posts directly (already limited to 3)
   const featuredPosts = useMemo(() => {
-    return blogPosts.slice(0, 3);
-  }, [blogPosts]);
+    return featuredBlogPosts;
+  }, [featuredBlogPosts]);
 
   // Do NOT block rendering - use skeletons for loading states instead
   // Homepage must render immediately after auth, regardless of data fetch timing

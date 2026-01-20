@@ -45,7 +45,21 @@ export const initSentry = () => {
           if (error.message.includes('ResizeObserver')) {
             return null;
           }
+          // Ignore tracking-related fetch errors (best-effort tracking failures)
+          if (error.message.includes('Failed to fetch') && 
+              (event.message?.includes('tracking') || 
+               event.message?.includes('page view') ||
+               event.tags?.source === 'Tracking')) {
+            return null;
+          }
         }
+      }
+      // Filter out tracking-related messages
+      if (event.message && (
+        event.message.includes('Error tracking page view') ||
+        event.message.includes('tracking failed')
+      )) {
+        return null;
       }
       return event;
     },

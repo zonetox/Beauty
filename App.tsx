@@ -102,15 +102,48 @@ const AppLayout: React.FC = () => {
 const AccountPageRouter: React.FC = () => {
     const { profile, user, state } = useAuth();
     const { role, isLoading: roleLoading, error: roleError } = useUserRole();
+    const [loadTimeout, setLoadTimeout] = useState(false);
+
+    // Safety timeout: If loading takes more than 15 seconds, show error
+    useEffect(() => {
+        if (state === 'loading' || roleLoading) {
+            const timeoutId = setTimeout(() => {
+                setLoadTimeout(true);
+            }, 15000);
+
+            return () => clearTimeout(timeoutId);
+        } else {
+            setLoadTimeout(false);
+        }
+    }, [state, roleLoading]);
 
     // Loading state
-    if (state === 'loading' || roleLoading) {
+    if ((state === 'loading' || roleLoading) && !loadTimeout) {
         return (
             <div className="flex items-center justify-center h-[50vh]">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
                     <p className="text-lg font-semibold">Đang tải thông tin tài khoản...</p>
                     <p className="text-gray-500">Vui lòng đợi.</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Timeout state
+    if (loadTimeout) {
+        return (
+            <div className="flex items-center justify-center h-[50vh]">
+                <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg text-center">
+                    <div className="text-red-500 text-5xl mb-4">⏱️</div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Tải thông tin quá lâu</h2>
+                    <p className="text-gray-600 mb-6">Tải thông tin tài khoản mất quá nhiều thời gian. Vui lòng thử lại sau hoặc làm mới trang.</p>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                    >
+                        Làm mới trang
+                    </button>
                 </div>
             </div>
         );

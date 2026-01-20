@@ -63,7 +63,7 @@ const toSnakeCase = (obj: any): any => {
 
 export function BusinessProvider({ children }: { children: ReactNode }) {
   // --- PARENT CONTEXTS ---
-  const { profile } = useUserSession();
+  const { profile, loading: profileLoading } = useUserSession();
   // Use useContext directly instead of hooks to avoid initialization order issues
   const publicDataContext = useContext(PublicDataContext);
   const businesses = publicDataContext?.businesses || [];
@@ -259,19 +259,30 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
 
   // Only fetch when user has a business
   useEffect(() => {
+    // Wait for profile to finish loading before making decisions
+    if (profileLoading) {
+      return;
+    }
+
     if (profile?.businessId && !hasFetchedRef.current) {
       fetchAllData();
     } else if (!profile?.businessId) {
-      // Reset when user doesn't have business
+      // Reset when user doesn't have business (or not logged in)
       hasFetchedRef.current = false;
       setPosts([]);
       setReviews([]);
       setOrders([]);
       setAppointments([]);
       setAnalyticsData([]);
+      // CRITICAL: Set loading to false so public pages can render
+      setBlogLoading(false);
+      setReviewsLoading(false);
+      setOrdersLoading(false);
+      setAppointmentsLoading(false);
+      setAnalyticsLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.businessId]); // Only depend on profile.businessId, not fetchAllData
+  }, [profile?.businessId, profileLoading]); // Depend on profileLoading to wait for auth check
 
   // --- LOGIC (copied from old BusinessBlogDataContext) ---
   const addPost = async (newPostData: Omit<BusinessBlogPost, 'id' | 'slug' | 'createdDate' | 'viewCount'>) => {

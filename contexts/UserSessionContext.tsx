@@ -51,18 +51,32 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
 
     const fetchProfile = async (user: User) => {
       try {
+        // Add timeout to prevent hanging (5 seconds)
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('Profile fetch timeout')), 5000);
+        });
+
         // PHASE 3: Optimize query - select only needed columns
-        const { data, error } = await supabase
+        const profileQuery = supabase
           .from('profiles')
           .select('id, full_name, email, avatar_url, business_id')
           .eq('id', user.id)
           .single();
 
+        const { data, error } = await Promise.race([profileQuery, timeoutPromise]);
+
         if (error && error.code === 'PGRST116') { // Profile doesn't exist, create it
-          const { data: newProfile, error: insertError } = await supabase
+          const insertQuery = supabase
             .from('profiles')
             .insert({ id: user.id, full_name: user.user_metadata.full_name, email: user.email })
             .select().single();
+          
+          const insertTimeoutPromise = new Promise<never>((_, reject) => {
+            setTimeout(() => reject(new Error('Profile insert timeout')), 5000);
+          });
+
+          const { data: newProfile, error: insertError } = await Promise.race([insertQuery, insertTimeoutPromise]);
+          
           if (insertError) {
             console.error('Error creating profile:', insertError.message);
           } else if (newProfile && mounted) {
@@ -74,7 +88,14 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
           setProfile(snakeToCamel(data) as Profile);
         }
       } catch (err) {
-        console.error('Unexpected error in fetchProfile:', err);
+        // Handle timeout and other errors gracefully
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        if (errorMessage.includes('timeout')) {
+          console.warn('Profile fetch timed out. User may have slow connection.');
+        } else {
+          console.error('Unexpected error in fetchProfile:', err);
+        }
+        // Don't throw - allow app to continue with null profile
       }
     };
 
@@ -101,9 +122,20 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
     // Get initial session
     if (isSupabaseConfigured) {
       hasAttemptedAuth = true;
-      supabase.auth.getSession().then(({ data: { session }, error }) => {
+      
+      // Add timeout to prevent hanging (8 seconds)
+      const getSessionTimeout = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('getSession timeout')), 8000);
+      });
+
+      Promise.race([
+        supabase.auth.getSession(),
+        getSessionTimeout
+      ]).then((result: any) => {
+        const { data: { session }, error } = result;
+        
         // Handle invalid refresh token errors
-        if (error && (error.message.includes('Invalid Refresh Token') || error.message.includes('Refresh Token Not Found'))) {
+        if (error && (error.message?.includes('Invalid Refresh Token') || error.message?.includes('Refresh Token Not Found'))) {
           // Clear invalid session
           if (mounted) {
             setSession(null);
@@ -124,8 +156,19 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
         }
         handleAuthChange('INITIAL_SESSION', session);
       }).catch(err => {
-        // Handle network or other errors
-        if (err.message && (err.message.includes('Invalid Refresh Token') || err.message.includes('Refresh Token Not Found'))) {
+        // Handle network, timeout, or other errors
+        const errorMessage = err?.message || String(err);
+        
+        if (errorMessage.includes('timeout')) {
+          // Timeout - assume no session
+          if (mounted) {
+            console.warn('getSession timed out. Assuming no session.');
+            setSession(null);
+            setCurrentUser(null);
+            setProfile(null);
+            setLoading(false);
+          }
+        } else if (errorMessage.includes('Invalid Refresh Token') || errorMessage.includes('Refresh Token Not Found')) {
           // Clear invalid session
           if (mounted) {
             setSession(null);
@@ -137,8 +180,15 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
             // Ignore signOut errors
           });
         } else {
+          // Other errors (network, etc.)
           console.error('Error getting initial session:', err);
-          if (mounted) setLoading(false);
+          if (mounted) {
+            // CRITICAL: Always set loading to false, even on error
+            setSession(null);
+            setCurrentUser(null);
+            setProfile(null);
+            setLoading(false);
+          }
         }
       });
 

@@ -3,7 +3,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { supabase } from './supabaseClient.ts';
+import { supabase, isSupabaseConfigured } from './supabaseClient.ts';
 import { useUserSession } from '../contexts/UserSessionContext.tsx';
 import { PageView, Conversion } from '../types.ts';
 
@@ -44,19 +44,29 @@ const trackPageView = async (
   pageId?: string,
   userId?: string
 ): Promise<void> => {
+  // Early return if Supabase is not configured
+  if (!isSupabaseConfigured) {
+    return;
+  }
+
   try {
     const sessionId = getSessionId();
     
     // Get referrer from document
-    const referrer = document.referrer || undefined;
+    const referrer = typeof document !== 'undefined' ? document.referrer || undefined : undefined;
     
     // Get user agent
-    const userAgent = navigator.userAgent || undefined;
+    const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent || undefined : undefined;
     
     // Note: IP address should be captured server-side for security
     // We'll leave it null and let Supabase Edge Function or trigger handle it if needed
     
-    const { error } = await supabase.from('page_views').insert({
+    // Add timeout to prevent hanging requests (5 seconds)
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Tracking timeout')), 5000);
+    });
+
+    const insertPromise = supabase.from('page_views').insert({
       page_type: pageType,
       page_id: pageId || null,
       user_id: userId || null,
@@ -67,17 +77,22 @@ const trackPageView = async (
       viewed_at: new Date().toISOString(),
     });
 
+    const { error } = await Promise.race([insertPromise, timeoutPromise]);
+
     // CRITICAL: Tracking failures are silent - never log as error
     // Only debug log in development mode
     if (error && import.meta.env.MODE === 'development') {
       console.debug('[Tracking] Page view tracking failed (best-effort):', error.message);
     }
   } catch (error) {
-    // CRITICAL: Catch ALL errors (network, CORS, adblock, etc.) and silently fail
+    // CRITICAL: Catch ALL errors (network, CORS, adblock, timeout, etc.) and silently fail
     // Only debug log in development mode
     if (import.meta.env.MODE === 'development') {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.debug('[Tracking] Page view tracking failed (best-effort):', errorMessage);
+      // Only log if it's not a network error (which is expected in some cases)
+      if (!errorMessage.includes('Failed to fetch') && !errorMessage.includes('NetworkError')) {
+        console.debug('[Tracking] Page view tracking failed (best-effort):', errorMessage);
+      }
     }
     // NEVER rethrow - tracking must never affect app flow
   }
@@ -151,6 +166,11 @@ export const trackConversion = async (
   metadata?: Record<string, any>,
   userId?: string
 ): Promise<void> => {
+  // Early return if Supabase is not configured
+  if (!isSupabaseConfigured) {
+    return;
+  }
+
   try {
     const sessionId = getSessionId();
 
@@ -167,7 +187,12 @@ export const trackConversion = async (
       }
     }
 
-    const { error } = await supabase.from('conversions').insert({
+    // Add timeout to prevent hanging requests (5 seconds)
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Tracking timeout')), 5000);
+    });
+
+    const insertPromise = supabase.from('conversions').insert({
       business_id: businessId || null,
       conversion_type: conversionType,
       source: determinedSource || null,
@@ -177,17 +202,22 @@ export const trackConversion = async (
       converted_at: new Date().toISOString(),
     });
 
+    const { error } = await Promise.race([insertPromise, timeoutPromise]);
+
     // CRITICAL: Tracking failures are silent - never log as error
     // Only debug log in development mode
     if (error && import.meta.env.MODE === 'development') {
       console.debug('[Tracking] Conversion tracking failed (best-effort):', error.message);
     }
   } catch (error) {
-    // CRITICAL: Catch ALL errors (network, CORS, adblock, etc.) and silently fail
+    // CRITICAL: Catch ALL errors (network, CORS, adblock, timeout, etc.) and silently fail
     // Only debug log in development mode
     if (import.meta.env.MODE === 'development') {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.debug('[Tracking] Conversion tracking failed (best-effort):', errorMessage);
+      // Only log if it's not a network error (which is expected in some cases)
+      if (!errorMessage.includes('Failed to fetch') && !errorMessage.includes('NetworkError')) {
+        console.debug('[Tracking] Conversion tracking failed (best-effort):', errorMessage);
+      }
     }
     // NEVER rethrow - tracking must never affect app flow
   }

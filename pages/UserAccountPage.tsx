@@ -1,30 +1,104 @@
 // User Account Page - For regular users (not business owners)
 // Displays user profile, favorites, appointments, reviews
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useUserSession } from '../contexts/UserSessionContext.tsx';
 import { useBusinessData } from '../contexts/BusinessDataContext.tsx';
 import SEOHead from '../components/SEOHead.tsx';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import BusinessCard from '../components/BusinessCard.tsx';
+import LoadingState from '../components/LoadingState.tsx';
+import EmptyState from '../components/EmptyState.tsx';
 
 // AccountTab: Only include tabs for features that are ACTUALLY implemented
 // Do NOT include incomplete features (appointments, reviews are not implemented for regular users)
 type AccountTab = 'profile' | 'favorites';
 
 const UserAccountPage: React.FC = () => {
-    const { currentUser, profile, isFavorite, toggleFavorite } = useUserSession();
+    const { currentUser, profile, loading, isFavorite, toggleFavorite } = useUserSession();
     const { businesses } = useBusinessData();
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<AccountTab>('profile');
+    const [loadTimeout, setLoadTimeout] = useState(false);
+
+    // Safety timeout: If loading takes more than 10 seconds, show error
+    useEffect(() => {
+        if (loading) {
+            const timeoutId = setTimeout(() => {
+                setLoadTimeout(true);
+            }, 10000);
+
+            return () => clearTimeout(timeoutId);
+        } else {
+            setLoadTimeout(false);
+        }
+    }, [loading]);
+
+    // Redirect to login if not authenticated (after loading completes)
+    useEffect(() => {
+        if (!loading && !currentUser) {
+            navigate('/login', { state: { from: '/account' }, replace: true });
+        }
+    }, [loading, currentUser, navigate]);
 
     // Get favorite businesses
     const favoriteBusinesses = businesses.filter(b => isFavorite(b.id));
 
+    // Loading state - show spinner
+    if (loading && !loadTimeout) {
+        return (
+            <>
+                <SEOHead title="Đang tải tài khoản..." description="Đang tải thông tin tài khoản..." />
+                <div className="container mx-auto px-4 py-16">
+                    <LoadingState message="Đang tải tài khoản..." fullScreen={false} />
+                </div>
+            </>
+        );
+    }
+
+    // Timeout or error state
+    if (loadTimeout || (!loading && !currentUser)) {
+        return (
+            <>
+                <SEOHead title="Lỗi tải tài khoản" description="Không thể tải thông tin tài khoản" />
+                <div className="container mx-auto px-4 py-16">
+                    <EmptyState
+                        title="Không thể tải tài khoản"
+                        message={
+                            loadTimeout
+                                ? "Tải thông tin tài khoản mất quá nhiều thời gian. Vui lòng thử lại sau."
+                                : "Bạn cần đăng nhập để xem tài khoản."
+                        }
+                    />
+                </div>
+            </>
+        );
+    }
+
+    // Profile not found (user exists but profile doesn't)
+    if (!loading && currentUser && !profile) {
+        return (
+            <>
+                <SEOHead title="Tài khoản chưa hoàn tất" description="Thông tin tài khoản chưa được thiết lập" />
+                <div className="container mx-auto px-4 py-16">
+                    <EmptyState
+                        title="Tài khoản chưa hoàn tất"
+                        message="Thông tin tài khoản của bạn chưa được thiết lập. Vui lòng liên hệ hỗ trợ hoặc thử đăng nhập lại."
+                    />
+                </div>
+            </>
+        );
+    }
+
+    // Should not reach here if data is valid, but safety check
     if (!currentUser || !profile) {
         return (
-            <div className="container mx-auto px-4 py-16 text-center">
-                <h1 className="text-2xl font-bold">Loading account...</h1>
-            </div>
+            <>
+                <SEOHead title="Đang tải tài khoản..." description="Đang tải thông tin tài khoản..." />
+                <div className="container mx-auto px-4 py-16">
+                    <LoadingState message="Đang tải tài khoản..." fullScreen={false} />
+                </div>
+            </>
         );
     }
 

@@ -37,23 +37,61 @@ const UserBusinessDashboardPage: React.FC = () => {
 
     // MANDATORY: Verify business access (owner OR staff)
     useEffect(() => {
-        const verifyAccess = async () => {
-            if (!user || !currentBusiness?.id) {
-                setVerifyingAccess(false);
-                return;
-            }
+        let mounted = true;
+        let timeoutId: NodeJS.Timeout | null = null;
 
-            // Verify user has access to this business (owner OR staff)
-            const accessResult = await verifyBusinessAccess(user.id, currentBusiness.id);
-            
-            if (!accessResult.hasAccess) {
-                setAccessError(accessResult.error || 'You do not have access to this business dashboard. You must be the business owner or a staff member.');
+        const verifyAccess = async () => {
+            try {
+                // Safety timeout: If verification takes more than 10 seconds, stop loading
+                timeoutId = setTimeout(() => {
+                    if (mounted) {
+                        setVerifyingAccess(false);
+                        setAccessError('Verification timeout. Please try refreshing the page.');
+                    }
+                }, 10000);
+
+                if (!user || !currentBusiness?.id) {
+                    if (mounted) {
+                        setVerifyingAccess(false);
+                    }
+                    return;
+                }
+
+                // Verify user has access to this business (owner OR staff)
+                const accessResult = await verifyBusinessAccess(user.id, currentBusiness.id);
+                
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                    timeoutId = null;
+                }
+
+                if (mounted) {
+                    if (!accessResult.hasAccess) {
+                        setAccessError(accessResult.error || 'You do not have access to this business dashboard. You must be the business owner or a staff member.');
+                    }
+                    setVerifyingAccess(false);
+                }
+            } catch (error) {
+                // CRITICAL: Always clear loading state, even on error
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                }
+                if (mounted) {
+                    console.error('Error verifying business access:', error);
+                    setAccessError('Failed to verify access. Please try refreshing the page.');
+                    setVerifyingAccess(false);
+                }
             }
-            
-            setVerifyingAccess(false);
         };
 
         verifyAccess();
+
+        return () => {
+            mounted = false;
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+        };
     }, [user, currentBusiness?.id]);
 
     // TASK 5: Trial expiry handling - Check on dashboard access (lazy check)
