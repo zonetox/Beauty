@@ -23,6 +23,8 @@ interface AdminGlobalSearchProps {
 const AdminGlobalSearch: React.FC<AdminGlobalSearchProps> = ({ businesses, orders, adminUsers, onNavigate }) => {
     const [query, setQuery] = useState('');
     const [isFocused, setIsFocused] = useState(false);
+    const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
+    const [loadingSuggestions, setLoadingSuggestions] = useState(false);
     const searchRef = useRef<HTMLDivElement>(null);
 
     const results = useMemo<SearchResult[]>(() => {
