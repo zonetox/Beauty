@@ -50,11 +50,13 @@ const Header: React.FC = () => {
       // Wait a bit to ensure session is cleared
       await new Promise(resolve => setTimeout(resolve, 300));
       navigate('/', { replace: true });
-      toast.success('Đã đăng xuất thành công');
+      // Don't show toast on logout - silent logout is better UX
+      // toast.success('Đã đăng xuất thành công');
     } catch (error: unknown) {
       console.error('Logout error:', error);
+      // Only show error toast if logout actually failed
       const errorMessage = error instanceof Error ? error.message : 'Vui lòng thử lại';
-      toast.error('Lỗi khi đăng xuất: ' + errorMessage);
+      toast.error('Lỗi khi đăng xuất: ' + errorMessage, { id: 'logout-error' });
     }
   };
 

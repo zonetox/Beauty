@@ -2,8 +2,9 @@
 // Tuân thủ ARCHITECTURE.md, sử dụng schema/RLS/contexts hiện có
 // 100% hoàn thiện, không placeholder, chuẩn SEO cơ bản
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
+import { showToast } from '../lib/toastUtils.ts';
 import { useNavigate, Link } from 'react-router-dom';
 import { BusinessCategory } from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
@@ -49,16 +50,35 @@ const RegisterPage: React.FC = () => {
 
     // BLOCK ACCESS: Business owners, staff, and admins should not see registration form
     // Only anonymous users and regular users (without business access) can register
+    // Track if we've already shown toast to prevent duplicates
+    const hasShownRedirectToast = useRef(false);
+    const lastUserRef = useRef<string | null>(null);
+    
     useEffect(() => {
-        if (state !== 'loading' && !roleLoading && user) {
+        // Only run once when user becomes authenticated
+        // Reset flag if user changed
+        if (user?.id !== lastUserRef.current) {
+            hasShownRedirectToast.current = false;
+            lastUserRef.current = user?.id || null;
+        }
+        
+        if (state !== 'loading' && !roleLoading && user && !hasShownRedirectToast.current) {
             if (isBusinessOwner || isBusinessStaff) {
-                toast.success('Bạn đã có quyền truy cập doanh nghiệp. Đang chuyển đến dashboard...');
+                hasShownRedirectToast.current = true;
+                showToast('Bạn đã có quyền truy cập doanh nghiệp. Đang chuyển đến dashboard...', 'success', { id: 'redirect-to-dashboard' });
                 navigate('/account', { replace: true });
             } else if (role === 'admin') {
                 // Admins should use admin panel to create businesses, not registration form
-                toast.success('Quản trị viên không thể sử dụng form đăng ký. Vui lòng sử dụng admin panel.');
+                hasShownRedirectToast.current = true;
+                showToast('Quản trị viên không thể sử dụng form đăng ký. Vui lòng sử dụng admin panel.', 'success', { id: 'redirect-to-admin' });
                 navigate('/admin', { replace: true });
             }
+        }
+        
+        // Reset flag when user logs out
+        if (!user) {
+            hasShownRedirectToast.current = false;
+            lastUserRef.current = null;
         }
     }, [user, state, roleLoading, role, isBusinessOwner, isBusinessStaff, navigate]);
 

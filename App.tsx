@@ -304,13 +304,16 @@ const App: React.FC = () => {
                       position="top-center" 
                       reverseOrder={false}
                       toastOptions={{
-                        // Reduce toast duration during app initialization
+                        // Reduce toast duration
                         duration: 3000,
-                        // Don't show toasts during initial load
+                        // Limit number of toasts shown at once
+                        maxToasts: 3,
                         style: {
                           maxWidth: '500px',
                         },
                       }}
+                      // Prevent duplicate toasts
+                      gutter={8}
                     />
                     <AuthProvider>
                         <AuthGate>
