@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -406,11 +406,41 @@ const AdminPage: React.FC = () => {
   // Remove auto-redirect - AdminProtectedRoute already handles this
   // This was causing redirect loops and flashing
 
-  if (authLoading) {
+  // Unified loading state with timeout
+  const [initialLoadTimeout, setInitialLoadTimeout] = useState(false);
+  
+  useEffect(() => {
+    // Set timeout for initial load (8 seconds)
+    const timeout = setTimeout(() => {
+      setInitialLoadTimeout(true);
+    }, 8000);
+
+    return () => clearTimeout(timeout);
+  }, []);
+
+  // Show loading only if auth is loading AND we haven't timed out
+  if (authLoading && !initialLoadTimeout) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-100 flex-col gap-4">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-gray-600 font-medium">Checking permissions...</p>
+        <p className="text-gray-600 font-medium">Loading admin dashboard...</p>
+      </div>
+    );
+  }
+
+  // If timeout occurred but still loading, show error
+  if (authLoading && initialLoadTimeout) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-100 flex-col gap-4">
+        <div className="text-red-500 text-5xl mb-4">⚠️</div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Loading Timeout</h2>
+        <p className="text-gray-600 mb-6">The admin dashboard is taking too long to load. Please refresh the page.</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors"
+        >
+          Refresh Page
+        </button>
       </div>
     );
   }

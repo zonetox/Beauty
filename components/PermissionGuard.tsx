@@ -19,7 +19,12 @@ const PermissionGuard: React.FC<PermissionGuardProps> = ({
     fallback = null,
     showForbiddenState = true
 }) => {
-    const { currentUser } = useAdminAuth();
+    const { currentUser, loading } = useAdminAuth();
+    
+    // Show nothing while loading (parent component should handle loading state)
+    if (loading) {
+        return <>{fallback}</>;
+    }
     
     // If no current user, show forbidden
     if (!currentUser) {
