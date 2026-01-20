@@ -146,8 +146,14 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   }, []);
 
+  // Delay theme fetch from database (load from localStorage first, then sync from DB)
   useEffect(() => {
-    fetchTheme();
+    // Delay database fetch by 500ms to let app initialize first
+    const timer = setTimeout(() => {
+      fetchTheme();
+    }, 500);
+
+    return () => clearTimeout(timer);
   }, [fetchTheme]);
 
   // Apply theme whenever it changes

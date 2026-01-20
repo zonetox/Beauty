@@ -157,8 +157,14 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
 
   }, []);
 
+  // Delay admin platform data fetch - only needed when admin page is actually viewed
   useEffect(() => {
-    fetchAllAdminData();
+    // Delay fetch by 2 seconds to avoid blocking app initialization
+    const timer = setTimeout(() => {
+      fetchAllAdminData();
+    }, 2000);
+
+    return () => clearTimeout(timer);
     // Supabase real-time subscription for new registrations
     if (isSupabaseConfigured) {
       const channel = supabase.channel('public:registration_requests')

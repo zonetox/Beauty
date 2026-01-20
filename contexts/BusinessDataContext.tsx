@@ -609,16 +609,17 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only fetch critical data on mount
 
-  // NON-CRITICAL DATA: Lazy-load after initial render (blog posts, categories, markers, packages)
+  // NON-CRITICAL DATA: Lazy-load after app initialization (blog posts, categories, markers, packages)
   useEffect(() => {
-    // Delay non-critical data fetching until after initial render
+    // Delay non-critical data fetching until after app initialization completes
+    // This prevents too many requests on app startup
     const timer = setTimeout(() => {
       fetchNonCriticalData();
-    }, 100); // Small delay to let initial render complete
+    }, 2000); // 2 seconds delay to let app initialize first
 
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Lazy-load non-critical data after render
+  }, []); // Lazy-load non-critical data after app initialization
 
   // --- BUSINESS LOGIC ---
   /**

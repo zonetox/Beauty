@@ -82,8 +82,11 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
   // Prevent double fetch in React.StrictMode (development)
   const hasFetchedRef = useRef(false);
 
-  // Fetch homepage data from database
+  // Fetch homepage data from database (delayed to avoid blocking app initialization)
   const fetchHomepageData = useCallback(async () => {
+    // Skip if already fetched
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
     // --- CACHE-FIRST: Check for cached homepage data (7-10 min cache) ---
     const cachedData = homepageCacheManager.get();
     if (cachedData !== null) {

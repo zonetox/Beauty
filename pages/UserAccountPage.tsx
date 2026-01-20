@@ -31,8 +31,13 @@ const UserAccountPage: React.FC = () => {
 
             return () => clearTimeout(timeoutId);
         }
-        // Reset timeout when loading completes
-        setLoadTimeout(false);
+    }, [loading]);
+
+    // Reset timeout when loading completes
+    useEffect(() => {
+        if (!loading) {
+            setLoadTimeout(false);
+        }
     }, [loading]);
 
     // Redirect to login if not authenticated (after loading completes)
