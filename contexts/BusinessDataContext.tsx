@@ -286,7 +286,11 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       }
     } catch (error: unknown) {
       console.error('Unexpected error fetching businesses:', error);
-      toast.error('Failed to load businesses');
+      // Don't show toast during initial load - silent fail with cache fallback
+      // Only show toast for user-initiated fetches (when page > 1 or has search options)
+      if (page > 1 || options.search || options.category || options.location) {
+        toast.error('Failed to load businesses');
+      }
     }
     setBusinessLoading(false);
   }, []);
