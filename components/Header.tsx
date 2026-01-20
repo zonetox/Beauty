@@ -8,7 +8,6 @@ import { useAuth } from '../providers/AuthProvider.tsx';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { useTheme } from '../contexts/ThemeContext.tsx';
 import { useUserRole } from '../hooks/useUserRole.ts';
-import ErrorDisplay from './ErrorDisplay.tsx';
 
 const UserIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
@@ -147,9 +146,6 @@ const Header: React.FC = () => {
 
           {/* Right side buttons - Desktop */}
           <div className="hidden md:flex items-center ml-2 gap-2">
-            {/* Error Display */}
-            <ErrorDisplay />
-            
             {/* API Status chỉ hiển thị cho admin trong development */}
             {isAdmin && (typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'development') && (
               <button onClick={handleHealthCheck} className="px-3 py-2 rounded-md text-sm font-medium text-amber-700 bg-amber-100 hover:bg-amber-200 transition-colors" title="Check Supabase Connection Status">
