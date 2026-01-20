@@ -113,9 +113,9 @@ const AccountPageRouter: React.FC = () => {
             }, 15000);
 
             return () => clearTimeout(timeoutId);
-        } else {
-            setLoadTimeout(false);
         }
+        // Reset timeout when loading completes
+        setLoadTimeout(false);
     }, [state, roleLoading]);
 
     // Loading state

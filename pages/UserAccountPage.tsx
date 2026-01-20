@@ -15,7 +15,7 @@ import { useAppInitialization } from '../contexts/AppInitializationContext.tsx';
 type AccountTab = 'profile' | 'favorites';
 
 const UserAccountPage: React.FC = () => {
-    const { currentUser, profile, loading, isFavorite, toggleFavorite } = useUserSession();
+    const { currentUser, profile, loading, isFavorite } = useUserSession();
     const { businesses } = useBusinessData();
     const navigate = useNavigate();
     const { isInitializing } = useAppInitialization();
@@ -30,9 +30,9 @@ const UserAccountPage: React.FC = () => {
             }, 10000);
 
             return () => clearTimeout(timeoutId);
-        } else {
-            setLoadTimeout(false);
         }
+        // Reset timeout when loading completes
+        setLoadTimeout(false);
     }, [loading]);
 
     // Redirect to login if not authenticated (after loading completes)
