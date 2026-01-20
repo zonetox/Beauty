@@ -25,6 +25,8 @@ function getCorsHeaders(origin: string | null) {
     'Access-Control-Allow-Origin': allowedOrigin,
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Max-Age': '86400', // Cache preflight for 24 hours
+    'Access-Control-Allow-Credentials': 'true',
   };
 }
 
@@ -47,12 +49,17 @@ function createErrorResponse(message: string, statusCode: number, origin: string
 
 // Fix: Add explicit Request type for the handler's parameter for better type safety.
 Deno.serve(async (req: Request) => {
-  const corsHeaders = getCorsHeaders(req.headers.get('origin'));
-  
-  // Handle the preflight CORS request, which is essential for browser security.
+  // Handle the preflight CORS request FIRST, before any other processing
+  // This is essential for browser security and must return 200 OK
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    const corsHeaders = getCorsHeaders(req.headers.get('origin'));
+    return new Response(null, { 
+      status: 200,
+      headers: corsHeaders 
+    });
   }
+
+  const corsHeaders = getCorsHeaders(req.headers.get('origin'));
 
   try {
     // Safely parse the JSON body from the request.
