@@ -1371,11 +1371,44 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
   };
 
   const addBlogCategory = async (name: string): Promise<void> => {
-    if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add category."); return; }
-    if (name.trim() === '' || blogCategories.some(c => c.name.toLowerCase() === name.toLowerCase())) { toast.error("Category name cannot be empty or duplicate."); return; }
-    const { error } = await supabase.from('blog_categories').insert({ name });
-    if (!error) { await refetchAllPublicData(); toast.success("Category added."); }
-    else { toast.error(`Failed to add category: ${error.message}`); }
+    if (!isSupabaseConfigured) { 
+      toast.error("Preview Mode: Cannot add category."); 
+      throw new Error("Preview Mode: Cannot add category.");
+    }
+    
+    // Validate input (should already be validated in component, but double-check)
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      toast.error("Tên danh mục không được để trống.");
+      throw new Error("Category name cannot be empty.");
+    }
+    
+    // Check for duplicate (case-insensitive, trim both sides)
+    const isDuplicate = blogCategories.some(
+      c => c.name.toLowerCase().trim() === trimmedName.toLowerCase()
+    );
+    
+    if (isDuplicate) {
+      toast.error(`Danh mục "${trimmedName}" đã tồn tại.`);
+      throw new Error("Category name is duplicate.");
+    }
+    
+    // Insert to database
+    const { error } = await supabase.from('blog_categories').insert({ name: trimmedName });
+    
+    if (error) {
+      // Handle specific database errors
+      if (error.code === '23505') { // Unique constraint violation
+        toast.error(`Danh mục "${trimmedName}" đã tồn tại trong database.`);
+      } else {
+        toast.error(`Không thể thêm danh mục: ${error.message}`);
+      }
+      throw error;
+    }
+    
+    // Success - refresh data and show success message
+    await refetchAllPublicData();
+    toast.success(`Đã thêm danh mục "${trimmedName}" thành công.`);
   };
   /**
    * Updates a blog category

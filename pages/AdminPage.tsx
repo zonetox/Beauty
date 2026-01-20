@@ -180,8 +180,37 @@ const BlogCategoryManager: React.FC<BlogCategoryManagerProps> = ({ setConfirmDia
   const { blogCategories, addBlogCategory, updateBlogCategory } = useBlogData();
   const [newCategoryName, setNewCategoryName] = useState('');
   const [editingCategory, setEditingCategory] = useState<BlogCategory | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
 
-  const handleAdd = async () => { await addBlogCategory(newCategoryName); setNewCategoryName(''); };
+  const handleAdd = async () => {
+    const trimmedName = newCategoryName.trim();
+    
+    // Client-side validation
+    if (!trimmedName) {
+      toast.error('Vui lòng nhập tên danh mục');
+      return;
+    }
+    
+    // Check for duplicate (case-insensitive)
+    const isDuplicate = blogCategories.some(
+      cat => cat.name.toLowerCase().trim() === trimmedName.toLowerCase()
+    );
+    
+    if (isDuplicate) {
+      toast.error(`Danh mục "${trimmedName}" đã tồn tại`);
+      return;
+    }
+    
+    setIsAdding(true);
+    try {
+      await addBlogCategory(trimmedName);
+      setNewCategoryName('');
+    } catch (error) {
+      console.error('Error adding category:', error);
+    } finally {
+      setIsAdding(false);
+    }
+  };
   const handleUpdate = async () => { if (editingCategory) { await updateBlogCategory(editingCategory.id, editingCategory.name); setEditingCategory(null); } };
   const handleDelete = async (id: string) => { 
     setConfirmDialog({ isOpen: true, type: 'deleteCategory', data: { id } });
@@ -191,8 +220,25 @@ const BlogCategoryManager: React.FC<BlogCategoryManagerProps> = ({ setConfirmDia
     <div className="mt-6">
       <h3 className="text-md font-semibold mb-3 text-neutral-dark">Manage Blog Categories</h3>
       <div className="flex gap-2 mb-4">
-        <input type="text" value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} placeholder="New category name" className="flex-grow w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
-        <button onClick={handleAdd} className="bg-secondary text-white px-4 py-2 rounded-md font-semibold text-sm">+ Add</button>
+        <input 
+          type="text" 
+          value={newCategoryName} 
+          onChange={(e) => setNewCategoryName(e.target.value)}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter' && !isAdding && newCategoryName.trim()) {
+              handleAdd();
+            }
+          }}
+          placeholder="Tên danh mục mới" 
+          className="flex-grow w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" 
+        />
+        <button 
+          onClick={handleAdd} 
+          disabled={isAdding || !newCategoryName.trim()}
+          className="bg-secondary text-white px-4 py-2 rounded-md font-semibold text-sm hover:bg-opacity-90 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+        >
+          {isAdding ? 'Đang thêm...' : '+ Thêm'}
+        </button>
       </div>
       <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
         {blogCategories.map(cat => (
