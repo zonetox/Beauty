@@ -1,12 +1,12 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import { MembershipTier, Business, AdminUserRole, RegistrationRequest, AdminUser, BlogPost, MembershipPackage, BusinessCategory, Order, OrderStatus, StaffMemberRole, BlogCategory, AppSettings, AdminPageTab } from '../types.ts';
+import { MembershipTier, Business, AdminUser, BlogPost, MembershipPackage, BusinessCategory, OrderStatus, BlogCategory, AdminPageTab } from '../types.ts';
 import { useBusinessData, useBlogData, useMembershipPackageData } from '../contexts/BusinessDataContext.tsx';
 import { useAdminAuth } from '../contexts/AdminContext.tsx';
-import { useOrderData, useBusinessBlogData } from '../contexts/BusinessBlogDataContext.tsx';
-import { useSettings, useAdminPlatform, usePageContent } from '../contexts/AdminPlatformContext.tsx';
+import { useOrderData } from '../contexts/BusinessBlogDataContext.tsx';
+import { useAdminPlatform } from '../contexts/AdminPlatformContext.tsx';
 import ConfirmDialog from '../components/ConfirmDialog.tsx';
 
 // Reusable Components
@@ -66,6 +66,10 @@ const AIBlogIdeaGenerator: React.FC = () => {
       });
 
       const text = response.text;
+      if (!text) {
+        setError('No response from AI. Please try again.');
+        return;
+      }
       const generatedIdeas = text.split('\n').filter(line => line.match(/^\d+\./)).map(line => line.replace(/^\d+\.\s*/, ''));
       setIdeas(generatedIdeas);
     } catch (e) {
@@ -135,12 +139,11 @@ interface ConfirmDialogState {
 }
 
 interface BlogCategoryManagerProps {
-  confirmDialog: ConfirmDialogState;
   setConfirmDialog: (dialog: ConfirmDialogState) => void;
   onCategoryDeleted?: () => void;
 }
 
-const BlogCategoryManager: React.FC<BlogCategoryManagerProps> = ({ confirmDialog, setConfirmDialog }) => {
+const BlogCategoryManager: React.FC<BlogCategoryManagerProps> = ({ setConfirmDialog }) => {
   const { blogCategories, addBlogCategory, updateBlogCategory } = useBlogData();
   const [newCategoryName, setNewCategoryName] = useState('');
   const [editingCategory, setEditingCategory] = useState<BlogCategory | null>(null);
@@ -182,10 +185,9 @@ const AdminPage: React.FC = () => {
   const { businesses, loading: businessesLoading, updateBusiness, addBusiness, deleteBusiness } = useBusinessData();
   const { adminUsers, addAdminUser, updateAdminUser, deleteAdminUser, currentUser, adminLogout, loading: authLoading } = useAdminAuth();
 
-  const { blogPosts, loading: blogLoading, addBlogPost, updateBlogPost, deleteBlogPost, blogCategories, addBlogCategory, updateBlogCategory, deleteBlogCategory } = useBlogData();
+  const { blogPosts, loading: blogLoading, addBlogPost, updateBlogPost, deleteBlogPost, deleteBlogCategory } = useBlogData();
   const { packages, addPackage, updatePackage, deletePackage } = useMembershipPackageData();
-  const { orders, loading: ordersLoading, addOrder, updateOrderStatus } = useOrderData();
-  const { posts: businessBlogPosts, updatePost: updateBusinessBlogPost } = useBusinessBlogData();
+  const { orders, loading: ordersLoading, updateOrderStatus } = useOrderData();
   const { addNotification, registrationRequests, approveRegistrationRequest, rejectRegistrationRequest } = useAdminPlatform();
 
   const [activeTab, setActiveTab] = useState<AdminPageTab>('dashboard');
@@ -208,7 +210,16 @@ const AdminPage: React.FC = () => {
   const filteredOrders = useMemo(() => { if (orderStatusFilter === 'all') return orders; return orders.filter(o => o.status === orderStatusFilter); }, [orders, orderStatusFilter]);
 
   const handleSaveBusiness = async (businessToSave: Business) => { if (businessToSave.id === 0) { const slug = businessToSave.name.toLowerCase().replace(/\s+/g, '-') + `-${Date.now()}`; await addBusiness({ ...businessToSave, slug }); } else { await updateBusiness(businessToSave); } setEditingBusiness(null); };
-  const handleSavePost = async (postToSave: BlogPost) => { if (postToSave.id === 0) { const { id, slug, date, viewCount, ...newPostData } = postToSave; await addBlogPost(newPostData); } else { await updateBlogPost(postToSave); } setEditingPost(null); };
+  const handleSavePost = async (postToSave: BlogPost) => { 
+    if (postToSave.id === 0) { 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { id, slug, date, viewCount, ...newPostData } = postToSave; 
+      await addBlogPost(newPostData); 
+    } else { 
+      await updateBlogPost(postToSave); 
+    } 
+    setEditingPost(null); 
+  };
   const handleDeletePost = async (postId: number) => { 
     setConfirmDialog({ isOpen: true, type: 'deletePost', data: { id: postId } });
   };
@@ -220,9 +231,7 @@ const AdminPage: React.FC = () => {
     setConfirmDialog({ isOpen: false, type: null });
   };
 
-  const handleDeleteCategory = async (id: string) => {
-    setConfirmDialog({ isOpen: true, type: 'deleteCategory', data: { id } });
-  };
+  // handleDeleteCategory removed - not used in current implementation
 
   /**
    * Confirms and executes category deletion
@@ -255,13 +264,15 @@ const AdminPage: React.FC = () => {
       return;
     }
     
-    const businessToDuplicate = businesses.find(b => b.name === confirmDialog.data.name);
+    const businessName = confirmDialog.data.name;
+    const businessToDuplicate = businesses.find(b => b.name === businessName);
     if (!businessToDuplicate) {
       setConfirmDialog({ isOpen: false, type: null });
       return;
     }
 
     setConfirmDialog({ isOpen: false, type: null });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id, slug, name, ...rest } = businessToDuplicate;
     const newName = `${name} (Copy)`;
     const newSlug = newName.toLowerCase().replace(/\s+/g, '-') + `-${Date.now()}`;
@@ -311,7 +322,8 @@ const AdminPage: React.FC = () => {
       return;
     }
 
-    const request = registrationRequests.find(r => r.id === confirmDialog.data.requestId);
+    const requestId = confirmDialog.data.requestId;
+    const request = registrationRequests.find(r => r.id === requestId);
     if (!request) {
       toast.error('Registration request not found.');
       setConfirmDialog({ isOpen: false, type: null });
@@ -319,7 +331,7 @@ const AdminPage: React.FC = () => {
     }
 
     setConfirmDialog({ isOpen: false, type: null });
-    const rejectionPromise = rejectRegistrationRequest(confirmDialog.data.requestId).then(() => {
+    const rejectionPromise = rejectRegistrationRequest(requestId).then(() => {
       addNotification(request.email, 'Your Registration Update', `We regret to inform you that your registration for ${request.businessName} has been rejected at this time.`);
     });
 
@@ -334,7 +346,17 @@ const AdminPage: React.FC = () => {
   const handleRejectOrder = (orderId: string) => { updateOrderStatus(orderId, OrderStatus.REJECTED, 'Payment rejected by admin.'); };
   const handleOpenUserModal = (user: AdminUser | null) => { setEditingUser(user); setIsUserModalOpen(true); };
   const handleCloseUserModal = () => { setEditingUser(null); setIsUserModalOpen(false); };
-  const handleSaveUser = (user: AdminUser) => { if (user.id) { const { password, ...updates } = user; updateAdminUser(user.id, updates); } else { addAdminUser(user as any); } handleCloseUserModal(); };
+  const handleSaveUser = (user: AdminUser) => { 
+    if (user.id) { 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password, ...updates } = user; 
+      updateAdminUser(user.id, updates); 
+    } else { 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      addAdminUser(user as any); 
+    } 
+    handleCloseUserModal(); 
+  };
   const handleDeleteUser = (userId: number) => { 
     if (userId === currentUser?.id) { 
       toast.error("Cannot delete self."); 
@@ -508,7 +530,7 @@ const AdminPage: React.FC = () => {
             <h2 className="text-xl font-semibold mb-4">Order Management</h2>
             <div className="flex items-center gap-4 mb-4">
               <label>Filter:</label>
-              <select value={orderStatusFilter} onChange={e => setOrderStatusFilter(e.target.value as any)} className="p-2 border rounded-md">
+              <select value={orderStatusFilter} onChange={e => setOrderStatusFilter(e.target.value as OrderStatus | 'all')} className="p-2 border rounded-md">
                 <option value="all">All</option>
                 {Object.values(OrderStatus).map(s => <option key={s} value={s}>{s}</option>)}
               </select>
@@ -526,7 +548,7 @@ const AdminPage: React.FC = () => {
             </div>
             {blogLoading ? <p>Loading posts...</p> : <BlogManagementTable posts={blogPosts} onEdit={setEditingPost} onDelete={handleDeletePost} onUpdate={updateBlogPost} />}
             <AIBlogIdeaGenerator />
-            <BlogCategoryManager confirmDialog={confirmDialog} setConfirmDialog={setConfirmDialog} />
+            <BlogCategoryManager setConfirmDialog={setConfirmDialog} />
           </div>
         </PermissionGuard>
       );

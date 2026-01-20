@@ -80,7 +80,6 @@ export const ErrorLoggerProvider: React.FC<{ children: ReactNode }> = ({ childre
   const originalConsoleRef = useRef<{
     error: typeof console.error;
     warn: typeof console.warn;
-    info: typeof console.info;
   } | null>(null);
   
   // Flag để tránh vòng lặp khi log từ interceptor
@@ -102,7 +101,7 @@ export const ErrorLoggerProvider: React.FC<{ children: ReactNode }> = ({ childre
         }
         
         // Convert timestamp strings back to Date objects
-        const errorsWithDates = parsed.map((e: any) => ({
+        const errorsWithDates = parsed.map((e: ErrorLog) => ({
           ...e,
           timestamp: new Date(e.timestamp)
         }));
@@ -162,14 +161,14 @@ export const ErrorLoggerProvider: React.FC<{ children: ReactNode }> = ({ childre
     // Sử dụng original console functions để tránh vòng lặp vô hạn
     const originalError = originalConsoleRef.current?.error || console.error;
     const originalWarn = originalConsoleRef.current?.warn || console.warn;
-    const originalInfo = originalConsoleRef.current?.info || console.info;
     
     if (severity === 'error') {
       originalError.call(console, `[${source || 'App'}]`, error);
     } else if (severity === 'warning') {
       originalWarn.call(console, `[${source || 'App'}]`, error);
     } else {
-      originalInfo.call(console, `[${source || 'App'}]`, error);
+      // Info severity - use warn instead of info (console.info not allowed)
+      originalWarn.call(console, `[${source || 'App'}]`, error);
     }
   }, []);
 
@@ -210,14 +209,15 @@ export const ErrorLoggerProvider: React.FC<{ children: ReactNode }> = ({ childre
       originalConsoleRef.current = {
         error: console.error.bind(console),
         warn: console.warn.bind(console),
-        info: console.info.bind(console),
       };
     }
+
+    if (!originalConsoleRef.current) return; // Safety check
 
     const originalError = originalConsoleRef.current.error;
     const originalWarn = originalConsoleRef.current.warn;
 
-    console.error = (...args: any[]) => {
+    console.error = (...args: unknown[]) => {
       originalError.apply(console, args);
       if (!isLoggingRef.current) {
         isLoggingRef.current = true;
@@ -235,7 +235,7 @@ export const ErrorLoggerProvider: React.FC<{ children: ReactNode }> = ({ childre
       }
     };
 
-    console.warn = (...args: any[]) => {
+    console.warn = (...args: unknown[]) => {
       originalWarn.apply(console, args);
       if (!isLoggingRef.current) {
         isLoggingRef.current = true;

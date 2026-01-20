@@ -14,10 +14,12 @@ const LoginPage: React.FC = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const { login, profile, user, state } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+    
+    // Get auth context - must be called unconditionally (React Hook rules)
+    const { login, profile, user, state } = useAuth();
 
     // If user is already logged in, redirect based on resolved role
     useEffect(() => {
@@ -27,15 +29,23 @@ const LoginPage: React.FC = () => {
         if (user && profile) {
             const resolveAndRedirect = async () => {
                 try {
-                    const roleResult = await resolveUserRole(user);
+                    // Add timeout to prevent hanging
+                    const timeoutPromise = new Promise<never>((_, reject) => {
+                        setTimeout(() => reject(new Error('Role resolution timeout')), 8000);
+                    });
+                    
+                    const roleResult = await Promise.race([
+                        resolveUserRole(user),
+                        timeoutPromise
+                    ]);
                     
                     if (roleResult.error) {
                         // Role resolution failed - show error but allow login
                         console.error('Role resolution error:', roleResult.error);
                     }
 
-                    const state = location.state as { from?: { pathname?: string } } | null;
-                    const from = state?.from?.pathname;
+                    const locationState = location.state as { from?: { pathname?: string } } | null;
+                    const from = locationState?.from?.pathname;
 
                     // Route based on resolved role - NO DEFAULT HOMEPAGE REDIRECT
                     if (roleResult.error) {
@@ -66,8 +76,13 @@ const LoginPage: React.FC = () => {
                     }
                 } catch (err) {
                     console.error('Error resolving role:', err);
-                    // Fallback to homepage
-                    navigate('/', { replace: true });
+                    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+                    if (errorMessage.includes('timeout')) {
+                        setError('Xác minh quyền hạn mất quá nhiều thời gian. Vui lòng thử lại.');
+                    } else {
+                        // Fallback to homepage on error
+                        navigate('/', { replace: true });
+                    }
                 }
             };
 
@@ -84,13 +99,23 @@ const LoginPage: React.FC = () => {
         e.preventDefault();
         setError('');
         setIsLoading(true);
+        
         try {
             await login(email, password);
             // Auth state will update via subscription
             // useEffect above will handle redirect based on user type
         } catch (err) {
             if (err instanceof Error) {
-                setError(err.message);
+                // Translate common error messages to Vietnamese
+                let errorMessage = err.message;
+                if (errorMessage.includes('Invalid login credentials')) {
+                    errorMessage = 'Email hoặc mật khẩu không đúng.';
+                } else if (errorMessage.includes('Email not confirmed')) {
+                    errorMessage = 'Email chưa được xác nhận. Vui lòng kiểm tra hộp thư.';
+                } else if (errorMessage.includes('Too many requests')) {
+                    errorMessage = 'Quá nhiều lần thử. Vui lòng đợi một lát rồi thử lại.';
+                }
+                setError(errorMessage);
             } else {
                 setError('Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.');
             }
