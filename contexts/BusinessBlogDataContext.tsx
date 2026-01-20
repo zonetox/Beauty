@@ -50,7 +50,7 @@ const APPOINTMENTS_STORAGE_KEY = 'all_appointments';
  * @param obj - The object to convert
  * @returns The object with snake_case keys
  */
-const toSnakeCase = <T>(obj: T): T => {
+const toSnakeCase = <T,>(obj: T): T => {
   if (typeof obj !== 'object' || obj === null) return obj;
   if (Array.isArray(obj)) return obj.map(toSnakeCase) as T;
   return Object.keys(obj as Record<string, unknown>).reduce((acc, key: string) => {

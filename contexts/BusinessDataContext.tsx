@@ -82,7 +82,7 @@ const COMMENTS_LOCAL_STORAGE_KEY = 'blog_comments';
  * @param obj - The object to convert
  * @returns The object with snake_case keys
  */
-const toSnakeCase = <T>(obj: T): T => {
+const toSnakeCase = <T,>(obj: T): T => {
   if (typeof obj !== 'object' || obj === null) return obj;
   if (Array.isArray(obj)) return obj.map(toSnakeCase) as T;
   return Object.keys(obj as Record<string, unknown>).reduce((acc, key: string) => {
@@ -416,7 +416,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
        * @param timeoutMs - Timeout in milliseconds
        * @returns The query result
        */
-      const measureQuery = async <T>(name: string, queryPromise: Promise<T>, timeoutMs: number): Promise<T> => {
+      const measureQuery = async <T,>(name: string, queryPromise: Promise<T>, timeoutMs: number): Promise<T> => {
         const startTime = performance.now();
         try {
           const result = await Promise.race([queryPromise, createTimeoutPromise(timeoutMs, `${name} timeout`)]);

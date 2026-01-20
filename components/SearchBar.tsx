@@ -13,7 +13,7 @@ interface SearchBarProps {
 
 // Custom hook to debounce a value. It's particularly useful for preventing
 // search queries from firing on every keystroke in the keyword input.
-function useDebounce<T>(value: T, delay: number): T {
+function useDebounce<T,>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
   useEffect(() => {
