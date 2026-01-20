@@ -44,15 +44,21 @@ const BusinessDashboardContext = createContext<BusinessDashboardContextType | un
 // --- LOCAL STORAGE KEYS ---
 const APPOINTMENTS_STORAGE_KEY = 'all_appointments';
 
-// FIX: Add missing 'toSnakeCase' helper function to convert object keys for Supabase.
-const toSnakeCase = (obj: any): any => {
+/**
+ * Helper to convert JS object keys from camelCase to snake_case for Supabase write operations.
+ * @template T - The type of the input object
+ * @param obj - The object to convert
+ * @returns The object with snake_case keys
+ */
+const toSnakeCase = <T>(obj: T): T => {
   if (typeof obj !== 'object' || obj === null) return obj;
-  if (Array.isArray(obj)) return obj.map(toSnakeCase);
-  return Object.keys(obj).reduce((acc: any, key: string) => {
+  if (Array.isArray(obj)) return obj.map(toSnakeCase) as T;
+  return Object.keys(obj as Record<string, unknown>).reduce((acc, key: string) => {
     const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-    acc[snakeKey] = toSnakeCase(obj[key]);
+    const value = (obj as Record<string, unknown>)[key];
+    (acc as Record<string, unknown>)[snakeKey] = toSnakeCase(value);
     return acc;
-  }, {});
+  }, {} as T);
 };
 
 export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ children }) => {

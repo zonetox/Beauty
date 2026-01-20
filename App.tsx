@@ -3,6 +3,7 @@
 import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Outlet } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { QueryClientProvider } from '@tanstack/react-query';
 
 import Header from './components/Header.tsx';
 import Footer from './components/Footer.tsx';
@@ -24,6 +25,7 @@ import { PublicPageContentProvider } from './contexts/PublicPageContentContext.t
 import { ErrorLoggerProvider } from './contexts/ErrorLoggerContext.tsx';
 import { StaffProvider } from './contexts/StaffContext.tsx';
 import AuthLoadingScreen from './components/AuthLoadingScreen.tsx';
+import { queryClient } from './lib/queryClient.ts';
 
 import { BusinessProvider } from './contexts/BusinessContext.tsx';
 import { useWebVitals } from './hooks/usePerformanceMonitoring.ts';
@@ -261,16 +263,18 @@ const AppContent: React.FC = () => {
 const App: React.FC = () => {
     return (
         <ErrorBoundary>
-            <Router>
-                <WebVitalsTracker />
-                <PageTracking />
-                <Toaster position="top-center" reverseOrder={false} />
-                <AuthProvider>
-                    <AuthGate>
-                        <AppContent />
-                    </AuthGate>
-                </AuthProvider>
-            </Router>
+            <QueryClientProvider client={queryClient}>
+                <Router>
+                    <WebVitalsTracker />
+                    <PageTracking />
+                    <Toaster position="top-center" reverseOrder={false} />
+                    <AuthProvider>
+                        <AuthGate>
+                            <AppContent />
+                        </AuthGate>
+                    </AuthProvider>
+                </Router>
+            </QueryClientProvider>
         </ErrorBoundary>
     );
 };

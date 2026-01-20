@@ -256,7 +256,12 @@ const BlogManager: React.FC = () => {
         setShowSEOSection(false);
     };
 
-    const handleFieldChange = (field: string, value: any) => {
+    /**
+     * Handles field changes in the blog post form
+     * @param field - The field name to update
+     * @param value - The new value for the field
+     */
+    const handleFieldChange = (field: string, value: unknown): void => {
         setEditingPost(prev => ({
             ...prev,
             [field]: value

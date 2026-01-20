@@ -24,8 +24,9 @@ const AdminLoginPage: React.FC = () => {
             // The onAuthStateChange listener in the context will handle redirection
             // but we can navigate optimistically.
             navigate('/admin');
-        } catch (err: any) {
-            setError(err.message || 'An unexpected error occurred.');
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred.';
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }

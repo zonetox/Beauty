@@ -377,8 +377,10 @@ export interface AdminUser {
 
 // AuthenticatedAdmin extends AdminUser with auth user
 // Note: authUser type is from Supabase Auth, using any to avoid circular dependency
+import type { User as SupabaseUser } from '@supabase/supabase-js';
+
 export interface AuthenticatedAdmin extends AdminUser {
-  authUser: any; // Supabase User type from @supabase/supabase-js
+  authUser: SupabaseUser; // Supabase User type from @supabase/supabase-js
 }
 
 export interface Profile {

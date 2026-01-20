@@ -51,9 +51,10 @@ const Header: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 300));
       navigate('/', { replace: true });
       toast.success('Đã đăng xuất thành công');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Logout error:', error);
-      toast.error('Lỗi khi đăng xuất: ' + (error.message || 'Vui lòng thử lại'));
+      const errorMessage = error instanceof Error ? error.message : 'Vui lòng thử lại';
+      toast.error('Lỗi khi đăng xuất: ' + errorMessage);
     }
   };
 

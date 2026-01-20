@@ -44,8 +44,9 @@ const AdminProtectedRoute: React.FC<AdminProtectedRouteProps> = ({ children }) =
                 }
                 
                 setIsAdmin(isAdmin);
-            } catch (err: any) {
-                setError(`Admin verification failed: ${err.message}`);
+            } catch (err: unknown) {
+                const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+                setError(`Admin verification failed: ${errorMessage}`);
                 setIsAdmin(false);
             }
         };

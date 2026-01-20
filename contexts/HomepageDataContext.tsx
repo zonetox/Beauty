@@ -1,8 +1,9 @@
 // D2.1 FIX: Move hero slides from localStorage to database (page_content table)
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback, useRef } from 'react';
-import { HomepageData } from '../types.ts';
+import { HomepageData, HomepageSection } from '../types.ts';
 import { DEFAULT_HOMEPAGE_DATA } from '../constants.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
+import { CacheManager, createContextCache } from '../lib/cacheManager.ts';
 
 interface HomepageDataContextType {
   homepageData: HomepageData;
@@ -13,6 +14,7 @@ interface HomepageDataContextType {
 const HomepageDataContext = createContext<HomepageDataContextType | undefined>(undefined);
 
 const LOCAL_STORAGE_KEY = 'homepage_content'; // Keep for cache/fallback only
+const homepageCacheManager = createContextCache.homepage();
 
 export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // Initialize with cached data immediately if available, otherwise use default
@@ -26,11 +28,11 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
           const defaultSections = DEFAULT_HOMEPAGE_DATA.sections;
           let finalSections = savedData.sections || [];
           defaultSections.forEach(defaultSection => {
-            if (!finalSections.find((s: any) => s.type === defaultSection.type)) {
+            if (!finalSections.find((s: HomepageSection) => s.type === defaultSection.type)) {
               finalSections.push(defaultSection);
             }
           });
-          finalSections = finalSections.map((section: any) => {
+          finalSections = finalSections.map((section: HomepageSection) => {
             const defaultMatch = defaultSections.find(s => s.type === section.type);
             return { ...defaultMatch, ...section };
           });
@@ -52,11 +54,11 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
           const defaultSections = DEFAULT_HOMEPAGE_DATA.sections;
           let finalSections = savedData.sections || [];
           defaultSections.forEach(defaultSection => {
-            if (!finalSections.find((s: any) => s.type === defaultSection.type)) {
+            if (!finalSections.find((s: HomepageSection) => s.type === defaultSection.type)) {
               finalSections.push(defaultSection);
             }
           });
-          finalSections = finalSections.map((section: any) => {
+          finalSections = finalSections.map((section: HomepageSection) => {
             const defaultMatch = defaultSections.find(s => s.type === section.type);
             return { ...defaultMatch, ...section };
           });
@@ -82,6 +84,15 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   // Fetch homepage data from database
   const fetchHomepageData = useCallback(async () => {
+    // --- CACHE-FIRST: Check for cached homepage data (7-10 min cache) ---
+    const cachedData = homepageCacheManager.get();
+    if (cachedData !== null) {
+      console.log('✓ Using cached homepage data');
+      setHomepageData(cachedData as HomepageData);
+      setLoading(false);
+      return;
+    }
+
     if (!isSupabaseConfigured) {
       // Fallback to localStorage if Supabase not configured
       try {
@@ -91,11 +102,11 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
           const defaultSections = DEFAULT_HOMEPAGE_DATA.sections;
           let finalSections = savedData.sections || [];
           defaultSections.forEach(defaultSection => {
-            if (!finalSections.find((s: any) => s.type === defaultSection.type)) {
+            if (!finalSections.find((s: HomepageSection) => s.type === defaultSection.type)) {
               finalSections.push(defaultSection);
             }
           });
-          finalSections = finalSections.map((section: any) => {
+          finalSections = finalSections.map((section: HomepageSection) => {
             const defaultMatch = defaultSections.find(s => s.type === section.type);
             return { ...defaultMatch, ...section };
           });
@@ -138,8 +149,11 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
         }
         data = result.data;
         error = result.error;
-      } catch (timeoutError: any) {
-        if (timeoutError.message?.includes('timeout')) {
+      } catch (timeoutError: unknown) {
+        const errorMessage = timeoutError instanceof Error 
+          ? timeoutError.message 
+          : String(timeoutError);
+        if (errorMessage.includes('timeout')) {
           // Silent timeout - has fallback to cache/default data
           error = { code: 'TIMEOUT', message: 'Query timeout' };
         } else {
@@ -156,11 +170,11 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
           const defaultSections = DEFAULT_HOMEPAGE_DATA.sections;
           let finalSections = savedData.sections || [];
           defaultSections.forEach(defaultSection => {
-            if (!finalSections.find((s: any) => s.type === defaultSection.type)) {
+            if (!finalSections.find((s: HomepageSection) => s.type === defaultSection.type)) {
               finalSections.push(defaultSection);
             }
           });
-          finalSections = finalSections.map((section: any) => {
+          finalSections = finalSections.map((section: HomepageSection) => {
             const defaultMatch = defaultSections.find(s => s.type === section.type);
             return { ...defaultMatch, ...section };
           });
@@ -223,6 +237,8 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
           sections: finalSections,
         };
         setHomepageData(mergedData);
+        // Cache in CacheManager (7-10 min TTL)
+        homepageCacheManager.set(mergedData);
         // Cache in localStorage for offline/fallback
         try {
           localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mergedData));
@@ -232,9 +248,10 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
       } else {
         setHomepageData(DEFAULT_HOMEPAGE_DATA);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Only log unhandled exceptions (not timeouts with fallbacks)
-      if (!error?.message?.includes('timeout') && !error?.message?.includes('Timeout')) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (!errorMessage.includes('timeout') && !errorMessage.includes('Timeout')) {
         console.error('Error in fetchHomepageData (unhandled exception):', error);
       }
       setHomepageData(DEFAULT_HOMEPAGE_DATA);
@@ -270,7 +287,7 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
         .from('page_content')
         .upsert({
           page_name: 'homepage',
-          content_data: newData as any,
+          content_data: newData as Record<string, unknown>,
         }, {
           onConflict: 'page_name',
         });

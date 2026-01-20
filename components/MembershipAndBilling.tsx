@@ -201,8 +201,19 @@ const MembershipAndBilling: React.FC = () => {
         { key: 'permissions.featuredLevel', label: 'Featured Level' },
     ];
     
-    const getNestedValue = (obj: MembershipPackage, path: string): any => {
-        return path.split('.').reduce((o, k) => (o && o[k] !== undefined ? o[k] : undefined), obj as any);
+    /**
+     * Gets a nested value from an object using dot notation path
+     * @param obj - The object to get value from
+     * @param path - Dot notation path (e.g., 'permissions.featuredLevel')
+     * @returns The value at the path or undefined
+     */
+    const getNestedValue = (obj: MembershipPackage, path: string): unknown => {
+        return path.split('.').reduce((o, k) => {
+            if (o && typeof o === 'object' && k in o) {
+                return (o as Record<string, unknown>)[k];
+            }
+            return undefined;
+        }, obj as unknown);
     };
 
     const formatFeaturedLevel = (level: number) => {
@@ -211,7 +222,13 @@ const MembershipAndBilling: React.FC = () => {
         return 'Standard';
     };
 
-    const renderPermission = (value: any, key: string) => {
+    /**
+     * Renders a permission value with appropriate formatting
+     * @param value - The permission value to render
+     * @param key - The permission key
+     * @returns React element representing the permission
+     */
+    const renderPermission = (value: unknown, key: string): React.ReactNode => {
         if (key.endsWith('featuredLevel')) {
             return <span className="font-semibold">{formatFeaturedLevel(value)}</span>;
         }

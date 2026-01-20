@@ -38,15 +38,15 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
     
     const fetchBlogPosts = async () => {
       setLoading(true);
-      // PHASE 3: Optimize query - select only needed columns
+      // OPTIMIZE: Blog list doesn't need full content, only excerpt
       const { data, error } = await supabase.from('blog_posts')
-        .select('id, slug, title, image_url, excerpt, author, date, category, content, view_count')
+        .select('id, slug, title, image_url, excerpt, author, date, category, view_count')
         .order('date', { ascending: false });
       if (error) {
         console.error("Error fetching blog posts:", error);
       } else if (data && !cancelled) {
         // Map snake_case to camelCase
-        setBlogPosts(data.map((post: any) => ({
+        setBlogPosts(data.map((post) => ({
           id: post.id,
           slug: post.slug,
           title: post.title,

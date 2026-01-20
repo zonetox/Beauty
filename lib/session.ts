@@ -83,7 +83,7 @@ export async function getUserProfile(userId: string) {
     }
 
     return { data, error: null };
-  } catch (error: any) {
-    return { data: null, error };
+  } catch (error: unknown) {
+    return { data: null, error: error instanceof Error ? error : new Error(String(error)) };
   }
 }

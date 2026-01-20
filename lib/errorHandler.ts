@@ -8,7 +8,7 @@ export interface StandardError {
   error: string;
   code?: string;
   statusCode?: number;
-  details?: any;
+  details?: unknown;
 }
 
 /**
@@ -28,23 +28,73 @@ export enum ErrorCode {
 }
 
 /**
+ * Type guard to check if error is in StandardError format
+ */
+function isStandardError(error: unknown): error is StandardError {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'error' in error &&
+    'code' in error
+  );
+}
+
+/**
+ * Type guard to check if error has a message property
+ */
+function hasMessage(error: unknown): error is { message: string } {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof (error as { message: unknown }).message === 'string'
+  );
+}
+
+/**
+ * Type guard to check if error has a code property
+ */
+function hasCode(error: unknown): error is { code: string } {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    typeof (error as { code: unknown }).code === 'string'
+  );
+}
+
+/**
+ * Type guard to check if error has a status property
+ */
+function hasStatus(error: unknown): error is { status: number } {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'status' in error &&
+    typeof (error as { status: unknown }).status === 'number'
+  );
+}
+
+/**
  * Standardized error handler for Supabase errors
  * Maps Supabase error codes to standardized error format
  */
-export function handleSupabaseError(error: any): StandardError {
+export function handleSupabaseError(error: unknown): StandardError {
   // If error is already in StandardError format, return as-is
-  if (error && typeof error === 'object' && 'error' in error && 'code' in error) {
-    return error as StandardError;
+  if (isStandardError(error)) {
+    return error;
   }
 
   // Extract error message
-  const message = error?.message || error?.error || 'An error occurred';
+  const message = hasMessage(error) 
+    ? error.message 
+    : (typeof error === 'string' ? error : 'An error occurred');
   
   // Map Supabase error codes
   let code: string = ErrorCode.INTERNAL_ERROR;
   let statusCode: number = 500;
   
-  if (error?.code) {
+  if (hasCode(error)) {
     switch (error.code) {
       case 'PGRST116':
         code = ErrorCode.NOT_FOUND;
@@ -66,7 +116,7 @@ export function handleSupabaseError(error: any): StandardError {
   }
   
   // Check for HTTP status in error response
-  if (error?.status) {
+  if (hasStatus(error)) {
     statusCode = error.status;
   }
   
@@ -80,11 +130,23 @@ export function handleSupabaseError(error: any): StandardError {
     code = ErrorCode.INTERNAL_ERROR;
   }
   
+  // Extract details if available
+  const details = 
+    typeof error === 'object' && 
+    error !== null && 
+    'details' in error 
+      ? (error as { details: unknown }).details
+      : (typeof error === 'object' && 
+         error !== null && 
+         'hint' in error 
+           ? (error as { hint: unknown }).hint
+           : undefined);
+
   return {
     error: message,
     code,
     statusCode,
-    details: error?.details || error?.hint || undefined,
+    details,
   };
 }
 
@@ -96,7 +158,7 @@ export function createErrorResponse(
   message: string,
   statusCode: number = 400,
   code?: string,
-  details?: any
+  details?: unknown
 ): Response {
   const errorResponse: StandardError = {
     error: message,
@@ -144,8 +206,8 @@ const USER_FRIENDLY_MESSAGES: Record<string, string> = {
 /**
  * Get user-friendly error message
  */
-export function getUserFriendlyMessage(error: StandardError | any): string {
-  const standardError = 'error' in error ? error : handleSupabaseError(error);
+export function getUserFriendlyMessage(error: StandardError | unknown): string {
+  const standardError = isStandardError(error) ? error : handleSupabaseError(error);
   
   // Prefer user-friendly message, fallback to original message
   if (standardError.code && USER_FRIENDLY_MESSAGES[standardError.code]) {
@@ -153,4 +215,39 @@ export function getUserFriendlyMessage(error: StandardError | any): string {
   }
   
   return standardError.error || 'An error occurred';
+}
+
+/**
+ * Async operation wrapper with error handling and retry logic
+ */
+export async function withErrorHandling<T>(
+  operation: () => Promise<T>,
+  options?: {
+    retries?: number;
+    retryDelay?: number;
+    onError?: (error: Error) => void;
+  }
+): Promise<T | null> {
+  const { retries = 0, retryDelay = 1000, onError } = options || {};
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      
+      if (attempt < retries) {
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, retryDelay * (attempt + 1)));
+        continue;
+      }
+      
+      // All retries exhausted
+      onError?.(lastError);
+      return null;
+    }
+  }
+
+  return null;
 }

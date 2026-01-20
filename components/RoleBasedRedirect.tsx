@@ -75,7 +75,8 @@ const RoleBasedRedirect: React.FC<RoleBasedRedirectProps> = ({
             navigate('/', { replace: true });
           }
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
+        console.error('Error resolving user role:', err);
         setRole('error');
         setError(`Role resolution failed: ${err.message}`);
       }

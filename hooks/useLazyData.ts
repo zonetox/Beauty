@@ -99,7 +99,7 @@ export function useLazyData() {
 
     // Cache the result
     if (posts.length > 0 || categories.length > 0) {
-      cacheManager.set(CACHE_KEYS.BLOG_HOMEPAGE, { posts, categories }, CACHE_TTL.BLOG);
+      cacheManager.set(CACHE_KEYS.BLOG_HOMEPAGE, { posts, categories }, CACHE_TTL.BLOG_POSTS);
     }
 
     setState(prev => ({

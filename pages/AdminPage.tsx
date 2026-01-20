@@ -111,8 +111,37 @@ const AccessDenied: React.FC<{ requiredRole: string }> = ({ requiredRole }) => (
   </div>
 );
 
-const BlogCategoryManager: React.FC = () => {
-  const { blogCategories, addBlogCategory, updateBlogCategory, deleteBlogCategory } = useBlogData();
+type ConfirmDialogType = 
+  | 'deleteCategory' 
+  | 'deletePost' 
+  | 'duplicateBusiness' 
+  | 'rejectRequest' 
+  | 'deleteUser' 
+  | 'deletePackage' 
+  | null;
+
+interface ConfirmDialogData {
+  id?: string | number;
+  name?: string;
+  requestId?: string;
+  userId?: number;
+  packageId?: string;
+}
+
+interface ConfirmDialogState {
+  isOpen: boolean;
+  type: ConfirmDialogType;
+  data?: ConfirmDialogData;
+}
+
+interface BlogCategoryManagerProps {
+  confirmDialog: ConfirmDialogState;
+  setConfirmDialog: (dialog: ConfirmDialogState) => void;
+  onCategoryDeleted?: () => void;
+}
+
+const BlogCategoryManager: React.FC<BlogCategoryManagerProps> = ({ confirmDialog, setConfirmDialog }) => {
+  const { blogCategories, addBlogCategory, updateBlogCategory } = useBlogData();
   const [newCategoryName, setNewCategoryName] = useState('');
   const [editingCategory, setEditingCategory] = useState<BlogCategory | null>(null);
 
@@ -120,13 +149,6 @@ const BlogCategoryManager: React.FC = () => {
   const handleUpdate = async () => { if (editingCategory) { await updateBlogCategory(editingCategory.id, editingCategory.name); setEditingCategory(null); } };
   const handleDelete = async (id: string) => { 
     setConfirmDialog({ isOpen: true, type: 'deleteCategory', data: { id } });
-  };
-
-  const confirmDeleteCategory = async () => {
-    if (confirmDialog.type === 'deleteCategory' && confirmDialog.data?.id) {
-      await deleteBlogCategory(confirmDialog.data.id as string);
-    }
-    setConfirmDialog({ isOpen: false, type: null });
   };
 
   return (
@@ -160,7 +182,7 @@ const AdminPage: React.FC = () => {
   const { businesses, loading: businessesLoading, updateBusiness, addBusiness, deleteBusiness } = useBusinessData();
   const { adminUsers, addAdminUser, updateAdminUser, deleteAdminUser, currentUser, adminLogout, loading: authLoading } = useAdminAuth();
 
-  const { blogPosts, loading: blogLoading, addBlogPost, updateBlogPost, deleteBlogPost } = useBlogData();
+  const { blogPosts, loading: blogLoading, addBlogPost, updateBlogPost, deleteBlogPost, blogCategories, addBlogCategory, updateBlogCategory, deleteBlogCategory } = useBlogData();
   const { packages, addPackage, updatePackage, deletePackage } = useMembershipPackageData();
   const { orders, loading: ordersLoading, addOrder, updateOrderStatus } = useOrderData();
   const { posts: businessBlogPosts, updatePost: updateBusinessBlogPost } = useBusinessBlogData();
@@ -176,11 +198,11 @@ const AdminPage: React.FC = () => {
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
   const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState<MembershipPackage | null>(null);
-  const [confirmDialog, setConfirmDialog] = useState<{
-    isOpen: boolean;
-    type: 'deleteCategory' | 'deletePost' | 'duplicateBusiness' | 'rejectRequest' | 'deleteUser' | 'deletePackage' | null;
-    data?: { id?: string | number; name?: string; requestId?: string; userId?: number; packageId?: string };
-  }>({ isOpen: false, type: null });
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState>({
+    isOpen: false,
+    type: null,
+    data: undefined,
+  });
 
   const filteredBusinesses = useMemo(() => { const q = searchQuery.toLowerCase().trim(); if (!q) return businesses; return businesses.filter(b => b.name.toLowerCase().includes(q)); }, [businesses, searchQuery]);
   const filteredOrders = useMemo(() => { if (orderStatusFilter === 'all') return orders; return orders.filter(o => o.status === orderStatusFilter); }, [orders, orderStatusFilter]);
@@ -196,6 +218,31 @@ const AdminPage: React.FC = () => {
       await deleteBlogPost(confirmDialog.data.id as number);
     }
     setConfirmDialog({ isOpen: false, type: null });
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    setConfirmDialog({ isOpen: true, type: 'deleteCategory', data: { id } });
+  };
+
+  /**
+   * Confirms and executes category deletion
+   * Shows success/error toast notifications
+   * @returns Promise that resolves when deletion completes
+   */
+  const confirmDeleteCategory = async (): Promise<void> => {
+    if (confirmDialog.type !== 'deleteCategory' || !confirmDialog.data?.id) {
+      setConfirmDialog({ isOpen: false, type: null });
+      return;
+    }
+
+    try {
+      await deleteBlogCategory(confirmDialog.data.id as string);
+      toast.success('Blog category deleted successfully');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete blog category');
+    } finally {
+      setConfirmDialog({ isOpen: false, type: null });
+    }
   };
 
   const handleDuplicateBusiness = async (businessToDuplicate: Business) => {
@@ -473,7 +520,7 @@ const AdminPage: React.FC = () => {
             </div>
             {blogLoading ? <p>Loading posts...</p> : <BlogManagementTable posts={blogPosts} onEdit={setEditingPost} onDelete={handleDeletePost} onUpdate={updateBlogPost} />}
             <AIBlogIdeaGenerator />
-            <BlogCategoryManager />
+            <BlogCategoryManager confirmDialog={confirmDialog} setConfirmDialog={setConfirmDialog} />
           </div>
         </PermissionGuard>
       );

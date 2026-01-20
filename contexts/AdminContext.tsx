@@ -290,7 +290,11 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             }
 
             if (pageContentRes.data) {
-                const dbContent = pageContentRes.data.reduce((acc: any, page: any) => {
+                interface PageContentRow {
+                  page_name: string;
+                  content_data: PageData;
+                }
+                const dbContent = (pageContentRes.data as PageContentRow[]).reduce((acc, page) => {
                     acc[page.page_name as PageName] = page.content_data;
                     return acc;
                 }, {} as { [key in PageName]?: PageData });
@@ -328,7 +332,14 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         });
     };
     const markNotificationAsRead = (notificationId: string) => { /* ... */ };
-    const addAnnouncement = async (title: string, content: string, type: any) => { if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add announcement."); return; } /* ... */ };
+    /**
+     * Adds a new announcement
+     * @param title - Announcement title
+     * @param content - Announcement content
+     * @param type - Announcement type
+     * @returns Promise that resolves when announcement is added
+     */
+    const addAnnouncement = async (title: string, content: string, type: string): Promise<void> => { if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add announcement."); return; } /* ... */ };
     const deleteAnnouncement = async (id: string) => { if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot delete announcement."); return; } /* ... */ };
     const getUnreadAnnouncements = (businessId: number) => { /* ... */ return []; };
     const markAnnouncementAsRead = (businessId: number, announcementId: string) => { /* ... */ };

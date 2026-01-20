@@ -119,8 +119,9 @@ const BusinessBulkImporter: React.FC = () => {
 
                 log.push(`✅ Imported: ${row.name}`);
                 successCount++;
-            } catch (err: any) {
-                log.push(`❌ Failed: ${row.name} - ${err.message}`);
+            } catch (err: unknown) {
+                const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+                log.push(`❌ Failed: ${row.name} - ${errorMessage}`);
                 failCount++;
             }
             // Update log every 10 items or so to avoid React state spam if needed, 

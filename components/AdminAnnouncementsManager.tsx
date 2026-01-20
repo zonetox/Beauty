@@ -98,7 +98,12 @@ const AdminAnnouncementsManager: React.FC = () => {
                 confirmText="Delete"
                 cancelText="Cancel"
                 variant="danger"
-                onConfirm={confirmDeleteAnnouncement}
+                onConfirm={() => {
+                  if (confirmDelete.announcementId) {
+                    deleteAnnouncement(confirmDelete.announcementId);
+                    setConfirmDelete({ isOpen: false, announcementId: null });
+                  }
+                }}
                 onCancel={() => setConfirmDelete({ isOpen: false, announcementId: null })}
             />
         </div>

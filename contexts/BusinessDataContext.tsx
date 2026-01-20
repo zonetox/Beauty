@@ -76,15 +76,21 @@ export const PublicDataContext = createContext<PublicDataContextType | undefined
 
 const COMMENTS_LOCAL_STORAGE_KEY = 'blog_comments';
 
-// Helper to convert JS object keys from camelCase to snake_case for Supabase write operations.
-const toSnakeCase = (obj: any): any => {
+/**
+ * Helper to convert JS object keys from camelCase to snake_case for Supabase write operations.
+ * @template T - The type of the input object
+ * @param obj - The object to convert
+ * @returns The object with snake_case keys
+ */
+const toSnakeCase = <T>(obj: T): T => {
   if (typeof obj !== 'object' || obj === null) return obj;
-  if (Array.isArray(obj)) return obj.map(toSnakeCase);
-  return Object.keys(obj).reduce((acc: any, key: string) => {
+  if (Array.isArray(obj)) return obj.map(toSnakeCase) as T;
+  return Object.keys(obj as Record<string, unknown>).reduce((acc, key: string) => {
     const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-    acc[snakeKey] = toSnakeCase(obj[key]);
+    const value = (obj as Record<string, unknown>)[key];
+    (acc as Record<string, unknown>)[snakeKey] = toSnakeCase(value);
     return acc;
-  }, {});
+  }, {} as T);
 };
 
 export function PublicDataProvider({ children }: { children: ReactNode }) {
@@ -133,12 +139,18 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
   const currentAdmin = null; // Placeholder - actual admin user handled elsewhere
 
   // --- DATA FETCHING ---
+  /**
+   * Fetches businesses with pagination and optional filters
+   * @param page - Page number (1-indexed)
+   * @param options - Search and filter options
+   * @returns Promise that resolves when fetch completes
+   */
   const fetchBusinesses = useCallback(async (page: number = 1, options: {
     search?: string,
     location?: string,
     district?: string,
     category?: string
-  } = {}) => {
+  } = {}): Promise<void> => {
     if (!isSupabaseConfigured) return;
 
     setBusinessLoading(true);
@@ -166,23 +178,28 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
         // search_businesses_advanced returns partial data, fetch full business data
         // IMPORTANT: Preserve database ranking order - do NOT sort results
         // Results from search_businesses_advanced are already sorted by final_score DESC
-        const businessIds = searchData.map((b: any) => b.id);
+        // OPTIMIZE: Directory listing doesn't need full description, only summary fields
+        interface SearchResult {
+          id: number;
+          [key: string]: unknown;
+        }
+        const businessIds = (searchData as SearchResult[]).map((b) => b.id);
         const { data: fullData, error: fetchError } = await supabase
           .from('businesses')
-          .select('*', { count: 'exact' })
+          .select('id, slug, name, logo_url, image_url, slogan, categories, address, city, district, ward, tags, phone, email, website, rating, review_count, view_count, membership_tier, is_verified, is_active, is_featured, joined_date, description, working_hours, socials, seo, hero_slides, hero_image_url, owner_id', { count: 'exact' })
           .in('id', businessIds);
         
         // Preserve order from search_businesses_advanced (ranked by final_score)
         // Map results in the same order as searchData
-        const orderedFullData = businessIds.map(id => 
-          fullData?.find(b => b.id === id)
-        ).filter(Boolean);
+        const orderedFullData = businessIds
+          .map(id => fullData?.find(b => b.id === id))
+          .filter((b): b is NonNullable<typeof b> => b !== undefined);
 
         if (fetchError) {
           console.error('Error fetching business details:', fetchError.message);
           toast.error('Failed to load businesses');
         } else if (orderedFullData && orderedFullData.length > 0) {
-          const mapped = snakeToCamel(orderedFullData).map((b: any) => ({
+          const mapped = snakeToCamel(orderedFullData).map((b) => ({
             ...b,
             services: [],
             gallery: [],
@@ -195,8 +212,9 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
           
           // Get total count using COUNT query instead of calling RPC function twice
           // This is much faster than fetching 10000 records just to count them
+          // OPTIMIZE: Count query only needs id field
           const countStartTime = performance.now();
-          let countQuery = supabase.from('businesses').select('*', { count: 'exact', head: true }).eq('is_active', true);
+          let countQuery = supabase.from('businesses').select('id', { count: 'exact', head: true }).eq('is_active', true);
           if (options.category) countQuery = countQuery.contains('categories', [options.category]);
           if (options.location) countQuery = countQuery.eq('city', options.location);
           if (options.district) countQuery = countQuery.eq('district', options.district);
@@ -247,7 +265,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
         console.error('Error fetching businesses:', error.message);
         toast.error('Failed to load businesses');
       } else if (data) {
-        const mapped = snakeToCamel(data).map((b: any) => ({
+        const mapped = snakeToCamel(data).map((b) => ({
           ...b,
           services: [],
           gallery: [],
@@ -260,7 +278,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
         if (count !== null) setTotalBusinesses(count);
         setCurrentPage(page);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Unexpected error fetching businesses:', error);
       toast.error('Failed to load businesses');
     }
@@ -278,19 +296,26 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       setBusinessLoading(true);
       
       // Only fetch featured businesses for homepage initial render (limit to 10-20 for performance)
-      const { data, error } = await supabase.from('businesses')
-        .select('*', { count: 'exact' })
-        .eq('is_active', true)
-        .eq('is_featured', true)
-        .order('id', { ascending: true })
-        .limit(20); // Only fetch featured businesses for initial render
+      // OPTIMIZE: Select only fields needed for homepage display
+      const [businessesResult, countResult] = await Promise.all([
+        supabase.from('businesses')
+          .select('id, slug, name, logo_url, image_url, slogan, categories, address, city, district, ward, tags, phone, email, website, rating, review_count, view_count, membership_tier, is_verified, is_active, is_featured, joined_date, description, working_hours, socials, seo, hero_slides, hero_image_url, owner_id', { count: 'exact' })
+          .eq('is_active', true)
+          .eq('is_featured', true)
+          .order('id', { ascending: true })
+          .limit(20),
+        supabase.from('businesses')
+          .select('id', { count: 'exact', head: true })
+          .eq('is_active', true)
+          .eq('is_featured', true)
+      ]);
 
-      if (error) {
-        console.error('Error fetching critical businesses:', error);
+      if (businessesResult.error) {
+        console.error('Error fetching critical businesses:', businessesResult.error);
         setBusinesses([]);
         setTotalBusinesses(0);
-      } else if (data) {
-        const mapped = snakeToCamel(data).map((b: any) => ({
+      } else if (businessesResult.data) {
+        const mapped = snakeToCamel(businessesResult.data).map((b) => ({
           ...b,
           services: [],
           gallery: [],
@@ -299,15 +324,9 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
           reviews: []
         })) as Business[];
         setBusinesses(mapped);
-        
-        // Get total count for featured businesses only
-        const { count } = await supabase.from('businesses')
-          .select('*', { count: 'exact', head: true })
-          .eq('is_active', true)
-          .eq('is_featured', true);
-        setTotalBusinesses(count || 0);
+        setTotalBusinesses(countResult.count || 0);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error in fetchCriticalData:', error);
       setBusinesses([]);
     } finally {
@@ -315,10 +334,14 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // NON-CRITICAL DATA: Lazy-load blog posts, categories, markers, packages, and all businesses
-  // MANDATORY: If cached data exists → NEVER fetch on page load, only refresh in background
-  // Cached data is already loaded in initial state, so loading is already false
-  const fetchNonCriticalData = useCallback(async (backgroundRefresh = false) => {
+  /**
+   * NON-CRITICAL DATA: Lazy-load blog posts, categories, markers, packages, and all businesses
+   * MANDATORY: If cached data exists → NEVER fetch on page load, only refresh in background
+   * Cached data is already loaded in initial state, so loading is already false
+   * @param backgroundRefresh - If true, fetch even if cache exists
+   * @returns Promise that resolves when fetch completes
+   */
+  const fetchNonCriticalData = useCallback(async (backgroundRefresh = false): Promise<void> => {
     if (!isSupabaseConfigured) {
       setBlogLoading(false);
       return;
@@ -360,8 +383,9 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
         .not('longitude', 'is', null)
         .limit(2000);
 
+      // OPTIMIZE: Homepage doesn't need full content, only excerpt
       const blogPromise = supabase.from('blog_posts')
-        .select('id, slug, title, image_url, excerpt, author, date, category, content, view_count')
+        .select('id, slug, title, image_url, excerpt, author, date, category, view_count')
         .order('date', { ascending: false })
         .limit(50);
 
@@ -385,17 +409,25 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       const createTimeoutPromise = (timeoutMs: number, rejectMsg: string) => 
         new Promise((_, reject) => setTimeout(() => reject(new Error(rejectMsg)), timeoutMs));
 
-      const measureQuery = async (name: string, queryPromise: Promise<any>, timeoutMs: number) => {
+      /**
+       * Measures query execution time and handles timeouts
+       * @param name - Query name for logging
+       * @param queryPromise - The query promise to measure
+       * @param timeoutMs - Timeout in milliseconds
+       * @returns The query result
+       */
+      const measureQuery = async <T>(name: string, queryPromise: Promise<T>, timeoutMs: number): Promise<T> => {
         const startTime = performance.now();
         try {
           const result = await Promise.race([queryPromise, createTimeoutPromise(timeoutMs, `${name} timeout`)]);
           const duration = performance.now() - startTime;
           console.log(`[PERF] ${name}: ${duration.toFixed(2)}ms`);
           return result;
-        } catch (error: any) {
+        } catch (error: unknown) {
           // Silent timeout - has fallback to cache/empty data
           // Only log if not a timeout error
-          if (!error?.message?.includes('timeout')) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          if (!errorMessage.includes('timeout')) {
             const duration = performance.now() - startTime;
             console.warn(`[PERF] ${name}: ERROR after ${duration.toFixed(2)}ms`, error);
           }
@@ -447,9 +479,13 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       }
 
       // Process blog posts
-      let blogRes: any = { error: null, data: null };
+      interface BlogResponse {
+        error: { message: string } | null;
+        data: unknown;
+      }
+      let blogRes: BlogResponse = { error: null, data: null };
       if (blogResult.status === 'fulfilled') {
-        const result = blogResult.value as any;
+        const result = blogResult.value as BlogResponse;
         blogRes = result;
       } else {
         // Silent timeout - has fallback (cache or empty data)
@@ -514,9 +550,10 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
         // Cache packages: 1 hour
         cacheManager.set(CACHE_KEYS.PACKAGES, packages, CACHE_TTL.PACKAGES);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Only log unhandled exceptions (not timeouts with fallbacks)
-      if (!error?.message?.includes('timeout') && !error?.message?.includes('Timeout')) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (!errorMessage.includes('timeout') && !errorMessage.includes('Timeout')) {
         console.error('Error in fetchNonCriticalData (unhandled exception):', error);
       }
       if (!backgroundRefresh) {
@@ -527,7 +564,12 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
 
   // Legacy: fetchAllPublicData for backwards compatibility (admin, other pages)
   // This fetches ALL data (critical + non-critical)
-  const fetchAllPublicData = useCallback(async () => {
+  /**
+   * Fetches all public data (critical + non-critical)
+   * Used for initial page load
+   * @returns Promise that resolves when all data is fetched
+   */
+  const fetchAllPublicData = useCallback(async (): Promise<void> => {
     if (hasFetchedRef.current) return;
     hasFetchedRef.current = true;
 
@@ -539,7 +581,12 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
   }, [fetchCriticalData, fetchNonCriticalData]);
 
   // Helper to reset and refetch (for after add/update/delete operations)
-  const refetchAllPublicData = useCallback(async () => {
+  /**
+   * Refetches all public data (forces refresh)
+   * Used after mutations to keep data in sync
+   * @returns Promise that resolves when all data is refetched
+   */
+  const refetchAllPublicData = useCallback(async (): Promise<void> => {
     hasFetchedRef.current = false; // Reset to allow refetch
     await fetchAllPublicData();
   }, [fetchAllPublicData]);
@@ -564,6 +611,11 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
   }, []); // Lazy-load non-critical data after render
 
   // --- BUSINESS LOGIC ---
+  /**
+   * Adds a new business to the database
+   * @param newBusiness - Complete business object
+   * @returns Promise resolving to the created business or null if failed
+   */
   const addBusiness = async (newBusiness: Business): Promise<Business | null> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add business."); return null; }
     const { id, services, gallery, team, deals, reviews, ...businessData } = newBusiness;
@@ -590,13 +642,25 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const deleteBusiness = async (businessId: number) => {
+  /**
+   * Deletes a business record from the database
+   * @param businessId - The ID of the business to delete
+   * @returns Promise that resolves when delete completes
+   */
+  const deleteBusiness = async (businessId: number): Promise<void> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot delete business."); return; }
     /* ... implementation unchanged ... */
   };
 
-  // Existing synchronous getter (from loaded list)
-  const getBusinessBySlug = (slug: string) => businesses.find(b => b.slug === slug);
+  /**
+   * Gets a business by slug from the loaded businesses list
+   * For detailed data, use fetchBusinessBySlug instead
+   * @param slug - Business slug identifier
+   * @returns Business object or undefined if not found
+   */
+  const getBusinessBySlug = (slug: string): Business | undefined => {
+    return businesses.find(b => b.slug === slug);
+  };
 
   // Use useRef to access businesses without causing function recreation
   const businessesRef = useRef(businesses);
@@ -604,7 +668,12 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     businessesRef.current = businesses;
   }, [businesses]);
 
-  // NEW: Async detailed getter
+  /**
+   * Fetches a complete business record by slug with all related data
+   * Includes services, gallery, team, deals, and reviews
+   * @param slug - Business slug identifier
+   * @returns Promise resolving to Business object or null if not found
+   */
   const fetchBusinessBySlug = useCallback(async (slug: string): Promise<Business | null> => {
     console.log('[fetchBusinessBySlug] Starting fetch for slug:', slug);
     
@@ -615,11 +684,11 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       return cached || null;
     }
 
-    // 1. Fetch the main business record
+    // 1. Fetch the main business record with selective fields
     console.log('[fetchBusinessBySlug] Fetching business data from database...');
     const { data: businessData, error: businessError } = await supabase
       .from('businesses')
-      .select('*')
+      .select('id, slug, name, logo_url, image_url, slogan, categories, address, city, district, ward, latitude, longitude, tags, phone, email, website, youtube_url, rating, review_count, view_count, membership_tier, membership_expiry_date, is_verified, is_active, is_featured, joined_date, description, working_hours, socials, seo, notification_settings, hero_slides, hero_image_url, staff, owner_id')
       .eq('slug', slug)
       .single();
 
@@ -633,15 +702,28 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
 
     console.log('[fetchBusinessBySlug] Business found:', businessData.name, 'ID:', businessData.id);
 
-    // 2. Parallel fetch for relations
+    // 2. Parallel fetch for relations with selective fields
     const businessId = businessData.id;
     console.log('[fetchBusinessBySlug] Fetching related data for business ID:', businessId);
     const [servicesRes, mediaRes, teamRes, dealsRes, reviewsRes] = await Promise.all([
-      supabase.from('services').select('*').eq('business_id', businessId).order('position', { ascending: true }),
-      supabase.from('media_items').select('*').eq('business_id', businessId).order('position', { ascending: true }),
-      supabase.from('team_members').select('*').eq('business_id', businessId),
-      supabase.from('deals').select('*').eq('business_id', businessId),
-      supabase.from('reviews').select('*').eq('business_id', businessId)
+      supabase.from('services')
+        .select('id, business_id, name, price, description, image_url, duration_minutes, position')
+        .eq('business_id', businessId)
+        .order('position', { ascending: true }),
+      supabase.from('media_items')
+        .select('id, business_id, url, type, category, title, description, position')
+        .eq('business_id', businessId)
+        .order('position', { ascending: true }),
+      supabase.from('team_members')
+        .select('id, business_id, name, role, image_url')
+        .eq('business_id', businessId),
+      supabase.from('deals')
+        .select('id, business_id, title, description, image_url, start_date, end_date, discount_percentage, original_price, deal_price, status')
+        .eq('business_id', businessId),
+      supabase.from('reviews')
+        .select('id, user_id, business_id, user_name, user_avatar_url, rating, comment, submitted_date, status, reply')
+        .eq('business_id', businessId)
+        .order('submitted_date', { ascending: false })
     ]);
 
     // Log any errors in related data
@@ -704,7 +786,13 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
   };
 
   // --- SERVICES LOGIC ---
-  const addService = async (newServiceData: Omit<Service, 'id' | 'position'>) => {
+  /**
+   * Adds a new service to a business
+   * @param newServiceData - Service data without id and position
+   * @returns Promise that resolves when service is added
+   * @throws Error if Supabase is not configured or operation fails
+   */
+  const addService = async (newServiceData: Omit<Service, 'id' | 'position'>): Promise<void> => {
     if (!isSupabaseConfigured) { 
       toast.error("Preview Mode: Cannot add service."); 
       throw new Error("Preview Mode: Cannot add service.");
@@ -743,7 +831,13 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  const deleteService = async (serviceId: string) => {
+  /**
+   * Deletes a service
+   * @param serviceId - Service ID to delete
+   * @returns Promise that resolves when deletion completes
+   * @throws Error if Supabase is not configured or operation fails
+   */
+  const deleteService = async (serviceId: string): Promise<void> => {
     if (!isSupabaseConfigured) { 
       toast.error("Preview Mode: Cannot delete service."); 
       throw new Error("Preview Mode: Cannot delete service.");
@@ -779,7 +873,12 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  const updateServicesOrder = async (orderedServices: Service[]) => {
+  /**
+   * Updates the order/position of services
+   * @param orderedServices - Array of services with updated positions
+   * @returns Promise that resolves when order is updated
+   */
+  const updateServicesOrder = async (orderedServices: Service[]): Promise<void> => {
     if (!isSupabaseConfigured) { 
       toast.error("Preview Mode: Cannot reorder services."); 
       throw new Error("Preview Mode: Cannot reorder services.");
@@ -798,7 +897,14 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
   };
 
   // --- MEDIA/GALLERY LOGIC ---
-  const addMediaItem = async (file: File, businessId: number) => {
+  /**
+   * Adds a new media item (image/video) to a business gallery
+   * @param file - The file to upload
+   * @param businessId - Business ID
+   * @returns Promise that resolves when media is added
+   * @throws Error if Supabase is not configured or operation fails
+   */
+  const addMediaItem = async (file: File, businessId: number): Promise<void> => {
     if (!isSupabaseConfigured) { 
       toast.error("Preview Mode: Cannot upload media."); 
       throw new Error("Preview Mode: Cannot upload media.");
@@ -829,7 +935,13 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  const updateMediaItem = async (updatedItem: MediaItem) => {
+  /**
+   * Updates a media item
+   * @param updatedItem - Updated media item data
+   * @returns Promise that resolves when update completes
+   * @throws Error if Supabase is not configured or operation fails
+   */
+  const updateMediaItem = async (updatedItem: MediaItem): Promise<void> => {
     if (!isSupabaseConfigured) { 
       toast.error("Preview Mode: Cannot update media."); 
       throw new Error("Preview Mode: Cannot update media.");
@@ -881,7 +993,12 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  const updateMediaOrder = async (orderedMedia: MediaItem[]) => {
+  /**
+   * Updates the order/position of media items
+   * @param orderedMedia - Array of media items with updated positions
+   * @returns Promise that resolves when order is updated
+   */
+  const updateMediaOrder = async (orderedMedia: MediaItem[]): Promise<void> => {
     if (!isSupabaseConfigured) { 
       toast.error("Preview Mode: Cannot reorder media."); 
       throw new Error("Preview Mode: Cannot reorder media.");
@@ -913,7 +1030,12 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     if (error) console.error("Error updating team member:", error.message);
     else await refetchAllPublicData();
   };
-  const deleteTeamMember = async (memberId: string) => {
+  /**
+   * Deletes a team member
+   * @param memberId - Team member ID to delete
+   * @returns Promise that resolves when deletion completes
+   */
+  const deleteTeamMember = async (memberId: string): Promise<void> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot delete team member."); return; }
     const { error } = await supabase.from('team_members').delete().eq('id', memberId);
     if (error) console.error("Error deleting team member:", error.message);
@@ -921,7 +1043,13 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
   };
 
   // --- DEALS LOGIC ---
-  const addDeal = async (newDealData: Omit<Deal, 'id'>) => {
+  /**
+   * Adds a new deal to a business
+   * @param newDealData - Deal data without id
+   * @returns Promise that resolves when deal is added
+   * @throws Error if Supabase is not configured or operation fails
+   */
+  const addDeal = async (newDealData: Omit<Deal, 'id'>): Promise<void> => {
     if (!isSupabaseConfigured) { 
       toast.error("Preview Mode: Cannot add deal."); 
       throw new Error("Preview Mode: Cannot add deal.");
@@ -960,7 +1088,13 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  const deleteDeal = async (dealId: string) => {
+  /**
+   * Deletes a deal and its image from storage
+   * @param dealId - Deal ID to delete
+   * @returns Promise that resolves when deletion completes
+   * @throws Error if Supabase is not configured or operation fails
+   */
+  const deleteDeal = async (dealId: string): Promise<void> => {
     if (!isSupabaseConfigured) { 
       toast.error("Preview Mode: Cannot delete deal."); 
       throw new Error("Preview Mode: Cannot delete deal.");
@@ -998,8 +1132,12 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
   };
 
   // --- BLOG LOGIC ---
-  // D2.1 FIX: Fetch comments from database instead of localStorage
-  const fetchComments = useCallback(async () => {
+  /**
+   * D2.1 FIX: Fetch comments from database instead of localStorage
+   * Fetches all blog comments from the database
+   * @returns Promise that resolves when comments are fetched
+   */
+  const fetchComments = useCallback(async (): Promise<void> => {
     if (!isSupabaseConfigured) {
       // Fallback to localStorage if Supabase not configured
       try {
@@ -1029,7 +1167,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
         }
       } else {
         // Convert database format to BlogComment format
-        const formattedComments: BlogComment[] = (data || []).map((comment: any) => ({
+        const formattedComments: BlogComment[] = (data || []).map((comment) => ({
           id: comment.id,
           postId: comment.post_id,
           authorName: comment.author_name,
@@ -1061,7 +1199,12 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     fetchComments();
   }, [fetchComments]);
 
-  const addBlogPost = async (newPostData: Omit<BlogPost, 'id' | 'slug' | 'date' | 'viewCount'>) => {
+  /**
+   * Adds a new blog post
+   * @param newPostData - Blog post data without id, slug, date, viewCount
+   * @returns Promise that resolves when post is added
+   */
+  const addBlogPost = async (newPostData: Omit<BlogPost, 'id' | 'slug' | 'date' | 'viewCount'>): Promise<void> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add blog post."); return; }
     const slug = newPostData.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-') + `-${Date.now()}`;
     const postToAdd = { ...newPostData, slug, date: new Date().toLocaleDateString('en-GB'), view_count: 0 };
@@ -1074,12 +1217,24 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.from('blog_posts').update(postToUpdate).eq('id', id);
     if (!error) await refetchAllPublicData();
   };
-  const deleteBlogPost = async (postId: number) => {
+  /**
+   * Deletes a blog post
+   * @param postId - Post ID to delete
+   * @returns Promise that resolves when deletion completes
+   */
+  const deleteBlogPost = async (postId: number): Promise<void> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot delete blog post."); return; }
     const { error } = await supabase.from('blog_posts').delete().eq('id', postId);
     if (!error) await refetchAllPublicData();
   };
-  const getPostBySlug = (slug: string) => blogPosts.find(p => p.slug === slug);
+  /**
+   * Gets a blog post by slug from the loaded posts list
+   * @param slug - Blog post slug identifier
+   * @returns Blog post object or undefined if not found
+   */
+  const getPostBySlug = (slug: string): BlogPost | undefined => {
+    return blogPosts.find(p => p.slug === slug);
+  };
   // D2.2 FIX: Use safe RPC function for view count increment (already using RPC, just ensure consistency)
   const incrementBlogViewCount = async (postId: number) => {
     if (!isSupabaseConfigured) return;
@@ -1103,7 +1258,16 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       // NEVER rethrow - tracking must never affect app flow
     }
   };
-  const getCommentsByPostId = (postId: number) => comments.filter(c => c.postId === postId).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  /**
+   * Gets comments for a specific blog post, sorted by date
+   * @param postId - Blog post ID
+   * @returns Array of comments sorted by date (oldest first)
+   */
+  const getCommentsByPostId = (postId: number): BlogComment[] => {
+    return comments
+      .filter(c => c.postId === postId)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  };
   
   // D2.1 FIX: Save comments to database instead of localStorage
   const addComment = async (postId: number, authorName: string, content: string) => {
@@ -1203,13 +1367,24 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     if (!error) { await refetchAllPublicData(); toast.success("Category added."); }
     else { toast.error(`Failed to add category: ${error.message}`); }
   };
-  const updateBlogCategory = async (id: string, name: string) => {
+  /**
+   * Updates a blog category
+   * @param id - Category ID
+   * @param name - New category name
+   * @returns Promise that resolves when update completes
+   */
+  const updateBlogCategory = async (id: string, name: string): Promise<void> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update category."); return; }
     const { error } = await supabase.from('blog_categories').update({ name }).eq('id', id);
     if (!error) { await refetchAllPublicData(); toast.success("Category updated."); }
     else { toast.error(`Failed to update category: ${error.message}`); }
   };
-  const deleteBlogCategory = async (id: string) => {
+  /**
+   * Deletes a blog category
+   * @param id - Category ID to delete
+   * @returns Promise that resolves when deletion completes
+   */
+  const deleteBlogCategory = async (id: string): Promise<void> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot delete category."); return; }
     const { error } = await supabase.from('blog_categories').delete().eq('id', id);
     if (!error) { await refetchAllPublicData(); toast.success("Category deleted."); }
@@ -1217,19 +1392,35 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
   };
 
   // --- PACKAGES LOGIC ---
-  const addPackage = async (newPackage: Omit<MembershipPackage, 'id'>) => {
+  /**
+   * Adds a new membership package
+   * @param newPackage - Package data without ID
+   * @returns Promise that resolves when package is added
+   */
+  const addPackage = async (newPackage: Omit<MembershipPackage, 'id'>): Promise<void> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add package."); return; }
     const { error } = await supabase.from('membership_packages').insert({ ...newPackage, id: `pkg_${crypto.randomUUID()}` });
     if (!error) { await refetchAllPublicData(); toast.success("Package added."); }
     else { toast.error(`Failed to add package: ${error.message}`); }
   };
-  const updatePackage = async (packageId: string, updates: Partial<MembershipPackage>) => {
+  /**
+   * Updates a membership package
+   * @param packageId - Package ID to update
+   * @param updates - Partial package data to update
+   * @returns Promise that resolves when update completes
+   */
+  const updatePackage = async (packageId: string, updates: Partial<MembershipPackage>): Promise<void> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update package."); return; }
     const { error } = await supabase.from('membership_packages').update(updates).eq('id', packageId);
     if (!error) { await refetchAllPublicData(); toast.success("Package updated."); }
     else { toast.error(`Failed to update package: ${error.message}`); }
   };
-  const deletePackage = async (packageId: string) => {
+  /**
+   * Deletes a membership package
+   * @param packageId - Package ID to delete
+   * @returns Promise that resolves when deletion completes
+   */
+  const deletePackage = async (packageId: string): Promise<void> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot delete package."); return; }
     const { error } = await supabase.from('membership_packages').delete().eq('id', packageId);
     if (!error) { await refetchAllPublicData(); toast.success("Package deleted."); }

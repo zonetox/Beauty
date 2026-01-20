@@ -6,17 +6,20 @@ import { PostgrestResponse } from '@supabase/supabase-js';
 
 /**
  * Recursively converts snake_case keys of an object to camelCase.
+ * @template T - The type of the input object
+ * @param obj - The object to convert
+ * @returns The object with camelCase keys
  */
-export const snakeToCamel = (obj: any): any => {
+export function snakeToCamel<T>(obj: T): T {
     if (obj === null || typeof obj !== 'object') {
         return obj;
     }
 
     if (Array.isArray(obj)) {
-        return obj.map(v => snakeToCamel(v));
+        return obj.map(v => snakeToCamel(v)) as T;
     }
 
-    return Object.keys(obj).reduce((result, key) => {
+    return Object.keys(obj as Record<string, unknown>).reduce((result, key) => {
         const camelKey = key.replace(/([-_][a-z])/ig, ($1) => {
             return $1.toUpperCase()
                 .replace('-', '')
@@ -28,27 +31,38 @@ export const snakeToCamel = (obj: any): any => {
             return result;
         }
 
-        result[camelKey] = snakeToCamel(obj[key]);
+        const value = (obj as Record<string, unknown>)[key];
+        (result as Record<string, unknown>)[camelKey] = snakeToCamel(value);
         return result;
-    }, {} as any);
-};
+    }, {} as T);
+}
 
 /**
  * Maps a Supabase PostgrestResponse by converting data keys to camelCase.
+ * @template T - The type of the data array elements
+ * @param response - The Supabase PostgrestResponse
+ * @returns An object with camelCase data and error
  */
-export const mapPostgrestResponse = <T>(response: PostgrestResponse<any>): { data: T[] | null; error: any } => {
+export function mapPostgrestResponse<T>(
+  response: PostgrestResponse<unknown>
+): { data: T[] | null; error: unknown } {
     return {
-        data: response.data ? snakeToCamel(response.data) as T[] : null,
+        data: response.data ? (snakeToCamel(response.data) as T[]) : null,
         error: response.error
     };
-};
+}
 
 /**
  * Specialized mapper for a single object response
+ * @template T - The type of the data object
+ * @param response - The response object with data and error
+ * @returns An object with camelCase data and error
  */
-export const mapSingleResponse = <T>(response: { data: any; error: any }): { data: T | null; error: any } => {
+export function mapSingleResponse<T>(
+  response: { data: unknown; error: unknown }
+): { data: T | null; error: unknown } {
     return {
-        data: response.data ? snakeToCamel(response.data) as T : null,
+        data: response.data ? (snakeToCamel(response.data) as T) : null,
         error: response.error
     };
-};
+}

@@ -40,11 +40,11 @@ const RegisterPage: React.FC = () => {
     useEffect(() => {
         if (state !== 'loading' && !roleLoading && user) {
             if (isBusinessOwner || isBusinessStaff) {
-                toast.info('Bạn đã có quyền truy cập doanh nghiệp. Đang chuyển đến dashboard...');
+                toast.success('Bạn đã có quyền truy cập doanh nghiệp. Đang chuyển đến dashboard...');
                 navigate('/account', { replace: true });
             } else if (role === 'admin') {
                 // Admins should use admin panel to create businesses, not registration form
-                toast.info('Quản trị viên không thể sử dụng form đăng ký. Vui lòng sử dụng admin panel.');
+                toast.success('Quản trị viên không thể sử dụng form đăng ký. Vui lòng sử dụng admin panel.');
                 navigate('/admin', { replace: true });
             }
         }

@@ -9,6 +9,7 @@ import { Deal, DealStatus } from '../types.ts';
 import LoadingState from './LoadingState.tsx';
 import EmptyState from './EmptyState.tsx';
 import EditDealModal from './EditDealModal.tsx';
+import ConfirmDialog from './ConfirmDialog.tsx';
 
 // Helper function to calculate deal status based on dates
 const calculateDealStatus = (deal: Deal): DealStatus => {

@@ -6,7 +6,7 @@
 
 ---
 
-## 📊 COMPLETE TABLE LIST (24 Tables Found)
+## 📊 COMPLETE TABLE LIST (25 Tables Found)
 
 ### BUSINESS TABLES (6 tables)
 1. **businesses** - Core business information
@@ -16,10 +16,11 @@
 5. **media_items** - Business gallery/media
 6. **reviews** - Customer reviews
 
-### BLOG TABLES (3 tables)
+### BLOG TABLES (4 tables)
 7. **blog_posts** - Platform blog posts
 8. **business_blog_posts** - Business blog posts
 9. **blog_comments** - Comments on blog posts
+10. **blog_categories** - Blog post categories (created via migration)
 
 ### USER & AUTH TABLES (3 tables)
 10. **profiles** - User profiles (extends auth.users)
@@ -79,11 +80,41 @@ All tables have Row Level Security (RLS) enabled.
 
 ---
 
+## 📈 PERFORMANCE INDEXES
+
+### Critical Indexes for Timeout Prevention (Added: 2025-01-18)
+
+**page_content table:**
+- `idx_page_content_page_name` - For homepage content queries
+
+**blog_categories table:**
+- `idx_blog_categories_name` - For category ordering queries
+
+**membership_packages table:**
+- `idx_membership_packages_active_price` - For active packages with price ordering
+- `idx_membership_packages_is_active` - For active package filtering
+
+**businesses table:**
+- `idx_businesses_location_coords` - For map markers queries (is_active + latitude/longitude)
+- `idx_businesses_active_featured_id` - For homepage featured businesses
+- `idx_businesses_active_city_district` - For location-based filtering
+
+**blog_posts table:**
+- `idx_blog_posts_date_desc` - For date-ordered blog listings
+
+**blog_comments table:**
+- `idx_blog_comments_post_id_date` - For post comments with date ordering
+- `idx_blog_comments_date` - For general date ordering
+
+See migration: `database/migrations/20250118000001_fix_timeout_queries_indexes.sql`
+
+---
+
 ## ⚠️ NOTE
 
 **Expected:** 27 tables  
-**Found:** 24 tables  
-**Difference:** 3 tables missing
+**Found:** 25 tables  
+**Difference:** 2 tables missing
 
 Possible reasons:
 - Additional tables in `auth` schema (not in public schema)
