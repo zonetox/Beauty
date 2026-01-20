@@ -7,8 +7,6 @@ import { useAdminAuth } from '../contexts/AdminContext.tsx';
 import { useOrderData } from '../contexts/BusinessBlogDataContext.tsx';
 import { useAdminPlatform } from '../contexts/AdminPlatformContext.tsx';
 import ConfirmDialog from '../components/ConfirmDialog.tsx';
-// Import Gemini service - use dynamic import to avoid build errors
-import type { generateWithGemini as GenerateWithGeminiType, isGeminiAvailable as IsGeminiAvailableType } from '../lib/geminiService.ts';
 
 // Reusable Components
 import BusinessManagementTable from '../components/BusinessManagementTable.tsx';
@@ -40,11 +38,27 @@ import AdminAbuseReports from '../components/AdminAbuseReports.tsx';
 import SystemSettings from '../components/SystemSettings.tsx';
 import AdminLandingPageModeration from '../components/AdminLandingPageModeration.tsx';
 
+// AI Blog Idea Generator - Wrapped in error boundary to prevent crashes
 const AIBlogIdeaGenerator: React.FC = () => {
   const [topic, setTopic] = useState('');
   const [ideas, setIdeas] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
+
+  // Check if Gemini is available on mount
+  React.useEffect(() => {
+    const checkAvailability = async () => {
+      try {
+        const geminiModule = await import('../lib/geminiService.ts');
+        setIsAvailable(geminiModule.isGeminiAvailable());
+      } catch (e) {
+        console.warn('Failed to load Gemini service:', e);
+        setIsAvailable(false);
+      }
+    };
+    checkAvailability();
+  }, []);
 
   const generateIdeas = async () => {
     if (!topic) {
@@ -93,6 +107,11 @@ const AIBlogIdeaGenerator: React.FC = () => {
     }
   };
 
+  // Don't render if Gemini is not available
+  if (isAvailable === false) {
+    return null;
+  }
+
   return (
     <div className="bg-gray-50 p-4 rounded-lg border mt-6">
       <h3 className="text-md font-semibold mb-3 text-neutral-dark">AI Blog Idea Generator</h3>
@@ -103,10 +122,11 @@ const AIBlogIdeaGenerator: React.FC = () => {
           onChange={(e) => setTopic(e.target.value)}
           placeholder="Enter a topic, e.g., 'skincare'"
           className="flex-grow w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-sm"
+          onKeyPress={(e) => e.key === 'Enter' && !loading && generateIdeas()}
         />
         <button
           onClick={generateIdeas}
-          disabled={loading}
+          disabled={loading || isAvailable === null}
           className="bg-secondary text-white px-4 py-2 rounded-md font-semibold hover:bg-opacity-80 disabled:bg-gray-400 transition-colors text-sm"
         >
           {loading ? '...' : 'Generate'}
