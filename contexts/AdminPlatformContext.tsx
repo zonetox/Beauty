@@ -73,7 +73,17 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
         .select('id, title, content, type, created_at')
         .order('created_at', { ascending: false }),
       supabase.from('support_tickets')
-        .select('id, business_id, subject, message, status, created_at, last_reply_at, replies')
+        .select(`
+          id, 
+          business_id, 
+          subject, 
+          message, 
+          status, 
+          created_at, 
+          last_reply_at, 
+          replies,
+          businesses!inner(name)
+        `)
         .order('last_reply_at', { ascending: false }),
       supabase.from('registration_requests')
         .select('id, business_name, email, phone, address, category, tier, submitted_at, status')
@@ -99,7 +109,7 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
       setTickets(ticketsRes.data.map((t: any) => ({
         id: t.id,
         businessId: t.business_id,
-        businessName: t.business_name || '',
+        businessName: t.businesses?.name || t.business_name || 'Unknown Business',
         subject: t.subject,
         message: t.message,
         status: t.status,

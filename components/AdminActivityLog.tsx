@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useAdminPlatform } from '../contexts/AdminPlatformContext.tsx';
-import { useAdminAuth } from '../contexts/AuthContext.tsx';
+import { useAdminAuth } from '../contexts/AdminContext.tsx';
 
 const AdminActivityLog: React.FC = () => {
     const { logs, clearLogs } = useAdminPlatform();

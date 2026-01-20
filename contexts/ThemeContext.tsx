@@ -1,5 +1,6 @@
-import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
 import { ThemeSettings } from '../types.ts';
+import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 
 // Default theme settings that match the initial index.html
 const DEFAULT_THEME: ThemeSettings = {
@@ -102,9 +103,31 @@ const applyTheme = (theme: ThemeSettings) => {
 
 export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<ThemeSettings>(DEFAULT_THEME);
+  const [loading, setLoading] = useState(true);
 
-  // Load from localStorage on initial mount
-  useEffect(() => {
+  // Load theme from database or localStorage
+  const fetchTheme = useCallback(async () => {
+    if (isSupabaseConfigured) {
+      try {
+        // Try to load from app_settings table first
+        const { data, error } = await supabase
+          .from('app_settings')
+          .select('settings_data')
+          .eq('id', 1)
+          .maybeSingle();
+
+        if (!error && data?.settings_data?.theme) {
+          // Merge with default to ensure new properties are not missing
+          setTheme({ ...DEFAULT_THEME, ...data.settings_data.theme });
+          setLoading(false);
+          return;
+        }
+      } catch (error) {
+        console.error('Error fetching theme from database:', error);
+      }
+    }
+
+    // Fallback to localStorage
     try {
       const savedThemeJSON = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (savedThemeJSON) {
@@ -113,20 +136,61 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       }
     } catch (e) {
       console.error("Failed to load theme from localStorage", e);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
+  useEffect(() => {
+    fetchTheme();
+  }, [fetchTheme]);
+
   // Apply theme whenever it changes
   useEffect(() => {
-    applyTheme(theme);
-  }, [theme]);
+    if (!loading) {
+      applyTheme(theme);
+    }
+  }, [theme, loading]);
 
-  const updateTheme = (newTheme: ThemeSettings) => {
+  const updateTheme = async (newTheme: ThemeSettings) => {
     setTheme(newTheme);
+    
+    // Save to localStorage immediately for fast UI update
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newTheme));
     } catch (e) {
       console.error("Failed to save theme to localStorage", e);
+    }
+
+    // Save to database if configured
+    if (isSupabaseConfigured) {
+      try {
+        // Get current app_settings
+        const { data: currentSettings } = await supabase
+          .from('app_settings')
+          .select('settings_data')
+          .eq('id', 1)
+          .maybeSingle();
+
+        const updatedSettings = {
+          ...(currentSettings?.settings_data || {}),
+          theme: newTheme,
+        };
+
+        // Upsert app_settings with theme
+        const { error } = await supabase
+          .from('app_settings')
+          .upsert(
+            { id: 1, settings_data: updatedSettings },
+            { onConflict: 'id' }
+          );
+
+        if (error) {
+          console.error('Error saving theme to database:', error);
+        }
+      } catch (error) {
+        console.error('Error updating theme in database:', error);
+      }
     }
   };
   
