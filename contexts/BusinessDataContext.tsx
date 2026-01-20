@@ -172,7 +172,12 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
 
       if (searchError) {
         console.error('Error searching businesses:', searchError.message);
-        toast.error('Lỗi tìm kiếm: ' + searchError.message);
+        // Don't show toast during initial load - only show on user-initiated searches
+        if (options.search || options.category || options.location) {
+          toast.error('Lỗi tìm kiếm: ' + searchError.message);
+        } else {
+          console.error('Error searching businesses:', searchError.message);
+        }
         // Fallback to regular query
       } else if (searchData && searchData.length > 0) {
         // search_businesses_advanced returns partial data, fetch full business data
@@ -263,7 +268,8 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('Error fetching businesses:', error.message);
-        toast.error('Failed to load businesses');
+        // Don't show toast during initial load - silent fail with cache fallback
+        // toast.error('Failed to load businesses');
       } else if (data) {
         const mapped = snakeToCamel(data).map((b) => ({
           ...b,

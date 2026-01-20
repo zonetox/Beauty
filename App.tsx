@@ -24,7 +24,7 @@ import { AdminPlatformProvider } from './contexts/AdminPlatformContext.tsx';
 import { PublicPageContentProvider } from './contexts/PublicPageContentContext.tsx';
 import { ErrorLoggerProvider } from './contexts/ErrorLoggerContext.tsx';
 import { StaffProvider } from './contexts/StaffContext.tsx';
-import AuthLoadingScreen from './components/AuthLoadingScreen.tsx';
+import AppInitializationScreen from './components/AppInitializationScreen.tsx';
 import { queryClient } from './lib/queryClient.ts';
 
 import { BusinessProvider } from './contexts/BusinessContext.tsx';
@@ -300,7 +300,18 @@ const App: React.FC = () => {
                 <Router>
                     <WebVitalsTracker />
                     <PageTracking />
-                    <Toaster position="top-center" reverseOrder={false} />
+                    <Toaster 
+                      position="top-center" 
+                      reverseOrder={false}
+                      toastOptions={{
+                        // Reduce toast duration during app initialization
+                        duration: 3000,
+                        // Don't show toasts during initial load
+                        style: {
+                          maxWidth: '500px',
+                        },
+                      }}
+                    />
                     <AuthProvider>
                         <AuthGate>
                             <AppContent />
@@ -312,14 +323,26 @@ const App: React.FC = () => {
     );
 };
 
-// Auth Gate: Shows loading screen while auth is being checked
-// Redirects to login if unauthenticated (for protected routes)
+// Auth Gate: Shows unified loading screen while auth is being checked
+// Prevents multiple loading screens from appearing
 const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { state } = useAuth();
+    const [isInitializing, setIsInitializing] = useState(true);
 
-    // Show loading screen while checking auth
-    if (state === 'loading') {
-        return <AuthLoadingScreen />;
+    // Track initialization state
+    useEffect(() => {
+        if (state !== 'loading') {
+            // Add small delay to prevent flash of loading screen
+            const timer = setTimeout(() => {
+                setIsInitializing(false);
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, [state]);
+
+    // Show unified loading screen during initialization
+    if (state === 'loading' || isInitializing) {
+        return <AppInitializationScreen message="Đang khởi tạo ứng dụng..." />;
     }
 
     // Auth state is resolved (authenticated or unauthenticated)
