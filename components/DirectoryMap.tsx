@@ -1,11 +1,10 @@
 
 import React, { useEffect, useRef } from 'react';
 import ReactDOMServer from 'react-dom/server';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { Business, BusinessCategory } from '../types.ts';
 import MapBusinessCard from './MapBusinessCard.tsx';
-
-// It's safer to declare L this way to avoid race conditions with the CDN script loading
-declare const L: any;
 
 interface DirectoryMapProps {
     businesses: Business[];
