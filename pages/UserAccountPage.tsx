@@ -24,14 +24,16 @@ const UserAccountPage: React.FC = () => {
     // Safety timeout: If loading takes more than 10 seconds, show error
     useEffect(() => {
         if (loading) {
+            // Reset timeout flag when loading starts
+            setLoadTimeout(false);
+            
             const timeoutId = setTimeout(() => {
                 setLoadTimeout(true);
             }, 10000);
 
             return () => clearTimeout(timeoutId);
-        } else {
-            setLoadTimeout(false);
         }
+        // Don't clear loadTimeout when loading stops - let it persist if timeout already fired
     }, [loading]);
 
     // Redirect to login if not authenticated (after loading completes)

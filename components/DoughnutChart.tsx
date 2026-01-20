@@ -4,22 +4,41 @@ import { ChartDataPoint } from '../types.ts';
 const COLORS = ['#BFA16A', '#4A4A4A', '#EAE0D1', '#A98C5A'];
 
 const DoughnutChart: React.FC<{ data: ChartDataPoint[], title: string }> = ({ data, title }) => {
-    const totalValue = data.reduce((sum, item) => sum + item.value, 0);
+    // Handle empty data case
+    if (!data || data.length === 0) {
+        return (
+            <div className="bg-white p-6 rounded-lg shadow h-full">
+                <h3 className="text-lg font-semibold text-neutral-dark mb-4">{title}</h3>
+                <div className="w-full h-[200px] flex items-center justify-center text-gray-500">
+                    <p>No data available</p>
+                </div>
+            </div>
+        );
+    }
+    
+    const totalValue = data.reduce((sum, item) => sum + (item.value || 0), 0);
     let cumulativePercent = 0;
 
     const segments = data.map((item, index) => {
-        const percent = totalValue > 0 ? (item.value / totalValue) : 0;
+        const value = item.value || 0;
+        const percent = totalValue > 0 ? (value / totalValue) : 0;
         const dashArray = 2 * Math.PI * 40; // Circumference of the circle
-        const dashOffset = dashArray * (1 - percent);
-        const rotation = cumulativePercent * 360;
+        const dashOffset = Math.max(dashArray * (1 - percent), 0);
+        const rotation = Math.max(cumulativePercent * 360, 0);
         cumulativePercent += percent;
+
+        // Ensure all values are finite
+        const safePercent = isFinite(percent) ? percent : 0;
+        const safeDashArray = isFinite(dashArray) ? dashArray : 0;
+        const safeDashOffset = isFinite(dashOffset) ? dashOffset : 0;
+        const safeRotation = isFinite(rotation) ? rotation : 0;
 
         return {
             ...item,
-            percent,
-            dashArray,
-            dashOffset,
-            rotation,
+            percent: safePercent,
+            dashArray: safeDashArray,
+            dashOffset: safeDashOffset,
+            rotation: safeRotation,
             color: COLORS[index % COLORS.length],
         };
     });
