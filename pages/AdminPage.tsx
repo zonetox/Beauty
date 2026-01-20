@@ -7,6 +7,8 @@ import { useAdminAuth } from '../contexts/AdminContext.tsx';
 import { useOrderData } from '../contexts/BusinessBlogDataContext.tsx';
 import { useAdminPlatform } from '../contexts/AdminPlatformContext.tsx';
 import ConfirmDialog from '../components/ConfirmDialog.tsx';
+// Import Gemini service - use dynamic import to avoid build errors
+import type { generateWithGemini as GenerateWithGeminiType, isGeminiAvailable as IsGeminiAvailableType } from '../lib/geminiService.ts';
 
 // Reusable Components
 import BusinessManagementTable from '../components/BusinessManagementTable.tsx';
@@ -53,15 +55,17 @@ const AIBlogIdeaGenerator: React.FC = () => {
     setError('');
     setIdeas([]);
     try {
-      const { generateWithGemini, isGeminiAvailable } = await import('../lib/geminiService');
+      // Dynamic import to avoid build errors
+      const geminiModule = await import('../lib/geminiService.ts');
       
-      if (!isGeminiAvailable()) {
-        throw new Error("Gemini API key chưa được cấu hình. Vui lòng set VITE_GEMINI_API_KEY trong environment variables.");
+      if (!geminiModule.isGeminiAvailable()) {
+        setError("Gemini API key chưa được cấu hình. Vui lòng set VITE_GEMINI_API_KEY trong environment variables.");
+        return;
       }
       
       const prompt = `Tạo 5 tiêu đề bài viết blog hấp dẫn về chủ đề "${topic}" cho một nền tảng thư mục làm đẹp bằng tiếng Việt. Các tiêu đề nên thân thiện với SEO và thu hút độc giả quan tâm đến spa, salon và mẹo làm đẹp. Format: Danh sách đánh số.`;
 
-      const response = await generateWithGemini({ prompt });
+      const response = await geminiModule.generateWithGemini({ prompt });
       
       if (!response) {
         setError('Không nhận được phản hồi từ AI. Vui lòng thử lại.');
@@ -74,11 +78,16 @@ const AIBlogIdeaGenerator: React.FC = () => {
         .map(line => line.replace(/^\d+[.)]\s*/, '').trim())
         .filter(line => line.length > 0);
       
+      if (generatedIdeas.length === 0) {
+        setError('Không thể phân tích phản hồi từ AI. Vui lòng thử lại.');
+        return;
+      }
+      
       setIdeas(generatedIdeas);
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : 'Không thể tạo ý tưởng. Vui lòng kiểm tra API key và thử lại.';
       setError(errorMessage);
-      console.error(e);
+      console.error('AI generation error:', e);
     } finally {
       setLoading(false);
     }

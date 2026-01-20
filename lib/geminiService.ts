@@ -46,12 +46,12 @@ export const generateWithGemini = async (
 ): Promise<string | null> => {
   const { prompt, model = 'gemini-2.5-flash', maxTokens, temperature } = options;
   
-  const client = getGeminiClient();
-  if (!client) {
-    throw new Error('Gemini API key not configured. Please set VITE_GEMINI_API_KEY in your environment variables.');
-  }
-
   try {
+    const client = getGeminiClient();
+    if (!client) {
+      throw new Error('Gemini API key not configured. Please set VITE_GEMINI_API_KEY in your environment variables.');
+    }
+
     const response = await client.models.generateContent({
       model,
       contents: prompt,
@@ -64,6 +64,10 @@ export const generateWithGemini = async (
     return response.text || null;
   } catch (error) {
     console.error('Gemini API error:', error);
+    // Re-throw with more context
+    if (error instanceof Error) {
+      throw new Error(`Gemini API error: ${error.message}`);
+    }
     throw error;
   }
 };
