@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { GoogleGenAI } from "@google/genai";
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { MembershipTier, Business, AdminUser, BlogPost, MembershipPackage, BusinessCategory, OrderStatus, BlogCategory, AdminPageTab } from '../types.ts';
@@ -47,33 +46,38 @@ const AIBlogIdeaGenerator: React.FC = () => {
 
   const generateIdeas = async () => {
     if (!topic) {
-      setError('Please enter a topic.');
+      setError('Vui lòng nhập chủ đề.');
       return;
     }
     setLoading(true);
     setError('');
     setIdeas([]);
     try {
-      if (!process.env.API_KEY) {
-        throw new Error("API_KEY environment variable not set.");
+      const { generateWithGemini, isGeminiAvailable } = await import('../lib/geminiService');
+      
+      if (!isGeminiAvailable()) {
+        throw new Error("Gemini API key chưa được cấu hình. Vui lòng set VITE_GEMINI_API_KEY trong environment variables.");
       }
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const prompt = `Generate 5 engaging blog post titles about "${topic}" for a beauty directory platform in Vietnamese. The titles should be SEO-friendly and appealing to readers interested in spas, salons, and beauty tips. Format the output as a numbered list.`;
+      
+      const prompt = `Tạo 5 tiêu đề bài viết blog hấp dẫn về chủ đề "${topic}" cho một nền tảng thư mục làm đẹp bằng tiếng Việt. Các tiêu đề nên thân thiện với SEO và thu hút độc giả quan tâm đến spa, salon và mẹo làm đẹp. Format: Danh sách đánh số.`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-      });
-
-      const text = response.text;
-      if (!text) {
-        setError('No response from AI. Please try again.');
+      const response = await generateWithGemini({ prompt });
+      
+      if (!response) {
+        setError('Không nhận được phản hồi từ AI. Vui lòng thử lại.');
         return;
       }
-      const generatedIdeas = text.split('\n').filter(line => line.match(/^\d+\./)).map(line => line.replace(/^\d+\.\s*/, ''));
+      
+      const generatedIdeas = response
+        .split('\n')
+        .filter(line => line.match(/^\d+[.)]/))
+        .map(line => line.replace(/^\d+[.)]\s*/, '').trim())
+        .filter(line => line.length > 0);
+      
       setIdeas(generatedIdeas);
     } catch (e) {
-      setError('Failed to generate ideas. Please check your API key and try again.');
+      const errorMessage = e instanceof Error ? e.message : 'Không thể tạo ý tưởng. Vui lòng kiểm tra API key và thử lại.';
+      setError(errorMessage);
       console.error(e);
     } finally {
       setLoading(false);

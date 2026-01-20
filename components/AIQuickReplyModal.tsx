@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { GoogleGenAI } from "@google/genai";
 import { Appointment } from '../types.ts';
+import { generateWithGemini, isGeminiAvailable } from '../lib/geminiService.ts';
 
 interface AIQuickReplyModalProps {
     isOpen: boolean;
@@ -37,33 +37,39 @@ const AIQuickReplyModal: React.FC<AIQuickReplyModalProps> = ({ isOpen, onClose, 
         setLoading(true);
         setError('');
         try {
-            if (!process.env.API_KEY) {
-                throw new Error("API_KEY environment variable not set.");
+            if (!isGeminiAvailable()) {
+                throw new Error("Gemini API key chưa được cấu hình. Vui lòng set VITE_GEMINI_API_KEY");
             }
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-            const prompt = `You are a helpful assistant for a beauty salon owner in Vietnam. Generate 3 professional and friendly reply messages in Vietnamese for the following situation.
-            - Customer Name: ${appointment.customerName}
-            - Service: ${appointment.serviceName}
-            - Date: ${new Date(appointment.date).toLocaleDateString('vi-VN')}
-            - Time: ${appointment.timeSlot}
-            - Desired action from the owner: ${contextToActionMap[context]}
             
-            Keep the replies concise, polite, and ready to be sent. Format the output as a numbered list. For example:
-            1. [First reply]
-            2. [Second reply]
-            3. [Third reply]`;
+            const prompt = `Bạn là trợ lý hữu ích cho chủ salon làm đẹp tại Việt Nam. Tạo 3 tin nhắn phản hồi chuyên nghiệp và thân thiện bằng tiếng Việt cho tình huống sau:
+            - Tên khách hàng: ${appointment.customerName}
+            - Dịch vụ: ${appointment.serviceName}
+            - Ngày: ${new Date(appointment.date).toLocaleDateString('vi-VN')}
+            - Giờ: ${appointment.timeSlot}
+            - Hành động mong muốn từ chủ salon: ${contextToActionMap[context]}
             
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-            });
+            Giữ các phản hồi ngắn gọn, lịch sự và sẵn sàng gửi. Format: Danh sách đánh số. Ví dụ:
+            1. [Phản hồi đầu tiên]
+            2. [Phản hồi thứ hai]
+            3. [Phản hồi thứ ba]`;
+            
+            const response = await generateWithGemini({ prompt });
 
-            const text = response.text ?? '';
-            const generatedReplies = text.split('\n').filter(line => line.match(/^\d+\./)).map(line => line.replace(/^\d+\.\s*/, '').trim());
+            if (!response) {
+                throw new Error('Không nhận được phản hồi từ AI');
+            }
+
+            const generatedReplies = response
+                .split('\n')
+                .filter(line => line.match(/^\d+[.)]/))
+                .map(line => line.replace(/^\d+[.)]\s*/, '').trim())
+                .filter(line => line.length > 0);
+            
             setReplies(generatedReplies);
 
         } catch (e) {
-            setError('Failed to generate replies. Please try again.');
+            const errorMessage = e instanceof Error ? e.message : 'Không thể tạo phản hồi. Vui lòng thử lại.';
+            setError(errorMessage);
             console.error(e);
         } finally {
             setLoading(false);

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CATEGORIES, LOCATIONS_HIERARCHY, CITIES } from '../constants.ts';
 import { BusinessCategory } from '../types.ts';
+import { generateChatbotResponse, isGeminiAvailable } from '../lib/geminiService.ts';
 
 interface Message {
     id: number;
@@ -37,10 +38,11 @@ const Chatbot: React.FC = () => {
         }
     }, [isOpen]);
 
-    const processUserMessage = (text: string) => {
+    const processUserMessage = async (text: string) => {
         const lowerText = text.toLowerCase();
         const params = new URLSearchParams();
         
+        // Try to extract search parameters (category, location, keyword)
         // 1. Find Category
         for (const category of Object.values(BusinessCategory)) {
             if (category && lowerText.includes(category.toLowerCase().split(' ')[0])) {
@@ -79,12 +81,58 @@ const Chatbot: React.FC = () => {
             params.set('keyword', keywords);
         }
 
+        // Use AI if available, otherwise use rule-based
+        if (isGeminiAvailable()) {
+            try {
+                // Build conversation history
+                const history = messages
+                    .filter(msg => msg.sender !== 'user' || msg.text !== "Để tôi xem nào...")
+                    .map(msg => ({
+                        role: msg.sender === 'user' ? 'user' as const : 'bot' as const,
+                        text: msg.text,
+                    }));
+
+                const aiResponse = await generateChatbotResponse(text, history);
+                
+                if (aiResponse) {
+                    addBotMessage(aiResponse);
+                    
+                    // If we have search parameters, offer to search
+                    if (params.toString()) {
+                        const timeout1 = setTimeout(() => {
+                            addBotMessage(`Tôi có thể giúp bạn tìm kiếm ngay bây giờ. Bạn có muốn xem kết quả không?`);
+                            const timeout2 = setTimeout(() => {
+                                if (messagesEndRef.current) {
+                                    const searchUrl = `/directory?${params.toString()}`;
+                                    navigate(searchUrl);
+                                    setIsOpen(false);
+                                }
+                            }, 2000);
+                            timeoutRefs.current.push(timeout2);
+                        }, 1000);
+                        timeoutRefs.current.push(timeout1);
+                    }
+                } else {
+                    // Fallback to rule-based if AI fails
+                    handleRuleBasedResponse(params);
+                }
+            } catch (error) {
+                console.error('AI chatbot error:', error);
+                // Fallback to rule-based
+                handleRuleBasedResponse(params);
+            }
+        } else {
+            // Use rule-based logic if AI not available
+            handleRuleBasedResponse(params);
+        }
+    };
+
+    const handleRuleBasedResponse = (params: URLSearchParams) => {
         const timeout1 = setTimeout(() => {
             if (params.toString()) {
                 const searchUrl = `/directory?${params.toString()}`;
                 addBotMessage(`Tuyệt vời! Dựa trên yêu cầu của bạn, tôi sẽ tìm kiếm ngay bây giờ...`);
                 const timeout2 = setTimeout(() => {
-                    // Check if component is still mounted before navigating
                     if (messagesEndRef.current) {
                         navigate(searchUrl);
                         setIsOpen(false);
@@ -102,7 +150,7 @@ const Chatbot: React.FC = () => {
         setMessages(prev => [...prev, { id: Date.now(), text, sender: 'bot' }]);
     };
 
-    const handleSendMessage = (e: React.FormEvent) => {
+    const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!inputValue.trim()) return;
 
@@ -112,10 +160,14 @@ const Chatbot: React.FC = () => {
             sender: 'user'
         };
         setMessages(prev => [...prev, userMessage]);
+        const messageText = inputValue;
         setInputValue('');
 
+        // Show loading message
         addBotMessage("Để tôi xem nào...");
-        processUserMessage(inputValue);
+        
+        // Process message (async)
+        await processUserMessage(messageText);
     };
 
     return (

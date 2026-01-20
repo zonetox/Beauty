@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Business, Order, AdminUser, AdminPageTab } from '../types.ts';
+import { generateSearchSuggestions, isGeminiAvailable } from '../lib/geminiService.ts';
 
 // Search Icon
 const SearchIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>;
@@ -48,6 +49,34 @@ const AdminGlobalSearch: React.FC<AdminGlobalSearchProps> = ({ businesses, order
         return [...businessResults, ...orderResults, ...userResults].slice(0, 7);
     }, [query, businesses, orders, adminUsers]);
 
+    // Generate AI search suggestions
+    useEffect(() => {
+        if (!query.trim() || query.length < 3) {
+            setAiSuggestions([]);
+            return;
+        }
+
+        if (!isGeminiAvailable()) {
+            return;
+        }
+
+        const timeoutId = setTimeout(async () => {
+            setLoadingSuggestions(true);
+            try {
+                const suggestions = await generateSearchSuggestions(query);
+                if (suggestions) {
+                    setAiSuggestions(suggestions);
+                }
+            } catch (error) {
+                console.error('Error generating search suggestions:', error);
+            } finally {
+                setLoadingSuggestions(false);
+            }
+        }, 500); // Debounce 500ms
+
+        return () => clearTimeout(timeoutId);
+    }, [query]);
+
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
@@ -84,18 +113,64 @@ const AdminGlobalSearch: React.FC<AdminGlobalSearchProps> = ({ businesses, order
             {showResults && (
                 <div className="absolute z-10 mt-2 w-full bg-white rounded-md shadow-lg border">
                     {results.length > 0 ? (
-                        <ul className="max-h-80 overflow-y-auto">
-                            {results.map((result, index) => (
-                                <li key={`${result.type}-${result.id}-${index}`}>
-                                    <button onClick={() => handleResultClick(result)} className="w-full text-left px-4 py-3 hover:bg-gray-100 transition-colors">
-                                        <p className="text-sm font-medium text-neutral-dark">{result.label}</p>
-                                        <p className="text-xs text-gray-500">{result.description} <span className="font-semibold text-primary">({result.type})</span></p>
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
+                        <>
+                            <ul className="max-h-60 overflow-y-auto border-b">
+                                {results.map((result, index) => (
+                                    <li key={`${result.type}-${result.id}-${index}`}>
+                                        <button onClick={() => handleResultClick(result)} className="w-full text-left px-4 py-3 hover:bg-gray-100 transition-colors">
+                                            <p className="text-sm font-medium text-neutral-dark">{result.label}</p>
+                                            <p className="text-xs text-gray-500">{result.description} <span className="font-semibold text-primary">({result.type})</span></p>
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                            {isGeminiAvailable() && (aiSuggestions.length > 0 || loadingSuggestions) && (
+                                <div className="px-4 py-2 bg-blue-50 border-t">
+                                    <p className="text-xs font-semibold text-blue-900 mb-2">💡 Gợi ý tìm kiếm:</p>
+                                    {loadingSuggestions ? (
+                                        <p className="text-xs text-blue-700">Đang tạo gợi ý...</p>
+                                    ) : (
+                                        <div className="flex flex-wrap gap-1">
+                                            {aiSuggestions.map((suggestion, index) => (
+                                                <button
+                                                    key={index}
+                                                    onClick={() => {
+                                                        setQuery(suggestion);
+                                                        setIsFocused(true);
+                                                    }}
+                                                    className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition-colors"
+                                                >
+                                                    {suggestion}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </>
                     ) : (
-                        <div className="px-4 py-3 text-sm text-gray-500">No results found.</div>
+                        <div className="px-4 py-3 text-sm text-gray-500">
+                            {loadingSuggestions ? 'Đang tìm kiếm...' : 'Không tìm thấy kết quả.'}
+                            {isGeminiAvailable() && aiSuggestions.length > 0 && (
+                                <div className="mt-3 pt-3 border-t">
+                                    <p className="text-xs font-semibold text-blue-900 mb-2">💡 Gợi ý tìm kiếm:</p>
+                                    <div className="flex flex-wrap gap-1">
+                                        {aiSuggestions.map((suggestion, index) => (
+                                            <button
+                                                key={index}
+                                                onClick={() => {
+                                                    setQuery(suggestion);
+                                                    setIsFocused(true);
+                                                }}
+                                                className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition-colors"
+                                            >
+                                                {suggestion}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     )}
                 </div>
             )}
