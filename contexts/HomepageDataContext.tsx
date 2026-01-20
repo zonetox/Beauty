@@ -84,9 +84,6 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   // Fetch homepage data from database (delayed to avoid blocking app initialization)
   const fetchHomepageData = useCallback(async () => {
-    // Skip if already fetched
-    if (hasFetchedRef.current) return;
-    hasFetchedRef.current = true;
     // --- CACHE-FIRST: Check for cached homepage data (7-10 min cache) ---
     const cachedData = homepageCacheManager.get();
     if (cachedData !== null) {
@@ -263,11 +260,19 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
     }
   }, []);
 
+  // Delay homepage data fetch to avoid blocking app initialization
+  // Load from cache/localStorage first, then fetch from database in background
   useEffect(() => {
-    // Prevent double fetch in React.StrictMode
+    // Prevent double fetch
     if (hasFetchedRef.current) return;
     hasFetchedRef.current = true;
-    fetchHomepageData();
+    
+    // Delay database fetch by 1 second to let app initialize first
+    const timer = setTimeout(() => {
+      fetchHomepageData();
+    }, 1000);
+
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once on mount
 
