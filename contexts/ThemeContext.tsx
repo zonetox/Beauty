@@ -103,13 +103,26 @@ const applyTheme = (theme: ThemeSettings) => {
 
 export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<ThemeSettings>(DEFAULT_THEME);
-  const [loading, setLoading] = useState(true);
+  // Start with loading false - use cached/default data immediately
+  const [loading, setLoading] = useState(false);
 
-  // Load theme from database or localStorage
+  // Load theme from database or localStorage (silent, no loading state)
   const fetchTheme = useCallback(async () => {
+    // Load from localStorage first (instant)
+    try {
+      const savedThemeJSON = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (savedThemeJSON) {
+        // Merge with default to ensure new properties are not missing
+        setTheme({ ...DEFAULT_THEME, ...JSON.parse(savedThemeJSON) });
+      }
+    } catch (e) {
+      console.error("Failed to load theme from localStorage", e);
+    }
+
+    // Then try database in background (non-blocking)
     if (isSupabaseConfigured) {
       try {
-        // Try to load from app_settings table first
+        // Try to load from app_settings table
         const { data, error } = await supabase
           .from('app_settings')
           .select('settings_data')
@@ -119,25 +132,17 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (!error && data?.settings_data?.theme) {
           // Merge with default to ensure new properties are not missing
           setTheme({ ...DEFAULT_THEME, ...data.settings_data.theme });
-          setLoading(false);
-          return;
+          // Save to localStorage for next time
+          try {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data.settings_data.theme));
+          } catch (e) {
+            console.error("Failed to save theme to localStorage", e);
+          }
         }
       } catch (error) {
         console.error('Error fetching theme from database:', error);
+        // Silent fail - use localStorage/default theme
       }
-    }
-
-    // Fallback to localStorage
-    try {
-      const savedThemeJSON = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (savedThemeJSON) {
-        // Merge with default to ensure new properties are not missing
-        setTheme({ ...DEFAULT_THEME, ...JSON.parse(savedThemeJSON) });
-      }
-    } catch (e) {
-      console.error("Failed to load theme from localStorage", e);
-    } finally {
-      setLoading(false);
     }
   }, []);
 

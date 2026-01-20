@@ -25,6 +25,7 @@ import { PublicPageContentProvider } from './contexts/PublicPageContentContext.t
 import { ErrorLoggerProvider } from './contexts/ErrorLoggerContext.tsx';
 import { StaffProvider } from './contexts/StaffContext.tsx';
 import AppInitializationScreen from './components/AppInitializationScreen.tsx';
+import { AppInitializationProvider, useAppInitialization } from './contexts/AppInitializationContext.tsx';
 import { queryClient } from './lib/queryClient.ts';
 
 import { BusinessProvider } from './contexts/BusinessContext.tsx';
@@ -209,6 +210,13 @@ const PublicDataLayout: React.FC = () => {
 
 // App content (rendered after auth is resolved)
 const AppContent: React.FC = () => {
+    const { isInitializing } = useAppInitialization();
+    
+    // Show unified loading screen during initialization
+    if (isInitializing) {
+        return <AppInitializationScreen message="Đang khởi tạo ứng dụng..." />;
+    }
+    
     return (
         <ErrorLoggerProvider>
             <ThemeProvider>
@@ -298,28 +306,27 @@ const App: React.FC = () => {
         <ErrorBoundary>
             <QueryClientProvider client={queryClient}>
                 <Router>
-                    <WebVitalsTracker />
-                    <PageTracking />
-                    <Toaster 
-                      position="top-center" 
-                      reverseOrder={false}
-                      toastOptions={{
-                        // Reduce toast duration
-                        duration: 3000,
-                        // Limit number of toasts shown at once
-                        maxToasts: 3,
-                        style: {
-                          maxWidth: '500px',
-                        },
-                      }}
-                      // Prevent duplicate toasts
-                      gutter={8}
-                    />
-                    <AuthProvider>
-                        <AuthGate>
-                            <AppContent />
-                        </AuthGate>
-                    </AuthProvider>
+                    <AppInitializationProvider>
+                        <WebVitalsTracker />
+                        <PageTracking />
+                        <Toaster 
+                          position="top-center" 
+                          reverseOrder={false}
+                          toastOptions={{
+                            duration: 3000,
+                            maxToasts: 3,
+                            style: {
+                              maxWidth: '500px',
+                            },
+                          }}
+                          gutter={8}
+                        />
+                        <AuthProvider>
+                            <AuthGate>
+                                <AppContent />
+                            </AuthGate>
+                        </AuthProvider>
+                    </AppInitializationProvider>
                 </Router>
             </QueryClientProvider>
         </ErrorBoundary>
@@ -330,20 +337,20 @@ const App: React.FC = () => {
 // Prevents multiple loading screens from appearing
 const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { state } = useAuth();
-    const [isInitializing, setIsInitializing] = useState(true);
+    const { isInitializing, setInitializing } = useAppInitialization();
 
-    // Track initialization state
+    // Track initialization state - mark as complete when auth resolves
     useEffect(() => {
-        if (state !== 'loading') {
+        if (state !== 'loading' && isInitializing) {
             // Add small delay to prevent flash of loading screen
             const timer = setTimeout(() => {
-                setIsInitializing(false);
-            }, 100);
+                setInitializing(false);
+            }, 300);
             return () => clearTimeout(timer);
         }
-    }, [state]);
+    }, [state, isInitializing, setInitializing]);
 
-    // Show unified loading screen during initialization
+    // Show unified loading screen during initialization or auth loading
     if (state === 'loading' || isInitializing) {
         return <AppInitializationScreen message="Đang khởi tạo ứng dụng..." />;
     }

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../providers/AuthProvider.tsx';
 import { resolveUserRole } from '../lib/roleResolution';
-import LoadingState from './LoadingState.tsx';
+import { useAppInitialization } from '../contexts/AppInitializationContext.tsx';
 
 interface AdminProtectedRouteProps {
     children: React.ReactNode;
@@ -13,6 +13,7 @@ interface AdminProtectedRouteProps {
 const AdminProtectedRoute: React.FC<AdminProtectedRouteProps> = ({ children }) => {
     const { user, profile, state } = useAuth();
     const location = useLocation();
+    const { isInitializing } = useAppInitialization();
     const [isAdmin, setIsAdmin] = useState<boolean | 'loading'>('loading');
     const [error, setError] = useState<string | null>(null);
 
@@ -106,10 +107,19 @@ const AdminProtectedRoute: React.FC<AdminProtectedRouteProps> = ({ children }) =
         };
     }, [user, profile, state]);
 
+    // Don't show loading if app is still initializing (AppInitializationScreen is shown)
+    if (isInitializing) {
+        return null; // AppInitializationScreen will be shown by AppContent
+    }
+
+    // Loading state - only show if not initializing
     if (state === 'loading' || isAdmin === 'loading') {
         return (
             <div className="flex items-center justify-center h-screen bg-gray-100">
-                <LoadingState message="Checking admin authentication..." />
+                <div className="text-center">
+                    <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-gray-600">Đang kiểm tra quyền admin...</p>
+                </div>
             </div>
         );
     }

@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../providers/AuthProvider.tsx';
-import LoadingState from './LoadingState.tsx';
 import { resolveUserRole } from '../lib/roleResolution';
+import { useAppInitialization } from '../contexts/AppInitializationContext.tsx';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -12,6 +12,7 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     const { state, user, profile } = useAuth();
     const location = useLocation();
+    const { isInitializing } = useAppInitialization();
     const [roleResolved, setRoleResolved] = useState(false);
     const [initError, setInitError] = useState<string | null>(null);
 
@@ -52,11 +53,20 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         verifyAccess();
     }, [state, user, profile]);
 
-    // Loading state
+    // Don't show loading if app is still initializing (AppInitializationScreen is shown)
+    // Only show loading if auth is resolved but role is not yet resolved
+    if (isInitializing) {
+        return null; // AppInitializationScreen will be shown by AppContent
+    }
+
+    // Loading state - only show if not initializing
     if (state === 'loading' || !roleResolved) {
         return (
             <div className="flex items-center justify-center h-screen">
-                <LoadingState message="Checking authentication..." />
+                <div className="text-center">
+                    <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-gray-600">Đang kiểm tra quyền truy cập...</p>
+                </div>
             </div>
         );
     }

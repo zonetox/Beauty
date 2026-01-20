@@ -7,8 +7,8 @@ import { useBusinessData } from '../contexts/BusinessDataContext.tsx';
 import SEOHead from '../components/SEOHead.tsx';
 import { Link, useNavigate } from 'react-router-dom';
 import BusinessCard from '../components/BusinessCard.tsx';
-import LoadingState from '../components/LoadingState.tsx';
 import EmptyState from '../components/EmptyState.tsx';
+import { useAppInitialization } from '../contexts/AppInitializationContext.tsx';
 
 // AccountTab: Only include tabs for features that are ACTUALLY implemented
 // Do NOT include incomplete features (appointments, reviews are not implemented for regular users)
@@ -18,6 +18,7 @@ const UserAccountPage: React.FC = () => {
     const { currentUser, profile, loading, isFavorite, toggleFavorite } = useUserSession();
     const { businesses } = useBusinessData();
     const navigate = useNavigate();
+    const { isInitializing } = useAppInitialization();
     const [activeTab, setActiveTab] = useState<AccountTab>('profile');
     const [loadTimeout, setLoadTimeout] = useState(false);
 
@@ -44,13 +45,23 @@ const UserAccountPage: React.FC = () => {
     // Get favorite businesses
     const favoriteBusinesses = businesses.filter(b => isFavorite(b.id));
 
-    // Loading state - show spinner
+    // Don't show loading if app is still initializing
+    if (isInitializing) {
+        return null; // AppInitializationScreen will be shown
+    }
+
+    // Loading state - show spinner (only if not initializing)
     if (loading && !loadTimeout) {
         return (
             <>
                 <SEOHead title="Đang tải tài khoản..." description="Đang tải thông tin tài khoản..." />
                 <div className="container mx-auto px-4 py-16">
-                    <LoadingState message="Đang tải tài khoản..." fullScreen={false} />
+                    <div className="flex items-center justify-center py-12">
+                        <div className="text-center">
+                            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                            <p className="text-gray-600">Đang tải tài khoản...</p>
+                        </div>
+                    </div>
                 </div>
             </>
         );
@@ -96,7 +107,12 @@ const UserAccountPage: React.FC = () => {
             <>
                 <SEOHead title="Đang tải tài khoản..." description="Đang tải thông tin tài khoản..." />
                 <div className="container mx-auto px-4 py-16">
-                    <LoadingState message="Đang tải tài khoản..." fullScreen={false} />
+                    <div className="flex items-center justify-center py-12">
+                        <div className="text-center">
+                            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                            <p className="text-gray-600">Đang tải tài khoản...</p>
+                        </div>
+                    </div>
                 </div>
             </>
         );

@@ -11,6 +11,16 @@ import toast from 'react-hot-toast';
 const shownToasts = new Map<string, number>();
 const TOAST_COOLDOWN_MS = 2000; // 2 seconds cooldown between same toast
 
+// Track app initialization state to suppress toasts during startup
+let isAppInitializing = true;
+
+// Allow external control of initialization state
+export const setAppInitializing = (value: boolean) => {
+  isAppInitializing = value;
+};
+
+export const getAppInitializing = () => isAppInitializing;
+
 /**
  * Show a toast notification with duplicate prevention
  * @param message - The toast message
@@ -24,8 +34,19 @@ export const showToast = (
   options?: {
     duration?: number;
     id?: string;
+    force?: boolean; // Force show even during initialization
   }
 ): string | null => {
+  // Suppress toasts during app initialization (unless forced)
+  if (isAppInitializing && !options?.force) {
+    // Only allow critical errors during initialization
+    if (type === 'error' && message.includes('CRITICAL')) {
+      // Allow critical errors
+    } else {
+      return null; // Suppress all other toasts during initialization
+    }
+  }
+
   // Create a unique key for this toast
   const toastKey = options?.id || `${type}-${message}`;
   const now = Date.now();
