@@ -368,15 +368,21 @@ const AdminPage: React.FC = () => {
 
 
   const handleLogout = async () => {
-    await adminLogout();
-    navigate('/admin/login');
+    try {
+      // Clear state first to prevent flashing
+      await adminLogout();
+      // Small delay to ensure state is cleared before redirect
+      await new Promise(resolve => setTimeout(resolve, 100));
+      navigate('/admin/login', { replace: true });
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still navigate even if logout fails
+      navigate('/admin/login', { replace: true });
+    }
   };
 
-  useEffect(() => {
-    if (!authLoading && !currentUser) {
-      navigate('/admin/login');
-    }
-  }, [authLoading, currentUser, navigate]);
+  // Remove auto-redirect - AdminProtectedRoute already handles this
+  // This was causing redirect loops and flashing
 
   if (authLoading) {
     return (

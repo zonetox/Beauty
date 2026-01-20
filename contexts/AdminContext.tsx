@@ -175,7 +175,13 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (isSupabaseConfigured) {
             const { data } = supabase.auth.onAuthStateChange(async (_event, session) => {
                 if (!mounted) return;
-                setLoading(true);
+                
+                // Don't set loading on SIGNED_OUT event to avoid flashing
+                // Only set loading for other events that need processing
+                if (_event !== 'SIGNED_OUT') {
+                    setLoading(true);
+                }
+                
                 try {
                     // Re-fetch users to get latest permissions/lock status
                     const allAdmins = await fetchAdminUsers();
@@ -203,10 +209,17 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
 
     const adminLogout = async () => {
+        // Clear state FIRST to prevent flashing and redirect loops
+        setCurrentUser(null);
+        setLoading(false);
+        
+        // Then attempt signOut (fire-and-forget to avoid blocking)
         if (isSupabaseConfigured) {
-            await supabase.auth.signOut();
+            supabase.auth.signOut().catch((error) => {
+                // Ignore signOut errors - state is already cleared
+                console.warn('SignOut error (ignored):', error);
+            });
         }
-        setCurrentUser(null); // Manually clear state for instant UI update
     };
 
     // loginAs removed - admin access must be determined ONLY by querying admin_users table

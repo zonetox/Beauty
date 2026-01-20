@@ -12,14 +12,38 @@ const AdminLoginPage: React.FC = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const { adminLogin, currentUser } = useAdminAuth();
     const navigate = useNavigate();
+    
+    // Get admin auth - must be called unconditionally (React Hook rules)
+    const { adminLogin, currentUser, loading: authLoading } = useAdminAuth();
+    
+    // Show loading state while auth is initializing
+    if (authLoading) {
+        return (
+            <>
+                <SEOHead title="Loading..." description="Admin login page" />
+                <div className="flex items-center justify-center min-h-screen bg-gray-100">
+                    <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
+                        <div className="flex justify-center">
+                            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                        <p className="text-center text-gray-600">Loading...</p>
+                    </div>
+                </div>
+            </>
+        );
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setLoading(true);
+        
         try {
+            if (!adminLogin) {
+                throw new Error('Admin authentication is not available. Please refresh the page.');
+            }
+            
             await adminLogin(email, password);
             // The onAuthStateChange listener in the context will handle redirection
             // but we can navigate optimistically.
@@ -53,8 +77,13 @@ const AdminLoginPage: React.FC = () => {
             <div className="flex items-center justify-center min-h-screen bg-gray-100">
                 <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
                     <h1 className="text-2xl font-bold text-center text-neutral-dark font-serif">Admin Panel Login</h1>
-                    {error && <p className="text-red-500 text-center bg-red-100 p-3 rounded-md">{error}</p>}
-                <form onSubmit={handleSubmit} className="space-y-6">
+                    {error && (
+                        <div className="text-red-500 text-center bg-red-100 p-3 rounded-md">
+                            <p className="font-medium">Lỗi đăng nhập</p>
+                            <p className="text-sm mt-1">{error}</p>
+                        </div>
+                    )}
+                    <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
                         <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
                         <input
