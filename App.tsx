@@ -103,6 +103,7 @@ const AppLayout: React.FC = () => {
 const AccountPageRouter: React.FC = () => {
     const { profile, user, state } = useAuth();
     const { role, isLoading: roleLoading, error: roleError } = useUserRole();
+    const navigate = useNavigate();
     const [loadTimeout, setLoadTimeout] = useState(false);
 
     // Safety timeout: If loading takes more than 15 seconds, show error
@@ -155,18 +156,58 @@ const AccountPageRouter: React.FC = () => {
         );
     }
 
-    // Error state - BLOCK access
-    if (roleError || !profile || !user) {
+    // Error state - Only block if critical (no user or profile), otherwise allow access with fallback role
+    if (!user) {
         return (
             <div className="flex items-center justify-center h-[50vh]">
                 <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg text-center">
                     <div className="text-red-500 text-5xl mb-4">⚠️</div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Account Setup Incomplete</h2>
-                    <p className="text-gray-600 mb-6">{roleError || 'Profile not found. Account is incomplete.'}</p>
-                    <p className="text-sm text-gray-500">Please contact support or try logging out and back in.</p>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Authentication Required</h2>
+                    <p className="text-gray-600 mb-6">Please log in to access your account.</p>
+                    <button
+                        onClick={() => navigate('/login', { replace: true })}
+                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                    >
+                        Đăng nhập
+                    </button>
                 </div>
             </div>
         );
+    }
+
+    // If profile is missing but user exists, try to show account page anyway (profile may load later)
+    if (!profile && roleError) {
+        // Show error but allow retry
+        return (
+            <div className="flex items-center justify-center h-[50vh]">
+                <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg text-center">
+                    <div className="text-yellow-500 text-5xl mb-4">⏱️</div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Đang tải thông tin</h2>
+                    <p className="text-gray-600 mb-6">{roleError}</p>
+                    <div className="flex gap-2 justify-center">
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                        >
+                            Làm mới trang
+                        </button>
+                        <button
+                            onClick={() => navigate('/', { replace: true })}
+                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                        >
+                            Về trang chủ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // If we have user and profile but role resolution failed, try to show account page with fallback
+    if (profile && user && roleError && !roleLoading) {
+        // Fallback: Show account page for regular users if role resolution fails
+        console.warn('Role resolution failed, using fallback user role:', roleError);
+        return <UserAccountPage />;
     }
 
     // Route based on resolved role - NO DEFAULT REDIRECT

@@ -61,37 +61,67 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
       return;
     }
 
+    // Add overall timeout for all queries (15 seconds)
+    const overallTimeout = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Admin data fetch timeout')), 15000);
+    });
+
     // F2.1: Optimize queries - select only needed columns
-    const [
-      announcementsRes,
-      ticketsRes,
-      requestsRes,
-      settingsRes,
-      pageContentRes
-    ] = await Promise.all([
-      supabase.from('announcements')
-        .select('id, title, content, type, created_at')
-        .order('created_at', { ascending: false }),
-      supabase.from('support_tickets')
-        .select(`
-          id, 
-          business_id, 
-          subject, 
-          message, 
-          status, 
-          created_at, 
-          last_reply_at, 
-          replies,
-          businesses!inner(name)
-        `)
-        .order('last_reply_at', { ascending: false }),
-      supabase.from('registration_requests')
-        .select('id, business_name, email, phone, address, category, tier, submitted_at, status')
-        .order('submitted_at', { ascending: false }),
-      supabase.from('app_settings').select('settings_data').eq('id', 1).maybeSingle(),
-      supabase.from('page_content')
-        .select('page_name, content_data')
-    ]);
+    // Add individual timeouts for each query (10 seconds each)
+    const queryWithTimeout = async <T,>(queryPromise: Promise<T>, timeoutMs = 10000): Promise<T> => {
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Query timeout')), timeoutMs);
+      });
+      return Promise.race([queryPromise, timeoutPromise]);
+    };
+
+    try {
+      const [
+        announcementsRes,
+        ticketsRes,
+        requestsRes,
+        settingsRes,
+        pageContentRes
+      ] = await Promise.race([
+        Promise.all([
+          queryWithTimeout(
+            supabase.from('announcements')
+              .select('id, title, content, type, created_at')
+              .order('created_at', { ascending: false })
+              .limit(50) // Limit to recent 50 announcements
+          ),
+          queryWithTimeout(
+            supabase.from('support_tickets')
+              .select(`
+                id, 
+                business_id, 
+                subject, 
+                message, 
+                status, 
+                created_at, 
+                last_reply_at, 
+                replies,
+                businesses!inner(name)
+              `)
+              .order('last_reply_at', { ascending: false })
+              .limit(100) // Limit to recent 100 tickets
+          ),
+          queryWithTimeout(
+            supabase.from('registration_requests')
+              .select('id, business_name, email, phone, address, category, tier, submitted_at, status')
+              .order('submitted_at', { ascending: false })
+              .limit(100) // Limit to recent 100 requests
+          ),
+          queryWithTimeout(
+            supabase.from('app_settings').select('settings_data').eq('id', 1).maybeSingle()
+          ),
+          queryWithTimeout(
+            supabase.from('page_content')
+              .select('page_name, content_data')
+          )
+        ]),
+        overallTimeout
+      ]);
 
     if (announcementsRes.data) {
       // Map snake_case to camelCase
@@ -154,15 +184,25 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
       }
     }
     setPageContent(finalContent);
-
+    } catch (error) {
+      console.error('Error fetching admin platform data:', error);
+      // Don't throw - allow admin page to render with partial data
+      // Individual components will handle missing data gracefully
+    }
   }, []);
 
-  // Delay admin platform data fetch - only needed when admin page is actually viewed
+  // Lazy load admin platform data - only fetch when actually needed (not on mount)
+  // This prevents blocking admin page load
+  // Data will be fetched on-demand when specific tabs/components request it
+  // For now, we still fetch on mount but with better error handling
   useEffect(() => {
-    // Delay fetch by 2 seconds to avoid blocking app initialization
+    // Delay fetch by 3 seconds to let admin page render first
     const timer = setTimeout(() => {
-      fetchAllAdminData();
-    }, 2000);
+      fetchAllAdminData().catch((error) => {
+        console.error('Failed to fetch admin platform data:', error);
+        // Don't block UI - allow admin to use page even if some data fails to load
+      });
+    }, 3000);
 
     return () => clearTimeout(timer);
     // Supabase real-time subscription for new registrations

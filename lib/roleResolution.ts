@@ -58,9 +58,9 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
   }
 
   try {
-    // Add timeout for profile query (5 seconds)
+    // Add timeout for profile query (10 seconds - increased for slower connections)
     const profileTimeout = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Profile query timeout')), 5000);
+      setTimeout(() => reject(new Error('Profile query timeout')), 10000);
     });
 
     // MANDATORY: Verify profile exists first (required for all authenticated users)

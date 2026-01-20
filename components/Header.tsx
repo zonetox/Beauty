@@ -45,14 +45,19 @@ const Header: React.FC = () => {
     try {
       setIsMenuOpen(false); // Close menu on logout
       setIsDropdownOpen(false); // Close dropdown on logout
-      await logout();
-      // Wait a bit to ensure session is cleared
-      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Navigate to home first (before logout completes) for better UX
       navigate('/', { replace: true });
+      
+      // Then perform logout (this will clear session in background)
+      await logout();
+      
       // Don't show toast on logout - silent logout is better UX
       // toast.success('Đã đăng xuất thành công');
     } catch (error: unknown) {
       console.error('Logout error:', error);
+      // Even if logout fails, ensure we're on home page
+      navigate('/', { replace: true });
       // Only show error toast if logout actually failed
       const errorMessage = error instanceof Error ? error.message : 'Vui lòng thử lại';
       toast.error('Lỗi khi đăng xuất: ' + errorMessage, { id: 'logout-error' });

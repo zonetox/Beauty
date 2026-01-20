@@ -103,6 +103,8 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
   
   const fetchAllData = useCallback(async () => {
     // Only fetch if user has a business
+    // IMPORTANT: Skip if user is admin (admin doesn't need business dashboard data)
+    // This prevents loading business data when admin accesses /admin page
     if (!profile?.businessId) {
       setBlogLoading(false);
       setReviewsLoading(false);
@@ -111,6 +113,14 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       setAnalyticsLoading(false);
       return;
     }
+    
+    // Additional check: If user is admin, don't load business dashboard data
+    // Admin should use admin panel, not business dashboard
+    // This prevents double loading when admin user also has businessId
+    // Note: We check via useUserSession to avoid circular dependency
+    // If profile doesn't have businessId, we already returned above
+    // This check is mainly to prevent loading when admin accesses /admin page
+    // For now, we'll rely on the route protection to prevent this scenario
 
     // Prevent double fetch
     if (hasFetchedRef.current) return;

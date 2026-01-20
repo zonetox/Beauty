@@ -36,17 +36,17 @@ const AdminProtectedRoute: React.FC<AdminProtectedRouteProps> = ({ children }) =
             }
 
             try {
-                // Add timeout to prevent hanging (10 seconds)
+                // Add timeout to prevent hanging (20 seconds - increased for slower connections)
                 timeoutId = setTimeout(() => {
                     if (mounted) {
                         setError('Admin verification timed out. Please try refreshing the page.');
                         setIsAdmin(false);
                     }
-                }, 10000);
+                }, 20000);
 
-                // Add timeout wrapper for resolveUserRole
+                // Add timeout wrapper for resolveUserRole (15 seconds - increased)
                 const roleResolutionTimeout = new Promise<never>((_, reject) => {
-                    setTimeout(() => reject(new Error('Role resolution timeout')), 8000);
+                    setTimeout(() => reject(new Error('Role resolution timeout')), 15000);
                 });
 
                 const roleResult = await Promise.race([

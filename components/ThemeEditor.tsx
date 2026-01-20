@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useTheme } from '../contexts/ThemeContext.tsx';
 import { ThemeSettings } from '../types.ts';
 import ConfirmDialog from './ConfirmDialog.tsx';
+import { uploadFile, deleteFileByUrl } from '../lib/storage.ts';
 
 const ColorInput: React.FC<{ label: string; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; name: string; }> = ({ label, value, onChange, name }) => (
     <div>
@@ -18,6 +19,12 @@ const ThemeEditor: React.FC = () => {
     const { theme, updateTheme, availableFonts } = useTheme();
     const [formData, setFormData] = useState<ThemeSettings>(JSON.parse(JSON.stringify(theme)));
     const [showResetConfirm, setShowResetConfirm] = useState(false);
+    const [uploadingLogo, setUploadingLogo] = useState(false);
+    const [uploadingFavicon, setUploadingFavicon] = useState(false);
+    const [logoPreview, setLogoPreview] = useState<string | null>(formData.logoUrl || null);
+    const [faviconPreview, setFaviconPreview] = useState<string | null>(formData.faviconUrl || null);
+    const logoInputRef = useRef<HTMLInputElement>(null);
+    const faviconInputRef = useRef<HTMLInputElement>(null);
 
     const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -32,6 +39,76 @@ const ThemeEditor: React.FC = () => {
     const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+        if (name === 'logoUrl') setLogoPreview(value || null);
+        if (name === 'faviconUrl') setFaviconPreview(value || null);
+    };
+
+    const handleImageUpload = async (file: File, type: 'logo' | 'favicon') => {
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            toast.error('Vui lòng chọn file hình ảnh');
+            return;
+        }
+
+        // Validate file size (max 2MB for logo, 500KB for favicon)
+        const maxSize = type === 'logo' ? 2 * 1024 * 1024 : 500 * 1024;
+        if (file.size > maxSize) {
+            toast.error(`Kích thước file quá lớn. Logo tối đa 2MB, Favicon tối đa 500KB`);
+            return;
+        }
+
+        const setUploading = type === 'logo' ? setUploadingLogo : setUploadingFavicon;
+        const setPreview = type === 'logo' ? setLogoPreview : setFaviconPreview;
+        const oldUrl = type === 'logo' ? formData.logoUrl : formData.faviconUrl;
+
+        setUploading(true);
+        try {
+            // Create preview
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+
+            // Upload to Supabase Storage
+            const folder = 'theme';
+            const imageUrl = await uploadFile('business-gallery', file, folder);
+
+            // Delete old image if it was uploaded to storage
+            if (oldUrl && oldUrl.startsWith('http') && oldUrl.includes('supabase.co')) {
+                try {
+                    await deleteFileByUrl('business-gallery', oldUrl);
+                } catch (deleteError) {
+                    console.warn('Failed to delete old image:', deleteError);
+                }
+            }
+
+            // Update form data
+            if (type === 'logo') {
+                setFormData(prev => ({ ...prev, logoUrl: imageUrl }));
+            } else {
+                setFormData(prev => ({ ...prev, faviconUrl: imageUrl }));
+            }
+
+            toast.success(`${type === 'logo' ? 'Logo' : 'Favicon'} đã được tải lên thành công!`);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Không thể tải lên hình ảnh';
+            toast.error(`Lỗi: ${message}`);
+            setPreview(oldUrl || null);
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'favicon') => {
+        const file = e.target.files?.[0];
+        if (file) {
+            handleImageUpload(file, type);
+        }
+        // Reset input so same file can be selected again
+        e.target.value = '';
     };
 
     const handleSave = (e: React.FormEvent) => {
@@ -73,13 +150,87 @@ const ThemeEditor: React.FC = () => {
             {/* Branding Section */}
             <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-neutral-dark border-b pb-2">Branding</h3>
+                
+                {/* Logo Upload */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Logo URL</label>
-                    <input type="text" name="logoUrl" value={formData.logoUrl} onChange={handleUrlChange} placeholder="Leave empty to use text logo" className="mt-1 w-full p-2 border rounded-md" />
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Logo</label>
+                    <div className="flex gap-4 items-start">
+                        <div className="flex-1">
+                            <input 
+                                type="text" 
+                                name="logoUrl" 
+                                value={formData.logoUrl} 
+                                onChange={handleUrlChange} 
+                                placeholder="URL logo hoặc để trống để dùng text logo" 
+                                className="w-full p-2 border rounded-md" 
+                            />
+                            <p className="text-xs text-gray-500 mt-1">Hoặc tải lên từ thiết bị (tối đa 2MB)</p>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <input
+                                ref={logoInputRef}
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleFileSelect(e, 'logo')}
+                                className="hidden"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => logoInputRef.current?.click()}
+                                disabled={uploadingLogo}
+                                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap"
+                            >
+                                {uploadingLogo ? 'Đang tải...' : 'Chọn file'}
+                            </button>
+                        </div>
+                    </div>
+                    {logoPreview && (
+                        <div className="mt-2">
+                            <p className="text-xs text-gray-500 mb-1">Preview:</p>
+                            <img src={logoPreview} alt="Logo preview" className="max-h-20 border rounded p-1" />
+                        </div>
+                    )}
                 </div>
-                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Favicon URL</label>
-                    <input type="text" name="faviconUrl" value={formData.faviconUrl} onChange={handleUrlChange} className="mt-1 w-full p-2 border rounded-md" />
+
+                {/* Favicon Upload */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Favicon</label>
+                    <div className="flex gap-4 items-start">
+                        <div className="flex-1">
+                            <input 
+                                type="text" 
+                                name="faviconUrl" 
+                                value={formData.faviconUrl} 
+                                onChange={handleUrlChange} 
+                                placeholder="URL favicon" 
+                                className="w-full p-2 border rounded-md" 
+                            />
+                            <p className="text-xs text-gray-500 mt-1">Hoặc tải lên từ thiết bị (tối đa 500KB, khuyến nghị 32x32 hoặc 64x64px)</p>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <input
+                                ref={faviconInputRef}
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleFileSelect(e, 'favicon')}
+                                className="hidden"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => faviconInputRef.current?.click()}
+                                disabled={uploadingFavicon}
+                                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap"
+                            >
+                                {uploadingFavicon ? 'Đang tải...' : 'Chọn file'}
+                            </button>
+                        </div>
+                    </div>
+                    {faviconPreview && (
+                        <div className="mt-2">
+                            <p className="text-xs text-gray-500 mb-1">Preview:</p>
+                            <img src={faviconPreview} alt="Favicon preview" className="h-8 w-8 border rounded p-1" />
+                        </div>
+                    )}
                 </div>
             </div>
 
