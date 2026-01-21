@@ -377,11 +377,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
   const getPostsByBusinessId = (businessId: number) => posts.filter(p => p.businessId === businessId);
   const incrementViewCount = async (postId: string) => {
     if (!isSupabaseConfigured) return;
-    try {
-      await supabase.rpc('increment_business_blog_view_count', { p_post_id: postId });
-    } catch (e) {
-      console.error('Failed to increment view count', e);
-    }
+    await supabase.rpc('increment_business_blog_view_count', { p_post_id: postId });
   };
   const addReview = async (reviewData: { business_id: number; rating: number; comment: string; userProfile: Profile }) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add review."); throw new Error("Preview Mode"); }

@@ -86,10 +86,10 @@ function readEnvFile(filePath) {
     if (match) {
       const key = match[1].trim();
       let value = match[2].trim();
-      
+
       // Remove quotes if present
       if ((value.startsWith('"') && value.endsWith('"')) ||
-          (value.startsWith("'") && value.endsWith("'"))) {
+        (value.startsWith("'") && value.endsWith("'"))) {
         value = value.slice(1, -1);
       }
 
@@ -102,7 +102,7 @@ function readEnvFile(filePath) {
 
 function validateEnvVars(vars, varDefs) {
   const results = {};
-  
+
   Object.entries(varDefs).forEach(([key, def]) => {
     const value = vars[key];
     if (!value) {
@@ -121,7 +121,7 @@ function validateEnvVars(vars, varDefs) {
       };
     }
   });
-  
+
   return results;
 }
 
@@ -167,10 +167,10 @@ async function testSupabaseConnection(url, key) {
             'apikey': key
           }
         });
-        
+
         if (authResponse.ok) {
-          return { 
-            success: true, 
+          return {
+            success: true,
             status: authResponse.status,
             note: 'Auth endpoint works, but RLS may block table access (this is OK)'
           };
@@ -191,29 +191,29 @@ async function testSupabaseConnection(url, key) {
         });
 
         if (rawResponse.ok) {
-          return { 
-            success: true, 
+          return {
+            success: true,
             status: rawResponse.status,
             note: 'Raw fetch works, SDK may have RLS issues (this is OK)'
           };
         } else if (rawResponse.status === 401 || rawResponse.status === 403) {
           // Check if it's RLS blocking (which is OK) vs invalid key
-          return { 
-            success: true, 
+          return {
+            success: true,
             status: rawResponse.status,
             note: 'Connection works, but RLS policies block access (this is expected and OK)'
           };
         } else {
-          return { 
-            success: false, 
-            status: rawResponse.status, 
-            error: rawResponse.statusText 
+          return {
+            success: false,
+            status: rawResponse.status,
+            error: rawResponse.statusText
           };
         }
       } catch (fetchErr) {
-        return { 
-          success: false, 
-          error: `SDK error: ${error.message}, Fetch error: ${fetchErr.message}` 
+        return {
+          success: false,
+          error: `SDK error: ${error.message}, Fetch error: ${fetchErr.message}`
         };
       }
     }
@@ -231,7 +231,7 @@ async function testSupabaseConnection(url, key) {
 function generateReport(localVars, vercelVars, localResults, vercelResults, connectionTest) {
   const timestamp = new Date().toISOString();
   const lines = [];
-  
+
   lines.push('# Environment Variables Verification Report');
   lines.push('');
   lines.push(`**Generated:** ${timestamp}`);
@@ -240,26 +240,26 @@ function generateReport(localVars, vercelVars, localResults, vercelResults, conn
   lines.push('');
   lines.push('## Summary');
   lines.push('');
-  
+
   const localRequiredValid = Object.values(localResults).filter(r => r.present && r.valid).length;
   const localRequiredTotal = Object.keys(REQUIRED_VARS).length;
   const localOptionalValid = Object.entries(OPTIONAL_VARS).map(([key]) => {
     const result = localResults[key];
     return result && result.present && result.valid;
   }).filter(Boolean).length;
-  
+
   lines.push(`### Local (.env.local)`);
   lines.push(`- ✅ Required variables: ${localRequiredValid}/${localRequiredTotal}`);
   lines.push(`- ⚪ Optional variables: ${localOptionalValid}/${Object.keys(OPTIONAL_VARS).length}`);
   lines.push(`- 🔌 Connection test: ${connectionTest.success ? '✅ Success' : '❌ Failed'}`);
   lines.push('');
-  
+
   if (Object.keys(vercelVars).length > 0) {
     const vercelRequiredValid = Object.values(vercelResults).filter(r => r.present && r.valid).length;
     lines.push(`### Vercel (.env.vercel)`);
     lines.push(`- ✅ Required variables: ${vercelRequiredValid}/${localRequiredTotal}`);
     lines.push('');
-    
+
     // Compare
     lines.push('### Comparison');
     lines.push('');
@@ -273,12 +273,12 @@ function generateReport(localVars, vercelVars, localResults, vercelResults, conn
     });
     lines.push('');
   }
-  
+
   lines.push('---');
   lines.push('');
   lines.push('## Detailed Results');
   lines.push('');
-  
+
   lines.push('### Required Variables');
   lines.push('');
   Object.entries(REQUIRED_VARS).forEach(([key, def]) => {
@@ -295,7 +295,7 @@ function generateReport(localVars, vercelVars, localResults, vercelResults, conn
     }
     lines.push('');
   });
-  
+
   lines.push('### Optional Variables');
   lines.push('');
   Object.entries(OPTIONAL_VARS).forEach(([key, def]) => {
@@ -311,7 +311,7 @@ function generateReport(localVars, vercelVars, localResults, vercelResults, conn
       lines.push('');
     }
   });
-  
+
   lines.push('---');
   lines.push('');
   lines.push('## Connection Test');
@@ -333,20 +333,20 @@ function generateReport(localVars, vercelVars, localResults, vercelResults, conn
     lines.push('- Firewall blocking connection');
   }
   lines.push('');
-  
+
   lines.push('---');
   lines.push('');
   lines.push('## Recommendations');
   lines.push('');
-  
+
   const missing = Object.entries(localResults).filter(([key]) => {
     return REQUIRED_VARS[key] && !localResults[key].present;
   }).map(([key]) => key);
-  
+
   const invalid = Object.entries(localResults).filter(([key, result]) => {
     return REQUIRED_VARS[key] && result.present && !result.valid;
   }).map(([key]) => key);
-  
+
   if (missing.length > 0) {
     lines.push('### Missing Required Variables');
     missing.forEach(key => {
@@ -354,7 +354,7 @@ function generateReport(localVars, vercelVars, localResults, vercelResults, conn
     });
     lines.push('');
   }
-  
+
   if (invalid.length > 0) {
     lines.push('### Invalid Variables');
     invalid.forEach(key => {
@@ -363,7 +363,7 @@ function generateReport(localVars, vercelVars, localResults, vercelResults, conn
     });
     lines.push('');
   }
-  
+
   if (!connectionTest.success) {
     lines.push('### Connection Issues');
     lines.push('- ❌ Supabase connection test failed');
@@ -381,48 +381,48 @@ function generateReport(localVars, vercelVars, localResults, vercelResults, conn
     lines.push('- App should work fine with proper authentication');
     lines.push('');
   }
-  
+
   if (missing.length === 0 && invalid.length === 0 && connectionTest.success) {
     lines.push('✅ **All checks passed!**');
     lines.push('');
     lines.push('Your environment is properly configured.');
   }
-  
+
   return lines.join('\n');
 }
 
 async function main() {
   console.log('🔍 Verifying Environment Variables & Connection...\n');
-  
+
   // Read env files
   const localVars = readEnvFile(ENV_LOCAL_PATH);
   const vercelVars = readEnvFile(ENV_VERCEL_PATH);
-  
+
   console.log(`📄 Local (.env.local): ${Object.keys(localVars).length} variables`);
   if (Object.keys(vercelVars).length > 0) {
     console.log(`📄 Vercel (.env.vercel): ${Object.keys(vercelVars).length} variables`);
   }
   console.log('');
-  
+
   // Validate
   const allVars = { ...REQUIRED_VARS, ...OPTIONAL_VARS };
   const localResults = validateEnvVars(localVars, allVars);
   const vercelResults = validateEnvVars(vercelVars, allVars);
-  
+
   // Test connection
   console.log('🔌 Testing Supabase connection...');
   let connectionTest = { success: false, error: 'No credentials' };
-  
+
   if (localVars.VITE_SUPABASE_URL && localVars.VITE_SUPABASE_ANON_KEY) {
     const localUrlResult = REQUIRED_VARS.VITE_SUPABASE_URL.validator(localVars.VITE_SUPABASE_URL);
     const localKeyResult = REQUIRED_VARS.VITE_SUPABASE_ANON_KEY.validator(localVars.VITE_SUPABASE_ANON_KEY);
-    
+
     if (localUrlResult.valid && localKeyResult.valid) {
       connectionTest = await testSupabaseConnection(
         localVars.VITE_SUPABASE_URL,
         localVars.VITE_SUPABASE_ANON_KEY
       );
-      
+
       if (connectionTest.success) {
         console.log('✅ Connection successful!\n');
       } else {
@@ -434,26 +434,26 @@ async function main() {
   } else {
     console.log('⚠️  Cannot test connection - missing credentials\n');
   }
-  
+
   // Generate report
   const report = generateReport(localVars, vercelVars, localResults, vercelResults, connectionTest);
   fs.writeFileSync(REPORT_PATH, report, 'utf-8');
-  
+
   console.log('📊 Verification Report');
   console.log('─'.repeat(50));
-  
+
   // Summary
   const localRequiredValid = Object.values(localResults).filter((r, i) => {
     const key = Object.keys(allVars)[i];
     return REQUIRED_VARS[key] && r.present && r.valid;
   }).length;
-  
+
   console.log(`✅ Required variables: ${localRequiredValid}/${Object.keys(REQUIRED_VARS).length}`);
   console.log(`🔌 Connection: ${connectionTest.success ? '✅ Success' : '❌ Failed'}`);
   console.log('');
   console.log(`📄 Full report saved to: ${REPORT_PATH}`);
   console.log('');
-  
+
   // Exit code
   if (localRequiredValid === Object.keys(REQUIRED_VARS).length && connectionTest.success) {
     console.log('✅ All checks passed!');

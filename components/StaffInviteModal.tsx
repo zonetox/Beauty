@@ -58,9 +58,9 @@ const StaffInviteModal: React.FC<StaffInviteModalProps> = ({ businessId, onClose
 
       // Refresh staff list
       await refreshStaff(businessId);
-      
-      toast.success(data?.isNewUser 
-        ? 'Staff member invited successfully. Invitation email sent.' 
+
+      toast.success(data?.isNewUser
+        ? 'Staff member invited successfully. Invitation email sent.'
         : 'Staff member added successfully.');
       onSuccess();
     } catch (err) {
@@ -76,7 +76,7 @@ const StaffInviteModal: React.FC<StaffInviteModalProps> = ({ businessId, onClose
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
         <h3 className="text-lg font-bold mb-4">Invite Staff Member</h3>
-        
+
         {error && (
           <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
             {error}
@@ -96,7 +96,7 @@ const StaffInviteModal: React.FC<StaffInviteModalProps> = ({ businessId, onClose
             disabled={isInviting}
           />
           <p className="mt-1 text-xs text-gray-500">
-            If the user doesn't have an account, they will receive an invitation email to create one.
+            If the user doesn&apos;t have an account, they will receive an invitation email to create one.
           </p>
         </div>
 

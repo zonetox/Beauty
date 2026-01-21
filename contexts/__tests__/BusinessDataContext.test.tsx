@@ -11,7 +11,6 @@ import { Business } from '../../types';
 
 // Mock AdminContext to avoid import.meta issues
 jest.mock('../AdminContext', () => {
-  const React = require('react');
   return {
     AdminContext: React.createContext(null),
     useAdminAuth: () => ({ currentUser: null }),

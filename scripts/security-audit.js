@@ -32,19 +32,9 @@ const secretPatterns = [
   // PostgreSQL URLs
   { pattern: /postgres:\/\/[^:]+:[^@]+@[^\s"']+/g, name: 'PostgreSQL Connection String', severity: 'CRITICAL' },
   // Passwords
-  { pattern: /password["\s:=]+([A-Za-z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{8,})/gi, name: 'Password', severity: 'HIGH' },
+  { pattern: new RegExp('password["\\s:=]+([A-Za-z0-9!@#$%^&*()_+\\-=[]{};\':"\\\\|,.<>/ ?]{8,})', 'gi'), name: 'Password', severity: 'HIGH' },
   // Generic high entropy (có thể là keys)
   { pattern: /[A-Za-z0-9]{32,}/g, name: 'High Entropy String', severity: 'LOW' },
-];
-
-// Files cần kiểm tra
-const filesToCheck = [
-  '.env',
-  '.env.local',
-  '.env.vercel',
-  'docs/.env.vercel',
-  '*.key',
-  '*.pem',
 ];
 
 // Files được phép có secrets (documentation với placeholders)
@@ -72,13 +62,13 @@ function logIssue(severity, file, line, pattern, match) {
     match: match.substring(0, 50) + (match.length > 50 ? '...' : ''),
     fullMatch: match
   };
-  
+
   results[severity.toLowerCase()].push(issue);
-  
-  const icon = severity === 'CRITICAL' ? '🔴' : 
-               severity === 'HIGH' ? '🟠' : 
-               severity === 'MEDIUM' ? '🟡' : '⚪';
-  
+
+  const icon = severity === 'CRITICAL' ? '🔴' :
+    severity === 'HIGH' ? '🟠' :
+      severity === 'MEDIUM' ? '🟡' : '⚪';
+
   console.log(`${icon} [${severity}] ${file}:${line}`);
   console.log(`   Pattern: ${pattern.name}`);
   console.log(`   Match: ${issue.match}`);
@@ -89,29 +79,29 @@ function checkFile(filePath, relativePath) {
   if (allowedFiles.some(allowed => relativePath.includes(allowed))) {
     return;
   }
-  
+
   // Skip node_modules và dist
   if (relativePath.includes('node_modules') || relativePath.includes('dist')) {
     return;
   }
-  
+
   try {
     const content = fs.readFileSync(filePath, 'utf-8');
     const lines = content.split('\n');
-    
+
     lines.forEach((line, index) => {
       secretPatterns.forEach(({ pattern, name, severity }) => {
         const matches = line.match(pattern);
         if (matches) {
           matches.forEach(match => {
             // Skip nếu là placeholder
-            if (match.includes('your-') || 
-                match.includes('YOUR_') || 
-                match.includes('example') ||
-                match.includes('placeholder')) {
+            if (match.includes('your-') ||
+              match.includes('YOUR_') ||
+              match.includes('example') ||
+              match.includes('placeholder')) {
               return;
             }
-            
+
             logIssue(severity, relativePath, index + 1, { name }, match);
           });
         }
@@ -124,19 +114,19 @@ function checkFile(filePath, relativePath) {
 
 function checkGitHistory() {
   console.log('\n🔍 Kiểm tra Git History...\n');
-  
+
   const knownLeakedSecrets = [
     'q1b8nn0MS1YLsOnN', // Old POSTGRES_PASSWORD
     're_dHNJuyTq_ydiGFqf2RGmtpAR2kBuaURw6', // Old RESEND_API_KEY
   ];
-  
+
   knownLeakedSecrets.forEach(secret => {
     try {
       const result = execSync(
         `git log --all --full-history -S "${secret}" --oneline`,
         { encoding: 'utf-8', cwd: rootDir, stdio: 'pipe' }
       );
-      
+
       if (result.trim()) {
         results.high.push({
           type: 'git_history',
@@ -154,14 +144,14 @@ function checkGitHistory() {
 
 function checkGitIgnore() {
   console.log('\n🔍 Kiểm tra .gitignore...\n');
-  
+
   const gitignorePath = path.join(rootDir, '.gitignore');
   if (!fs.existsSync(gitignorePath)) {
     results.critical.push({ type: 'gitignore', issue: '.gitignore không tồn tại' });
     console.log('❌ .gitignore không tồn tại!');
     return;
   }
-  
+
   const gitignoreContent = fs.readFileSync(gitignorePath, 'utf-8');
   const requiredPatterns = [
     '.env',
@@ -170,7 +160,7 @@ function checkGitIgnore() {
     '*.key',
     '*.pem',
   ];
-  
+
   requiredPatterns.forEach(pattern => {
     if (gitignoreContent.includes(pattern)) {
       results.passed.push(`.gitignore có pattern: ${pattern}`);
@@ -184,19 +174,19 @@ function checkGitIgnore() {
 
 function checkTrackedFiles() {
   console.log('\n🔍 Kiểm tra files đang được track...\n');
-  
+
   try {
     const trackedFiles = execSync(
       'git ls-files',
       { encoding: 'utf-8', cwd: rootDir, stdio: 'pipe' }
     ).trim().split('\n');
-    
+
     const sensitiveFiles = trackedFiles.filter(file => {
-      return file.includes('.env') && 
-             !file.includes('.example') && 
-             !file.includes('env.example');
+      return file.includes('.env') &&
+        !file.includes('.example') &&
+        !file.includes('env.example');
     });
-    
+
     if (sensitiveFiles.length > 0) {
       sensitiveFiles.forEach(file => {
         results.critical.push({ type: 'tracked_file', file });
@@ -213,26 +203,26 @@ function checkTrackedFiles() {
 
 function scanDirectory(dir, relativeDir = '') {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
-  
+
   entries.forEach(entry => {
     const fullPath = path.join(dir, entry.name);
     const relativePath = path.join(relativeDir, entry.name);
-    
+
     // Skip node_modules, dist, .git
-    if (entry.name === 'node_modules' || 
-        entry.name === 'dist' || 
-        entry.name === '.git' ||
-        entry.name.startsWith('.')) {
+    if (entry.name === 'node_modules' ||
+      entry.name === 'dist' ||
+      entry.name === '.git' ||
+      entry.name.startsWith('.')) {
       return;
     }
-    
+
     if (entry.isDirectory()) {
       scanDirectory(fullPath, relativePath);
     } else if (entry.isFile()) {
       // Chỉ check text files
       const ext = path.extname(entry.name);
       const textExtensions = ['.js', '.ts', '.tsx', '.jsx', '.json', '.md', '.txt', '.env', '.sql'];
-      
+
       if (textExtensions.includes(ext) || entry.name.startsWith('.env')) {
         checkFile(fullPath, relativePath);
       }
@@ -243,7 +233,7 @@ function scanDirectory(dir, relativeDir = '') {
 function printSummary() {
   console.log('\n\n📊 TÓM TẮT KIỂM TRA BẢO MẬT\n');
   console.log('='.repeat(60));
-  
+
   if (results.critical.length > 0) {
     console.log(`\n🔴 CRITICAL: ${results.critical.length}`);
     results.critical.forEach(issue => {
@@ -254,7 +244,7 @@ function printSummary() {
       }
     });
   }
-  
+
   if (results.high.length > 0) {
     console.log(`\n🟠 HIGH: ${results.high.length}`);
     results.high.forEach(issue => {
@@ -265,24 +255,24 @@ function printSummary() {
       }
     });
   }
-  
+
   if (results.medium.length > 0) {
     console.log(`\n🟡 MEDIUM: ${results.medium.length}`);
     results.medium.forEach(issue => {
       console.log(`   🟡 ${JSON.stringify(issue)}`);
     });
   }
-  
+
   if (results.low.length > 0) {
     console.log(`\n⚪ LOW: ${results.low.length}`);
     console.log(`   (Có ${results.low.length} potential issues - cần review thủ công)`);
   }
-  
+
   console.log(`\n✅ PASSED: ${results.passed.length}`);
   results.passed.forEach(test => console.log(`   ✅ ${test}`));
-  
+
   console.log('\n' + '='.repeat(60));
-  
+
   if (results.critical.length === 0 && results.high.length === 0) {
     console.log('\n🎉 KHÔNG CÓ VẤN ĐỀ BẢO MẬT NGHIÊM TRỌNG!');
     console.log('✅ Có thể push code an toàn.\n');
@@ -298,25 +288,25 @@ async function main() {
   console.log('🔒 SECURITY AUDIT - KIỂM TRA BẢO MẬT TRƯỚC KHI PUSH');
   console.log('='.repeat(60));
   console.log('Kiểm tra secrets, .gitignore, và git history\n');
-  
+
   // 1. Check .gitignore
   checkGitIgnore();
-  
+
   // 2. Check tracked files
   checkTrackedFiles();
-  
+
   // 3. Check git history
   checkGitHistory();
-  
+
   // 4. Scan current files
   console.log('\n🔍 Quét files hiện tại...\n');
   console.log('(Có thể mất vài giây...)\n');
-  
+
   scanDirectory(rootDir);
-  
+
   // 5. Summary
   const safe = printSummary();
-  
+
   if (!safe) {
     console.log('\n📋 HÀNH ĐỘNG CẦN THỰC HIỆN:');
     console.log('   1. Xóa hoặc thay thế secrets trong files');

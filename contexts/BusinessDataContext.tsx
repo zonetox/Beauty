@@ -884,7 +884,10 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       toast.error("Preview Mode: Cannot reorder services.");
       throw new Error("Preview Mode: Cannot reorder services.");
     }
-    const updates = orderedServices.map((service, index) => ({ id: service.id, position: index + 1 }));
+    const updates = orderedServices.map((service, index) => ({
+      ...toSnakeCase(service),
+      position: index + 1
+    }));
     const { error } = await supabase.from('services').upsert(updates);
     if (error) {
       console.error("Error updating service order:", error.message);
@@ -988,7 +991,10 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       toast.error("Preview Mode: Cannot reorder media.");
       throw new Error("Preview Mode: Cannot reorder media.");
     }
-    const updates = orderedMedia.map((item, index) => ({ id: item.id, position: index + 1 }));
+    const updates = orderedMedia.map((item, index) => ({
+      ...toSnakeCase(item),
+      position: index + 1
+    }));
     const { error } = await supabase.from('media_items').upsert(updates);
     if (error) {
       console.error("Error updating media order:", error.message);
@@ -1004,17 +1010,25 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     else await refetchAllPublicData();
   };
   const updateTeamMember = async (updatedMember: TeamMember) => {
-    if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update team member."); return; }
+    if (!isSupabaseConfigured) {
+      toast.error("Preview Mode: Cannot update team member.");
+      throw new Error("Preview Mode: Cannot update team member.");
+    }
     const { id, ...memberToUpdate } = updatedMember;
     const { error } = await supabase.from('team_members').update(toSnakeCase(memberToUpdate)).eq('id', id);
-    if (error) console.error("Error updating team member:", error.message);
-    else await refetchAllPublicData();
+    if (error) {
+      console.error("Error updating team member:", error.message);
+      toast.error(`Failed to update team member: ${error.message}`);
+      throw error;
+    }
+    await refetchAllPublicData();
+    toast.success('Team member updated successfully!');
   };
   /**
-   * Deletes a team member
-   * @param memberId - Team member ID to delete
-   * @returns Promise that resolves when deletion completes
-   */
+ * Deletes a team member
+ * @param memberId - Team member ID to delete
+ * @returns Promise that resolves when deletion completes
+ */
   const deleteTeamMember = async (memberId: string): Promise<void> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot delete team member."); return; }
     const { error } = await supabase.from('team_members').delete().eq('id', memberId);
@@ -1127,12 +1141,8 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       if (error) {
         console.error('Error fetching comments:', error);
         // Fallback to localStorage
-        try {
-          const savedCommentsJSON = localStorage.getItem(COMMENTS_LOCAL_STORAGE_KEY);
-          setComments(savedCommentsJSON ? JSON.parse(savedCommentsJSON) : []);
-        } catch (e) {
-          setComments([]);
-        }
+        const savedCommentsJSON = localStorage.getItem(COMMENTS_LOCAL_STORAGE_KEY);
+        setComments(savedCommentsJSON ? JSON.parse(savedCommentsJSON) : []);
       } else {
         // Convert database format to BlogComment format
         const formattedComments: BlogComment[] = (data || []).map((comment) => ({

@@ -62,5 +62,16 @@ export default tseslint.config(
     rules: {
       'no-console': 'off',
     },
+  },
+  {
+    files: ['*.cjs', '*.config.js'],
+    languageOptions: {
+      globals: {
+        module: 'readonly',
+        require: 'readonly',
+        __dirname: 'readonly',
+        process: 'readonly',
+      },
+    },
   }
 );

@@ -104,13 +104,5 @@ module.exports = {
   ],
   extensionsToTreatAsEsm: [],
   // Add globals for import.meta support
-  collectCoverageFrom: [
-    'lib/**/*.{ts,tsx}',
-    'components/**/*.{ts,tsx}',
-    'contexts/**/*.{ts,tsx}',
-    '!**/*.d.ts',
-    '!**/__tests__/**',
-    '!**/node_modules/**',
-    '!**/dist/**'
   ]
 };
