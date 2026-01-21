@@ -21,7 +21,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const ENV_LOCAL_PATH = path.join(__dirname, '..', '.env.local');
-const ENV_EXAMPLE_PATH = path.join(__dirname, '..', 'docs', 'env.example');
 
 // Required environment variables
 const REQUIRED_VARS = [
@@ -52,10 +51,10 @@ function readEnvFile(filePath) {
     if (match) {
       const key = match[1].trim();
       let value = match[2].trim();
-      
+
       // Remove quotes if present
       if ((value.startsWith('"') && value.endsWith('"')) ||
-          (value.startsWith("'") && value.endsWith("'"))) {
+        (value.startsWith("'") && value.endsWith("'"))) {
         value = value.slice(1, -1);
       }
 
@@ -68,7 +67,7 @@ function readEnvFile(filePath) {
 
 function writeEnvFile(filePath, vars, comments = {}) {
   const lines = [];
-  
+
   // Add header
   lines.push('# ============================================');
   lines.push('# Environment Variables for 1Beauty.asia');
@@ -126,23 +125,23 @@ async function pullFromVercel() {
     OPTIONAL_VARS.forEach(key => console.log(`   - ${key} (optional)`));
     console.log('3. Paste them into .env.local file');
     console.log('\nOr use: npm run env:sync (reads from .env.vercel)');
-    
+
     // Check if .env.vercel exists as fallback
     const envVercelPath = path.join(__dirname, '..', '.env.vercel');
     if (fs.existsSync(envVercelPath)) {
       console.log('\n✅ Found .env.vercel file. Reading from it...');
       const vercelVars = readEnvFile(envVercelPath);
-      
+
       if (Object.keys(vercelVars).length > 0) {
         const comments = {
           'VITE_SUPABASE_URL': 'Supabase project URL',
           'VITE_SUPABASE_ANON_KEY': 'Supabase anon/publishable key',
           'GEMINI_API_KEY': 'Gemini AI API key (optional)'
         };
-        
+
         writeEnvFile(ENV_LOCAL_PATH, vercelVars, comments);
         console.log(`✅ Synced ${Object.keys(vercelVars).length} variables to .env.local`);
-        
+
         // Validate
         const missing = REQUIRED_VARS.filter(key => !vercelVars[key]);
         if (missing.length > 0) {
@@ -152,7 +151,7 @@ async function pullFromVercel() {
         }
       }
     }
-    
+
   } catch (error) {
     console.error('❌ Error:', error.message);
     process.exit(1);
@@ -171,10 +170,10 @@ async function pushToVercel() {
 
 async function showStatus() {
   console.log('📊 Environment Variables Status\n');
-  
+
   const localVars = readEnvFile(ENV_LOCAL_PATH);
   const exampleVars = readEnvFile(ENV_EXAMPLE_PATH);
-  
+
   console.log('Local (.env.local):');
   if (Object.keys(localVars).length === 0) {
     console.log('  ❌ File not found or empty');
@@ -196,7 +195,7 @@ async function showStatus() {
       }
     });
   }
-  
+
   console.log('\nExample (docs/env.example):');
   console.log('  📄 Template file exists');
 }

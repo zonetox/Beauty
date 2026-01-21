@@ -23,7 +23,6 @@ const __dirname = path.dirname(__filename);
 
 const ENV_LOCAL_PATH = path.join(__dirname, '..', '.env.local');
 const ENV_VERCEL_PATH = path.join(__dirname, '..', '.env.vercel');
-const ENV_EXAMPLE_PATH = path.join(__dirname, '..', 'docs', 'env.example');
 
 const REQUIRED_VARS = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
 const OPTIONAL_VARS = ['GEMINI_API_KEY'];
@@ -46,9 +45,9 @@ function readEnvFile(filePath) {
     if (match) {
       const key = match[1].trim();
       let value = match[2].trim();
-      
+
       if ((value.startsWith('"') && value.endsWith('"')) ||
-          (value.startsWith("'") && value.endsWith("'"))) {
+        (value.startsWith("'") && value.endsWith("'"))) {
         value = value.slice(1, -1);
       }
 
@@ -61,7 +60,7 @@ function readEnvFile(filePath) {
 
 function writeEnvFile(filePath, vars) {
   const lines = [];
-  
+
   lines.push('# ============================================');
   lines.push('# Environment Variables for 1Beauty.asia');
   lines.push('# ============================================');
@@ -75,14 +74,14 @@ function writeEnvFile(filePath, vars) {
   lines.push('# ============================================');
   lines.push('# Get these from: https://supabase.com/dashboard/project/YOUR_PROJECT_ID/settings/api');
   lines.push('');
-  
+
   REQUIRED_VARS.forEach(key => {
     if (vars[key]) {
       lines.push(`${key}="${vars[key]}"`);
       lines.push('');
     }
   });
-  
+
   if (OPTIONAL_VARS.some(key => vars[key])) {
     lines.push('# ============================================');
     lines.push('# Optional Configuration');
@@ -94,7 +93,7 @@ function writeEnvFile(filePath, vars) {
       }
     });
   }
-  
+
   fs.writeFileSync(filePath, lines.join('\n'), 'utf-8');
 }
 
@@ -163,7 +162,7 @@ async function testConnection(url, key) {
 
 async function main() {
   console.log('🔄 Complete Environment Sync from Vercel\n');
-  
+
   // Read Vercel env
   if (!fs.existsSync(ENV_VERCEL_PATH)) {
     console.error('❌ Error: .env.vercel file not found!');
