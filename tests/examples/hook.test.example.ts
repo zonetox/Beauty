@@ -2,7 +2,7 @@
 // This is a template for writing custom hook tests
 // Update imports and test cases to match your actual hooks
 
-import { renderHook, act } from '@testing-library/react';
+
 
 describe('Example Custom Hook', () => {
   it('example test - update with actual hook', () => {

@@ -12,12 +12,12 @@ import LoadingState from '../components/LoadingState.tsx';
 const AboutPage: React.FC = () => {
     const { getPageContent, loading } = usePublicPageContent();
     const pageData = getPageContent('about');
-    
+
     // SEO metadata
     const seoTitle = 'Về chúng tôi | 1Beauty.asia';
     const seoDescription = 'Tìm hiểu về 1Beauty.asia - Nền tảng kết nối khách hàng với các spa, salon và clinic làm đẹp uy tín tại Việt Nam.';
     const seoUrl = typeof window !== 'undefined' ? `${window.location.origin}/about` : '';
-    
+
     // Loading state
     if (loading || !pageData) {
         return (
@@ -27,18 +27,18 @@ const AboutPage: React.FC = () => {
             </>
         );
     }
-    
+
     // Manually render the hero outside the container for full-width effect
     const heroItem = pageData?.layout.find(item => item.key === 'about-hero');
-    const heroIsVisible = heroItem && pageData?.visibility[heroItem.key];
-    
+    const heroIsVisible = heroItem && heroItem.key && pageData?.visibility?.[heroItem.key];
+
     // Filter out the hero to prevent PageRenderer from rendering it again
     const mainContentLayout = pageData?.layout.filter(item => item.key !== 'about-hero');
     const mainContentPageData = pageData ? { ...pageData, layout: mainContentLayout || [] } : undefined;
 
     return (
         <>
-            <SEOHead 
+            <SEOHead
                 title={seoTitle}
                 description={seoDescription}
                 keywords="về chúng tôi, giới thiệu, 1beauty, làm đẹp, spa, salon"
@@ -48,7 +48,7 @@ const AboutPage: React.FC = () => {
             <div>
                 {heroIsVisible && <AboutHero />}
                 <div className="container mx-auto px-4">
-                     {mainContentPageData && <PageRenderer pageData={mainContentPageData} />}
+                    {mainContentPageData && <PageRenderer pageData={mainContentPageData} />}
                 </div>
             </div>
         </>

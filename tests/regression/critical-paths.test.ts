@@ -19,46 +19,46 @@ describe('Critical Paths Regression Tests', () => {
     it('should complete full user flow', async () => {
       // Test: User registers → logs in → accesses dashboard
       // This is a critical path that must always work
-      
+
       // Step 1: Registration
       mockSupabase.auth.signUp.mockResolvedValueOnce({
         data: { user: { id: '123', email: 'user@test.com' }, session: null },
         error: null,
       });
-      
+
       const signUpResult = await mockSupabase.auth.signUp({
         email: 'user@test.com',
         password: 'Test123!',
       });
-      
+
       expect(signUpResult.data.user).toBeDefined();
       expect(signUpResult.error).toBeNull();
-      
+
       // Step 2: Login
       const mockSession = {
         access_token: 'token',
         user: { id: '123', email: 'user@test.com' },
       };
-      
+
       mockSupabase.auth.signInWithPassword.mockResolvedValueOnce({
         data: { session: mockSession, user: mockSession.user },
         error: null,
       });
-      
+
       const signInResult = await mockSupabase.auth.signInWithPassword({
         email: 'user@test.com',
         password: 'Test123!',
       });
-      
+
       expect(signInResult.data.session).toBeDefined();
       expect(signInResult.error).toBeNull();
-      
+
       // Step 3: Access dashboard (verify session exists)
       mockSupabase.auth.getSession.mockResolvedValueOnce({
         data: { session: mockSession },
         error: null,
       });
-      
+
       const sessionResult = await mockSupabase.auth.getSession();
       expect(sessionResult.data.session).toBeDefined();
     });
@@ -67,7 +67,7 @@ describe('Critical Paths Regression Tests', () => {
   describe('Business Registration → Approval → Dashboard', () => {
     it('should complete business registration flow', async () => {
       // Test: Business registers → admin approves → owner logs in → dashboard
-      
+
       // Step 1: Business registration request
       const mockRequest = {
         id: 1,
@@ -75,7 +75,7 @@ describe('Critical Paths Regression Tests', () => {
         email: 'owner@test.com',
         status: 'pending',
       };
-      
+
       const mockInsert = {
         insert: jest.fn().mockReturnThis(),
         select: jest.fn().mockResolvedValue({
@@ -83,24 +83,19 @@ describe('Critical Paths Regression Tests', () => {
           error: null,
         }),
       };
-      
+
       mockSupabase.from.mockReturnValueOnce(mockInsert);
-      
+
       const requestResult = await mockSupabase
         .from('registration_requests')
         .insert(mockRequest)
         .select();
-      
+
       expect(requestResult.data).toBeDefined();
       expect(requestResult.data[0].status).toBe('pending');
-      
+
       // Step 2: Admin approval (simulated - would call Edge Function in real app)
-      const mockBusiness = {
-        id: 1,
-        name: 'Test Business',
-        owner_id: 'owner123',
-      };
-      
+
       const mockUpdate = {
         update: jest.fn().mockReturnThis(),
         eq: jest.fn().mockReturnThis(),
@@ -109,33 +104,33 @@ describe('Critical Paths Regression Tests', () => {
           error: null,
         }),
       };
-      
+
       mockSupabase.from.mockReturnValueOnce(mockUpdate);
-      
+
       const approvalResult = await mockSupabase
         .from('registration_requests')
         .update({ status: 'approved' })
         .eq('id', 1)
         .select();
-      
+
       expect(approvalResult.data[0].status).toBe('approved');
-      
+
       // Step 3: Owner login
       const mockSession = {
         access_token: 'token',
         user: { id: 'owner123', email: 'owner@test.com' },
       };
-      
+
       mockSupabase.auth.signInWithPassword.mockResolvedValueOnce({
         data: { session: mockSession, user: mockSession.user },
         error: null,
       });
-      
+
       const loginResult = await mockSupabase.auth.signInWithPassword({
         email: 'owner@test.com',
         password: 'Test123!',
       });
-      
+
       expect(loginResult.data.session).toBeDefined();
     });
   });
@@ -143,17 +138,17 @@ describe('Critical Paths Regression Tests', () => {
   describe('Edge Cases', () => {
     it('should handle empty data gracefully', () => {
       // Test: Components should handle empty data without crashing
-      const emptyData = [];
+      const emptyData: any[] = [];
       const nullData = null;
       const undefinedData = undefined;
-      
+
       // Verify empty arrays don't cause errors
       expect(Array.isArray(emptyData)).toBe(true);
       expect(emptyData.length).toBe(0);
-      
+
       // Verify null handling
       expect(nullData).toBeNull();
-      
+
       // Verify undefined handling
       expect(undefinedData).toBeUndefined();
     });
@@ -164,7 +159,7 @@ describe('Critical Paths Regression Tests', () => {
         message: 'Network request failed',
         code: 'NETWORK_ERROR',
       };
-      
+
       // Verify error object structure
       expect(networkError).toHaveProperty('message');
       expect(networkError).toHaveProperty('code');
@@ -178,7 +173,7 @@ describe('Critical Paths Regression Tests', () => {
         email: 'invalid-email',
         age: -1,
       };
-      
+
       // Verify validation checks
       expect(invalidData.name).toBeNull();
       expect(invalidData.email).not.toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
@@ -193,7 +188,7 @@ describe('Critical Paths Regression Tests', () => {
         status: 404,
         message: 'Not Found',
       };
-      
+
       expect(notFoundError.status).toBe(404);
       expect(notFoundError.message).toBe('Not Found');
     });
@@ -204,7 +199,7 @@ describe('Critical Paths Regression Tests', () => {
         status: 500,
         message: 'Internal Server Error',
       };
-      
+
       expect(serverError.status).toBe(500);
       expect(serverError.message).toBe('Internal Server Error');
     });
@@ -216,7 +211,7 @@ describe('Critical Paths Regression Tests', () => {
         message: 'Forbidden',
         code: 'PERMISSION_DENIED',
       };
-      
+
       expect(permissionError.status).toBe(403);
       expect(permissionError.code).toBe('PERMISSION_DENIED');
     });

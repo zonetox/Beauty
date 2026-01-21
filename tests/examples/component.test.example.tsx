@@ -2,9 +2,8 @@
 // This is a template for writing component tests
 // Update imports and test cases to match your actual components
 
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import '@testing-library/jest-dom';
+// import { render, screen } from '@testing-library/react';
+// import '@testing-library/jest-dom';
 
 describe('ExampleComponent', () => {
   it('example test - update with actual component', () => {

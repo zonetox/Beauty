@@ -12,7 +12,7 @@ import RecentlyViewed from '../components/RecentlyViewed.tsx';
 import SEOHead from '../components/SEOHead.tsx';
 import EmptyState from '../components/EmptyState.tsx';
 import { CATEGORIES, CITIES, FEATURED_LOCATIONS } from '../constants.ts';
-import { HomepageSection, BlogPost, Deal, DealStatus } from '../types.ts';
+import { HomepageSection, BlogPost, Deal } from '../types.ts';
 import { useBusinessData } from '../contexts/BusinessDataContext.tsx';
 import { useHomepageData } from '../contexts/HomepageDataContext.tsx';
 import { getOptimizedSupabaseUrl } from '../lib/image.ts';
@@ -447,7 +447,7 @@ const HomePage: React.FC = () => {
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold font-outfit text-white mb-6 leading-tight animate-fade-in-up delay-100">
                 {heroSlides.length > 0 ? (
                   <>
-                    {heroSlides[currentSlide].title.split(' ').map((word, i, arr) => (
+                    {heroSlides[currentSlide].title.split(' ').map((word, i) => (
                       <React.Fragment key={i}>
                         {word === 'Nhan' || word === 'sắc' || word === 'Cảm' || word === 'xúc' ? (
                           <span className="text-gradient">{word} </span>

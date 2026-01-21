@@ -8,10 +8,9 @@ import SearchBar from '../components/SearchBar.tsx';
 import BusinessCard from '../components/BusinessCard.tsx';
 import DirectoryMap from '../components/DirectoryMap.tsx';
 import SEOHead from '../components/SEOHead.tsx';
-import LoadingState from '../components/LoadingState.tsx';
 import EmptyState from '../components/EmptyState.tsx';
 import { CATEGORIES, CITIES, LOCATIONS_HIERARCHY } from '../constants.ts';
-import { Business, MembershipTier, WorkingHours } from '../types.ts';
+import { Business, WorkingHours } from '../types.ts';
 import { useBusinessData } from '../contexts/BusinessDataContext.tsx';
 import FilterTag from '../components/FilterTag.tsx';
 import Pagination from '../components/Pagination.tsx';
@@ -48,30 +47,30 @@ const checkIfOpen = (workingHours: WorkingHours | null | undefined): boolean => 
 
         for (const dayRange in workingHours) {
             const timeRange = workingHours[dayRange];
-            
+
             // Handle new object format: {open, close, isOpen}
             if (typeof timeRange === 'object' && timeRange !== null && 'open' in timeRange && 'close' in timeRange) {
                 if (timeRange.isOpen === false || !timeRange.open || !timeRange.close) continue;
-                
+
                 // Map day name to day number
                 const dayNum = dayMap[dayRange.toLowerCase()];
                 if (dayNum === undefined || dayNum !== currentDay) continue;
-                
+
                 // Parse time
                 const [startH, startM] = timeRange.open.split(':').map(Number);
                 const [endH, endM] = timeRange.close.split(':').map(Number);
-                
+
                 if (isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM)) continue;
-                
+
                 const startTime = startH * 60 + startM;
                 const endTime = endH * 60 + endM;
-                
+
                 if (currentTime >= startTime && currentTime < endTime) {
                     return true;
                 }
                 continue;
             }
-            
+
             // Handle old string format
             if (typeof timeRange !== 'string') continue;
             if (!timeRange || timeRange.toLowerCase().includes('closed')) continue;
@@ -128,7 +127,7 @@ const checkIfOpen = (workingHours: WorkingHours | null | undefined): boolean => 
 const DirectoryPage: React.FC = () => {
     const {
         businesses, businessMarkers, totalBusinesses,
-        currentPage: dbPage, fetchBusinesses, loading: contextLoading
+        fetchBusinesses, loading: contextLoading
     } = useBusinessData();
 
     const [mapVisibleBusinesses, setMapVisibleBusinesses] = useState<Business[]>([]);
@@ -186,8 +185,8 @@ const DirectoryPage: React.FC = () => {
 
         // Filter by deals
         if (activeFilters.hasDeals) {
-            filtered = filtered.filter(b => 
-                b.deals && b.deals.length > 0 && 
+            filtered = filtered.filter(b =>
+                b.deals && b.deals.length > 0 &&
                 b.deals.some(deal => deal.status === 'Active')
             );
         }
@@ -206,35 +205,35 @@ const DirectoryPage: React.FC = () => {
         const hasSearchText = activeFilters.keyword && activeFilters.keyword.trim() !== '';
         if (!hasSearchText) {
             switch (activeFilters.sort) {
-            case 'rating':
-                filtered.sort((a, b) => {
-                    const ratingA = a.reviews && a.reviews.length > 0
-                        ? a.reviews.reduce((sum, r) => sum + r.rating, 0) / a.reviews.length
-                        : 0;
-                    const ratingB = b.reviews && b.reviews.length > 0
-                        ? b.reviews.reduce((sum, r) => sum + r.rating, 0) / b.reviews.length
-                        : 0;
-                    return ratingB - ratingA;
-                });
-                break;
-            case 'newest':
-                filtered.sort((a, b) => {
-                    const dateA = new Date(a.joinedDate || 0).getTime();
-                    const dateB = new Date(b.joinedDate || 0).getTime();
-                    return dateB - dateA;
-                });
-                break;
-            case 'name':
-                filtered.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
-                break;
-            default:
-                // Default: featured first, then by ID
-                filtered.sort((a, b) => {
-                    if (a.isFeatured !== b.isFeatured) {
-                        return a.isFeatured ? -1 : 1;
-                    }
-                    return a.id - b.id;
-                });
+                case 'rating':
+                    filtered.sort((a, b) => {
+                        const ratingA = a.reviews && a.reviews.length > 0
+                            ? a.reviews.reduce((sum, r) => sum + r.rating, 0) / a.reviews.length
+                            : 0;
+                        const ratingB = b.reviews && b.reviews.length > 0
+                            ? b.reviews.reduce((sum, r) => sum + r.rating, 0) / b.reviews.length
+                            : 0;
+                        return ratingB - ratingA;
+                    });
+                    break;
+                case 'newest':
+                    filtered.sort((a, b) => {
+                        const dateA = new Date(a.joinedDate || 0).getTime();
+                        const dateB = new Date(b.joinedDate || 0).getTime();
+                        return dateB - dateA;
+                    });
+                    break;
+                case 'name':
+                    filtered.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+                    break;
+                default:
+                    // Default: featured first, then by ID
+                    filtered.sort((a, b) => {
+                        if (a.isFeatured !== b.isFeatured) {
+                            return a.isFeatured ? -1 : 1;
+                        }
+                        return a.id - b.id;
+                    });
             }
         }
         // If has search text, preserve database ranking order (no client-side sort)
@@ -246,7 +245,7 @@ const DirectoryPage: React.FC = () => {
     useEffect(() => {
         if (filterByMap && mapBounds) {
             const visible = filteredBusinesses.filter(b =>
-                b.latitude && b.longitude && mapBounds.contains([b.latitude, b.longitude])
+                b.latitude && b.longitude && mapBounds.contains?.([b.latitude, b.longitude])
             );
             setMapVisibleBusinesses(visible);
         } else {
@@ -284,14 +283,14 @@ const DirectoryPage: React.FC = () => {
     }, [getFiltersFromUrl, navigate]);
 
     const hasActiveFilters = useMemo(() => {
-        return Object.entries(activeFilters).some(([key, value]) => 
+        return Object.entries(activeFilters).some(([key, value]) =>
             key !== 'page' && value !== null && value !== undefined && value !== '' && value !== 'default' && value !== false
         );
     }, [activeFilters]);
 
     const hasTagFilters = useMemo(() => {
-        return !!(activeFilters.keyword || activeFilters.category || activeFilters.location || 
-                 activeFilters.district || activeFilters.hasDeals || activeFilters.isVerified || activeFilters.isOpenNow);
+        return !!(activeFilters.keyword || activeFilters.category || activeFilters.location ||
+            activeFilters.district || activeFilters.hasDeals || activeFilters.isVerified || activeFilters.isOpenNow);
     }, [activeFilters]);
 
     const hasSearchQuery = useMemo(() => {
@@ -323,7 +322,7 @@ const DirectoryPage: React.FC = () => {
 
     return (
         <>
-            <SEOHead 
+            <SEOHead
                 title={seoTitle}
                 description={seoDescription}
             />
@@ -349,8 +348,8 @@ const DirectoryPage: React.FC = () => {
                     {/* Search Bar */}
                     <SearchBar
                         onSearch={handleFilterChange}
-                        categories={CATEGORIES} 
-                        locations={CITIES} 
+                        categories={CATEGORIES}
+                        locations={CITIES}
                         locationsHierarchy={LOCATIONS_HIERARCHY}
                         isLoading={contextLoading}
                     />
@@ -360,21 +359,19 @@ const DirectoryPage: React.FC = () => {
                         <div className="flex items-center gap-2 bg-white border border-gray-300 rounded-lg p-1">
                             <button
                                 onClick={() => setViewMode('map')}
-                                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                                    viewMode === 'map'
+                                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'map'
                                         ? 'bg-primary text-white'
                                         : 'text-gray-700 hover:bg-gray-100'
-                                }`}
+                                    }`}
                             >
                                 Bản đồ
                             </button>
                             <button
                                 onClick={() => setViewMode('list')}
-                                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                                    viewMode === 'list'
+                                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'list'
                                         ? 'bg-primary text-white'
                                         : 'text-gray-700 hover:bg-gray-100'
-                                }`}
+                                    }`}
                             >
                                 Danh sách
                             </button>
@@ -390,52 +387,52 @@ const DirectoryPage: React.FC = () => {
                                         {hasTagFilters ? (
                                             <>
                                                 {activeFilters.keyword && (
-                                                    <FilterTag 
-                                                        label="Từ khóa" 
-                                                        value={activeFilters.keyword} 
-                                                        onRemove={() => handleRemoveFilter('keyword')} 
+                                                    <FilterTag
+                                                        label="Từ khóa"
+                                                        value={activeFilters.keyword}
+                                                        onRemove={() => handleRemoveFilter('keyword')}
                                                     />
                                                 )}
                                                 {activeFilters.category && (
-                                                    <FilterTag 
-                                                        label="Lĩnh vực" 
-                                                        value={activeFilters.category} 
-                                                        onRemove={() => handleRemoveFilter('category')} 
+                                                    <FilterTag
+                                                        label="Lĩnh vực"
+                                                        value={activeFilters.category}
+                                                        onRemove={() => handleRemoveFilter('category')}
                                                     />
                                                 )}
                                                 {activeFilters.location && (
-                                                    <FilterTag 
-                                                        label="TP" 
-                                                        value={activeFilters.location} 
-                                                        onRemove={() => handleRemoveFilter('location')} 
+                                                    <FilterTag
+                                                        label="TP"
+                                                        value={activeFilters.location}
+                                                        onRemove={() => handleRemoveFilter('location')}
                                                     />
                                                 )}
                                                 {activeFilters.district && (
-                                                    <FilterTag 
-                                                        label="Quận" 
-                                                        value={activeFilters.district} 
-                                                        onRemove={() => handleRemoveFilter('district')} 
+                                                    <FilterTag
+                                                        label="Quận"
+                                                        value={activeFilters.district}
+                                                        onRemove={() => handleRemoveFilter('district')}
                                                     />
                                                 )}
                                                 {activeFilters.hasDeals && (
-                                                    <FilterTag 
-                                                        label="Khác" 
-                                                        value="Có ưu đãi" 
-                                                        onRemove={() => handleRemoveFilter('deals')} 
+                                                    <FilterTag
+                                                        label="Khác"
+                                                        value="Có ưu đãi"
+                                                        onRemove={() => handleRemoveFilter('deals')}
                                                     />
                                                 )}
                                                 {activeFilters.isVerified && (
-                                                    <FilterTag 
-                                                        label="Khác" 
-                                                        value="Đã xác thực" 
-                                                        onRemove={() => handleRemoveFilter('verified')} 
+                                                    <FilterTag
+                                                        label="Khác"
+                                                        value="Đã xác thực"
+                                                        onRemove={() => handleRemoveFilter('verified')}
                                                     />
                                                 )}
                                                 {activeFilters.isOpenNow && (
-                                                    <FilterTag 
-                                                        label="Khác" 
-                                                        value="Đang mở cửa" 
-                                                        onRemove={() => handleRemoveFilter('open')} 
+                                                    <FilterTag
+                                                        label="Khác"
+                                                        value="Đang mở cửa"
+                                                        onRemove={() => handleRemoveFilter('open')}
                                                     />
                                                 )}
                                             </>
@@ -443,8 +440,8 @@ const DirectoryPage: React.FC = () => {
                                             <span className="text-sm text-gray-500 italic">Đã áp dụng sắp xếp.</span>
                                         )}
                                     </div>
-                                    <button 
-                                        onClick={handleClearAllFilters} 
+                                    <button
+                                        onClick={handleClearAllFilters}
                                         className="text-sm font-semibold text-red-600 hover:text-red-800 transition-colors flex-shrink-0 flex items-center gap-1"
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -468,10 +465,10 @@ const DirectoryPage: React.FC = () => {
                                 <div className="flex items-center gap-x-6 gap-y-3 flex-wrap">
                                     <div className="flex items-center gap-2 text-sm">
                                         <label htmlFor="sort-by" className="font-medium">Sắp xếp:</label>
-                                        <select 
-                                            id="sort-by" 
-                                            value={activeFilters.sort} 
-                                            onChange={(e) => handleFilterChange({ sort: e.target.value })} 
+                                        <select
+                                            id="sort-by"
+                                            value={activeFilters.sort}
+                                            onChange={(e) => handleFilterChange({ sort: e.target.value })}
                                             className="bg-white border border-gray-300 text-sm rounded-lg focus:ring-primary focus:border-primary p-1.5"
                                         >
                                             <option value="default">Mặc định</option>
@@ -557,7 +554,7 @@ const DirectoryPage: React.FC = () => {
                                 ) : (
                                     <EmptyState
                                         title="Không tìm thấy doanh nghiệp nào"
-                                        message={hasActiveFilters 
+                                        message={hasActiveFilters
                                             ? "Không có doanh nghiệp nào phù hợp với bộ lọc của bạn. Hãy thử điều chỉnh các tiêu chí tìm kiếm."
                                             : "Hiện tại chưa có doanh nghiệp nào trong hệ thống."
                                         }
