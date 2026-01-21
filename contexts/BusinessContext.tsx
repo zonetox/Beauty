@@ -300,25 +300,21 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       toast.error("Preview Mode: Cannot add post.");
       throw new Error("Preview Mode: Cannot add post.");
     }
-    try {
-      const slug = newPostData.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-') + `-${Date.now()}`;
-      const postToAdd = {
-        ...toSnakeCase(newPostData),
-        slug: slug,
-        view_count: 0,
-      };
-      const { error } = await supabase.from('business_blog_posts').insert(postToAdd);
-      if (error) {
-        console.error("Error adding business post:", error.message);
-        toast.error(`Failed to add post: ${error.message}`);
-        throw error;
-      }
-      hasFetchedRef.current = false; // Reset to allow refetch
-      await fetchAllData();
-      toast.success("Post added successfully!");
-    } catch (error) {
+    const slug = newPostData.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-') + `-${Date.now()}`;
+    const postToAdd = {
+      ...toSnakeCase(newPostData),
+      slug: slug,
+      view_count: 0,
+    };
+    const { error } = await supabase.from('business_blog_posts').insert(postToAdd);
+    if (error) {
+      console.error("Error adding business post:", error.message);
+      toast.error(`Failed to add post: ${error.message}`);
       throw error;
     }
+    hasFetchedRef.current = false; // Reset to allow refetch
+    await fetchAllData();
+    toast.success("Post added successfully!");
   };
 
   const updatePost = async (updatedPost: BusinessBlogPost) => {
@@ -326,32 +322,28 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       toast.error("Preview Mode: Cannot update post.");
       throw new Error("Preview Mode: Cannot update post.");
     }
-    try {
-      // If image changed and old image is from blog-images bucket, delete it
-      const oldPost = posts.find(p => p.id === updatedPost.id);
-      if (oldPost && oldPost.imageUrl !== updatedPost.imageUrl && oldPost.imageUrl.includes('blog-images')) {
-        try {
-          const { deleteFileByUrl } = await import('../lib/storage.ts');
-          await deleteFileByUrl('blog-images', oldPost.imageUrl);
-        } catch (deleteError) {
-          // Log but don't fail the update operation
-          console.warn('Failed to delete old blog post image from storage:', deleteError);
-        }
+    // If image changed and old image is from blog-images bucket, delete it
+    const oldPost = posts.find(p => p.id === updatedPost.id);
+    if (oldPost && oldPost.imageUrl !== updatedPost.imageUrl && oldPost.imageUrl.includes('blog-images')) {
+      try {
+        const { deleteFileByUrl } = await import('../lib/storage.ts');
+        await deleteFileByUrl('blog-images', oldPost.imageUrl);
+      } catch (deleteError) {
+        // Log but don't fail the update operation
+        console.warn('Failed to delete old blog post image from storage:', deleteError);
       }
+    }
 
-      const { id, ...postToUpdate } = updatedPost;
-      const { error } = await supabase.from('business_blog_posts').update(toSnakeCase(postToUpdate)).eq('id', id);
-      if (error) {
-        console.error("Error updating business post:", error.message);
-        toast.error(`Failed to update post: ${error.message}`);
-        throw error;
-      }
-      hasFetchedRef.current = false; // Reset to allow refetch
-      await fetchAllData();
-      toast.success("Post updated successfully!");
-    } catch (error) {
+    const { id, ...postToUpdate } = updatedPost;
+    const { error } = await supabase.from('business_blog_posts').update(toSnakeCase(postToUpdate)).eq('id', id);
+    if (error) {
+      console.error("Error updating business post:", error.message);
+      toast.error(`Failed to update post: ${error.message}`);
       throw error;
     }
+    hasFetchedRef.current = false; // Reset to allow refetch
+    await fetchAllData();
+    toast.success("Post updated successfully!");
   };
 
   const deletePost = async (postId: string) => {
@@ -359,31 +351,27 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       toast.error("Preview Mode: Cannot delete post.");
       throw new Error("Preview Mode: Cannot delete post.");
     }
-    try {
-      // Delete image from Storage if exists and is from blog-images bucket
-      const post = posts.find(p => p.id === postId);
-      if (post && post.imageUrl && post.imageUrl.includes('blog-images')) {
-        try {
-          const { deleteFileByUrl } = await import('../lib/storage.ts');
-          await deleteFileByUrl('blog-images', post.imageUrl);
-        } catch (deleteError) {
-          // Log but don't fail the delete operation
-          console.warn('Failed to delete blog post image from storage:', deleteError);
-        }
+    // Delete image from Storage if exists and is from blog-images bucket
+    const post = posts.find(p => p.id === postId);
+    if (post && post.imageUrl && post.imageUrl.includes('blog-images')) {
+      try {
+        const { deleteFileByUrl } = await import('../lib/storage.ts');
+        await deleteFileByUrl('blog-images', post.imageUrl);
+      } catch (deleteError) {
+        // Log but don't fail the delete operation
+        console.warn('Failed to delete blog post image from storage:', deleteError);
       }
+    }
 
-      const { error } = await supabase.from('business_blog_posts').delete().eq('id', postId);
-      if (error) {
-        console.error("Error deleting business post:", error.message);
-        toast.error(`Failed to delete post: ${error.message}`);
-        throw error;
-      }
-      hasFetchedRef.current = false; // Reset to allow refetch
-      await fetchAllData();
-      toast.success("Post deleted successfully!");
-    } catch (error) {
+    const { error } = await supabase.from('business_blog_posts').delete().eq('id', postId);
+    if (error) {
+      console.error("Error deleting business post:", error.message);
+      toast.error(`Failed to delete post: ${error.message}`);
       throw error;
     }
+    hasFetchedRef.current = false; // Reset to allow refetch
+    await fetchAllData();
+    toast.success("Post deleted successfully!");
   };
   const getPostBySlug = (slug: string) => posts.find(p => p.slug === slug);
   const getPostsByBusinessId = (businessId: number) => posts.filter(p => p.businessId === businessId);
@@ -406,7 +394,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       user_id: userProfile.id,
       user_name: userProfile.fullName || 'Anonymous',
       user_avatar_url: userProfile.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.fullName || 'A')}&background=random`,
-      status: 'Visible' as any,
+      status: 'Visible' as ReviewStatus,
     };
     const { error } = await supabase.from('reviews').insert(newReview);
     if (error) {
@@ -422,44 +410,36 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       toast.error("Preview Mode: Cannot add reply.");
       throw new Error("Preview Mode: Cannot add reply.");
     }
-    try {
-      const reply = { content: replyContent, replied_date: new Date().toISOString() };
-      const { error } = await supabase.from('reviews').update({ reply }).eq('id', reviewId);
-      if (error) {
-        console.error("Error adding reply:", error.message);
-        toast.error(`Failed to save reply: ${error.message}`);
-        throw error;
-      }
-      hasFetchedRef.current = false; // Reset to allow refetch
-      await fetchAllData();
-      toast.success("Reply saved successfully!");
-    } catch (error) {
+    const reply = { content: replyContent, replied_date: new Date().toISOString() };
+    const { error } = await supabase.from('reviews').update({ reply }).eq('id', reviewId);
+    if (error) {
+      console.error("Error adding reply:", error.message);
+      toast.error(`Failed to save reply: ${error.message}`);
       throw error;
     }
+    hasFetchedRef.current = false; // Reset to allow refetch
+    await fetchAllData();
+    toast.success("Reply saved successfully!");
   };
   const toggleReviewVisibility = async (reviewId: string) => {
     if (!isSupabaseConfigured) {
       toast.error("Preview Mode: Cannot change review visibility.");
       throw new Error("Preview Mode: Cannot change review visibility.");
     }
-    try {
-      const review = reviews.find(r => r.id === reviewId);
-      if (!review) {
-        throw new Error("Review not found");
-      }
-      const newStatus = review.status === ReviewStatus.VISIBLE ? ReviewStatus.HIDDEN : ReviewStatus.VISIBLE;
-      const { error } = await supabase.from('reviews').update({ status: newStatus }).eq('id', reviewId);
-      if (error) {
-        console.error("Error toggling review visibility:", error.message);
-        toast.error(`Failed to update review visibility: ${error.message}`);
-        throw error;
-      }
-      hasFetchedRef.current = false; // Reset to allow refetch
-      await fetchAllData();
-      toast.success(`Review ${newStatus === ReviewStatus.HIDDEN ? 'hidden' : 'shown'} successfully!`);
-    } catch (error) {
+    const review = reviews.find(r => r.id === reviewId);
+    if (!review) {
+      throw new Error("Review not found");
+    }
+    const newStatus = review.status === ReviewStatus.VISIBLE ? ReviewStatus.HIDDEN : ReviewStatus.VISIBLE;
+    const { error } = await supabase.from('reviews').update({ status: newStatus }).eq('id', reviewId);
+    if (error) {
+      console.error("Error toggling review visibility:", error.message);
+      toast.error(`Failed to update review visibility: ${error.message}`);
       throw error;
     }
+    hasFetchedRef.current = false; // Reset to allow refetch
+    await fetchAllData();
+    toast.success(`Review ${newStatus === ReviewStatus.HIDDEN ? 'hidden' : 'shown'} successfully!`);
   };
   const getReviewsByBusinessId = (businessId: number) => reviews.filter(r => r.business_id === businessId);
   const getAnalyticsByBusinessId = (businessId: number) => analyticsData.find(data => data.businessId === businessId);
@@ -482,18 +462,14 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       toast.error("Preview Mode: Cannot update appointment status.");
       throw new Error("Preview Mode: Cannot update appointment status.");
     }
-    try {
-      const { error } = await supabase.from('appointments').update({ status }).eq('id', appointmentId);
-      if (error) {
-        console.error("Error updating appointment status:", error.message);
-        toast.error(`Failed to update appointment: ${error.message}`);
-        throw error;
-      }
-      hasFetchedRef.current = false; // Reset to allow refetch
-      await fetchAllData();
-    } catch (error) {
+    const { error } = await supabase.from('appointments').update({ status }).eq('id', appointmentId);
+    if (error) {
+      console.error("Error updating appointment status:", error.message);
+      toast.error(`Failed to update appointment: ${error.message}`);
       throw error;
     }
+    hasFetchedRef.current = false; // Reset to allow refetch
+    await fetchAllData();
   };
 
   const getAppointmentsForBusiness = (businessId: number) => appointments.filter(appt => appt.businessId === businessId);

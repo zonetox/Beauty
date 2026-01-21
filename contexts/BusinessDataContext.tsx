@@ -810,19 +810,15 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       toast.error("Preview Mode: Cannot add service.");
       throw new Error("Preview Mode: Cannot add service.");
     }
-    try {
-      const currentServices = businesses.find(b => b.id === newServiceData.business_id)?.services || [];
-      const newPosition = currentServices.length > 0 ? Math.max(...currentServices.map(s => s.position)) + 1 : 1;
-      const { error } = await supabase.from('services').insert({ ...(toSnakeCase(newServiceData) as any), position: newPosition });
-      if (error) {
-        console.error("Error adding service:", error.message);
-        toast.error(`Failed to add service: ${error.message}`);
-        throw error;
-      }
-      await refetchAllPublicData();
-    } catch (error) {
+    const currentServices = businesses.find(b => b.id === newServiceData.business_id)?.services || [];
+    const newPosition = currentServices.length > 0 ? Math.max(...currentServices.map(s => s.position)) + 1 : 1;
+    const { error } = await supabase.from('services').insert({ ...toSnakeCase(newServiceData), position: newPosition });
+    if (error) {
+      console.error("Error adding service:", error.message);
+      toast.error(`Failed to add service: ${error.message}`);
       throw error;
     }
+    await refetchAllPublicData();
   };
 
   const updateService = async (updatedService: Service) => {
@@ -830,18 +826,14 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       toast.error("Preview Mode: Cannot update service.");
       throw new Error("Preview Mode: Cannot update service.");
     }
-    try {
-      const { id, ...serviceToUpdate } = updatedService;
-      const { error } = await supabase.from('services').update(toSnakeCase(serviceToUpdate) as any).eq('id', id);
-      if (error) {
-        console.error("Error updating service:", error.message);
-        toast.error(`Failed to update service: ${error.message}`);
-        throw error;
-      }
-      await refetchAllPublicData();
-    } catch (error) {
+    const { id, ...serviceToUpdate } = updatedService;
+    const { error } = await supabase.from('services').update(toSnakeCase(serviceToUpdate)).eq('id', id);
+    if (error) {
+      console.error("Error updating service:", error.message);
+      toast.error(`Failed to update service: ${error.message}`);
       throw error;
     }
+    await refetchAllPublicData();
   };
 
   /**
@@ -855,35 +847,31 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       toast.error("Preview Mode: Cannot delete service.");
       throw new Error("Preview Mode: Cannot delete service.");
     }
-    try {
-      // Get service to delete image
-      const serviceToDelete = businesses
-        .flatMap(b => b.services || [])
-        .find(s => s.id === serviceId);
+    // Get service to delete image
+    const serviceToDelete = businesses
+      .flatMap(b => b.services || [])
+      .find(s => s.id === serviceId);
 
-      // Delete service from database
-      const { error } = await supabase.from('services').delete().eq('id', serviceId);
-      if (error) {
-        console.error("Error deleting service:", error.message);
-        toast.error(`Failed to delete service: ${error.message}`);
-        throw error;
-      }
-
-      // Delete image from Storage if exists
-      if (serviceToDelete?.image_url && serviceToDelete.image_url.startsWith('http')) {
-        try {
-          const { deleteFileByUrl } = await import('../lib/storage.ts');
-          await deleteFileByUrl('business-gallery', serviceToDelete.image_url);
-        } catch (deleteError) {
-          // Log but don't fail the delete operation
-          console.warn('Failed to delete service image from storage:', deleteError);
-        }
-      }
-
-      await fetchAllPublicData();
-    } catch (error) {
+    // Delete service from database
+    const { error } = await supabase.from('services').delete().eq('id', serviceId);
+    if (error) {
+      console.error("Error deleting service:", error.message);
+      toast.error(`Failed to delete service: ${error.message}`);
       throw error;
     }
+
+    // Delete image from Storage if exists
+    if (serviceToDelete?.image_url && serviceToDelete.image_url.startsWith('http')) {
+      try {
+        const { deleteFileByUrl } = await import('../lib/storage.ts');
+        await deleteFileByUrl('business-gallery', serviceToDelete.image_url);
+      } catch (deleteError) {
+        // Log but don't fail the delete operation
+        console.warn('Failed to delete service image from storage:', deleteError);
+      }
+    }
+
+    await fetchAllPublicData();
   };
 
   /**
@@ -896,15 +884,11 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       toast.error("Preview Mode: Cannot reorder services.");
       throw new Error("Preview Mode: Cannot reorder services.");
     }
-    try {
-      const updates = orderedServices.map((service, index) => ({ id: service.id, position: index + 1 }));
-      const { error } = await supabase.from('services').upsert(updates as any);
-      if (error) {
-        console.error("Error updating service order:", error.message);
-        toast.error(`Failed to save service order: ${error.message}`);
-        throw error;
-      }
-    } catch (error) {
+    const updates = orderedServices.map((service, index) => ({ id: service.id, position: index + 1 }));
+    const { error } = await supabase.from('services').upsert(updates);
+    if (error) {
+      console.error("Error updating service order:", error.message);
+      toast.error(`Failed to save service order: ${error.message}`);
       throw error;
     }
   };
@@ -922,30 +906,26 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       toast.error("Preview Mode: Cannot upload media.");
       throw new Error("Preview Mode: Cannot upload media.");
     }
-    try {
-      // FIX: Use business-gallery bucket instead of business-assets
-      const folder = `business/${businessId}/gallery`;
-      const publicUrl = await uploadFile('business-gallery', file, folder);
-      const isImage = file.type.startsWith('image/');
-      const currentMedia = businesses.find(b => b.id === businessId)?.gallery || [];
-      const newPosition = currentMedia.length > 0 ? Math.max(...currentMedia.map(m => m.position)) + 1 : 1;
-      const newItem = {
-        business_id: businessId,
-        url: publicUrl,
-        type: isImage ? MediaType.IMAGE : MediaType.VIDEO,
-        title: file.name,
-        position: newPosition
-      };
-      const { error } = await supabase.from('media_items').insert(toSnakeCase(newItem) as any);
-      if (error) {
-        console.error("Error adding media item:", error.message);
-        toast.error(`Failed to upload media: ${error.message}`);
-        throw error;
-      }
-      await fetchAllPublicData();
-    } catch (error) {
+    // FIX: Use business-gallery bucket instead of business-assets
+    const folder = `business/${businessId}/gallery`;
+    const publicUrl = await uploadFile('business-gallery', file, folder);
+    const isImage = file.type.startsWith('image/');
+    const currentMedia = businesses.find(b => b.id === businessId)?.gallery || [];
+    const newPosition = currentMedia.length > 0 ? Math.max(...currentMedia.map(m => m.position)) + 1 : 1;
+    const newItem = {
+      business_id: businessId,
+      url: publicUrl,
+      type: isImage ? MediaType.IMAGE : MediaType.VIDEO,
+      title: file.name,
+      position: newPosition
+    };
+    const { error } = await supabase.from('media_items').insert(toSnakeCase(newItem));
+    if (error) {
+      console.error("Error adding media item:", error.message);
+      toast.error(`Failed to upload media: ${error.message}`);
       throw error;
     }
+    await fetchAllPublicData();
   };
 
   /**
@@ -959,19 +939,15 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       toast.error("Preview Mode: Cannot update media.");
       throw new Error("Preview Mode: Cannot update media.");
     }
-    try {
-      const { id, ...itemToUpdate } = updatedItem;
-      const { error } = await supabase.from('media_items').update(toSnakeCase(itemToUpdate) as any).eq('id', id);
-      if (error) {
-        console.error("Error updating media item:", error.message);
-        toast.error(`Failed to update media: ${error.message}`);
-        throw error;
-      }
-      await refetchAllPublicData();
-      toast.success('Media updated successfully!');
-    } catch (error) {
+    const { id, ...itemToUpdate } = updatedItem;
+    const { error } = await supabase.from('media_items').update(toSnakeCase(itemToUpdate)).eq('id', id);
+    if (error) {
+      console.error("Error updating media item:", error.message);
+      toast.error(`Failed to update media: ${error.message}`);
       throw error;
     }
+    await refetchAllPublicData();
+    toast.success('Media updated successfully!');
   };
 
   const deleteMediaItem = async (itemToDelete: MediaItem) => {
@@ -979,31 +955,27 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       toast.error("Preview Mode: Cannot delete media.");
       throw new Error("Preview Mode: Cannot delete media.");
     }
-    try {
-      // Delete file from Storage first
-      if (itemToDelete.url && itemToDelete.url.startsWith('http')) {
-        try {
-          const { deleteFileByUrl } = await import('../lib/storage.ts');
-          // FIX: Use business-gallery bucket instead of business-assets
-          await deleteFileByUrl('business-gallery', itemToDelete.url);
-        } catch (deleteError) {
-          // Log but don't fail the delete operation
-          console.warn('Failed to delete media file from storage:', deleteError);
-        }
+    // Delete file from Storage first
+    if (itemToDelete.url && itemToDelete.url.startsWith('http')) {
+      try {
+        const { deleteFileByUrl } = await import('../lib/storage.ts');
+        // FIX: Use business-gallery bucket instead of business-assets
+        await deleteFileByUrl('business-gallery', itemToDelete.url);
+      } catch (deleteError) {
+        // Log but don't fail the delete operation
+        console.warn('Failed to delete media file from storage:', deleteError);
       }
+    }
 
-      // Delete record from database
-      const { error } = await supabase.from('media_items').delete().eq('id', itemToDelete.id);
-      if (error) {
-        console.error("Error deleting media item record:", error.message);
-        toast.error(`Failed to delete media: ${error.message}`);
-        throw error;
-      }
-      await refetchAllPublicData();
-      toast.success('Media deleted successfully!');
-    } catch (error) {
+    // Delete record from database
+    const { error } = await supabase.from('media_items').delete().eq('id', itemToDelete.id);
+    if (error) {
+      console.error("Error deleting media item record:", error.message);
+      toast.error(`Failed to delete media: ${error.message}`);
       throw error;
     }
+    await refetchAllPublicData();
+    toast.success('Media deleted successfully!');
   };
 
   /**
@@ -1016,29 +988,25 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       toast.error("Preview Mode: Cannot reorder media.");
       throw new Error("Preview Mode: Cannot reorder media.");
     }
-    try {
-      const updates = orderedMedia.map((item, index) => ({ id: item.id, position: index + 1 }));
-      const { error } = await supabase.from('media_items').upsert(updates as any);
-      if (error) {
-        console.error("Error updating media order:", error.message);
-        toast.error(`Failed to save media order: ${error.message}`);
-        throw error;
-      }
-    } catch (error) {
+    const updates = orderedMedia.map((item, index) => ({ id: item.id, position: index + 1 }));
+    const { error } = await supabase.from('media_items').upsert(updates);
+    if (error) {
+      console.error("Error updating media order:", error.message);
+      toast.error(`Failed to save media order: ${error.message}`);
       throw error;
     }
   };
 
   const addTeamMember = async (newMemberData: Omit<TeamMember, 'id'>) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add team member."); return; }
-    const { error } = await supabase.from('team_members').insert(toSnakeCase(newMemberData) as any);
+    const { error } = await supabase.from('team_members').insert(toSnakeCase(newMemberData));
     if (error) console.error("Error adding team member:", error.message);
     else await refetchAllPublicData();
   };
   const updateTeamMember = async (updatedMember: TeamMember) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update team member."); return; }
     const { id, ...memberToUpdate } = updatedMember;
-    const { error } = await supabase.from('team_members').update(toSnakeCase(memberToUpdate) as any).eq('id', id);
+    const { error } = await supabase.from('team_members').update(toSnakeCase(memberToUpdate)).eq('id', id);
     if (error) console.error("Error updating team member:", error.message);
     else await refetchAllPublicData();
   };
@@ -1066,18 +1034,14 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       toast.error("Preview Mode: Cannot add deal.");
       throw new Error("Preview Mode: Cannot add deal.");
     }
-    try {
-      const { error } = await supabase.from('deals').insert(toSnakeCase(newDealData) as any);
-      if (error) {
-        console.error("Error adding deal:", error.message);
-        toast.error(`Failed to add deal: ${error.message}`);
-        throw error;
-      }
-      await refetchAllPublicData();
-      toast.success('Deal added successfully!');
-    } catch (error) {
+    const { error } = await supabase.from('deals').insert(toSnakeCase(newDealData));
+    if (error) {
+      console.error("Error adding deal:", error.message);
+      toast.error(`Failed to add deal: ${error.message}`);
       throw error;
     }
+    await refetchAllPublicData();
+    toast.success('Deal added successfully!');
   };
 
   const updateDeal = async (updatedDeal: Deal) => {
@@ -1085,19 +1049,15 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       toast.error("Preview Mode: Cannot update deal.");
       throw new Error("Preview Mode: Cannot update deal.");
     }
-    try {
-      const { id, ...dealToUpdate } = updatedDeal;
-      const { error } = await supabase.from('deals').update(toSnakeCase(dealToUpdate) as any).eq('id', id);
-      if (error) {
-        console.error("Error updating deal:", error.message);
-        toast.error(`Failed to update deal: ${error.message}`);
-        throw error;
-      }
-      await refetchAllPublicData();
-      toast.success('Deal updated successfully!');
-    } catch (error) {
+    const { id, ...dealToUpdate } = updatedDeal;
+    const { error } = await supabase.from('deals').update(toSnakeCase(dealToUpdate)).eq('id', id);
+    if (error) {
+      console.error("Error updating deal:", error.message);
+      toast.error(`Failed to update deal: ${error.message}`);
       throw error;
     }
+    await refetchAllPublicData();
+    toast.success('Deal updated successfully!');
   };
 
   /**
@@ -1111,36 +1071,32 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       toast.error("Preview Mode: Cannot delete deal.");
       throw new Error("Preview Mode: Cannot delete deal.");
     }
-    try {
-      // Get deal to delete image
-      const dealToDelete = businesses
-        .flatMap(b => b.deals || [])
-        .find(d => d.id === dealId);
+    // Get deal to delete image
+    const dealToDelete = businesses
+      .flatMap(b => b.deals || [])
+      .find(d => d.id === dealId);
 
-      // Delete deal from database
-      const { error } = await supabase.from('deals').delete().eq('id', dealId);
-      if (error) {
-        console.error("Error deleting deal:", error.message);
-        toast.error(`Failed to delete deal: ${error.message}`);
-        throw error;
-      }
-
-      // Delete image from Storage if exists
-      if (dealToDelete?.image_url && dealToDelete.image_url.startsWith('http')) {
-        try {
-          const { deleteFileByUrl } = await import('../lib/storage.ts');
-          await deleteFileByUrl('business-gallery', dealToDelete.image_url);
-        } catch (deleteError) {
-          // Log but don't fail the delete operation
-          console.warn('Failed to delete deal image from storage:', deleteError);
-        }
-      }
-
-      await refetchAllPublicData();
-      toast.success('Deal deleted successfully!');
-    } catch (error) {
+    // Delete deal from database
+    const { error } = await supabase.from('deals').delete().eq('id', dealId);
+    if (error) {
+      console.error("Error deleting deal:", error.message);
+      toast.error(`Failed to delete deal: ${error.message}`);
       throw error;
     }
+
+    // Delete image from Storage if exists
+    if (dealToDelete?.image_url && dealToDelete.image_url.startsWith('http')) {
+      try {
+        const { deleteFileByUrl } = await import('../lib/storage.ts');
+        await deleteFileByUrl('business-gallery', dealToDelete.image_url);
+      } catch (deleteError) {
+        // Log but don't fail the delete operation
+        console.warn('Failed to delete deal image from storage:', deleteError);
+      }
+    }
+
+    await refetchAllPublicData();
+    toast.success('Deal deleted successfully!');
   };
 
   // --- BLOG LOGIC ---
