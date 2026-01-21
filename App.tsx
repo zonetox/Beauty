@@ -124,8 +124,25 @@ const AccountPageRouter: React.FC = () => {
         }
     }, [state, roleLoading]);
 
-    // Loading state
+    // Loading state with Grace Period (prevent flash)
+    // Only show spinner if loading takes more than 400ms
+    const [showLoading, setShowLoading] = useState(false);
+
+    useEffect(() => {
+        let timer: NodeJS.Timeout;
+        if (state === 'loading' || roleLoading) {
+            timer = setTimeout(() => {
+                setShowLoading(true);
+            }, 400); // 400ms grace period
+        } else {
+            setShowLoading(false);
+        }
+        return () => clearTimeout(timer);
+    }, [state, roleLoading]);
+
     if ((state === 'loading' || roleLoading) && !loadTimeout) {
+        if (!showLoading) return null; // Invisible during grace period
+
         return (
             <div className="flex items-center justify-center h-[50vh]">
                 <div className="text-center">

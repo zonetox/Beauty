@@ -113,7 +113,7 @@ const RegisterPage: React.FC = () => {
     if (userType === 'business') {
       return [
         { id: 'account', label: 'Tạo tài khoản', status: getStepStatus('account') },
-        { id: 'profile', label: 'Khởi tạo hồ sơ', status: getStepStatus('profile') },
+        { id: 'profile', label: 'Chuẩn bị tài khoản', status: getStepStatus('profile') },
         { id: 'business', label: 'Tạo doanh nghiệp', status: getStepStatus('business') },
         { id: 'verify', label: 'Xác minh', status: getStepStatus('verify') },
         { id: 'complete', label: 'Hoàn tất', status: getStepStatus('complete') },
@@ -121,7 +121,7 @@ const RegisterPage: React.FC = () => {
     } else {
       return [
         { id: 'account', label: 'Tạo tài khoản', status: getStepStatus('account') },
-        { id: 'profile', label: 'Khởi tạo hồ sơ', status: getStepStatus('profile') },
+        { id: 'profile', label: 'Chuẩn bị tài khoản', status: getStepStatus('profile') },
         { id: 'complete', label: 'Hoàn tất', status: getStepStatus('complete') },
       ];
     }
@@ -490,12 +490,7 @@ const RegisterPage: React.FC = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    {currentStep === 'creating_account' && 'Đang tạo tài khoản...'}
-                    {currentStep === 'initializing_profile' && 'Đang khởi tạo hồ sơ...'}
-                    {currentStep === 'creating_business' && 'Đang tạo doanh nghiệp...'}
-                    {currentStep === 'verifying_business' && 'Đang xác minh...'}
-                    {currentStep === 'completing' && 'Đang hoàn tất...'}
-                    {!currentStep || currentStep === 'idle' && 'Đang đăng ký...'}
+                    Đang xử lý...
                   </>
                 ) : (
                   'Đăng ký'

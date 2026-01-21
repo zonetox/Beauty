@@ -100,92 +100,73 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
       };
     }
 
-    // 2. Check admin status (from admin_users table) - MANDATORY: is_locked = FALSE
-    // Use maybeSingle() instead of single() to avoid 406 errors when user is not an admin
-    // maybeSingle() returns { data: null, error: null } when no rows match (not an error condition)
-    const { data: adminUser, error: adminError } = await supabase
+    // 2. PARALLEL EXECUTION: Check Admin, Owner, and Staff status simultaneously
+    // This reduces the waterfall effect and speeds up role resolution significantly
+
+    // Promise for Admin Check
+    const adminCheck = supabase
       .from('admin_users')
       .select('id, is_locked')
       .eq('email', user.email)
       .eq('is_locked', false)
       .maybeSingle();
 
-    // Handle actual errors (network issues, RLS violations, etc.)
-    // Note: maybeSingle() does NOT return error codes 406 or PGRST116 when no rows exist
-    // It returns { data: null, error: null } - which is the normal case for non-admin users
-    if (adminError) {
-      // Log unexpected errors but don't block - user might still be a business owner or regular user
-      console.warn('Admin check error (non-critical):', adminError.message);
+    // Promise for Business Owner Check (only if linked)
+    // Explicitly cast to PromiseLike to satisfy Promise.all type requirements with Supabase v2
+    let ownerCheck: PromiseLike<{ data: { id: number; owner_id: string } | null; error: any }> = Promise.resolve({ data: null, error: null });
+
+    if (profile.business_id) {
+      ownerCheck = supabase
+        .from('businesses')
+        .select('id, owner_id')
+        .eq('id', profile.business_id)
+        .eq('owner_id', user.id)
+        .single();
     }
 
-    // If adminUser exists and no error, user is an admin
+    // Promise for Business Staff Check
+    const staffCheck = supabase
+      .from('business_staff')
+      .select('business_id')
+      .eq('user_id', user.id)
+      .limit(1)
+      .maybeSingle();
+
+    // Execute all checks in parallel
+    const [
+      { data: adminUser, error: adminError },
+      { data: businessOwner },
+      { data: staffRecord }
+    ] = await Promise.all([adminCheck, ownerCheck, staffCheck]);
+
+    // EVALUATE RESULTS (Order of Precedence)
+
+    // A. Admin (Highest Priority)
     if (!adminError && adminUser) {
-      // User is admin - can also own business
       return {
         role: 'admin',
-        profileId: profile.id,
+        profileId: profile.id, // Verified profiles.id exists
         businessId: profile.business_id || null,
         isAdmin: true,
-        isBusinessOwner: profile.business_id ? await checkBusinessOwnership(user.id, profile.business_id) : false,
+        // Optional checks can be done here if needed, but role is strictly admin
+        isBusinessOwner: !!businessOwner,
         isBusinessStaff: false
       };
     }
 
-    // 3. Check business ownership (businesses.owner_id = auth.uid())
-    if (profile.business_id) {
-      let business = null;
-      try {
-        const businessTimeout = new Promise<never>((_, reject) => {
-          setTimeout(() => reject(new Error('Business check timeout')), 5000);
-        });
-
-        const businessQuery = supabase
-          .from('businesses')
-          .select('id, owner_id')
-          .eq('id', profile.business_id)
-          .eq('owner_id', user.id)
-          .single();
-
-        const result = await Promise.race([businessQuery, businessTimeout]);
-        business = result.data || null;
-      } catch {
-        // Timeout or error - assume not owner (graceful degradation)
-        business = null;
-      }
-
-      if (business) {
-        return {
-          role: 'business_owner',
-          profileId: profile.id,
-          businessId: profile.business_id,
-          isAdmin: false,
-          isBusinessOwner: true,
-          isBusinessStaff: false
-        };
-      }
+    // B. Business Owner
+    if (businessOwner) {
+      return {
+        role: 'business_owner',
+        profileId: profile.id,
+        businessId: profile.business_id, // Trust the profile link if validated
+        isAdmin: false,
+        isBusinessOwner: true,
+        isBusinessStaff: false
+      };
     }
 
-    // 4. Check business staff relationship (business_staff.user_id = auth.uid())
-    let staffRecord = null;
-    try {
-      const staffTimeout = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Staff check timeout')), 5000);
-      });
-
-      const staffQuery = supabase
-        .from('business_staff')
-        .select('business_id')
-        .eq('user_id', user.id)
-        .limit(1)
-        .single();
-
-      const result = await Promise.race([staffQuery, staffTimeout]);
-      staffRecord = result.data || null;
-    } catch {
-      // Timeout or error - assume not staff (graceful degradation)
-      staffRecord = null;
-    }
-
+    // C. Business Staff
     if (staffRecord) {
       return {
         role: 'business_staff',
@@ -197,7 +178,7 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
       };
     }
 
-    // 5. Regular user
+    // D. Regular User (Default)
     return {
       role: 'user',
       profileId: profile.id,
@@ -218,24 +199,6 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
       isBusinessStaff: false,
       error: `Role resolution failed: ${errorMessage}`
     };
-  }
-}
-
-/**
- * Helper: Check if user owns a business
- */
-async function checkBusinessOwnership(userId: string, businessId: number): Promise<boolean> {
-  try {
-    const { data } = await supabase
-      .from('businesses')
-      .select('id')
-      .eq('id', businessId)
-      .eq('owner_id', userId)
-      .single();
-    
-    return !!data;
-  } catch {
-    return false;
   }
 }
 

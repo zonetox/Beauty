@@ -103,6 +103,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const handleAuthChange = useCallback(async (_event: AuthChangeEvent, newSession: Session | null) => {
     setSession(newSession);
     const newUser = newSession?.user ?? null;
+
+    // Prevent redundant profile fetching if user is already loaded
+    // This stops the "checking account" loop
+    if (newUser?.id === user?.id && profile) {
+      // Just update user object in case metadata changed, but don't re-fetch profile or toggle loading state
+      setUser(newUser);
+      return;
+    }
+
     setUser(newUser);
 
     if (newUser) {
@@ -114,7 +123,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setProfile(null);
       setState('unauthenticated');
     }
-  }, [fetchProfile]);
+  }, [fetchProfile, user, profile]);
 
   // Initialize: Check session ONCE on app load
   useEffect(() => {
