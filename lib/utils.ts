@@ -10,13 +10,13 @@ import { PostgrestResponse } from '@supabase/supabase-js';
  * @param obj - The object to convert
  * @returns The object with camelCase keys
  */
-export function snakeToCamel<T>(obj: T): T {
+export function snakeToCamel(obj: unknown): any {
     if (obj === null || typeof obj !== 'object') {
         return obj;
     }
 
     if (Array.isArray(obj)) {
-        return obj.map(v => snakeToCamel(v)) as T;
+        return obj.map(v => snakeToCamel(v));
     }
 
     return Object.keys(obj as Record<string, unknown>).reduce((result, key) => {
@@ -34,7 +34,15 @@ export function snakeToCamel<T>(obj: T): T {
         const value = (obj as Record<string, unknown>)[key];
         (result as Record<string, unknown>)[camelKey] = snakeToCamel(value);
         return result;
-    }, {} as T);
+    }, {} as any);
+}
+
+/**
+ * Helper to convert and assert the result to a specific type.
+ * Use this when you want a typed return from a PostgREST response.
+ */
+export function snakeToCamelAs<T>(obj: unknown): T {
+    return (snakeToCamel(obj) as unknown) as T;
 }
 
 /**
@@ -44,12 +52,12 @@ export function snakeToCamel<T>(obj: T): T {
  * @returns An object with camelCase data and error
  */
 export function mapPostgrestResponse<T>(
-  response: PostgrestResponse<unknown>
+    response: PostgrestResponse<unknown>
 ): { data: T[] | null; error: unknown } {
-    return {
-        data: response.data ? (snakeToCamel(response.data) as T[]) : null,
-        error: response.error
-    };
+        return {
+                data: response.data ? ((snakeToCamel(response.data) as unknown) as T[]) : null,
+                error: response.error
+        };
 }
 
 /**
@@ -59,10 +67,10 @@ export function mapPostgrestResponse<T>(
  * @returns An object with camelCase data and error
  */
 export function mapSingleResponse<T>(
-  response: { data: unknown; error: unknown }
+    response: { data: unknown; error: unknown }
 ): { data: T | null; error: unknown } {
-    return {
-        data: response.data ? (snakeToCamel(response.data) as T) : null,
-        error: response.error
-    };
+        return {
+                data: response.data ? ((snakeToCamel(response.data) as unknown) as T) : null,
+                error: response.error
+        };
 }

@@ -4,15 +4,15 @@ import { createClient } from '@supabase/supabase-js';
 // Export for diagnostic purposes on the error page.
 // The new logic prioritizes Vite's `import.meta.env` and falls back to `process.env`.
 export const supabaseUrlFromEnv =
-    (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) ||
-    (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_URL) ||
-    (typeof process !== 'undefined' && process.env?.SUPABASE_URL);
+    (typeof import.meta !== 'undefined' ? import.meta.env?.VITE_SUPABASE_URL : undefined) ||
+    (typeof process !== 'undefined' ? process.env?.VITE_SUPABASE_URL : undefined) ||
+    (typeof process !== 'undefined' ? process.env?.SUPABASE_URL : undefined);
 
 // Export for diagnostic purposes on the error page.
 export const supabaseAnonKeyFromEnv =
-    (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_ANON_KEY) ||
-    (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_ANON_KEY) ||
-    (typeof process !== 'undefined' && process.env?.SUPABASE_ANON_KEY);
+    (typeof import.meta !== 'undefined' ? import.meta.env?.VITE_SUPABASE_ANON_KEY : undefined) ||
+    (typeof process !== 'undefined' ? process.env?.VITE_SUPABASE_ANON_KEY : undefined) ||
+    (typeof process !== 'undefined' ? process.env?.SUPABASE_ANON_KEY : undefined);
 
 
 // Check if the credentials are truly configured and not just placeholders.
@@ -27,8 +27,8 @@ export const isSupabaseConfigured =
 // Use real credentials if configured; otherwise, use valid-looking dummy credentials.
 // This prevents the client from throwing an 'Invalid supabaseUrl' error on initialization
 // before the app has a chance to render the configuration error page.
-const supabaseUrl = isSupabaseConfigured ? supabaseUrlFromEnv : 'https://dummy-url.supabase.co';
-const supabaseAnonKey = isSupabaseConfigured ? supabaseAnonKeyFromEnv : 'dummy-key-for-initialization-to-prevent-crash-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+const supabaseUrl = isSupabaseConfigured ? String(supabaseUrlFromEnv) : 'https://dummy-url.supabase.co';
+const supabaseAnonKey = isSupabaseConfigured ? String(supabaseAnonKeyFromEnv) : 'dummy-key-for-initialization-to-prevent-crash-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
 
 // The client is created. The app's entry point (`App.tsx`) uses `isSupabaseConfigured`
 // to prevent any real API calls from being made with the dummy client.
