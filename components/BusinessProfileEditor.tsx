@@ -145,7 +145,8 @@ const BusinessProfileEditor: React.FC = () => {
             }, {} as { [key: string]: string });
             setFormData((prev) => {
                 if (!prev) return null;
-                return { ...prev, workingHours: workingHoursObject } as Business;
+                const updated: Business = { ...prev, workingHours: workingHoursObject };
+                return updated;
             });
         }
     }, [workingHoursList]);
@@ -213,7 +214,8 @@ const BusinessProfileEditor: React.FC = () => {
         const isNumeric = type === 'number';
         setFormData((prev) => {
             if (!prev) return null;
-            return { ...prev, [name]: isNumeric ? parseFloat(value) : value } as Business;
+            const updated: Business = { ...prev, [name]: isNumeric ? parseFloat(value) : value };
+            return updated;
         });
         // Clear error for this field when user starts typing
         if (errors[name as keyof FormErrors]) {
@@ -228,12 +230,14 @@ const BusinessProfileEditor: React.FC = () => {
         setFormData((prev: Business | null) => {
             if (!prev) return null;
             const currentCategories = prev.categories || [];
+            let updated: Business;
             if (checked) {
-                return { ...prev, categories: [...new Set([...currentCategories, category])] } as Business;
+                updated = { ...prev, categories: [...new Set([...currentCategories, category])] };
             } else {
                 const newCategories = currentCategories.filter((c: BusinessCategory) => c !== category);
-                return { ...prev, categories: newCategories.length > 0 ? newCategories : currentCategories } as Business;
+                updated = { ...prev, categories: newCategories.length > 0 ? newCategories : currentCategories };
             }
+            return updated;
         });
         // Clear error when category is selected
         if (errors.categories) {
@@ -259,7 +263,8 @@ const BusinessProfileEditor: React.FC = () => {
             const publicUrl = await uploadFile('business-logos', file, folder);
             setFormData((prev) => {
                 if (!prev) return null;
-                return { ...prev, logoUrl: publicUrl } as Business;
+                const updated: Business = { ...prev, logoUrl: publicUrl };
+                return updated;
             });
             toast.success('Logo uploaded successfully!');
         } catch (error: unknown) {
@@ -287,7 +292,8 @@ const BusinessProfileEditor: React.FC = () => {
             const publicUrl = await uploadFile('business-gallery', file, folder);
             setFormData((prev) => {
                 if (!prev) return null;
-                return { ...prev, imageUrl: publicUrl } as Business;
+                const updated: Business = { ...prev, imageUrl: publicUrl };
+                return updated;
             });
             toast.success('Cover image uploaded successfully!');
             // Clear error if cover image was missing
@@ -307,14 +313,16 @@ const BusinessProfileEditor: React.FC = () => {
         const { name, value } = e.target;
         setFormData((prev) => {
             if (!prev) return null;
-            return { ...prev, seo: { ...(prev.seo || {}), [name]: value } } as Business;
+            const updated: Business = { ...prev, seo: { ...(prev.seo || {}), [name]: value } };
+            return updated;
         });
     };
 
     const handleLandingPageConfigChange = (newConfig: LandingPageConfig) => {
         setFormData((prev) => {
             if (!prev) return null;
-            return { ...prev, landingPageConfig: newConfig } as Business;
+            const updated: Business = { ...prev, landingPageConfig: newConfig };
+            return updated;
         });
     };
 
@@ -322,7 +330,8 @@ const BusinessProfileEditor: React.FC = () => {
         const { name, value } = e.target;
         setFormData((prev) => {
             if (!prev) return null;
-            return { ...prev, socials: { ...(prev.socials || {}), [name]: value } } as Business;
+            const updated: Business = { ...prev, socials: { ...(prev.socials || {}), [name]: value } };
+            return updated;
         });
     };
 
@@ -781,7 +790,8 @@ const BusinessProfileEditor: React.FC = () => {
                                                         updated[index] = { ...updated[index], type: e.target.value as TrustIndicator['type'] };
                                                         setFormData((prev) => {
                                                             if (!prev) return null;
-                                                            return { ...prev, trustIndicators: updated } as Business;
+                                                            const updatedResult: Business = { ...prev, trustIndicators: updated };
+                                                            return updatedResult;
                                                         });
                                                     }}
                                                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
@@ -801,7 +811,8 @@ const BusinessProfileEditor: React.FC = () => {
                                                         updated[index] = { ...updated[index], title: e.target.value };
                                                         setFormData((prev) => {
                                                             if (!prev) return null;
-                                                            return { ...prev, trustIndicators: updated } as Business;
+                                                            const updatedResult: Business = { ...prev, trustIndicators: updated };
+                                                            return updatedResult;
                                                         });
                                                     }}
                                                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
@@ -819,7 +830,8 @@ const BusinessProfileEditor: React.FC = () => {
                                                     updated[index] = { ...updated[index], icon: e.target.value };
                                                     setFormData((prev) => {
                                                         if (!prev) return null;
-                                                        return { ...prev, trustIndicators: updated } as Business;
+                                                        const updatedResult: Business = { ...prev, trustIndicators: updated };
+                                                        return updatedResult;
                                                     });
                                                 }}
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
@@ -835,7 +847,8 @@ const BusinessProfileEditor: React.FC = () => {
                                                     updated[index] = { ...updated[index], description: e.target.value };
                                                     setFormData((prev) => {
                                                         if (!prev) return null;
-                                                        return { ...prev, trustIndicators: updated } as Business;
+                                                        const updatedResult: Business = { ...prev, trustIndicators: updated };
+                                                        return updatedResult;
                                                     });
                                                 }}
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
@@ -849,7 +862,8 @@ const BusinessProfileEditor: React.FC = () => {
                                                 const updated = (formData.trustIndicators || []).filter((_: TrustIndicator, i: number) => i !== index);
                                                 setFormData((prev) => {
                                                     if (!prev) return null;
-                                                    return { ...prev, trustIndicators: updated } as Business;
+                                                    const updatedResult: Business = { ...prev, trustIndicators: updated };
+                                                    return updatedResult;
                                                 });
                                             }}
                                             className="text-red-600 hover:text-red-800 text-sm font-medium"
@@ -865,10 +879,11 @@ const BusinessProfileEditor: React.FC = () => {
                                         const newIndicator: TrustIndicator = { type: 'badge', title: '' };
                                         setFormData((prev) => {
                                             if (!prev) return null;
-                                            return {
+                                            const updatedResult: Business = {
                                                 ...prev,
                                                 trustIndicators: [...(prev.trustIndicators || []), newIndicator]
-                                            } as Business;
+                                            };
+                                            return updatedResult;
                                         });
                                     }}
                                     className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-primary hover:text-primary transition-colors"
