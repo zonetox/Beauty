@@ -1,7 +1,7 @@
 // constants.ts
 
 // FIX: Add HomepageData and HeroSlide to the import
-import { BusinessCategory, MembershipTier, AdminUser, AdminUserRole, MembershipPackage, Order, OrderStatus, AppointmentStatus, BlogCategory, AdminPermissions, HomepageData, HeroSlide } from './types.ts';
+import { BusinessCategory, MembershipTier, AdminUserRole, MembershipPackage, BlogCategory, AdminPermissions, HomepageData } from './types.ts';
 
 export const CATEGORIES: string[] = Object.values(BusinessCategory);
 export const CITIES: string[] = ['TP. Hồ Chí Minh', 'Hà Nội', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ'];
@@ -16,29 +16,21 @@ export const POPULAR_SEARCH_SUGGESTIONS: string[] = [
 ];
 
 export const FEATURED_LOCATIONS = [
-    { 
-        name: 'TP. Hồ Chí Minh', 
-        // Ho Chi Minh City - Modern skyline with Bitexco Financial Tower and vibrant cityscape
-        // Reference: saigonvibes.com - The New Ho Chi Minh City (1600x989)
-        imageUrl: 'https://images.unsplash.com/photo-1577702312576-5cf0d7c3d8b4?w=800&h=1000&fit=crop&q=80&auto=format'
+    {
+        name: 'TP. Hồ Chí Minh',
+        imageUrl: 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=800&h=1000&fit=crop&q=80&auto=format'
     },
-    { 
-        name: 'Hà Nội', 
-        // Hanoi - Old Quarter with traditional Vietnamese architecture, Hoan Kiem Lake, and historic landmarks
-        // Reference: cellphones.com.vn - Top 18 địa điểm du lịch ở Hà Nội (1200x675)
-        imageUrl: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&h=1000&fit=crop&q=80&auto=format'
+    {
+        name: 'Hà Nội',
+        imageUrl: 'https://images.unsplash.com/photo-1537533511567-f13981a7f174?w=800&h=1000&fit=crop&q=80&auto=format'
     },
-    { 
-        name: 'Đà Nẵng', 
-        // Da Nang - Dragon Bridge at night, beautiful beaches, and modern coastal cityscape
-        // Reference: ivivu.com - Du lịch Đà Nẵng 2026 (2000x1086)
-        imageUrl: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&h=1000&fit=crop&q=80&auto=format'
+    {
+        name: 'Đà Nẵng',
+        imageUrl: 'https://images.unsplash.com/photo-1559592448-69fca7ed2047?w=800&h=1000&fit=crop&q=80&auto=format'
     },
-    { 
-        name: 'Cần Thơ', 
-        // Can Tho - Mekong Delta city with floating markets, traditional boats, and river life
-        // Reference: baocantho.com.vn - TP Cần Thơ phát triển (1000x665)
-        imageUrl: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&h=1000&fit=crop&q=80&auto=format'
+    {
+        name: 'Cần Thơ',
+        imageUrl: 'https://images.unsplash.com/photo-1599708153386-62e200399088?w=800&h=1000&fit=crop&q=80&auto=format'
     },
 ];
 

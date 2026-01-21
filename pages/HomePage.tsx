@@ -21,14 +21,14 @@ import { snakeToCamel } from '../lib/utils.ts';
 import toast from 'react-hot-toast';
 
 const SkeletonCard: React.FC = () => (
-    <div className="bg-white rounded-lg overflow-hidden border border-gray-200">
-        <div className="bg-gray-200 h-48 w-full animate-pulse"></div>
-        <div className="p-4 space-y-3">
-            <div className="bg-gray-200 h-4 w-1/3 animate-pulse rounded"></div>
-            <div className="bg-gray-200 h-6 w-3/4 animate-pulse rounded"></div>
-            <div className="bg-gray-200 h-4 w-full animate-pulse rounded"></div>
-        </div>
+  <div className="bg-white rounded-lg overflow-hidden border border-gray-200">
+    <div className="bg-gray-200 h-48 w-full animate-pulse"></div>
+    <div className="p-4 space-y-3">
+      <div className="bg-gray-200 h-4 w-1/3 animate-pulse rounded"></div>
+      <div className="bg-gray-200 h-6 w-3/4 animate-pulse rounded"></div>
+      <div className="bg-gray-200 h-4 w-full animate-pulse rounded"></div>
     </div>
+  </div>
 );
 
 const HomePage: React.FC = () => {
@@ -43,7 +43,7 @@ const HomePage: React.FC = () => {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [newsletterError, setNewsletterError] = useState('');
   const [isSubmittingNewsletter, setIsSubmittingNewsletter] = useState(false);
-  
+
   // OPTIMIZED: Only fetch featured blog posts (3 posts) instead of all
   const [featuredBlogPosts, setFeaturedBlogPosts] = useState<BlogPost[]>([]);
   const [blogLoading, setBlogLoading] = useState(false);
@@ -51,7 +51,7 @@ const HomePage: React.FC = () => {
   // OPTIMIZED: Fetch only 3 featured blog posts for homepage
   useEffect(() => {
     let mounted = true;
-    
+
     const fetchFeaturedBlogPosts = async () => {
       if (!isSupabaseConfigured) {
         setBlogLoading(false);
@@ -60,7 +60,7 @@ const HomePage: React.FC = () => {
 
       try {
         setBlogLoading(true);
-        
+
         // Only fetch 3 latest blog posts for homepage
         const { data, error } = await supabase
           .from('blog_posts')
@@ -101,23 +101,23 @@ const HomePage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-      const viewedRaw = localStorage.getItem('recently_viewed_businesses');
-      if (viewedRaw) {
-          try {
-              const viewedIds = JSON.parse(viewedRaw);
-              if (viewedIds && viewedIds.length > 0) {
-                  setHasRecentlyViewed(true);
-              }
-          } catch {
-              setHasRecentlyViewed(false);
-          }
+    const viewedRaw = localStorage.getItem('recently_viewed_businesses');
+    if (viewedRaw) {
+      try {
+        const viewedIds = JSON.parse(viewedRaw);
+        if (viewedIds && viewedIds.length > 0) {
+          setHasRecentlyViewed(true);
+        }
+      } catch {
+        setHasRecentlyViewed(false);
       }
+    }
   }, []);
 
   useEffect(() => {
     if (heroSlides.length === 0) return;
     const timer = setInterval(() => {
-        setCurrentSlide(prev => (prev + 1) % heroSlides.length);
+      setCurrentSlide(prev => (prev + 1) % heroSlides.length);
     }, 5000); // Change slide every 5 seconds
     return () => clearInterval(timer);
   }, [heroSlides.length]);
@@ -129,7 +129,7 @@ const HomePage: React.FC = () => {
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validation
     if (!newsletterEmail || !newsletterEmail.includes('@')) {
       setNewsletterError('Vui lòng nhập một địa chỉ email hợp lệ.');
@@ -148,10 +148,10 @@ const HomePage: React.FC = () => {
         existingSubscribers.push(newsletterEmail);
         localStorage.setItem('newsletter_subscribers', JSON.stringify(existingSubscribers));
       }
-      
+
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       setIsSubscribed(true);
       toast.success('Đăng ký thành công! Cảm ơn bạn đã quan tâm.');
       setNewsletterEmail('');
@@ -174,12 +174,12 @@ const HomePage: React.FC = () => {
     businessName: string;
     businessSlug: string;
   }
-  
+
   const [featuredDeals, setFeaturedDeals] = useState<FeaturedDeal[]>([]);
-  
+
   useEffect(() => {
     let mounted = true;
-    
+
     const fetchFeaturedDeals = async () => {
       if (!isSupabaseConfigured || businesses.length === 0) {
         return;
@@ -188,7 +188,7 @@ const HomePage: React.FC = () => {
       try {
         // Only fetch deals from featured businesses (limit to 4 businesses)
         const featuredBusinessIds = businesses.slice(0, 4).map(b => b.id);
-        
+
         if (featuredBusinessIds.length === 0) {
           if (mounted) setFeaturedDeals([]);
           return;
@@ -212,7 +212,7 @@ const HomePage: React.FC = () => {
             .map(deal => {
               const business = businesses.find(b => b.id === deal.business_id);
               if (!business) return null;
-              
+
               const camelDeal = snakeToCamel(deal) as Deal;
               return {
                 ...camelDeal,
@@ -221,7 +221,7 @@ const HomePage: React.FC = () => {
               } as FeaturedDeal;
             })
             .filter((deal): deal is FeaturedDeal => deal !== null);
-          
+
           setFeaturedDeals(dealsWithBusiness);
         }
       } catch (error) {
@@ -258,15 +258,15 @@ const HomePage: React.FC = () => {
               <h2 className="text-3xl font-bold text-center font-serif text-neutral-dark mb-2">{section.title}</h2>
               <p className="text-center text-gray-500 mb-8">{section.subtitle}</p>
               {businessLoading ? (
-                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                    {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
-                 </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                  {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
+                </div>
               ) : featuredBusinesses.length > 0 ? (
-                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                    {featuredBusinesses.map((business) => (
-                      <BusinessCard key={business.id} business={business} />
-                    ))}
-                 </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                  {featuredBusinesses.map((business) => (
+                    <BusinessCard key={business.id} business={business} />
+                  ))}
+                </div>
               ) : (
                 <EmptyState
                   title="Chưa có đối tác nổi bật"
@@ -326,7 +326,7 @@ const HomePage: React.FC = () => {
               <p className="text-center text-gray-500 mb-8">{section.subtitle}</p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {featuredPosts.map((post) => (
-                  <BlogPostCard key={post.id} post={{...post, url: `/blog/${post.slug}`}} />
+                  <BlogPostCard key={post.id} post={{ ...post, url: `/blog/${post.slug}` }} />
                 ))}
               </div>
             </div>
@@ -334,27 +334,43 @@ const HomePage: React.FC = () => {
         );
       case 'exploreByLocation':
         return (
-          <section key={section.id} className="py-16 bg-background">
+          <section key={section.id} className="py-24 bg-background">
             <div className="container mx-auto px-4">
-              <h2 className="text-3xl font-bold text-center font-serif text-neutral-dark mb-2">{section.title}</h2>
-              <p className="text-center text-gray-500 mb-8">{section.subtitle}</p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                {FEATURED_LOCATIONS.map((location) => (
-                  <Link 
-                    key={location.name} 
-                    to={`/directory?location=${encodeURIComponent(location.name)}`} 
-                    className="group relative rounded-lg overflow-hidden shadow-lg aspect-[3/4]"
-                  >
-                    <img 
-                      src={location.imageUrl} 
-                      alt={`Khám phá ${location.name}`} 
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" 
-                      loading="lazy" 
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                    <h3 className="absolute bottom-4 left-4 text-white text-xl font-bold font-serif">{location.name}</h3>
-                  </Link>
-                ))}
+              <div className="text-center mb-16">
+                <h2 className="text-4xl font-bold font-outfit text-neutral-dark mb-4">{section.title}</h2>
+                <div className="w-20 h-1 bg-primary mx-auto rounded-full mb-4"></div>
+                <p className="text-gray-500 max-w-2xl mx-auto">{section.subtitle}</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-6 h-auto md:h-[600px]">
+                {FEATURED_LOCATIONS.map((location, index) => {
+                  const bentoClasses = [
+                    "md:col-span-2 md:row-span-2", // Tràng Tiền / TP.HCM (Large)
+                    "md:col-span-1 md:row-span-1", // Standard
+                    "md:col-span-1 md:row-span-1", // Standard
+                    "md:col-span-2 md:row-span-1", // Wide
+                  ];
+                  return (
+                    <Link
+                      key={location.name}
+                      to={`/directory?location=${encodeURIComponent(location.name)}`}
+                      className={`group relative rounded-3xl overflow-hidden shadow-premium transition-all duration-700 ${bentoClasses[index % 4] || "md:col-span-1"}`}
+                    >
+                      <img
+                        src={location.imageUrl}
+                        alt={`Khám phá ${location.name}`}
+                        className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-neutral-dark/90 via-neutral-dark/20 to-transparent transition-opacity duration-500 opacity-80 group-hover:opacity-100"></div>
+                      <div className="absolute bottom-6 left-6 right-6 transform transition-transform duration-500 group-hover:-translate-y-2">
+                        <p className="text-primary text-xs font-bold uppercase tracking-widest mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500">Discover</p>
+                        <h3 className="text-white text-2xl font-bold font-outfit">{location.name}</h3>
+                        <div className="w-0 group-hover:w-12 h-1 bg-primary transition-all duration-500 mt-2 rounded-full"></div>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           </section>
@@ -365,7 +381,7 @@ const HomePage: React.FC = () => {
   };
 
   // SEO metadata
-  const seoTitle = heroSlides.length > 0 && heroSlides[currentSlide]?.title 
+  const seoTitle = heroSlides.length > 0 && heroSlides[currentSlide]?.title
     ? `${heroSlides[currentSlide].title} | 1Beauty.asia`
     : '1Beauty.asia - Khám phá Vẻ đẹp đích thực';
   const seoDescription = heroSlides.length > 0 && heroSlides[currentSlide]?.subtitle
@@ -379,7 +395,7 @@ const HomePage: React.FC = () => {
   // Data loading uses skeleton placeholders instead
   return (
     <>
-      <SEOHead 
+      <SEOHead
         title={seoTitle}
         description={seoDescription}
         image={seoImage}
@@ -400,64 +416,106 @@ const HomePage: React.FC = () => {
         }}
       />
       <div>
-        {/* Hero Section */}
-        <section className="relative h-[500px] overflow-hidden">
-          {heroSlides.length > 0 ? (
-            <>
-              {heroSlides.map((slide, index) => (
-                  <div
-                      key={index}
-                      className="absolute inset-0 w-full h-full bg-cover bg-center transition-opacity duration-1000"
-                      style={{
-                          backgroundImage: `url(${getOptimizedSupabaseUrl(slide.imageUrl, { width: 1920, quality: 85 })})`,
-                          opacity: index === currentSlide ? 1 : 0,
-                      }}
-                      aria-hidden={index !== currentSlide ? 'true' : 'false'}
-                  />
-              ))}
-              <div className="absolute inset-0 bg-black/40"></div>
-              <div className="relative container mx-auto px-4 h-full flex flex-col justify-center items-center text-white text-center z-10">
-                {currentSlide < heroSlides.length && (
+        {/* Hero Section - Dynamic Slider with Left Alignment */}
+        <section className="relative min-h-[700px] flex items-center overflow-hidden bg-neutral-dark">
+          {/* Background Slider Layer */}
+          {heroSlides.map((slide, index) => (
+            <div
+              key={index}
+              className={`absolute inset-0 z-0 transition-opacity duration-1000 ease-in-out ${index === currentSlide ? 'opacity-100' : 'opacity-0'}`}
+            >
+              <img
+                src={slide.imageUrl || "/premium_beauty_hero.png"}
+                alt={slide.title}
+                className={`w-full h-full object-cover ${index === currentSlide ? 'animate-ken-burns' : ''}`}
+                loading={index === 0 ? "eager" : "lazy"}
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-neutral-dark/90 via-neutral-dark/40 to-transparent"></div>
+            </div>
+          ))}
+
+          <div className="relative z-10 container mx-auto px-4 py-20 text-center flex flex-col items-center">
+            <div className="max-w-4xl w-full">
+              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-primary/20 backdrop-blur-md border border-primary/30 text-primary text-xs font-bold uppercase tracking-wider mb-6 animate-fade-in-up">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                </span>
+                <span>Khám phá vẻ đẹp đích thực</span>
+              </div>
+
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold font-outfit text-white mb-6 leading-tight animate-fade-in-up delay-100">
+                {heroSlides.length > 0 ? (
                   <>
-                    <h1 className="text-4xl md:text-6xl font-bold font-serif mb-4">{heroSlides[currentSlide].title}</h1>
-                    <p className="text-lg md:text-xl mb-8 max-w-2xl">{heroSlides[currentSlide].subtitle}</p>
+                    {heroSlides[currentSlide].title.split(' ').map((word, i, arr) => (
+                      <React.Fragment key={i}>
+                        {word === 'Nhan' || word === 'sắc' || word === 'Cảm' || word === 'xúc' ? (
+                          <span className="text-gradient">{word} </span>
+                        ) : (
+                          <>{word} </>
+                        )}
+                        {i === 2 && <br className="hidden md:block" />}
+                      </React.Fragment>
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    Nâng tầm <span className="text-gradient">Nhan sắc</span> <br className="hidden md:block" />
+                    Chạm tới <span className="text-gradient">Cảm xúc</span>
                   </>
                 )}
-                <div className="w-full max-w-5xl">
-                  <SearchBar onSearch={handleSearch} categories={CATEGORIES} locations={CITIES} />
+              </h1>
+
+              <p className="text-base md:text-xl text-gray-200 mb-10 max-w-2xl mx-auto leading-relaxed animate-fade-in-up delay-200">
+                {heroSlides.length > 0 ? heroSlides[currentSlide].subtitle : 'Tìm kiếm hàng ngàn spa, salon và clinic uy tín gần bạn. Trải nghiệm dịch vụ làm đẹp đẳng cấp chỉ trong vài cú nhấp chuột.'}
+              </p>
+
+              <div className="glass-card p-2 md:p-5 rounded-2xl md:rounded-3xl shadow-premium animate-fade-in-up delay-300 max-w-4xl mx-auto">
+                <SearchBar onSearch={handleSearch} categories={CATEGORIES} locations={CITIES} />
+              </div>
+
+              <div className="mt-10 flex flex-wrap justify-center gap-6 text-white/80 text-sm animate-fade-in-up delay-400">
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm">
+                    <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                  </div>
+                  <span>1000+ Đối tác uy tín</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm">
+                    <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                  </div>
+                  <span>Đặt lịch 24/7</span>
                 </div>
               </div>
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
+
+              {/* Slider Controls */}
+              {heroSlides.length > 1 && (
+                <div className="mt-12 flex items-center justify-center space-x-3 animate-fade-in-up delay-500">
                   {heroSlides.map((_, index) => (
-                      <button
-                          key={index}
-                          onClick={() => setCurrentSlide(index)}
-                          className={`w-3 h-3 rounded-full transition-colors ${index === currentSlide ? 'bg-white' : 'bg-white/50 hover:bg-white'}`}
-                          aria-label={`Chuyển đến slide ${index + 1}`}
-                      />
+                    <button
+                      key={index}
+                      onClick={() => setCurrentSlide(index)}
+                      className={`h-1.5 rounded-full transition-all duration-500 ${index === currentSlide ? 'w-12 bg-primary' : 'w-4 bg-white/30 hover:bg-white/50'}`}
+                      aria-label={`Go to slide ${index + 1}`}
+                    />
                   ))}
-              </div>
-            </>
-          ) : (
-            <div className="relative h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-              <div className="container mx-auto px-4 text-center text-white z-10">
-                <h1 className="text-4xl md:text-6xl font-bold font-serif mb-4">Khám phá Vẻ đẹp đích thực</h1>
-                <p className="text-lg md:text-xl mb-8 max-w-2xl">Tìm kiếm hàng ngàn spa, salon, và clinic uy tín gần bạn.</p>
-                <div className="w-full max-w-5xl mx-auto">
-                  <SearchBar onSearch={handleSearch} categories={CATEGORIES} locations={CITIES} />
                 </div>
-              </div>
+              )}
             </div>
-          )}
+          </div>
+
+          {/* Bottom curve decoration */}
+          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent z-10"></div>
         </section>
 
         {/* Recently Viewed Section */}
         {hasRecentlyViewed && (
-            <section className="py-16 bg-background">
-                <div className="container mx-auto px-4">
-                    <RecentlyViewed />
-                </div>
-            </section>
+          <section className="py-16 bg-background">
+            <div className="container mx-auto px-4">
+              <RecentlyViewed />
+            </div>
+          </section>
         )}
 
         {/* Dynamically Rendered Sections */}
@@ -510,9 +568,8 @@ const HomePage: React.FC = () => {
                     required
                     aria-label="Email for newsletter"
                     disabled={isSubmittingNewsletter}
-                    className={`flex-grow w-full px-4 py-3 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary text-neutral-dark ${
-                      newsletterError ? 'border-red-500' : 'border-gray-300'
-                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className={`flex-grow w-full px-4 py-3 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary text-neutral-dark ${newsletterError ? 'border-red-500' : 'border-gray-300'
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
                   />
                   <button
                     type="submit"

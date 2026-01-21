@@ -19,7 +19,6 @@ import AccountSettings from '../components/AccountSettings.tsx';
 import BookingsManager from '../components/BookingsManager.tsx';
 import BusinessSupportCenter from '../components/BusinessSupportCenter.tsx';
 import StaffManagement from '../components/StaffManagement.tsx';
-import { useStaffPermissions } from '../hooks/useStaffPermissions.ts';
 
 export type ActiveTab = 'dashboard' | 'profile' | 'services' | 'billing' | 'blog' | 'gallery' | 'reviews' | 'stats' | 'settings' | 'bookings' | 'support' | 'deals' | 'staff';
 
@@ -30,7 +29,6 @@ import BusinessOnboardingWizard from '../components/BusinessOnboardingWizard.tsx
 const UserBusinessDashboardPage: React.FC = () => {
     const { currentBusiness } = useBusinessAuth();
     const { user } = useAuth();
-    const staffPermissions = useStaffPermissions();
     const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
     const [accessError, setAccessError] = useState<string | null>(null);
     const [verifyingAccess, setVerifyingAccess] = useState(true);
@@ -59,7 +57,7 @@ const UserBusinessDashboardPage: React.FC = () => {
 
                 // Verify user has access to this business (owner OR staff)
                 const accessResult = await verifyBusinessAccess(user.id, currentBusiness.id);
-                
+
                 if (timeoutId) {
                     clearTimeout(timeoutId);
                     timeoutId = null;
@@ -171,16 +169,40 @@ const UserBusinessDashboardPage: React.FC = () => {
     }
 
     return (
-        <div className="bg-background py-12">
+        <div className="bg-background min-h-screen py-16">
             <div className="container mx-auto px-4">
-                <h1 className="text-4xl font-bold font-serif text-neutral-dark mb-2">Business Dashboard</h1>
-                <p className="text-gray-500 mb-8">Welcome back, <strong className="text-primary">{currentBusiness.name}</strong>!</p>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                    <aside className="md:col-span-1">
-                        <BusinessDashboardSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+                <div className="mb-12 animate-fade-in-up">
+                    <h1 className="text-4xl md:text-5xl font-bold font-outfit text-neutral-dark mb-3">Business Dashboard</h1>
+                    <p className="text-gray-500 text-lg">Hân hạnh chào đón sự trở lại của <strong className="text-gradient font-bold">{currentBusiness.name}</strong></p>
+                </div>
+
+                {!currentBusiness.isActive && (
+                    <div className="p-6 glass-card border-l-4 border-primary shadow-premium mb-12 animate-fade-in-up delay-100">
+                        <div className="flex items-start space-x-4">
+                            <div className="bg-primary/20 p-2 rounded-full">
+                                <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            </div>
+                            <div>
+                                <h3 className="font-outfit font-bold text-neutral-dark text-lg">Hồ sơ doanh nghiệp đang chờ kích hoạt</h3>
+                                <p className="text-gray-600 mt-1">Thông tin của bạn chưa được hiển thị công khai. Vui lòng hoàn tất hồ sơ và chọn gói thành viên để bắt đầu tiếp cận khách hàng.</p>
+                                <button onClick={() => setActiveTab('billing')} className="mt-4 inline-flex items-center text-primary font-bold hover:translate-x-1 transition-transform">
+                                    Nâng cấp & Kích hoạt ngay <span className="ml-2">&rarr;</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+                    <aside className="md:col-span-3 sticky top-24 animate-fade-in-up delay-200">
+                        <div className="glass-card rounded-3xl overflow-hidden p-2">
+                            <BusinessDashboardSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+                        </div>
                     </aside>
-                    <main className="md:col-span-3 bg-white rounded-lg shadow-md min-h-[600px]">
-                        {renderContent()}
+                    <main className="md:col-span-9 glass-card rounded-3xl shadow-premium min-h-[700px] overflow-hidden animate-fade-in-up delay-300">
+                        <div className="p-2 md:p-4">
+                            {renderContent()}
+                        </div>
                     </main>
                 </div>
             </div>

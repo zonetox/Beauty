@@ -40,7 +40,7 @@ const BusinessDetailPage: React.FC = () => {
 
     useEffect(() => {
         let isMounted = true;
-        
+
         const loadBusiness = async () => {
             if (!slug) {
                 if (isMounted) {
@@ -54,14 +54,14 @@ const BusinessDetailPage: React.FC = () => {
                 setLoading(true);
                 setError(null);
             }
-            
+
             try {
                 console.log('Loading business with slug:', slug);
                 const data = await fetchBusinessBySlug(slug);
                 console.log('Business data loaded:', data ? 'Success' : 'Not found', data);
-                
+
                 if (!isMounted) return; // Component unmounted, skip state update
-                
+
                 if (!data) {
                     console.warn('Business not found for slug:', slug);
                     setError('Business not found');
@@ -80,9 +80,9 @@ const BusinessDetailPage: React.FC = () => {
                 }
             }
         };
-        
+
         loadBusiness();
-        
+
         return () => {
             isMounted = false;
         };
@@ -116,7 +116,7 @@ const BusinessDetailPage: React.FC = () => {
     if (loading) {
         return (
             <>
-                <SEOHead 
+                <SEOHead
                     title="Đang tải..."
                     description="Đang tải thông tin doanh nghiệp..."
                 />
@@ -132,17 +132,17 @@ const BusinessDetailPage: React.FC = () => {
 
     // SEO metadata
     const seoTitle = business.seo?.title || `${business.name} | 1Beauty.asia`;
-    const seoDescription = business.seo?.description || 
-        business.description?.substring(0, 160) || 
+    const seoDescription = business.seo?.description ||
+        business.description?.substring(0, 160) ||
         `${business.name} - ${business.categories.join(', ')} tại ${business.city || 'Việt Nam'}`;
-    const seoKeywords = business.seo?.keywords || 
+    const seoKeywords = business.seo?.keywords ||
         `${business.name}, ${business.categories.join(', ')}, ${business.city || ''}`;
     const seoImage = business.heroSlides && business.heroSlides.length > 0
         ? getOptimizedSupabaseUrl(business.heroSlides[0].imageUrl, { width: 1200, quality: 85 })
         : business.heroImageUrl || business.imageUrl
-        ? getOptimizedSupabaseUrl(business.heroImageUrl || business.imageUrl || '', { width: 1200, quality: 85 })
-        : 'https://picsum.photos/seed/beauty/1200/630';
-    const seoUrl = typeof window !== 'undefined' 
+            ? getOptimizedSupabaseUrl(business.heroImageUrl || business.imageUrl || '', { width: 1200, quality: 85 })
+            : 'https://picsum.photos/seed/beauty/1200/630';
+    const seoUrl = typeof window !== 'undefined'
         ? `${window.location.origin}/business/${business.slug}`
         : '';
 
@@ -158,8 +158,8 @@ const BusinessDetailPage: React.FC = () => {
         image: business.heroSlides && business.heroSlides.length > 0
             ? business.heroSlides.map(slide => getOptimizedSupabaseUrl(slide.imageUrl, { width: 1200, quality: 85 }))
             : business.heroImageUrl || business.imageUrl
-            ? [getOptimizedSupabaseUrl(business.heroImageUrl || business.imageUrl || '', { width: 1200, quality: 85 })]
-            : [seoImage],
+                ? [getOptimizedSupabaseUrl(business.heroImageUrl || business.imageUrl || '', { width: 1200, quality: 85 })]
+                : [seoImage],
         address: {
             streetAddress: business.address,
             addressLocality: business.city,
@@ -212,7 +212,7 @@ const BusinessDetailPage: React.FC = () => {
                     'Saturday': ['Saturday'],
                 };
                 const dayOfWeek = dayMap[day] || [];
-                
+
                 // Handle both formats
                 let opens: string, closes: string;
                 if (typeof hours === 'string') {
@@ -224,7 +224,7 @@ const BusinessDetailPage: React.FC = () => {
                 } else {
                     return null;
                 }
-                
+
                 if (dayOfWeek.length === 0) return null;
                 return {
                     dayOfWeek,
@@ -303,8 +303,8 @@ const BusinessDetailPage: React.FC = () => {
     };
 
     return (
-        <>
-            <SEOHead 
+        <div className="bg-background min-h-screen">
+            <SEOHead
                 title={seoTitle}
                 description={seoDescription}
                 keywords={seoKeywords}
@@ -313,59 +313,70 @@ const BusinessDetailPage: React.FC = () => {
                 type="business"
                 businessSchema={businessSchema}
             />
-            <div className="bg-white">
-                <BusinessHeader business={business} onBookNowClick={() => setIsBookingModalOpen(true)} />
-                <main>
-                    {/* Render sections based on config */}
-                    {enabledSections.map(({ key }) => {
-                        // Hero is rendered outside container
-                        if (key === 'hero') {
-                            return renderSection(key);
-                        }
-                        return null;
-                    })}
 
-                    {/* About section - always shown (not in config) */}
-                    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <BusinessHeader business={business} onBookNowClick={() => setIsBookingModalOpen(true)} />
+
+            <main className="pb-24">
+                {/* Render sections based on config */}
+                {enabledSections.map(({ key }) => {
+                    // Hero is rendered full-width
+                    if (key === 'hero') {
+                        return <div key="hero" className="animate-fade-in">{renderSection(key)}</div>;
+                    }
+                    return null;
+                })}
+
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-24 md:space-y-32">
+                    {/* About section - The Soul of the Business */}
+                    <section className="animate-fade-in-up">
                         <AboutSection business={business} />
-                    </div>
+                    </section>
 
-                    {/* Render other enabled sections */}
+                    {/* Render other enabled sections in a Bento-like or spaced flow */}
                     {enabledSections
-                        .filter(s => s.key !== 'hero') // Hero already rendered
-                        .map(({ key }) => renderSection(key))}
+                        .filter(s => s.key !== 'hero')
+                        .map(({ key }) => (
+                            <section key={key} className="animate-fade-in-up">
+                                {renderSection(key)}
+                            </section>
+                        ))}
 
-                    {/* Optional sections - shown if business has content (not in config) */}
+                    {/* Optional Dynamic Sections */}
                     {business.youtubeUrl && (
-                        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                        <section className="animate-fade-in-up">
                             <VideoSection business={business} />
-                        </div>
+                        </section>
                     )}
+
                     {business.businessBlogPosts && business.businessBlogPosts.length > 0 && (
-                        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                        <section className="animate-fade-in-up">
                             <BusinessBlogSection business={business} />
-                        </div>
+                        </section>
                     )}
+
                     {business.deals && business.deals.length > 0 && (
-                        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                        <section className="animate-fade-in-up">
                             <DealsSection business={business} />
-                        </div>
+                        </section>
                     )}
-                </main>
-                <BusinessFooter business={business} />
-                <FloatingActionButtons 
-                    business={business} 
-                    onBookNowClick={() => setIsBookingModalOpen(true)} 
+                </div>
+            </main>
+
+            <BusinessFooter business={business} />
+
+            <FloatingActionButtons
+                business={business}
+                onBookNowClick={() => setIsBookingModalOpen(true)}
+            />
+
+            {isBookingModalOpen && (
+                <BookingModal
+                    isOpen={isBookingModalOpen}
+                    onClose={() => setIsBookingModalOpen(false)}
+                    business={business}
                 />
-                {isBookingModalOpen && (
-                    <BookingModal
-                        isOpen={isBookingModalOpen}
-                        onClose={() => setIsBookingModalOpen(false)}
-                        business={business}
-                    />
-                )}
-            </div>
-        </>
+            )}
+        </div>
     );
 };
 

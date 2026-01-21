@@ -81,7 +81,9 @@ const Header: React.FC = () => {
   }, [isDropdownOpen]);
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive ? 'bg-primary text-white' : 'text-neutral-dark hover:bg-primary/10'
+    `px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${isActive
+      ? 'bg-primary/10 text-primary shadow-[0_0_20px_rgba(212,175,55,0.1)]'
+      : 'text-neutral-500 hover:text-neutral-dark hover:bg-white/50'
     }`;
 
   const mobileNavLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -130,17 +132,17 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+    <header className="glass-header sticky top-0 z-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link to="/" onClick={() => setIsMenuOpen(false)}>
+            <Link to="/" onClick={() => setIsMenuOpen(false)} className="group">
               {theme.logoUrl ? (
-                <img src={theme.logoUrl} alt="1Beauty Asia Logo" className="h-10 w-auto" />
+                <img src={theme.logoUrl} alt="1Beauty Asia Logo" className="h-12 w-auto" />
               ) : (
-                <span className="text-2xl font-bold font-serif text-primary">
-                  1Beauty Asia
+                <span className="text-2xl font-bold font-outfit text-gradient transition-all duration-300 group-hover:scale-105 inline-block">
+                  1Beauty.asia
                 </span>
               )}
             </Link>

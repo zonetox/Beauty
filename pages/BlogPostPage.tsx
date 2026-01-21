@@ -39,7 +39,6 @@ const BlogPostPage: React.FC = () => {
 
   return (
     <>
-      {/* FINAL PHASE FIX: Render SEO meta tags from database */}
       <SEOHead
         title={seoTitle}
         description={seoDescription}
@@ -47,25 +46,32 @@ const BlogPostPage: React.FC = () => {
         url={seoUrl}
         type="article"
       />
-      <div className="bg-background">
-        <div className="container mx-auto px-4 py-16">
+      <div className="bg-background min-h-screen py-16 md:py-24 animate-fade-in">
+        <div className="container mx-auto px-4">
           <article className="max-w-4xl mx-auto">
-            {/* Header */}
-            <header className="mb-8">
+            {/* Premium Header */}
+            <header className="mb-12 text-center animate-fade-in-up">
               {post.category && (
-                <span className="inline-block px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium mb-4">
+                <span className="inline-block px-4 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-bold font-outfit uppercase tracking-wider mb-6 border border-primary/20">
                   {post.category}
                 </span>
               )}
-              <h1 className="text-4xl font-bold font-serif text-neutral-dark mb-4">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black font-outfit text-neutral-dark mb-8 leading-tight">
                 {post.title}
               </h1>
-              <div className="flex items-center gap-4 text-neutral-light text-sm">
+              <div className="flex items-center justify-center gap-6 text-gray-500 text-sm font-medium">
                 {post.author && (
-                  <span className="font-medium">By {post.author}</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                      {post.author[0]}
+                    </div>
+                    <span className="text-neutral-dark font-bold">{post.author}</span>
+                  </div>
                 )}
+                <div className="h-4 w-[1px] bg-gray-200 hidden md:block"></div>
                 {post.date && (
-                  <time dateTime={post.date}>
+                  <time dateTime={post.date} className="flex items-center gap-1">
+                    <svg className="w-4 h-4 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                     {new Date(post.date).toLocaleDateString('vi-VN', {
                       year: 'numeric',
                       month: 'long',
@@ -73,26 +79,56 @@ const BlogPostPage: React.FC = () => {
                     })}
                   </time>
                 )}
+                <div className="h-4 w-[1px] bg-gray-200 hidden md:block"></div>
                 {post.viewCount !== undefined && (
-                  <span>{post.viewCount} views</span>
+                  <span className="flex items-center gap-1">
+                    <svg className="w-4 h-4 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.522 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.022 7-9.542 7-4.478 0-8.268-2.943-9.542-7z"></path></svg>
+                    {post.viewCount.toLocaleString()} lượt xem
+                  </span>
                 )}
               </div>
             </header>
 
-            {/* Featured Image */}
+            {/* Featured Image with Glass Frame */}
             {post.imageUrl && (
-              <div className="mb-8">
-                <img
-                  src={post.imageUrl}
-                  alt={post.title}
-                  className="w-full h-auto rounded-lg object-cover"
-                />
+              <div className="mb-12 relative group animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+                <div className="absolute inset-0 bg-primary/20 blur-3xl opacity-20 group-hover:opacity-40 transition-opacity rounded-full"></div>
+                <div className="relative glass-card p-2 rounded-[2rem] shadow-premium overflow-hidden transition-all duration-700 hover:scale-[1.01]">
+                  <img
+                    src={post.imageUrl}
+                    alt={post.title}
+                    className="w-full h-auto rounded-[1.5rem] object-cover transition-transform duration-1000 group-hover:scale-105"
+                  />
+                </div>
               </div>
             )}
 
-            {/* Content - SECURITY FIX: Use SafeHtmlRenderer to prevent XSS */}
-            <div className="prose prose-lg max-w-none">
-              <SafeHtmlRenderer html={post.content || ''} />
+            {/* Content Area - Premium Glass Card */}
+            <div className="glass-card p-8 md:p-12 rounded-[2.5rem] shadow-premium animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+              <div className="prose prose-lg md:prose-xl max-w-none prose-headings:font-outfit prose-headings:text-neutral-dark prose-p:text-gray-600 prose-p:leading-relaxed prose-a:text-primary prose-a:no-underline hover:prose-a:underline transition-all">
+                <SafeHtmlRenderer html={post.content || ''} />
+              </div>
+
+              {/* Social Share or Footer */}
+              <div className="mt-16 pt-8 border-t border-white/20 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-4">
+                  <p className="text-sm font-bold text-gray-400 font-outfit uppercase tracking-widest">Chia sẻ bài viết</p>
+                  <div className="flex gap-2">
+                    {[1, 2, 3].map(i => (
+                      <button key={i} className="w-10 h-10 rounded-full glass-card flex items-center justify-center text-gray-500 hover:bg-primary hover:text-white transition-all">
+                        <div className="w-4 h-4 border-2 border-current rounded-sm"></div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <button
+                  onClick={() => window.history.back()}
+                  className="flex items-center gap-2 px-6 py-3 bg-white/50 border border-white/20 rounded-full text-sm font-bold text-neutral-dark hover:bg-white transition-all shadow-sm"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                  Quay lại Blog
+                </button>
+              </div>
             </div>
           </article>
         </div>
