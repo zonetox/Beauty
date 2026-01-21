@@ -208,7 +208,7 @@ const BusinessProfileEditor: React.FC = () => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         const isNumeric = type === 'number';
-        setFormData((prev: Business | null) => ({ ...prev, [name]: isNumeric ? parseFloat(value) : value }));
+        setFormData((prev: Business | null) => prev ? ({ ...prev, [name]: isNumeric ? parseFloat(value) : value }) : null);
         // Clear error for this field when user starts typing
         if (errors[name as keyof FormErrors]) {
             setErrors((prev) => ({ ...prev, [name]: undefined }));
@@ -220,6 +220,7 @@ const BusinessProfileEditor: React.FC = () => {
         const category = value as BusinessCategory;
 
         setFormData((prev: Business | null) => {
+            if (!prev) return null;
             const currentCategories = prev.categories || [];
             if (checked) {
                 return { ...prev, categories: [...new Set([...currentCategories, category])] };
@@ -247,10 +248,10 @@ const BusinessProfileEditor: React.FC = () => {
         setIsUploadingLogo(true);
         try {
             // Use business-logos bucket with path: business/{business_id}/logo.{ext}
-            const fileExt = file.name.split('.').pop();
+
             const folder = `business/${currentBusiness.id}`;
             const publicUrl = await uploadFile('business-logos', file, folder);
-            setFormData((prev: Business | null) => ({ ...prev, logoUrl: publicUrl }));
+            setFormData((prev: Business | null) => prev ? ({ ...prev, logoUrl: publicUrl }) : null);
             toast.success('Logo uploaded successfully!');
         } catch (error: unknown) {
             const err = error as Record<string, unknown>;
@@ -275,7 +276,7 @@ const BusinessProfileEditor: React.FC = () => {
             // Use business-gallery bucket with path: business/{business_id}/cover.{ext}
             const folder = `business/${currentBusiness.id}`;
             const publicUrl = await uploadFile('business-gallery', file, folder);
-            setFormData((prev: Business | null) => ({ ...prev, imageUrl: publicUrl }));
+            setFormData((prev: Business | null) => prev ? ({ ...prev, imageUrl: publicUrl }) : null);
             toast.success('Cover image uploaded successfully!');
             // Clear error if cover image was missing
             if (errors.imageUrl) {
@@ -292,16 +293,16 @@ const BusinessProfileEditor: React.FC = () => {
 
     const handleSeoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setFormData((prev: Business | null) => ({ ...prev, seo: { ...(prev.seo || {}), [name]: value } }));
+        setFormData((prev: Business | null) => prev ? ({ ...prev, seo: { ...(prev.seo || {}), [name]: value } }) : null);
     };
 
     const handleLandingPageConfigChange = (newConfig: LandingPageConfig) => {
-        setFormData((prev: Business | null) => ({ ...prev, landingPageConfig: newConfig }));
+        setFormData((prev: Business | null) => prev ? ({ ...prev, landingPageConfig: newConfig }) : null);
     };
 
     const handleSocialChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormData((prev: Business | null) => ({ ...prev, socials: { ...(prev.socials || {}), [name]: value } }));
+        setFormData((prev: Business | null) => prev ? ({ ...prev, socials: { ...(prev.socials || {}), [name]: value } }) : null);
     };
 
     const handleWorkingHoursListChange = (index: number, field: 'day' | 'time', value: string) => {
@@ -374,8 +375,8 @@ const BusinessProfileEditor: React.FC = () => {
                         type="submit"
                         disabled={isSaving || isUploadingLogo || isUploadingCover}
                         className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white transition-colors flex items-center justify-center min-w-[120px] ${isSaving || isUploadingLogo || isUploadingCover
-                                ? 'bg-gray-400 cursor-not-allowed'
-                                : 'bg-primary hover:bg-primary-dark'
+                            ? 'bg-gray-400 cursor-not-allowed'
+                            : 'bg-primary hover:bg-primary-dark'
                             }`}
                     >
                         {isSaving ? <><Spinner /> Saving...</> : 'Save Changes'}
@@ -757,7 +758,7 @@ const BusinessProfileEditor: React.FC = () => {
                                                     onChange={(e) => {
                                                         const updated = [...(formData.trustIndicators || [])];
                                                         updated[index] = { ...updated[index], type: e.target.value as TrustIndicator['type'] };
-                                                        setFormData((prev: Business | null) => ({ ...prev, trustIndicators: updated }));
+                                                        setFormData((prev: Business | null) => prev ? ({ ...prev, trustIndicators: updated }) : null);
                                                     }}
                                                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                                                 >
@@ -774,7 +775,7 @@ const BusinessProfileEditor: React.FC = () => {
                                                     onChange={(e) => {
                                                         const updated = [...(formData.trustIndicators || [])];
                                                         updated[index] = { ...updated[index], title: e.target.value };
-                                                        setFormData((prev: Business | null) => ({ ...prev, trustIndicators: updated }));
+                                                        setFormData((prev: Business | null) => prev ? ({ ...prev, trustIndicators: updated }) : null);
                                                     }}
                                                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                                                     placeholder="e.g., Verified Business"
@@ -789,7 +790,7 @@ const BusinessProfileEditor: React.FC = () => {
                                                 onChange={(e) => {
                                                     const updated = [...(formData.trustIndicators || [])];
                                                     updated[index] = { ...updated[index], icon: e.target.value };
-                                                    setFormData((prev: Business | null) => ({ ...prev, trustIndicators: updated }));
+                                                    setFormData((prev: Business | null) => prev ? ({ ...prev, trustIndicators: updated }) : null);
                                                 }}
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
                                                 placeholder="https://example.com/icon.png"
@@ -802,7 +803,7 @@ const BusinessProfileEditor: React.FC = () => {
                                                 onChange={(e) => {
                                                     const updated = [...(formData.trustIndicators || [])];
                                                     updated[index] = { ...updated[index], description: e.target.value };
-                                                    setFormData((prev: Business | null) => ({ ...prev, trustIndicators: updated }));
+                                                    setFormData((prev: Business | null) => prev ? ({ ...prev, trustIndicators: updated }) : null);
                                                 }}
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
                                                 rows={2}
@@ -813,7 +814,7 @@ const BusinessProfileEditor: React.FC = () => {
                                             type="button"
                                             onClick={() => {
                                                 const updated = (formData.trustIndicators || []).filter((_: TrustIndicator, i: number) => i !== index);
-                                                setFormData((prev: Business | null) => ({ ...prev, trustIndicators: updated }));
+                                                setFormData((prev: Business | null) => prev ? ({ ...prev, trustIndicators: updated }) : null);
                                             }}
                                             className="text-red-600 hover:text-red-800 text-sm font-medium"
                                         >
@@ -826,10 +827,10 @@ const BusinessProfileEditor: React.FC = () => {
                                     type="button"
                                     onClick={() => {
                                         const newIndicator: TrustIndicator = { type: 'badge', title: '' };
-                                        setFormData((prev: Business | null) => ({
+                                        setFormData((prev: Business | null) => prev ? ({
                                             ...prev,
                                             trustIndicators: [...(prev.trustIndicators || []), newIndicator]
-                                        }));
+                                        }) : null);
                                     }}
                                     className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-primary hover:text-primary transition-colors"
                                 >
@@ -854,8 +855,8 @@ const BusinessProfileEditor: React.FC = () => {
                     type="submit"
                     disabled={isSaving || isUploadingLogo || isUploadingCover}
                     className={`w-full sm:w-auto px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white transition-colors flex items-center justify-center min-w-[160px] ${isSaving || isUploadingLogo || isUploadingCover
-                            ? 'bg-gray-400 cursor-not-allowed'
-                            : 'bg-primary hover:bg-primary-dark'
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-primary hover:bg-primary-dark'
                         }`}
                 >
                     {isSaving ? <><Spinner /> Saving...</> : 'Save All Changes'}
