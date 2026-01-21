@@ -1,7 +1,7 @@
 
 
 import React, { lazy, Suspense, useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation, Outlet, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Outlet } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { QueryClientProvider } from '@tanstack/react-query';
 
@@ -103,7 +103,6 @@ const AppLayout: React.FC = () => {
 const AccountPageRouter: React.FC = () => {
     const { profile, user, state } = useAuth();
     const { role, isLoading: roleLoading, error: roleError } = useUserRole();
-    const navigate = useNavigate();
     const [loadTimeout, setLoadTimeout] = useState(false);
 
     // Safety timeout: If loading takes more than 15 seconds, show error
@@ -166,7 +165,7 @@ const AccountPageRouter: React.FC = () => {
                     <h2 className="text-2xl font-bold text-gray-900 mb-4">Authentication Required</h2>
                     <p className="text-gray-600 mb-6">Please log in to access your account.</p>
                     <button
-                        onClick={() => navigate('/login', { replace: true })}
+                        onClick={() => window.location.href = '/login'}
                         className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
                     >
                         Đăng nhập
@@ -193,7 +192,7 @@ const AccountPageRouter: React.FC = () => {
                             Làm mới trang
                         </button>
                         <button
-                            onClick={() => navigate('/', { replace: true })}
+                            onClick={() => window.location.href = '/'}
                             className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
                         >
                             Về trang chủ
