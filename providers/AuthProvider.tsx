@@ -20,7 +20,7 @@ export interface AuthContextType {
   session: Session | null;
   user: User | null;
   profile: Profile | null;
-  
+
   // Actions
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -55,8 +55,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const fetchProfile = useCallback(async (userId: string) => {
     try {
       const { data, error } = await getUserProfile(userId);
-      
-      if (error && error.code === 'PGRST116') {
+
+      if (error && (error as any).code === 'PGRST116') {
         // Profile doesn't exist - CRITICAL ERROR
         // Attempt to create (trigger may have failed)
         const { data: newProfile, error: insertError } = await supabase
@@ -100,7 +100,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   // Handle auth state change
-  const handleAuthChange = useCallback(async (event: AuthChangeEvent, newSession: Session | null) => {
+  const handleAuthChange = useCallback(async (_event: AuthChangeEvent, newSession: Session | null) => {
     setSession(newSession);
     const newUser = newSession?.user ?? null;
     setUser(newUser);
@@ -124,7 +124,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const initialize = async () => {
       // Check session once
       const sessionState = await checkSessionOnce();
-      
+
       if (!mounted) return;
 
       setSession(sessionState.session);
@@ -167,16 +167,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Logout
   const logout = useCallback(async () => {
-    // Clear local state immediately for better UX
-    setState('unauthenticated');
-    setSession(null);
-    setUser(null);
-    setProfile(null);
-    
-    // Sign out from Supabase (don't throw on error)
-    await supabase.auth.signOut().catch(() => {
-      // Ignore signOut errors - state is already cleared
-    });
+    try {
+      // Clear local state immediately for better UX
+      setState('unauthenticated');
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+
+      // Sign out from Supabase (don't throw on error)
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.warn('Supabase signOut error (ignoring):', error);
+    }
   }, []);
 
   // Register

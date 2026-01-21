@@ -1,7 +1,7 @@
 
 
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../providers/AuthProvider.tsx';
@@ -34,10 +34,10 @@ const Header: React.FC = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  
+
   // Get user role from role resolution (based on actual database state)
-  const { role, isAdmin, isBusinessOwner, isBusinessStaff, businessId, isLoading: roleLoading } = useUserRole();
-  
+  const { role, isAdmin, isBusinessOwner, isBusinessStaff, isLoading: roleLoading } = useUserRole();
+
   // Determine if user has business access (owner OR staff)
   const hasBusinessAccess = isBusinessOwner || isBusinessStaff;
 
@@ -45,15 +45,16 @@ const Header: React.FC = () => {
     try {
       setIsMenuOpen(false); // Close menu on logout
       setIsDropdownOpen(false); // Close dropdown on logout
-      
+
       // Navigate to home first (before logout completes) for better UX
+      // The state change to 'unauthenticated' will naturally trigger 
+      // the routing system to protect routes if needed.
       navigate('/', { replace: true });
-      
-      // Then perform logout (this will clear session in background)
+
+      // Perform logout
       await logout();
-      
-      // Don't show toast on logout - silent logout is better UX
-      // toast.success('Đã đăng xuất thành công');
+
+      // Silent logout is better UX - no success toast needed
     } catch (error: unknown) {
       console.error('Logout error:', error);
       // Even if logout fails, ensure we're on home page
@@ -76,6 +77,7 @@ const Header: React.FC = () => {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
+    return undefined;
   }, [isDropdownOpen]);
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -161,16 +163,16 @@ const Header: React.FC = () => {
               <div className="flex items-center ml-2 gap-2">
                 {/* User Avatar & Dropdown */}
                 <div className="relative user-dropdown-container">
-                  <button 
+                  <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                     className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-primary/10 transition-colors"
                     aria-expanded={isDropdownOpen}
                     aria-haspopup="true"
                   >
                     {profile?.avatarUrl ? (
-                      <img 
-                        src={profile.avatarUrl} 
-                        alt={profile.fullName || user.email || 'User'} 
+                      <img
+                        src={profile.avatarUrl}
+                        alt={profile.fullName || user.email || 'User'}
                         className="w-8 h-8 rounded-full object-cover"
                       />
                     ) : (
@@ -185,78 +187,78 @@ const Header: React.FC = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
-                  
+
                   {/* Dropdown Menu */}
                   {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                    <div className="py-2">
-                      <div className="px-4 py-2 border-b border-gray-200">
-                        <p className="text-sm font-semibold text-neutral-dark">
-                          {profile?.fullName || user.user_metadata?.full_name || 'User'}
-                        </p>
-                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                      </div>
-                      {/* Account/Dashboard Link - Show based on role with finalized naming */}
-                      {hasBusinessAccess ? (
-                        <Link
-                          to="/account"
-                          className="block px-4 py-2 text-sm text-neutral-dark hover:bg-primary/10 transition-colors"
-                          onClick={() => {
-                            setIsMenuOpen(false);
-                            setIsDropdownOpen(false);
-                          }}
-                        >
-                          <div className="flex items-center gap-2">
-                            <UserIcon className="w-4 h-4" />
-                            <span>Dashboard doanh nghiệp</span>
-                          </div>
-                        </Link>
-                      ) : (
-                        <Link
-                          to="/account"
-                          className="block px-4 py-2 text-sm text-neutral-dark hover:bg-primary/10 transition-colors"
-                          onClick={() => {
-                            setIsMenuOpen(false);
-                            setIsDropdownOpen(false);
-                          }}
-                        >
-                          <div className="flex items-center gap-2">
-                            <UserIcon className="w-4 h-4" />
-                            <span>Tài khoản của tôi</span>
-                          </div>
-                        </Link>
-                      )}
-                      {/* Register Business Link - Only show for regular users (not owner, not staff, not admin) */}
-                      {role === 'user' && !hasBusinessAccess && (
-                        <Link
-                          to="/for-business"
-                          className="block px-4 py-2 text-sm text-neutral-dark hover:bg-primary/10 transition-colors"
-                          onClick={() => {
-                            setIsMenuOpen(false);
-                            setIsDropdownOpen(false);
-                          }}
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                      <div className="py-2">
+                        <div className="px-4 py-2 border-b border-gray-200">
+                          <p className="text-sm font-semibold text-neutral-dark">
+                            {profile?.fullName || user.user_metadata?.full_name || 'User'}
+                          </p>
+                          <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                        </div>
+                        {/* Account/Dashboard Link - Show based on role with finalized naming */}
+                        {hasBusinessAccess ? (
+                          <Link
+                            to="/account"
+                            className="block px-4 py-2 text-sm text-neutral-dark hover:bg-primary/10 transition-colors"
+                            onClick={() => {
+                              setIsMenuOpen(false);
+                              setIsDropdownOpen(false);
+                            }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <UserIcon className="w-4 h-4" />
+                              <span>Dashboard doanh nghiệp</span>
+                            </div>
+                          </Link>
+                        ) : (
+                          <Link
+                            to="/account"
+                            className="block px-4 py-2 text-sm text-neutral-dark hover:bg-primary/10 transition-colors"
+                            onClick={() => {
+                              setIsMenuOpen(false);
+                              setIsDropdownOpen(false);
+                            }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <UserIcon className="w-4 h-4" />
+                              <span>Tài khoản của tôi</span>
+                            </div>
+                          </Link>
+                        )}
+                        {/* Register Business Link - Only show for regular users (not owner, not staff, not admin) */}
+                        {role === 'user' && !hasBusinessAccess && (
+                          <Link
+                            to="/for-business"
+                            className="block px-4 py-2 text-sm text-neutral-dark hover:bg-primary/10 transition-colors"
+                            onClick={() => {
+                              setIsMenuOpen(false);
+                              setIsDropdownOpen(false);
+                            }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                              </svg>
+                              <span>Đăng ký doanh nghiệp</span>
+                            </div>
+                          </Link>
+                        )}
+                        <button
+                          onClick={handleLogout}
+                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
                         >
                           <div className="flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                             </svg>
-                            <span>Đăng ký doanh nghiệp</span>
+                            <span>Đăng xuất</span>
                           </div>
-                        </Link>
-                      )}
-                      <button
-                        onClick={handleLogout}
-                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                      >
-                        <div className="flex items-center gap-2">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                          </svg>
-                          <span>Đăng xuất</span>
-                        </div>
-                      </button>
+                        </button>
+                      </div>
                     </div>
-                  </div>
                   )}
                 </div>
               </div>
@@ -293,7 +295,7 @@ const Header: React.FC = () => {
         </div>
       </div>
 
-          {/* Mobile menu, show/hide based on menu state. */}
+      {/* Mobile menu, show/hide based on menu state. */}
       {isMenuOpen && (
         <div className="md:hidden" id="mobile-menu">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
@@ -312,9 +314,9 @@ const Header: React.FC = () => {
                 <div className="px-3 py-2 mb-2">
                   <div className="flex items-center gap-3">
                     {profile?.avatarUrl ? (
-                      <img 
-                        src={profile.avatarUrl} 
-                        alt={profile.fullName || user.email || 'User'} 
+                      <img
+                        src={profile.avatarUrl}
+                        alt={profile.fullName || user.email || 'User'}
                         className="w-10 h-10 rounded-full object-cover"
                       />
                     ) : (
@@ -330,18 +332,18 @@ const Header: React.FC = () => {
                 </div>
                 {/* Account/Dashboard Link - Show based on role with finalized naming */}
                 {hasBusinessAccess ? (
-                  <NavLink 
-                    to="/account" 
-                    className={({ isActive }) => `${mobileNavLinkClass({ isActive })} flex items-center gap-3`} 
+                  <NavLink
+                    to="/account"
+                    className={({ isActive }) => `${mobileNavLinkClass({ isActive })} flex items-center gap-3`}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <UserIcon className="w-6 h-6" />
                     <span>Dashboard doanh nghiệp</span>
                   </NavLink>
                 ) : (
-                  <NavLink 
-                    to="/account" 
-                    className={({ isActive }) => `${mobileNavLinkClass({ isActive })} flex items-center gap-3`} 
+                  <NavLink
+                    to="/account"
+                    className={({ isActive }) => `${mobileNavLinkClass({ isActive })} flex items-center gap-3`}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <UserIcon className="w-6 h-6" />

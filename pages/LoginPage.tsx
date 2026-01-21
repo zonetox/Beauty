@@ -17,79 +17,14 @@ const LoginPage: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
-    
+
     // Get auth context - must be called unconditionally (React Hook rules)
     const { login, profile, user, state } = useAuth();
 
-    // If user is already logged in, redirect based on resolved role
-    useEffect(() => {
-        // Wait for auth state to resolve
-        if (state === 'loading') return;
-        
-        if (user && profile) {
-            const resolveAndRedirect = async () => {
-                try {
-                    // Add timeout to prevent hanging
-                    const timeoutPromise = new Promise<never>((_, reject) => {
-                        setTimeout(() => reject(new Error('Role resolution timeout')), 8000);
-                    });
-                    
-                    const roleResult = await Promise.race([
-                        resolveUserRole(user),
-                        timeoutPromise
-                    ]);
-                    
-                    if (roleResult.error) {
-                        // Role resolution failed - show error but allow login
-                        console.error('Role resolution error:', roleResult.error);
-                    }
+    // Unified redirection is handled by AccountPageRouter at /account 
+    // or by ProtectedRoute if the user was trying to access a specific page.
+    // This effect is no longer needed and was causing redundant role resolution calls.
 
-                    const locationState = location.state as { from?: { pathname?: string } } | null;
-                    const from = locationState?.from?.pathname;
-
-                    // Route based on resolved role - NO DEFAULT HOMEPAGE REDIRECT
-                    if (roleResult.error) {
-                        // Role resolution failed - show error but stay on login page
-                        setError(roleResult.error);
-                        return;
-                    }
-
-                    if (roleResult.role === 'admin') {
-                        // Admin → admin panel
-                        navigate('/admin', { replace: true });
-                    } else if (roleResult.role === 'business_owner' && roleResult.businessId) {
-                        // Business owner → business dashboard
-                        navigate('/account', { replace: true });
-                    } else if (roleResult.role === 'business_staff' && roleResult.businessId) {
-                        // Business staff → business dashboard
-                        navigate('/account', { replace: true });
-                    } else if (roleResult.role === 'user') {
-                        // Regular user: go back to where they were OR homepage
-                        if (from && from !== '/login' && from !== '/register') {
-                            navigate(from, { replace: true });
-                        } else {
-                            navigate('/', { replace: true });
-                        }
-                    } else {
-                        // Unknown role or anonymous - should not happen after login
-                        setError('Unable to determine user role. Please contact support.');
-                    }
-                } catch (err) {
-                    console.error('Error resolving role:', err);
-                    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-                    if (errorMessage.includes('timeout')) {
-                        setError('Xác minh quyền hạn mất quá nhiều thời gian. Vui lòng thử lại.');
-                    } else {
-                        // Fallback to homepage on error
-                        navigate('/', { replace: true });
-                    }
-                }
-            };
-
-            resolveAndRedirect();
-        }
-    }, [user, profile, state, navigate, location]);
-    
     // SEO metadata
     const seoTitle = 'Đăng nhập | 1Beauty.asia';
     const seoDescription = 'Đăng nhập vào tài khoản doanh nghiệp của bạn trên 1Beauty.asia để quản lý thông tin và dịch vụ.';
@@ -99,7 +34,7 @@ const LoginPage: React.FC = () => {
         e.preventDefault();
         setError('');
         setIsLoading(true);
-        
+
         try {
             await login(email, password);
             // Auth state will update via subscription
@@ -125,14 +60,14 @@ const LoginPage: React.FC = () => {
 
     return (
         <>
-            <SEOHead 
+            <SEOHead
                 title={seoTitle}
                 description={seoDescription}
                 keywords="đăng nhập, login, tài khoản doanh nghiệp, business account"
                 url={seoUrl}
                 type="website"
             />
-            <ForgotPasswordModal 
+            <ForgotPasswordModal
                 isOpen={isForgotPasswordOpen}
                 onClose={() => setIsForgotPasswordOpen(false)}
             />
@@ -158,7 +93,7 @@ const LoginPage: React.FC = () => {
                         <div>
                             <div className="flex items-center justify-between">
                                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">Mật khẩu</label>
-                                 <button type="button" onClick={() => setIsForgotPasswordOpen(true)} className="text-sm font-medium text-primary hover:text-primary-dark focus:outline-none disabled:opacity-50" disabled={isLoading}>
+                                <button type="button" onClick={() => setIsForgotPasswordOpen(true)} className="text-sm font-medium text-primary hover:text-primary-dark focus:outline-none disabled:opacity-50" disabled={isLoading}>
                                     Quên mật khẩu?
                                 </button>
                             </div>
