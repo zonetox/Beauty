@@ -1,7 +1,7 @@
 // G1.2 - Extended Unit Tests for Utility Functions
 // Tuân thủ Master Plan v1.1
 
-import { snakeToCamel, mapPostgrestResponse, mapSingleResponse } from '../utils';
+import { mapPostgrestResponse, mapSingleResponse } from '../utils';
 import { PostgrestResponse } from '@supabase/supabase-js';
 
 describe('mapPostgrestResponse', () => {
@@ -15,10 +15,10 @@ describe('mapPostgrestResponse', () => {
       count: null,
       status: 200,
       statusText: 'OK'
-    };
+    } as unknown as PostgrestResponse<any>;
 
     const result = mapPostgrestResponse(response);
-    
+
     expect(result.data).toEqual([
       { firstName: 'John', lastName: 'Doe' },
       { firstName: 'Jane', lastName: 'Smith' }
@@ -33,7 +33,7 @@ describe('mapPostgrestResponse', () => {
       count: null,
       status: 200,
       statusText: 'OK'
-    };
+    } as unknown as PostgrestResponse<any>;
 
     const result = mapPostgrestResponse(response);
     expect(result.data).toBeNull();
@@ -48,7 +48,7 @@ describe('mapPostgrestResponse', () => {
       count: null,
       status: 500,
       statusText: 'Internal Server Error'
-    };
+    } as unknown as PostgrestResponse<any>;
 
     const result = mapPostgrestResponse(response);
     expect(result.data).toBeNull();
@@ -64,7 +64,7 @@ describe('mapSingleResponse', () => {
     };
 
     const result = mapSingleResponse(response);
-    
+
     expect(result.data).toEqual({
       userId: 123,
       fullName: 'John Doe',

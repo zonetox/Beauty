@@ -31,7 +31,7 @@ const BookingsManager: React.FC = () => {
     const [view, setView] = useState<'list' | 'calendar'>('list');
     const [statusFilter, setStatusFilter] = useState<AppointmentStatus | 'all'>('all');
     const [updatingId, setUpdatingId] = useState<string | null>(null);
-    const [replyingAppointment, setReplyingAppointment] = useState<{appointment: Appointment, context: 'confirm' | 'cancel' | 'suggest_reschedule'} | null>(null);
+    const [replyingAppointment, setReplyingAppointment] = useState<{ appointment: Appointment, context: 'confirm' | 'cancel' | 'suggest_reschedule' } | null>(null);
 
     // Move hooks before early return to follow Rules of Hooks
     const allAppointments = useMemo(() => {
@@ -47,10 +47,10 @@ const BookingsManager: React.FC = () => {
     }, [allAppointments, statusFilter]);
 
     const stats = useMemo(() => {
-        if (!allAppointments.length) return { total: 0, confirmed: 0, pending: 0, cancelled: 0 };
+        if (!allAppointments.length) return { total: 0, confirmed: 0, pending: 0, cancelled: 0, upcoming: 0, today: 0, completed: 0 };
         const now = new Date();
         const todayStr = now.toISOString().split('T')[0];
-        
+
         return {
             pending: allAppointments.filter(a => a?.status === AppointmentStatus.PENDING).length,
             upcoming: allAppointments.filter(a => a?.status === AppointmentStatus.CONFIRMED && new Date(a?.date ?? '') >= now).length,
@@ -64,7 +64,7 @@ const BookingsManager: React.FC = () => {
         if (!appointments.length) return [];
         return appointments.filter(a => a.status === AppointmentStatus.PENDING || a.status === AppointmentStatus.CONFIRMED);
     }, [appointments]);
-    
+
     const pastAppointments = useMemo(() => {
         if (!appointments.length) return [];
         return appointments.filter(a => a.status === AppointmentStatus.COMPLETED || a.status === AppointmentStatus.CANCELLED);
@@ -168,7 +168,7 @@ const BookingsManager: React.FC = () => {
                                                             Cancel
                                                         </button>
                                                         <button
-                                                            onClick={() => setReplyingAppointment({appointment: appt, context: 'confirm'})}
+                                                            onClick={() => setReplyingAppointment({ appointment: appt, context: 'confirm' })}
                                                             className="text-xs font-semibold text-blue-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                                                             disabled={updatingId !== null}
                                                         >
@@ -217,7 +217,7 @@ const BookingsManager: React.FC = () => {
     return (
         <div className="p-8">
             {replyingAppointment && (
-                <AIQuickReplyModal 
+                <AIQuickReplyModal
                     isOpen={!!replyingAppointment}
                     onClose={() => setReplyingAppointment(null)}
                     appointment={replyingAppointment.appointment}
@@ -229,23 +229,21 @@ const BookingsManager: React.FC = () => {
                 <div className="flex items-center gap-2 p-1 bg-gray-200 rounded-lg">
                     <button
                         onClick={() => setView('list')}
-                        className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors ${
-                            view === 'list' ? 'bg-white shadow' : 'text-gray-600 hover:text-gray-800'
-                        }`}
+                        className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors ${view === 'list' ? 'bg-white shadow' : 'text-gray-600 hover:text-gray-800'
+                            }`}
                     >
                         List View
                     </button>
                     <button
                         onClick={() => setView('calendar')}
-                        className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors ${
-                            view === 'calendar' ? 'bg-white shadow' : 'text-gray-600 hover:text-gray-800'
-                        }`}
+                        className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors ${view === 'calendar' ? 'bg-white shadow' : 'text-gray-600 hover:text-gray-800'
+                            }`}
                     >
                         Calendar View
                     </button>
                 </div>
             </div>
-            
+
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
                 <StatCard title="Pending" value={stats.pending} />
@@ -285,10 +283,10 @@ const BookingsManager: React.FC = () => {
                     <AppointmentTable title="Past Appointments" data={pastAppointments} />
                 </div>
             ) : (
-                <BookingCalendarView 
-                    appointments={appointments} 
+                <BookingCalendarView
+                    appointments={appointments}
                     onUpdateStatus={handleUpdateStatus}
-                    onQuickReply={(appt, context) => setReplyingAppointment({appointment: appt, context})}
+                    onQuickReply={(appt, context) => setReplyingAppointment({ appointment: appt, context })}
                 />
             )}
         </div>

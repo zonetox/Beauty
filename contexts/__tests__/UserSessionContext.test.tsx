@@ -2,7 +2,7 @@
 // Tuân thủ Master Plan v1.1
 
 import React from 'react';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { UserSessionProvider, useUserSession } from '../UserSessionContext';
 import { supabase } from '../../lib/supabaseClient';
 import { User, Session } from '@supabase/supabase-js';
@@ -15,8 +15,8 @@ jest.mock('../../lib/supabaseClient', () => ({
         data: { session: null },
         error: null,
       }),
-      onAuthStateChange: jest.fn(() => ({ 
-        data: { subscription: { unsubscribe: jest.fn() } } 
+      onAuthStateChange: jest.fn(() => ({
+        data: { subscription: { unsubscribe: jest.fn() } }
       })),
       signInWithPassword: jest.fn(),
       signOut: jest.fn(),

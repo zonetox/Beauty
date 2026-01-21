@@ -23,7 +23,7 @@ const SortIcon: React.FC<{ className?: string }> = ({ className }) => (
 
 const StarIcon: React.FC<{ className?: string }> = ({ className = '' }) => (
     <svg className={`w-4 h-4 ${className}`} fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
     </svg>
 );
 
@@ -41,9 +41,9 @@ type SortKey = 'name' | 'rating' | 'viewCount';
 const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ businesses, onEdit, onUpdate, onDelete, onDuplicate }) => {
     const [selectedBusinessIds, setSelectedBusinessIds] = useState<number[]>([]);
     const [sortConfig, setSortConfig] = useState<{ key: SortKey | null; direction: 'asc' | 'desc' }>({ key: null, direction: 'asc' });
-    const [confirmDialog, setConfirmDialog] = useState<{ 
-        isOpen: boolean; 
-        type: 'verify' | 'toggle' | 'delete' | null; 
+    const [confirmDialog, setConfirmDialog] = useState<{
+        isOpen: boolean;
+        type: 'verify' | 'toggle' | 'delete' | null;
         businessId?: number;
         businessName?: string;
         count?: number;
@@ -54,13 +54,13 @@ const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ busin
         if (sortConfig.key !== null) {
             sortableItems.sort((a, b) => {
                 if (sortConfig.key === 'name') {
-                    return sortConfig.direction === 'asc' 
-                        ? a.name.localeCompare(b.name) 
+                    return sortConfig.direction === 'asc'
+                        ? a.name.localeCompare(b.name)
                         : b.name.localeCompare(a.name);
                 }
                 if (sortConfig.key === 'rating') {
-                    return sortConfig.direction === 'asc' 
-                        ? a.rating - b.rating 
+                    return sortConfig.direction === 'asc'
+                        ? a.rating - b.rating
                         : b.rating - a.rating;
                 }
                 if (sortConfig.key === 'viewCount') {
@@ -88,13 +88,13 @@ const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ busin
         onUpdate({ ...business, membershipTier: newTier });
     };
 
-    const handleStatusToggle = (business: Business) => {
-        onUpdate({ ...business, isActive: !business.isActive });
-    };
+    // const handleStatusToggle = (business: Business) => {
+    //    onUpdate({ ...business, isActive: !business.isActive });
+    // };
 
-    const handleVerificationToggle = (business: Business) => {
-        onUpdate({ ...business, isVerified: !business.isVerified });
-    };
+    // const handleVerificationToggle = (business: Business) => {
+    //    onUpdate({ ...business, isVerified: !business.isVerified });
+    // };
 
     const handleFeaturedToggle = (business: Business) => {
         onUpdate({ ...business, isFeatured: !business.isFeatured });
@@ -117,7 +117,7 @@ const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ busin
             setSelectedBusinessIds(prev => prev.filter(selectedId => selectedId !== id));
         }
     };
-    
+
     const handleVerifySelected = () => {
         setConfirmDialog({ isOpen: true, type: 'verify', count: selectedBusinessIds.length });
     };
@@ -134,7 +134,7 @@ const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ busin
         }
         setConfirmDialog({ isOpen: false, type: null });
     };
-    
+
     const handleToggleSelectedStatus = () => {
         setConfirmDialog({ isOpen: true, type: 'toggle', count: selectedBusinessIds.length });
     };
@@ -164,7 +164,7 @@ const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ busin
                         {selectedBusinessIds.length} business{selectedBusinessIds.length > 1 ? 'es' : ''} selected.
                     </p>
                     <div className="flex items-center gap-2 flex-wrap">
-                        <button 
+                        <button
                             onClick={handleVerifySelected}
                             className="px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-md hover:bg-green-600 transition-colors"
                         >
@@ -185,8 +185,8 @@ const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ busin
                         <tr>
                             <th scope="col" className="p-4">
                                 <div className="flex items-center">
-                                    <input 
-                                        id="checkbox-all" 
+                                    <input
+                                        id="checkbox-all"
                                         type="checkbox"
                                         className="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary focus:ring-2"
                                         checked={isAllSelected}
@@ -210,7 +210,7 @@ const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ busin
                                     {sortConfig.key === 'rating' ? (sortConfig.direction === 'asc' ? <SortAscIcon /> : <SortDescIcon />) : <SortIcon className="text-gray-400 opacity-50 group-hover:opacity-100" />}
                                 </button>
                             </th>
-                             <th scope="col" className="px-6 py-3">
+                            <th scope="col" className="px-6 py-3">
                                 <button onClick={() => requestSort('viewCount')} className="flex items-center gap-1.5 group">
                                     Views
                                     {sortConfig.key === 'viewCount' ? (sortConfig.direction === 'asc' ? <SortAscIcon /> : <SortDescIcon />) : <SortIcon className="text-gray-400 opacity-50 group-hover:opacity-100" />}
@@ -228,8 +228,8 @@ const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ busin
                             <tr key={business.id} className={`bg-white border-b hover:bg-gray-50 ${selectedBusinessIds.includes(business.id) ? 'bg-primary/5' : ''}`}>
                                 <td className="w-4 p-4">
                                     <div className="flex items-center">
-                                        <input 
-                                            id={`checkbox-table-${business.id}`} 
+                                        <input
+                                            id={`checkbox-table-${business.id}`}
                                             type="checkbox"
                                             className="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary focus:ring-2"
                                             checked={selectedBusinessIds.includes(business.id)}
@@ -249,8 +249,8 @@ const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ busin
                                     {(business.viewCount || 0).toLocaleString()}
                                 </td>
                                 <td className="px-6 py-4">
-                                    <select 
-                                        value={business.membershipTier} 
+                                    <select
+                                        value={business.membershipTier}
                                         onChange={(e) => handleTierChange(business, e.target.value as MembershipTier)}
                                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2"
                                     >
@@ -271,11 +271,11 @@ const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ busin
                                 </td>
                                 <td className="px-6 py-4">
                                     <label htmlFor={`featured-toggle-${business.id}`} className="inline-flex relative items-center cursor-pointer">
-                                        <input 
-                                            type="checkbox" 
-                                            id={`featured-toggle-${business.id}`} 
-                                            className="sr-only peer" 
-                                            checked={business.isFeatured || false} 
+                                        <input
+                                            type="checkbox"
+                                            id={`featured-toggle-${business.id}`}
+                                            className="sr-only peer"
+                                            checked={business.isFeatured || false}
                                             onChange={() => handleFeaturedToggle(business)}
                                         />
                                         <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
@@ -283,8 +283,8 @@ const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ busin
                                 </td>
                                 <td className="px-6 py-4 flex items-center gap-2 flex-wrap">
                                     <button onClick={() => onEdit(business)} className="font-medium text-secondary hover:underline">Edit</button>
-                                     <button onClick={() => onDuplicate(business)} className="font-medium text-blue-600 hover:underline">Duplicate</button>
-                                    <button 
+                                    <button onClick={() => onDuplicate(business)} className="font-medium text-blue-600 hover:underline">Duplicate</button>
+                                    <button
                                         onClick={() => setConfirmDialog({ isOpen: true, type: 'delete', businessId: business.id, businessName: business.name })}
                                         className="font-medium text-red-600 hover:underline"
                                     >

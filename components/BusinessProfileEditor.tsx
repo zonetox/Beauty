@@ -10,31 +10,30 @@ import { useBusinessData } from '../contexts/BusinessDataContext.tsx';
 import { BusinessCategory, HeroSlide, TrustIndicator, Business } from '../types.ts';
 import { uploadFile } from '../lib/storage.ts';
 import LoadingState from './LoadingState.tsx';
-import EmptyState from './EmptyState.tsx';
+// import EmptyState from './EmptyState.tsx';
 import { useStaffPermissions } from '../hooks/useStaffPermissions.ts';
 import LandingPageSectionEditor from './LandingPageSectionEditor.tsx';
 import LandingPagePreview from './LandingPagePreview.tsx';
 import { LandingPageConfig } from '../types.ts';
 
 // Helper to convert blob to base64 (for team member images)
-const blobToBase64 = (blob: Blob): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-};
+// const blobToBase64 = (blob: Blob): Promise<string> => {
+//   return new Promise((resolve, reject) => {
+//     const reader = new FileReader();
+//     reader.onloadend = () => resolve(reader.result as string);
+//     reader.onerror = reject;
+//     reader.readAsDataURL(blob);
+//   });
+// };
 
 // Reusable form field components
 const InputField: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label: string; error?: string }> = ({ label, error, ...props }) => (
     <div>
         <label className="block text-sm font-medium text-gray-700">{label}</label>
-        <input 
-            {...props} 
-            className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary ${
-                error ? 'border-red-500' : 'border-gray-300'
-            }`} 
+        <input
+            {...props}
+            className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary ${error ? 'border-red-500' : 'border-gray-300'
+                }`}
         />
         {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
     </div>
@@ -43,11 +42,10 @@ const InputField: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label
 const TextareaField: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string; error?: string }> = ({ label, error, ...props }) => (
     <div>
         <label className="block text-sm font-medium text-gray-700">{label}</label>
-        <textarea 
-            {...props} 
-            className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary ${
-                error ? 'border-red-500' : 'border-gray-300'
-            }`} 
+        <textarea
+            {...props}
+            className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary ${error ? 'border-red-500' : 'border-gray-300'
+                }`}
         />
         {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
     </div>
@@ -57,9 +55,8 @@ const TabButton: React.FC<{ active: boolean; onClick: () => void; children: Reac
     <button
         type="button"
         onClick={onClick}
-        className={`px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors whitespace-nowrap ${
-            active ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-        }`}
+        className={`px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors whitespace-nowrap ${active ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
     >
         {children}
     </button>
@@ -98,7 +95,7 @@ const BusinessProfileEditor: React.FC = () => {
     const [isUploadingLogo, setIsUploadingLogo] = useState(false);
     const [isUploadingCover, setIsUploadingCover] = useState(false);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-    
+
     const [workingHoursList, setWorkingHoursList] = useState<Array<{ day: string; time: string }>>([]);
 
     // Initialize form data from currentBusiness
@@ -118,7 +115,7 @@ const BusinessProfileEditor: React.FC = () => {
             const hours = currentBusiness.workingHours || {};
             const hoursList = Object.entries(hours).map(([day, time]) => ({ day, time: time as string }));
             setWorkingHoursList(hoursList.length > 0 ? hoursList : [{ day: '', time: '' }]);
-            
+
             // Initialize landing_page_config if not present
             if (!businessData.landingPageConfig) {
                 businessData.landingPageConfig = {
@@ -146,7 +143,7 @@ const BusinessProfileEditor: React.FC = () => {
                 }
                 return acc;
             }, {} as { [key: string]: string });
-            setFormData((prev: Business | null) => ({ ...prev, workingHours: workingHoursObject }));
+            setFormData((prev: Business | null) => prev ? ({ ...prev, workingHours: workingHoursObject }) : null);
         }
     }, [workingHoursList]);
 
@@ -236,11 +233,11 @@ const BusinessProfileEditor: React.FC = () => {
             setErrors((prev) => ({ ...prev, categories: undefined }));
         }
     };
-    
+
     // C3.2 FIX: Use correct storage buckets (business-logos, business-gallery) and paths
     const handleLogoFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || !e.target.files[0]) return;
-        
+
         const file = e.target.files[0];
         if (file.size > 4 * 1024 * 1024) {
             toast.error("File is too large. Please select a file smaller than 4MB.");
@@ -266,7 +263,7 @@ const BusinessProfileEditor: React.FC = () => {
 
     const handleCoverImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || !e.target.files[0]) return;
-        
+
         const file = e.target.files[0];
         if (file.size > 4 * 1024 * 1024) {
             toast.error("File is too large. Please select a file smaller than 4MB.");
@@ -292,7 +289,7 @@ const BusinessProfileEditor: React.FC = () => {
             setIsUploadingCover(false);
         }
     };
-    
+
     const handleSeoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData((prev: Business | null) => ({ ...prev, seo: { ...(prev.seo || {}), [name]: value } }));
@@ -301,12 +298,12 @@ const BusinessProfileEditor: React.FC = () => {
     const handleLandingPageConfigChange = (newConfig: LandingPageConfig) => {
         setFormData((prev: Business | null) => ({ ...prev, landingPageConfig: newConfig }));
     };
-    
+
     const handleSocialChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData((prev: Business | null) => ({ ...prev, socials: { ...(prev.socials || {}), [name]: value } }));
     };
-    
+
     const handleWorkingHoursListChange = (index: number, field: 'day' | 'time', value: string) => {
         const newList = [...workingHoursList];
         if (newList[index]) {
@@ -325,15 +322,15 @@ const BusinessProfileEditor: React.FC = () => {
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         // Additional validation for landing page tab
         if (activeTab === 'landing') {
             if (!formData.heroSlides || formData.heroSlides.length === 0) {
                 toast.error('At least one hero slide is required.');
                 return;
             }
-            const invalidSlides = formData.heroSlides.filter((slide: HeroSlide) => 
-                !slide.title || slide.title.trim().length === 0 || 
+            const invalidSlides = formData.heroSlides.filter((slide: HeroSlide) =>
+                !slide.title || slide.title.trim().length === 0 ||
                 !slide.subtitle || slide.subtitle.trim().length === 0 ||
                 !slide.imageUrl || slide.imageUrl.trim().length === 0
             );
@@ -342,7 +339,7 @@ const BusinessProfileEditor: React.FC = () => {
                 return;
             }
         }
-        
+
         if (!validateForm()) {
             toast.error('Please fix the errors before saving.');
             return;
@@ -366,23 +363,22 @@ const BusinessProfileEditor: React.FC = () => {
             <div className="p-6 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                 <h2 className="text-2xl font-bold font-serif text-neutral-dark">Business Profile Editor</h2>
                 <div className="flex items-center gap-3">
-                    <button 
-                        type="button" 
-                        onClick={() => navigate(`/business/${currentBusiness.slug}`)} 
+                    <button
+                        type="button"
+                        onClick={() => navigate(`/business/${currentBusiness.slug}`)}
                         className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100"
                     >
                         Preview Page
                     </button>
-                    <button 
-                        type="submit" 
-                        disabled={isSaving || isUploadingLogo || isUploadingCover} 
-                        className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white transition-colors flex items-center justify-center min-w-[120px] ${
-                            isSaving || isUploadingLogo || isUploadingCover 
-                                ? 'bg-gray-400 cursor-not-allowed' 
+                    <button
+                        type="submit"
+                        disabled={isSaving || isUploadingLogo || isUploadingCover}
+                        className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white transition-colors flex items-center justify-center min-w-[120px] ${isSaving || isUploadingLogo || isUploadingCover
+                                ? 'bg-gray-400 cursor-not-allowed'
                                 : 'bg-primary hover:bg-primary-dark'
-                        }`}
+                            }`}
                     >
-                        {isSaving ? <><Spinner/> Saving...</> : 'Save Changes'}
+                        {isSaving ? <><Spinner /> Saving...</> : 'Save Changes'}
                     </button>
                 </div>
             </div>
@@ -402,24 +398,24 @@ const BusinessProfileEditor: React.FC = () => {
                     <section>
                         <h3 className="text-lg font-semibold text-neutral-dark mb-4">Basic Information</h3>
                         <div className="space-y-4">
-                            <InputField 
-                                label="Brand Name *" 
-                                name="name" 
-                                value={formData.name || ''} 
-                                onChange={handleChange} 
-                                required 
+                            <InputField
+                                label="Brand Name *"
+                                name="name"
+                                value={formData.name || ''}
+                                onChange={handleChange}
+                                required
                                 error={errors.name}
                             />
-                            <TextareaField 
-                                label="Detailed Description *" 
-                                name="description" 
-                                value={formData.description || ''} 
-                                onChange={handleChange} 
-                                rows={5} 
+                            <TextareaField
+                                label="Detailed Description *"
+                                name="description"
+                                value={formData.description || ''}
+                                onChange={handleChange}
+                                rows={5}
                                 required
                                 error={errors.description}
                             />
-                            
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Categories *</label>
                                 {errors.categories && <p className="text-sm text-red-600 mb-2">{errors.categories}</p>}
@@ -442,85 +438,85 @@ const BusinessProfileEditor: React.FC = () => {
 
                         <h3 className="text-lg font-semibold text-neutral-dark mt-8 mb-4">Contact & Location</h3>
                         <div className="space-y-4">
-                            <InputField 
-                                label="Address *" 
-                                name="address" 
-                                value={formData.address || ''} 
-                                onChange={handleChange} 
-                                required 
+                            <InputField
+                                label="Address *"
+                                name="address"
+                                value={formData.address || ''}
+                                onChange={handleChange}
+                                required
                                 error={errors.address}
                             />
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <InputField 
-                                    label="City *" 
-                                    name="city" 
-                                    value={formData.city || ''} 
-                                    onChange={handleChange} 
-                                    required 
+                                <InputField
+                                    label="City *"
+                                    name="city"
+                                    value={formData.city || ''}
+                                    onChange={handleChange}
+                                    required
                                     error={errors.city}
                                 />
-                                <InputField 
-                                    label="District *" 
-                                    name="district" 
-                                    value={formData.district || ''} 
-                                    onChange={handleChange} 
-                                    required 
+                                <InputField
+                                    label="District *"
+                                    name="district"
+                                    value={formData.district || ''}
+                                    onChange={handleChange}
+                                    required
                                     error={errors.district}
                                 />
-                                <InputField 
-                                    label="Ward *" 
-                                    name="ward" 
-                                    value={formData.ward || ''} 
-                                    onChange={handleChange} 
-                                    required 
+                                <InputField
+                                    label="Ward *"
+                                    name="ward"
+                                    value={formData.ward || ''}
+                                    onChange={handleChange}
+                                    required
                                     error={errors.ward}
                                 />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <InputField 
-                                    label="Phone *" 
-                                    name="phone" 
-                                    type="tel" 
-                                    value={formData.phone || ''} 
-                                    onChange={handleChange} 
-                                    required 
+                                <InputField
+                                    label="Phone *"
+                                    name="phone"
+                                    type="tel"
+                                    value={formData.phone || ''}
+                                    onChange={handleChange}
+                                    required
                                     error={errors.phone}
                                 />
-                                <InputField 
-                                    label="Email" 
-                                    name="email" 
-                                    type="email" 
-                                    value={formData.email || ''} 
-                                    onChange={handleChange} 
+                                <InputField
+                                    label="Email"
+                                    name="email"
+                                    type="email"
+                                    value={formData.email || ''}
+                                    onChange={handleChange}
                                     error={errors.email}
                                 />
                             </div>
-                            <InputField 
-                                label="Website" 
-                                name="website" 
-                                type="url" 
-                                value={formData.website || ''} 
-                                onChange={handleChange} 
-                                placeholder="https://your-business.com" 
+                            <InputField
+                                label="Website"
+                                name="website"
+                                type="url"
+                                value={formData.website || ''}
+                                onChange={handleChange}
+                                placeholder="https://your-business.com"
                             />
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <InputField 
-                                    label="Latitude" 
-                                    name="latitude" 
-                                    type="number" 
-                                    step="any" 
-                                    value={formData.latitude || ''} 
-                                    onChange={handleChange} 
-                                    placeholder="e.g., 10.7769" 
+                                <InputField
+                                    label="Latitude"
+                                    name="latitude"
+                                    type="number"
+                                    step="any"
+                                    value={formData.latitude || ''}
+                                    onChange={handleChange}
+                                    placeholder="e.g., 10.7769"
                                 />
-                                <InputField 
-                                    label="Longitude" 
-                                    name="longitude" 
-                                    type="number" 
-                                    step="any" 
-                                    value={formData.longitude || ''} 
-                                    onChange={handleChange} 
-                                    placeholder="e.g., 106.7009" 
+                                <InputField
+                                    label="Longitude"
+                                    name="longitude"
+                                    type="number"
+                                    step="any"
+                                    value={formData.longitude || ''}
+                                    onChange={handleChange}
+                                    placeholder="e.g., 106.7009"
                                 />
                             </div>
                             <p className="text-xs text-gray-500">Coordinates are used for precise map location. You can find them on OpenStreetMap by right-clicking a location.</p>
@@ -537,25 +533,24 @@ const BusinessProfileEditor: React.FC = () => {
                                 <div className="space-y-3">
                                     <label className="block text-sm font-medium text-gray-700">Logo</label>
                                     <div className="flex items-center gap-4">
-                                        <img 
-                                            src={formData.logoUrl || 'https://placehold.co/128x128/E6A4B4/FFFFFF?text=Logo'} 
-                                            alt="Current Logo" 
-                                            className="w-32 h-32 object-cover rounded-md border bg-gray-100" 
+                                        <img
+                                            src={formData.logoUrl || 'https://placehold.co/128x128/E6A4B4/FFFFFF?text=Logo'}
+                                            alt="Current Logo"
+                                            className="w-32 h-32 object-cover rounded-md border bg-gray-100"
                                         />
                                         <div>
-                                            <label 
-                                                htmlFor="logo-upload" 
-                                                className={`cursor-pointer bg-secondary text-white px-3 py-2 text-sm font-semibold rounded-md hover:opacity-90 inline-block ${
-                                                    isUploadingLogo ? 'opacity-50 cursor-not-allowed' : ''
-                                                }`}
+                                            <label
+                                                htmlFor="logo-upload"
+                                                className={`cursor-pointer bg-secondary text-white px-3 py-2 text-sm font-semibold rounded-md hover:opacity-90 inline-block ${isUploadingLogo ? 'opacity-50 cursor-not-allowed' : ''
+                                                    }`}
                                             >
-                                                {isUploadingLogo ? <><Spinner/> Uploading...</> : 'Upload File'}
+                                                {isUploadingLogo ? <><Spinner /> Uploading...</> : 'Upload File'}
                                             </label>
-                                            <input 
-                                                id="logo-upload" 
-                                                type="file" 
-                                                className="hidden" 
-                                                accept="image/*" 
+                                            <input
+                                                id="logo-upload"
+                                                type="file"
+                                                className="hidden"
+                                                accept="image/*"
                                                 onChange={handleLogoFileUpload}
                                                 disabled={isUploadingLogo}
                                             />
@@ -563,45 +558,44 @@ const BusinessProfileEditor: React.FC = () => {
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 {/* Cover Image */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Cover Image *</label>
                                     {errors.imageUrl && <p className="text-sm text-red-600 mb-2">{errors.imageUrl}</p>}
-                                    <InputField 
-                                        label="Cover Image URL" 
-                                        name="imageUrl" 
-                                        value={formData.imageUrl || ''} 
-                                        onChange={handleChange} 
-                                        placeholder="https://..." 
-                                        required 
+                                    <InputField
+                                        label="Cover Image URL"
+                                        name="imageUrl"
+                                        value={formData.imageUrl || ''}
+                                        onChange={handleChange}
+                                        placeholder="https://..."
+                                        required
                                         error={errors.imageUrl}
                                     />
                                     <div className="flex items-center gap-2 mt-2">
                                         <span className="text-sm text-gray-500">Or</span>
-                                        <label 
-                                            htmlFor="cover-image-upload" 
-                                            className={`cursor-pointer text-sm font-semibold text-secondary hover:underline ${
-                                                isUploadingCover ? 'opacity-50 cursor-not-allowed' : ''
-                                            }`}
+                                        <label
+                                            htmlFor="cover-image-upload"
+                                            className={`cursor-pointer text-sm font-semibold text-secondary hover:underline ${isUploadingCover ? 'opacity-50 cursor-not-allowed' : ''
+                                                }`}
                                         >
                                             {isUploadingCover ? 'Uploading...' : 'Upload from device'}
                                         </label>
-                                        <input 
-                                            id="cover-image-upload" 
-                                            type="file" 
-                                            className="hidden" 
-                                            accept="image/*" 
+                                        <input
+                                            id="cover-image-upload"
+                                            type="file"
+                                            className="hidden"
+                                            accept="image/*"
                                             onChange={handleCoverImageUpload}
                                             disabled={isUploadingCover}
                                         />
                                     </div>
                                     <div className="mt-2 p-4 bg-gray-50 rounded-md border">
                                         <p className="text-sm text-gray-700">This image appears in listings.</p>
-                                        <img 
-                                            src={formData.imageUrl || 'https://placehold.co/400x300/E6A4B4/FFFFFF?text=Cover'} 
-                                            alt="Cover preview" 
-                                            className="mt-2 w-full h-auto object-cover rounded-md aspect-video" 
+                                        <img
+                                            src={formData.imageUrl || 'https://placehold.co/400x300/E6A4B4/FFFFFF?text=Cover'}
+                                            alt="Cover preview"
+                                            className="mt-2 w-full h-auto object-cover rounded-md aspect-video"
                                         />
                                     </div>
                                 </div>
@@ -609,12 +603,12 @@ const BusinessProfileEditor: React.FC = () => {
                         </div>
                         <div className="pt-8 border-t">
                             <h3 className="text-lg font-semibold text-neutral-dark mb-4">Video Content</h3>
-                            <InputField 
-                                label="YouTube Video URL" 
-                                name="youtubeUrl" 
-                                value={formData.youtubeUrl || ''} 
-                                onChange={handleChange} 
-                                placeholder="https://www.youtube.com/watch?v=..." 
+                            <InputField
+                                label="YouTube Video URL"
+                                name="youtubeUrl"
+                                value={formData.youtubeUrl || ''}
+                                onChange={handleChange}
+                                placeholder="https://www.youtube.com/watch?v=..."
                             />
                             <p className="text-xs text-gray-500 mt-1">This video will be featured on your landing page.</p>
                         </div>
@@ -627,21 +621,21 @@ const BusinessProfileEditor: React.FC = () => {
                         <div className="space-y-3">
                             {workingHoursList.map((item, index) => (
                                 <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
-                                    <input 
-                                        value={item.day} 
-                                        onChange={(e) => handleWorkingHoursListChange(index, 'day', e.target.value)} 
-                                        placeholder="Day(s) (e.g., Monday - Friday)" 
-                                        className="w-1/3 px-3 py-2 border rounded-md" 
+                                    <input
+                                        value={item.day}
+                                        onChange={(e) => handleWorkingHoursListChange(index, 'day', e.target.value)}
+                                        placeholder="Day(s) (e.g., Monday - Friday)"
+                                        className="w-1/3 px-3 py-2 border rounded-md"
                                     />
-                                    <input 
-                                        value={item.time} 
-                                        onChange={(e) => handleWorkingHoursListChange(index, 'time', e.target.value)} 
-                                        placeholder="Time (e.g., 9:00 - 21:00)" 
-                                        className="flex-grow px-3 py-2 border rounded-md" 
+                                    <input
+                                        value={item.time}
+                                        onChange={(e) => handleWorkingHoursListChange(index, 'time', e.target.value)}
+                                        placeholder="Time (e.g., 9:00 - 21:00)"
+                                        className="flex-grow px-3 py-2 border rounded-md"
                                     />
-                                    <button 
-                                        type="button" 
-                                        onClick={() => removeWorkingHoursRow(index)} 
+                                    <button
+                                        type="button"
+                                        onClick={() => removeWorkingHoursRow(index)}
                                         className="text-red-500 font-bold p-2 hover:text-red-700"
                                     >
                                         ✕
@@ -649,9 +643,9 @@ const BusinessProfileEditor: React.FC = () => {
                                 </div>
                             ))}
                         </div>
-                        <button 
-                            type="button" 
-                            onClick={addWorkingHoursRow} 
+                        <button
+                            type="button"
+                            onClick={addWorkingHoursRow}
                             className="mt-3 text-sm text-secondary font-semibold hover:underline"
                         >
                             + Add hours
@@ -664,55 +658,55 @@ const BusinessProfileEditor: React.FC = () => {
                         <div>
                             <h3 className="text-lg font-semibold text-neutral-dark mb-4">Social Media Links</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <InputField 
-                                    label="Facebook URL" 
-                                    name="facebook" 
-                                    value={formData.socials?.facebook || ''} 
-                                    onChange={handleSocialChange} 
+                                <InputField
+                                    label="Facebook URL"
+                                    name="facebook"
+                                    value={formData.socials?.facebook || ''}
+                                    onChange={handleSocialChange}
                                 />
-                                <InputField 
-                                    label="Instagram URL" 
-                                    name="instagram" 
-                                    value={formData.socials?.instagram || ''} 
-                                    onChange={handleSocialChange} 
+                                <InputField
+                                    label="Instagram URL"
+                                    name="instagram"
+                                    value={formData.socials?.instagram || ''}
+                                    onChange={handleSocialChange}
                                 />
-                                <InputField 
-                                    label="Zalo Phone/Link" 
-                                    name="zalo" 
-                                    value={formData.socials?.zalo || ''} 
-                                    onChange={handleSocialChange} 
+                                <InputField
+                                    label="Zalo Phone/Link"
+                                    name="zalo"
+                                    value={formData.socials?.zalo || ''}
+                                    onChange={handleSocialChange}
                                 />
-                                <InputField 
-                                    label="TikTok URL" 
-                                    name="tiktok" 
-                                    value={formData.socials?.tiktok || ''} 
-                                    onChange={handleSocialChange} 
+                                <InputField
+                                    label="TikTok URL"
+                                    name="tiktok"
+                                    value={formData.socials?.tiktok || ''}
+                                    onChange={handleSocialChange}
                                 />
                             </div>
                         </div>
                         <div className="pt-8 border-t">
                             <h3 className="text-lg font-semibold text-neutral-dark mb-4">SEO Settings</h3>
                             <div className="space-y-4">
-                                <InputField 
-                                    label="Meta Title" 
-                                    name="title" 
-                                    value={formData.seo?.title || ''} 
-                                    onChange={handleSeoChange} 
-                                    maxLength={60} 
+                                <InputField
+                                    label="Meta Title"
+                                    name="title"
+                                    value={formData.seo?.title || ''}
+                                    onChange={handleSeoChange}
+                                    maxLength={60}
                                 />
-                                <TextareaField 
-                                    label="Meta Description" 
-                                    name="description" 
-                                    value={formData.seo?.description || ''} 
-                                    onChange={handleSeoChange} 
-                                    rows={3} 
-                                    maxLength={160} 
+                                <TextareaField
+                                    label="Meta Description"
+                                    name="description"
+                                    value={formData.seo?.description || ''}
+                                    onChange={handleSeoChange}
+                                    rows={3}
+                                    maxLength={160}
                                 />
-                                <InputField 
-                                    label="Meta Keywords" 
-                                    name="keywords" 
-                                    value={formData.seo?.keywords || ''} 
-                                    onChange={handleSeoChange} 
+                                <InputField
+                                    label="Meta Keywords"
+                                    name="keywords"
+                                    value={formData.seo?.keywords || ''}
+                                    onChange={handleSeoChange}
                                 />
                             </div>
                         </div>
@@ -745,12 +739,12 @@ const BusinessProfileEditor: React.FC = () => {
                                 </p>
                             </div>
                         )}
-                        
+
                         {/* Trust Indicators Editor */}
                         <div className="mt-8 border-t pt-6">
                             <h3 className="text-lg font-semibold text-neutral-dark mb-4">Trust Indicators</h3>
                             <p className="text-sm text-gray-600 mb-4">Add badges, certifications, or awards to build trust with your customers.</p>
-                            
+
                             <div className="space-y-4">
                                 {(formData.trustIndicators || []).map((indicator: TrustIndicator, index: number) => (
                                     <div key={index} className="p-4 border border-gray-200 rounded-lg">
@@ -827,14 +821,14 @@ const BusinessProfileEditor: React.FC = () => {
                                         </button>
                                     </div>
                                 ))}
-                                
+
                                 <button
                                     type="button"
                                     onClick={() => {
                                         const newIndicator: TrustIndicator = { type: 'badge', title: '' };
-                                        setFormData((prev: Business | null) => ({ 
-                                            ...prev, 
-                                            trustIndicators: [...(prev.trustIndicators || []), newIndicator] 
+                                        setFormData((prev: Business | null) => ({
+                                            ...prev,
+                                            trustIndicators: [...(prev.trustIndicators || []), newIndicator]
                                         }));
                                     }}
                                     className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-primary hover:text-primary transition-colors"
@@ -846,7 +840,7 @@ const BusinessProfileEditor: React.FC = () => {
                     </section>
                 )}
             </div>
-            
+
             {isPreviewOpen && formData && currentBusiness && formData.landingPageConfig && (
                 <LandingPagePreview
                     business={{ ...currentBusiness, landingPageConfig: formData.landingPageConfig }}
@@ -854,18 +848,17 @@ const BusinessProfileEditor: React.FC = () => {
                     onClose={() => setIsPreviewOpen(false)}
                 />
             )}
-            
+
             <div className="p-6 flex justify-end border-t">
-                <button 
-                    type="submit" 
-                    disabled={isSaving || isUploadingLogo || isUploadingCover} 
-                    className={`w-full sm:w-auto px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white transition-colors flex items-center justify-center min-w-[160px] ${
-                        isSaving || isUploadingLogo || isUploadingCover 
-                            ? 'bg-gray-400 cursor-not-allowed' 
+                <button
+                    type="submit"
+                    disabled={isSaving || isUploadingLogo || isUploadingCover}
+                    className={`w-full sm:w-auto px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white transition-colors flex items-center justify-center min-w-[160px] ${isSaving || isUploadingLogo || isUploadingCover
+                            ? 'bg-gray-400 cursor-not-allowed'
                             : 'bg-primary hover:bg-primary-dark'
-                    }`}
+                        }`}
                 >
-                    {isSaving ? <><Spinner/> Saving...</> : 'Save All Changes'}
+                    {isSaving ? <><Spinner /> Saving...</> : 'Save All Changes'}
                 </button>
             </div>
         </form>

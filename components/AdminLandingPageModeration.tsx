@@ -3,7 +3,6 @@
 
 import React, { useState, useMemo } from 'react';
 import { useBusinessData } from '../contexts/BusinessDataContext.tsx';
-import { Business } from '../types.ts';
 import { supabase } from '../lib/supabaseClient.ts';
 import toast from 'react-hot-toast';
 import LoadingState from './LoadingState.tsx';
@@ -134,31 +133,28 @@ const AdminLandingPageModeration: React.FC = () => {
                 <div className="flex gap-2">
                     <button
                         onClick={() => setStatusFilter('all')}
-                        className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                            statusFilter === 'all'
+                        className={`px-4 py-2 rounded-md font-medium transition-colors ${statusFilter === 'all'
                                 ? 'bg-primary text-white'
                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
+                            }`}
                     >
                         All
                     </button>
                     <button
                         onClick={() => setStatusFilter('Pending')}
-                        className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                            statusFilter === 'Pending'
+                        className={`px-4 py-2 rounded-md font-medium transition-colors ${statusFilter === 'Pending'
                                 ? 'bg-yellow-500 text-white'
                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
+                            }`}
                     >
                         Pending
                     </button>
                     <button
                         onClick={() => setStatusFilter('Needs Review')}
-                        className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                            statusFilter === 'Needs Review'
+                        className={`px-4 py-2 rounded-md font-medium transition-colors ${statusFilter === 'Needs Review'
                                 ? 'bg-orange-500 text-white'
                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
+                            }`}
                     >
                         Needs Review
                     </button>
@@ -169,7 +165,7 @@ const AdminLandingPageModeration: React.FC = () => {
             {filteredBusinesses.length === 0 ? (
                 <EmptyState
                     title="No landing pages found"
-                    message={searchQuery || statusFilter !== 'all' 
+                    message={searchQuery || statusFilter !== 'all'
                         ? "No businesses match your search criteria."
                         : "No businesses have landing pages yet."}
                 />

@@ -4,7 +4,7 @@ import AdminStatCard from './AdminStatCard.tsx';
 import AnalyticsChart from './AnalyticsChart.tsx';
 import { supabase } from '../lib/supabaseClient.ts';
 import { snakeToCamel } from '../lib/utils.ts';
-import { ensureNumber, ensureArray, safeIndex } from '../lib/typeHelpers.ts';
+import { ensureNumber, ensureArray } from '../lib/typeHelpers.ts';
 
 type TimeRange = '7d' | '30d' | 'month';
 
@@ -15,7 +15,7 @@ const EyeIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5
 const StarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>;
 
 
-const FilterButton: React.FC<{ label: string; value: TimeRange; active: boolean; onClick: () => void }> = ({ label, value, active, onClick }) => (
+const FilterButton: React.FC<{ label: string; value: TimeRange; active: boolean; onClick: () => void }> = ({ label, active, onClick }) => (
     <button
         onClick={onClick}
         className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${active ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
@@ -66,7 +66,7 @@ const FunnelStage: React.FC<{ stage: FunnelStageData, baseValue: number }> = ({ 
 const ConversionRate: React.FC<{ from: number, to: number }> = ({ from, to }) => {
     const rate = from > 0 ? ((to / from) * 100).toFixed(1) : '0.0';
     return (
-         <div className="flex items-center justify-center my-2">
+        <div className="flex items-center justify-center my-2">
             <div className="flex items-center gap-2 text-sm font-semibold text-gray-500">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
                 <span>{rate}%</span>
@@ -118,7 +118,7 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
                 break;
             case 'month':
                 start.setDate(1);
-                start.setHours(0,0,0,0);
+                start.setHours(0, 0, 0, 0);
                 break;
         }
         return { startDate: start, endDate: end };
@@ -171,7 +171,7 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
         const revenue = ensureArray(filteredData?.orders)
             .filter(o => o?.status === OrderStatus.COMPLETED)
             .reduce((sum, o) => sum + ensureNumber(o?.amount, 0), 0);
-        
+
         // Calculate page view stats
         const pvArray = ensureArray(filteredData?.pageViews);
         const totalPageViews = pvArray.length;
@@ -181,7 +181,7 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
             acc[pageType] = (acc[pageType] ?? 0) + 1;
             return acc;
         }, {} as Record<string, number>);
-        
+
         return {
             revenue,
             newOrders: ensureArray(filteredData?.orders).length,
@@ -191,7 +191,7 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
             pageViewsByType
         };
     }, [filteredData]);
-    
+
     const revenueChartData: ChartDataPoint[] = useMemo(() => {
         const data: { [key: string]: number } = {};
         const currentDate = new Date(startDate);
@@ -210,7 +210,7 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
                     data[dateKey]! += ensureNumber(order?.amount, 0);
                 }
             });
-        
+
         return Object.entries(data).map(([label, value]) => ({ label, value }));
     }, [filteredData, startDate, endDate]);
 
@@ -230,25 +230,25 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
                 data[dateKey]! += 1;
             }
         });
-        
+
         return Object.entries(data).map(([label, value]) => ({ label, value }));
     }, [filteredData, startDate, endDate]);
-    
-    const topViewed = useMemo(() => 
+
+    const topViewed = useMemo(() =>
         ensureArray(businesses)
             .sort((a, b) => ensureNumber(b?.viewCount, 0) - ensureNumber(a?.viewCount, 0))
             .slice(0, 5)
             .map(b => ({ name: b?.name ?? 'Unknown', value: `${ensureNumber(b?.viewCount, 0).toLocaleString()} views` }))
-    , [businesses]);
+        , [businesses]);
 
-    const topRated = useMemo(() => 
+    const topRated = useMemo(() =>
         ensureArray(businesses)
             .filter(b => ensureNumber(b?.reviewCount, 0) > 0)
             .sort((a, b) => ensureNumber(b?.rating, 0) - ensureNumber(a?.rating, 0))
             .slice(0, 5)
             .map(b => ({ name: b?.name ?? 'Unknown', value: `${ensureNumber(b?.rating, 0).toFixed(1)} ★ (${ensureNumber(b?.reviewCount, 0)})` }))
-    , [businesses]);
-    
+        , [businesses]);
+
     const handleExport = () => {
         const headers = ["Order ID", "Business Name", "Package", "Amount", "Status", "Date"];
         const rows = filteredData.orders.filter(o => o.status === OrderStatus.COMPLETED).map(order => [
@@ -259,7 +259,7 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
             order.status,
             new Date(order.confirmedAt!).toISOString()
         ].join(','));
-        
+
         const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
         const link = document.createElement('a');
         link.setAttribute('href', encodeURI(csvContent));
@@ -340,12 +340,12 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
             </div>
 
             <div className="bg-white p-6 rounded-lg shadow">
-                 <div className="flex justify-between items-center mb-4">
+                <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold text-neutral-dark">Completed Orders in Period</h3>
                     <button onClick={handleExport} className="text-sm font-semibold bg-secondary text-white px-3 py-1.5 rounded-md hover:opacity-90">Export CSV</button>
-                 </div>
-                 <div className="overflow-x-auto max-h-96">
-                     <table className="w-full text-sm text-left">
+                </div>
+                <div className="overflow-x-auto max-h-96">
+                    <table className="w-full text-sm text-left">
                         <thead className="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0">
                             <tr>
                                 <th className="px-4 py-3">Business</th>
@@ -355,20 +355,20 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
                             </tr>
                         </thead>
                         <tbody className="text-gray-600">
-                             {filteredData.orders.filter(o => o.status === OrderStatus.COMPLETED).map(order => (
+                            {filteredData.orders.filter(o => o.status === OrderStatus.COMPLETED).map(order => (
                                 <tr key={order.id} className="border-b hover:bg-gray-50">
                                     <td className="px-4 py-3 font-medium text-neutral-dark">{order.businessName}</td>
                                     <td className="px-4 py-3">{order.packageName}</td>
                                     <td className="px-4 py-3 font-semibold">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.amount)}</td>
                                     <td className="px-4 py-3">{new Date(order.confirmedAt!).toLocaleDateString('vi-VN')}</td>
                                 </tr>
-                             ))}
+                            ))}
                         </tbody>
-                     </table>
-                     {filteredData.orders.filter(o => o.status === OrderStatus.COMPLETED).length === 0 && (
-                         <p className="text-center text-gray-500 py-8">No completed orders in this period.</p>
-                     )}
-                 </div>
+                    </table>
+                    {filteredData.orders.filter(o => o.status === OrderStatus.COMPLETED).length === 0 && (
+                        <p className="text-center text-gray-500 py-8">No completed orders in this period.</p>
+                    )}
+                </div>
             </div>
         </div>
     );

@@ -43,14 +43,14 @@ const LOCAL_STORAGE_KEY = 'app_theme_settings';
 
 // Function to apply theme styles to the DOM
 const applyTheme = (theme: ThemeSettings) => {
-    // 1. Apply Favicon
-    const faviconEl = document.getElementById('favicon') as HTMLLinkElement | null;
-    if (faviconEl && faviconEl.href !== theme.faviconUrl) {
-        faviconEl.href = theme.faviconUrl;
-    }
+  // 1. Apply Favicon
+  const faviconEl = document.getElementById('favicon') as HTMLLinkElement | null;
+  if (faviconEl && faviconEl.href !== theme.faviconUrl) {
+    faviconEl.href = theme.faviconUrl;
+  }
 
-    // 2. Apply Colors via CSS Variables
-    const cssVariables = `
+  // 2. Apply Colors via CSS Variables
+  const cssVariables = `
       :root {
         --color-primary: ${theme.colors.primary};
         --color-primary-dark: ${theme.colors.primaryDark};
@@ -60,51 +60,51 @@ const applyTheme = (theme: ThemeSettings) => {
         --color-neutral-dark: ${theme.colors.neutralDark};
       }
     `;
-    let styleEl = document.getElementById('dynamic-theme-styles');
-    if (!styleEl) {
-        styleEl = document.createElement('style');
-        styleEl.id = 'dynamic-theme-styles';
-        document.head.appendChild(styleEl);
-    }
-    styleEl.innerHTML = cssVariables;
+  let styleEl = document.getElementById('dynamic-theme-styles');
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = 'dynamic-theme-styles';
+    document.head.appendChild(styleEl);
+  }
+  styleEl.innerHTML = cssVariables;
 
-    // 3. Apply Fonts
-    document.body.style.fontFamily = `'${theme.fonts.sans}', sans-serif`;
-    document.querySelectorAll('.font-serif').forEach(el => {
-        (el as HTMLElement).style.fontFamily = `'${theme.fonts.serif}', serif`;
-    });
-    
-    // 4. Load Google Fonts
-    const loadFont = (fontName: string, id: string) => {
-        const fontUrlPart = FONT_URL_MAP[fontName];
-        if (!fontUrlPart) return;
-        
-        let linkEl = document.getElementById(id) as HTMLLinkElement | null;
-        const newHref = `https://fonts.googleapis.com/css2?family=${fontUrlPart.replace(/ /g, '+')}&display=swap`;
-        
-        if (linkEl) {
-            if(linkEl.href !== newHref) linkEl.href = newHref;
-        } else {
-            linkEl = document.createElement('link');
-            linkEl.id = id;
-            linkEl.rel = 'stylesheet';
-            linkEl.href = newHref;
-            document.head.appendChild(linkEl);
-        }
-    };
-    
-    // De-duplicate font loading
-    const requiredFonts = new Set([theme.fonts.sans, theme.fonts.serif]);
-    let fontCounter = 0;
-    requiredFonts.forEach(fontName => {
-        loadFont(fontName, `dynamic-font-${fontCounter++}`);
-    });
+  // 3. Apply Fonts
+  document.body.style.fontFamily = `'${theme.fonts.sans}', sans-serif`;
+  document.querySelectorAll('.font-serif').forEach(el => {
+    (el as HTMLElement).style.fontFamily = `'${theme.fonts.serif}', serif`;
+  });
+
+  // 4. Load Google Fonts
+  const loadFont = (fontName: string, id: string) => {
+    const fontUrlPart = FONT_URL_MAP[fontName];
+    if (!fontUrlPart) return;
+
+    let linkEl = document.getElementById(id) as HTMLLinkElement | null;
+    const newHref = `https://fonts.googleapis.com/css2?family=${fontUrlPart.replace(/ /g, '+')}&display=swap`;
+
+    if (linkEl) {
+      if (linkEl.href !== newHref) linkEl.href = newHref;
+    } else {
+      linkEl = document.createElement('link');
+      linkEl.id = id;
+      linkEl.rel = 'stylesheet';
+      linkEl.href = newHref;
+      document.head.appendChild(linkEl);
+    }
+  };
+
+  // De-duplicate font loading
+  const requiredFonts = new Set([theme.fonts.sans, theme.fonts.serif]);
+  let fontCounter = 0;
+  requiredFonts.forEach(fontName => {
+    loadFont(fontName, `dynamic-font-${fontCounter++}`);
+  });
 };
 
 export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<ThemeSettings>(DEFAULT_THEME);
   // Start with loading false - use cached/default data immediately
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
 
   // Load theme from database or localStorage (silent, no loading state)
   const fetchTheme = useCallback(async () => {
@@ -129,12 +129,13 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           .eq('id', 1)
           .maybeSingle();
 
-        if (!error && data?.settings_data?.theme) {
+        const settings = data?.settings_data as any;
+        if (!error && settings?.theme) {
           // Merge with default to ensure new properties are not missing
-          setTheme({ ...DEFAULT_THEME, ...data.settings_data.theme });
+          setTheme({ ...DEFAULT_THEME, ...settings.theme });
           // Save to localStorage for next time
           try {
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data.settings_data.theme));
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(settings.theme));
           } catch (e) {
             console.error("Failed to save theme to localStorage", e);
           }
@@ -158,14 +159,12 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   // Apply theme whenever it changes
   useEffect(() => {
-    if (!loading) {
-      applyTheme(theme);
-    }
-  }, [theme, loading]);
+    applyTheme(theme);
+  }, [theme]);
 
   const updateTheme = async (newTheme: ThemeSettings) => {
     setTheme(newTheme);
-    
+
     // Save to localStorage immediately for fast UI update
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newTheme));
@@ -184,7 +183,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           .maybeSingle();
 
         const updatedSettings = {
-          ...(currentSettings?.settings_data || {}),
+          ...(currentSettings?.settings_data as Record<string, any> || {}),
           theme: newTheme,
         };
 
@@ -192,7 +191,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         const { error } = await supabase
           .from('app_settings')
           .upsert(
-            { id: 1, settings_data: updatedSettings },
+            { id: 1, settings_data: updatedSettings } as any,
             { onConflict: 'id' }
           );
 
@@ -204,7 +203,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       }
     }
   };
-  
+
   const availableFonts = Object.keys(FONT_URL_MAP);
 
   const value = { theme, updateTheme, availableFonts };

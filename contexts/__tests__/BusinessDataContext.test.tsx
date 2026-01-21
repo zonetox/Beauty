@@ -15,7 +15,7 @@ jest.mock('../AdminContext', () => {
   return {
     AdminContext: React.createContext(null),
     useAdminAuth: () => ({ currentUser: null }),
-    useAdmin: () => ({ 
+    useAdmin: () => ({
       logAdminAction: jest.fn(),
       currentUser: null,
     }),
@@ -28,14 +28,14 @@ const createMockQueryBuilderForTest = (defaultData: any[] = [], defaultCount: nu
   // Include all chainable methods used in BusinessDataContext
   const chainableMethods = [
     'eq', 'neq', 'gt', 'gte', 'lt', 'lte',
-    'like', 'ilike', 'is', 'in', 'contains', 
+    'like', 'ilike', 'is', 'in', 'contains',
     'order', 'limit', 'range', 'upsert'
   ];
   chainableMethods.forEach(method => {
     builder[method] = jest.fn().mockReturnValue(builder);
   });
   // select can take options like { count: 'exact' }
-  builder.select = jest.fn((columns?: string, options?: any) => {
+  builder.select = jest.fn((_columns?: string, options?: any) => {
     builder._count = options?.count === 'exact' ? (defaultCount ?? defaultData.length) : null;
     return builder;
   });
@@ -77,7 +77,7 @@ jest.mock('../../lib/supabaseClient', () => {
         }
         return createMockQueryBuilderForTest([]);
       }),
-      rpc: jest.fn((fnName: string, params?: any) => {
+      rpc: jest.fn((fnName: string, _params?: any) => {
         // Mock different RPC functions
         if (fnName === 'get_business_count') {
           return Promise.resolve({ data: 0, error: null });
@@ -101,18 +101,18 @@ describe('BusinessDataContext', () => {
     // Mock all queries that fetchAllPublicData will call
     const mockFrom = supabase.from as jest.Mock;
     const mockRpc = supabase.rpc as jest.Mock;
-    
+
     // Mock businesses query - need to return builder with all methods
     const mockBusinessBuilder = createMockQueryBuilderForTest([], 0);
     mockFrom.mockReturnValueOnce(mockBusinessBuilder); // for fetchBusinesses (first call)
     mockFrom.mockReturnValueOnce(mockBusinessBuilder); // for markers (second call)
-    
+
     // Mock blog queries
     const mockBlogBuilder = createMockQueryBuilderForTest([]);
     mockFrom.mockReturnValueOnce(mockBlogBuilder); // blog_posts
     mockFrom.mockReturnValueOnce(mockBlogBuilder); // blog_categories
     mockFrom.mockReturnValueOnce(mockBlogBuilder); // membership_packages
-    
+
     // Mock RPC calls
     mockRpc.mockResolvedValueOnce({ data: 0, error: null }); // get_business_count
 
@@ -150,7 +150,7 @@ describe('BusinessDataContext', () => {
 
     // Mock the chain to return data with all methods
     const mockBuilder = createMockQueryBuilderForTest(mockBusinesses, mockBusinesses.length);
-    
+
     const mockFrom = supabase.from as jest.Mock;
     mockFrom.mockReturnValue(mockBuilder);
 
@@ -171,18 +171,18 @@ describe('BusinessDataContext', () => {
     // Mock search_businesses RPC to return some data
     const mockSearchData = [{ id: 1, name: 'Test Business' }];
     const mockRpcFn = supabase.rpc as jest.Mock;
-    
+
     // First call: search_businesses
     mockRpcFn.mockResolvedValueOnce({ data: mockSearchData, error: null });
-    
+
     // Mock businesses query for fetching full data after search
     const mockFrom = supabase.from as jest.Mock;
     const mockBusinessBuilder = createMockQueryBuilderForTest(mockSearchData, mockSearchData.length);
     mockFrom.mockReturnValueOnce(mockBusinessBuilder);
-    
+
     // Second call: get_business_count
     mockRpcFn.mockResolvedValueOnce({ data: mockSearchData.length, error: null });
-    
+
     // Third call: search_businesses for count (if search text provided)
     mockRpcFn.mockResolvedValueOnce({ data: mockSearchData, error: null });
 

@@ -2,12 +2,12 @@
 // Tuân thủ Master Plan v1.1
 // 100% hoàn thiện - không placeholder
 
-import React from 'react';
+
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import ProtectedRoute from '../ProtectedRoute';
 import { User } from '@supabase/supabase-js';
-import * as UserSessionContextModule from '../../contexts/UserSessionContext';
+
 
 // Mock useUserSession hook
 const mockUseUserSession = jest.fn();

@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { safeFetch, prioritySafeFetch } from '../lib/safeFetch.ts';
+import { prioritySafeFetch } from '../lib/safeFetch.ts';
 import { cacheManager, CACHE_KEYS, CACHE_TTL } from '../lib/cache.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { snakeToCamel } from '../lib/utils.ts';

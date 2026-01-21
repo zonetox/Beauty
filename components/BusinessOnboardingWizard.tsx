@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabaseClient.ts';
 import { useUserSession } from '../contexts/UserSessionContext.tsx';
@@ -8,8 +7,8 @@ import { BusinessCategory, MembershipTier } from '../types.ts';
 // D3.1 FIX: Fix onboarding wizard edge cases - validation, error handling, user feedback
 const BusinessOnboardingWizard: React.FC = () => {
     const { currentUser, refreshProfile } = useUserSession();
-    const navigate = useNavigate();
-    const [step, setStep] = useState(1);
+    // const navigate = useNavigate(); // Unused
+    // const [step, setStep] = useState(1); // Unused
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -155,7 +154,7 @@ const BusinessOnboardingWizard: React.FC = () => {
             // D3.4 FIX: Always show error feedback to user
             const errorMessage = error.message || "Failed to create business. Please try again.";
             toast.error(errorMessage);
-            
+
             // D3.1 FIX: Set form-level error for better UX
             setErrors({ submit: errorMessage });
         } finally {
@@ -189,9 +188,8 @@ const BusinessOnboardingWizard: React.FC = () => {
                                     required
                                     value={formData.name}
                                     onChange={handleChange}
-                                    className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm ${
-                                        errors.name ? 'border-red-500' : 'border-gray-300'
-                                    }`}
+                                    className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm ${errors.name ? 'border-red-500' : 'border-gray-300'
+                                        }`}
                                 />
                                 {errors.name && (
                                     <p className="mt-1 text-sm text-red-600">{errors.name}</p>
@@ -232,9 +230,8 @@ const BusinessOnboardingWizard: React.FC = () => {
                                     required
                                     value={formData.phone}
                                     onChange={handleChange}
-                                    className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm ${
-                                        errors.phone ? 'border-red-500' : 'border-gray-300'
-                                    }`}
+                                    className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm ${errors.phone ? 'border-red-500' : 'border-gray-300'
+                                        }`}
                                 />
                                 {errors.phone && (
                                     <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
@@ -255,9 +252,8 @@ const BusinessOnboardingWizard: React.FC = () => {
                                     placeholder="e.g. Ho Chi Minh"
                                     value={formData.city}
                                     onChange={handleChange}
-                                    className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm ${
-                                        errors.city ? 'border-red-500' : 'border-gray-300'
-                                    }`}
+                                    className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm ${errors.city ? 'border-red-500' : 'border-gray-300'
+                                        }`}
                                 />
                                 {errors.city && (
                                     <p className="mt-1 text-sm text-red-600">{errors.city}</p>
@@ -277,9 +273,8 @@ const BusinessOnboardingWizard: React.FC = () => {
                                     required
                                     value={formData.address}
                                     onChange={handleChange}
-                                    className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm ${
-                                        errors.address ? 'border-red-500' : 'border-gray-300'
-                                    }`}
+                                    className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm ${errors.address ? 'border-red-500' : 'border-gray-300'
+                                        }`}
                                 />
                                 {errors.address && (
                                     <p className="mt-1 text-sm text-red-600">{errors.address}</p>
