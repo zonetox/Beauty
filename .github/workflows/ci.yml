@@ -36,12 +36,12 @@ jobs:
       # Bước 4: Type check
       - name: Type check
         run: npm run type-check
-        continue-on-error: true   # Không dừng nếu có lỗi type (có thể fix sau)
+        # STRICT MODE: Fail if types are wrong (as requested)
       
       # Bước 5: Lint
       - name: Lint
         run: npm run lint
-        continue-on-error: true   # Không dừng nếu có lỗi lint (có thể fix sau)
+        # STRICT MODE: Fail if linting fails
       
       # Bước 6: Run unit tests
       - name: Run unit tests

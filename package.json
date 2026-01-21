@@ -18,6 +18,7 @@
     "test:all:e2e": "npm run test:all && npm run test:e2e",
     "check:all": "node scripts/run-all-checks.js",
     "type-check": "tsc --noEmit",
+    "update-types": "npx supabase gen types typescript --project-id \"fdklazlcbxaiapsnnbqq\" --schema public > types/supabase.ts",
     "type-check:strict": "tsc --noEmit --project tsconfig.strict.json",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
