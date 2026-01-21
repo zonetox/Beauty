@@ -1,7 +1,7 @@
 
 
 import React, { lazy, Suspense, useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation, Outlet } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { QueryClientProvider } from '@tanstack/react-query';
 
@@ -115,6 +115,7 @@ const AccountPageRouter: React.FC = () => {
 
             return () => clearTimeout(timeoutId);
         }
+        return undefined;
     }, [state, roleLoading]);
 
     // Reset timeout when loading completes
@@ -372,7 +373,6 @@ const App: React.FC = () => {
                             reverseOrder={false}
                             toastOptions={{
                                 duration: 3000,
-                                maxToasts: 3,
                                 style: {
                                     maxWidth: '500px',
                                 },
@@ -394,8 +394,9 @@ const App: React.FC = () => {
 // Auth Gate: Shows unified loading screen while auth is being checked
 // Prevents multiple loading screens from appearing
 const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { state } = useAuth();
+    const { state, logout } = useAuth();
     const { isInitializing, setInitializing } = useAppInitialization();
+    const [showBypassMenu, setShowBypassMenu] = useState(false);
 
     // Track initialization state - mark as complete when auth resolves
     useEffect(() => {
@@ -406,10 +407,61 @@ const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             }, 300);
             return () => clearTimeout(timer);
         }
+        return undefined;
     }, [state, isInitializing, setInitializing]);
+
+    // Safety timeout for the initialization screen UI
+    useEffect(() => {
+        if (isInitializing || state === 'loading') {
+            const timer = setTimeout(() => {
+                setShowBypassMenu(true);
+            }, 12000); // 12 seconds - slightly more than AuthProvider timeout
+            return () => clearTimeout(timer);
+        } else {
+            setShowBypassMenu(false);
+        }
+        return undefined;
+    }, [isInitializing, state]);
+
+    const handleBypass = () => {
+        setInitializing(false);
+    };
+
+    const handleResetAuth = async () => {
+        await logout();
+        window.location.reload();
+    };
 
     // Show unified loading screen during initialization or auth loading
     if (state === 'loading' || isInitializing) {
+        if (showBypassMenu) {
+            return (
+                <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4 text-center">
+                    <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+                        <svg className="w-10 h-10 text-primary animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <h2 className="text-2xl font-bold text-neutral-dark mb-2">Quá trình khởi tạo đang mất nhiều thời gian</h2>
+                    <p className="text-gray-500 max-w-md mb-8">Hệ thống đang cố gắng kết nối với dịch vụ xác thực. Bạn có muốn tiếp tục chờ hoặc truy cập trang web ngay?</p>
+
+                    <div className="flex flex-col sm:flex-row gap-4 w-full max-w-xs">
+                        <button
+                            onClick={handleBypass}
+                            className="bg-primary text-white px-6 py-3 rounded-xl font-bold shadow-premium hover:bg-primary-dark transition-all"
+                        >
+                            Tiếp tục truy cập
+                        </button>
+                        <button
+                            onClick={handleResetAuth}
+                            className="bg-white text-neutral-dark border border-gray-200 px-6 py-3 rounded-xl font-bold hover:bg-gray-50 transition-all"
+                        >
+                            Thử lại / Đăng xuất
+                        </button>
+                    </div>
+
+                    <p className="mt-8 text-xs text-gray-400">Gợi ý: Nếu vấn đề tiếp tục, hãy thử xóa cache trình duyệt.</p>
+                </div>
+            );
+        }
         return <AppInitializationScreen message="Đang khởi tạo ứng dụng..." />;
     }
 
