@@ -2,7 +2,7 @@
 // Displays user profile, favorites, appointments, reviews
 
 import React, { useState, useEffect } from 'react';
-import { useUserSession } from '../contexts/UserSessionContext.tsx';
+import { useAuth } from '../providers/AuthProvider.tsx';
 import { useBusinessData } from '../contexts/BusinessDataContext.tsx';
 import SEOHead from '../components/SEOHead.tsx';
 import { Link, useNavigate } from 'react-router-dom';
@@ -15,7 +15,9 @@ import { useAppInitialization } from '../contexts/AppInitializationContext.tsx';
 type AccountTab = 'profile' | 'favorites';
 
 const UserAccountPage: React.FC = () => {
-    const { currentUser, profile, loading, isFavorite } = useUserSession();
+    const { user: currentUser, profile, state } = useAuth();
+    const loading = state === 'loading';
+    const isFavorite = (businessId: number) => profile?.favorites?.includes(businessId) ?? false;
     const { businesses } = useBusinessData();
     const navigate = useNavigate();
     const { isInitializing } = useAppInitialization();
@@ -178,7 +180,7 @@ const UserAccountPage: React.FC = () => {
 
     return (
         <>
-            <SEOHead 
+            <SEOHead
                 title="Tài khoản của tôi | 1Beauty.asia"
                 description="Quản lý thông tin tài khoản, doanh nghiệp yêu thích và lịch hẹn của bạn."
             />
@@ -186,28 +188,26 @@ const UserAccountPage: React.FC = () => {
                 <div className="container mx-auto px-4">
                     <h1 className="text-4xl font-bold font-serif text-neutral-dark mb-2">Tài khoản của tôi</h1>
                     <p className="text-gray-500 mb-8">Xin chào, <strong className="text-primary">{profile.fullName || currentUser.user_metadata?.full_name || currentUser.email}</strong>!</p>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                         <aside className="md:col-span-1">
                             <div className="bg-white rounded-lg shadow-md p-4">
                                 <nav className="space-y-2">
                                     <button
                                         onClick={() => setActiveTab('profile')}
-                                        className={`w-full text-left px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                                            activeTab === 'profile'
-                                                ? 'bg-primary text-white'
-                                                : 'text-neutral-dark hover:bg-primary/10'
-                                        }`}
+                                        className={`w-full text-left px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'profile'
+                                            ? 'bg-primary text-white'
+                                            : 'text-neutral-dark hover:bg-primary/10'
+                                            }`}
                                     >
                                         Thông tin tài khoản
                                     </button>
                                     <button
                                         onClick={() => setActiveTab('favorites')}
-                                        className={`w-full text-left px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                                            activeTab === 'favorites'
-                                                ? 'bg-primary text-white'
-                                                : 'text-neutral-dark hover:bg-primary/10'
-                                        }`}
+                                        className={`w-full text-left px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'favorites'
+                                            ? 'bg-primary text-white'
+                                            : 'text-neutral-dark hover:bg-primary/10'
+                                            }`}
                                     >
                                         Yêu thích ({favoriteBusinesses.length})
                                     </button>

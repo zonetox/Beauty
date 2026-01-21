@@ -1,6 +1,6 @@
 
 
-import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback, useRef } from 'react';
+import { createContext, useState, useEffect, useContext, ReactNode, useCallback, useRef } from 'react';
 import { Business, BusinessBlogPost, Review, ReviewStatus, BusinessAnalytics, Appointment, Order, OrderStatus, AppointmentStatus, Profile, Deal, AnalyticsDataPoint, TrafficSource } from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { useUserSession } from './UserSessionContext.tsx';
@@ -67,10 +67,10 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
   // Use useContext directly instead of hooks to avoid initialization order issues
   const publicDataContext = useContext(PublicDataContext);
   const businesses = publicDataContext?.businesses || [];
-  const updateBusiness = publicDataContext?.updateBusiness || (async () => {});
-  const addDeal = publicDataContext?.addDeal || (async () => {});
-  const updateDeal = publicDataContext?.updateDeal || (async () => {});
-  const deleteDeal = publicDataContext?.deleteDeal || (async () => {});
+  const updateBusiness = publicDataContext?.updateBusiness || (async () => { });
+  const addDeal = publicDataContext?.addDeal || (async () => { });
+  const updateDeal = publicDataContext?.updateDeal || (async () => { });
+  const deleteDeal = publicDataContext?.deleteDeal || (async () => { });
   const packages = publicDataContext?.packages || [];
   // Removed useAdmin to avoid circular dependency - admin notifications handled at higher level
 
@@ -100,7 +100,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
   // --- DATA FETCHING (from old BusinessBlogDataContext) ---
   // Lazy load: only fetch when user has a business (business dashboard)
   const hasFetchedRef = useRef(false);
-  
+
   const fetchAllData = useCallback(async () => {
     // Only fetch if user has a business
     // IMPORTANT: Skip if user is admin (admin doesn't need business dashboard data)
@@ -113,7 +113,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       setAnalyticsLoading(false);
       return;
     }
-    
+
     // Additional check: If user is admin, don't load business dashboard data
     // Admin should use admin panel, not business dashboard
     // This prevents double loading when admin user also has businessId
@@ -190,46 +190,46 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
         const businessReviews = reviewsRes.data.filter((r: any) => r.business_id === businessId);
         const businessAppointments = appointmentsRes.data.filter((a: any) => a.business_id === businessId);
         const businessOrders = ordersRes.data.filter((o: any) => o.business_id === businessId);
-        
+
         // Get page views for this business (from page_views table where page_id = businessId or page_type = 'business')
-        const businessPageViews = pageViewsRes.data?.filter((pv: any) => 
-          (pv.page_type === 'business' && pv.page_id === String(businessId)) || 
+        const businessPageViews = pageViewsRes.data?.filter((pv: any) =>
+          (pv.page_type === 'business' && pv.page_id === String(businessId)) ||
           (pv.business_id === businessId)
         ) || [];
-        
+
         // Get conversions for this business
         const businessConversions = conversionsRes.data?.filter((c: any) => c.business_id === businessId) || [];
-        
+
         // Calculate time series for last 30 days
         const timeSeries: AnalyticsDataPoint[] = [];
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        
+
         for (let i = 29; i >= 0; i--) {
           const date = new Date();
           date.setDate(date.getDate() - i);
           date.setHours(0, 0, 0, 0);
           const dateStr = date.toISOString().split('T')[0];
-          
+
           // Count page views for this day
           const dayPageViews = businessPageViews.filter((pv: any) => {
             const viewDate = new Date(pv.viewed_at);
             viewDate.setHours(0, 0, 0, 0);
             return viewDate.getTime() === date.getTime();
           }).length;
-          
+
           // Count conversions by type for this day
           const dayConversions = businessConversions.filter((c: any) => {
             const convDate = new Date(c.converted_at);
             convDate.setHours(0, 0, 0, 0);
             return convDate.getTime() === date.getTime();
           });
-          
+
           const dayCallClicks = dayConversions.filter((c: any) => c.conversion_type === 'call').length;
           const dayContactClicks = dayConversions.filter((c: any) => c.conversion_type === 'contact').length;
           const dayBookingClicks = dayConversions.filter((c: any) => c.conversion_type === 'booking').length;
-          const dayCtaClicks = dayConversions.filter((c: any) => c.conversion_type === 'click').length;
-          
+          // const dayCtaClicks = dayConversions.filter((c: any) => c.conversion_type === 'click').length;
+
           timeSeries.push({
             date: dateStr,
             pageViews: dayPageViews || 0,
@@ -238,7 +238,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
             directionClicks: 0, // Not tracked yet
           });
         }
-        
+
         // Calculate traffic sources (simplified)
         const totalInteractions = businessReviews.length + businessAppointments.length + businessOrders.length;
         const trafficSources: TrafficSource[] = [
@@ -247,7 +247,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
           { source: 'Blog', percentage: totalInteractions > 0 ? Math.round((businessOrders.length / totalInteractions) * 100) : 0 },
           { source: 'Direct Search', percentage: totalInteractions > 0 ? Math.max(0, 100 - (businessReviews.length + businessAppointments.length + businessOrders.length) / totalInteractions * 100) : 0 },
         ];
-        
+
         return {
           businessId,
           timeSeries,
@@ -255,7 +255,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
           averageTimeOnPage: 0, // Not tracked in current schema
         };
       });
-      
+
       setAnalyticsData(analytics);
     }
 
@@ -296,8 +296,8 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
 
   // --- LOGIC (copied from old BusinessBlogDataContext) ---
   const addPost = async (newPostData: Omit<BusinessBlogPost, 'id' | 'slug' | 'createdDate' | 'viewCount'>) => {
-    if (!isSupabaseConfigured) { 
-      toast.error("Preview Mode: Cannot add post."); 
+    if (!isSupabaseConfigured) {
+      toast.error("Preview Mode: Cannot add post.");
       throw new Error("Preview Mode: Cannot add post.");
     }
     try {
@@ -320,10 +320,10 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       throw error;
     }
   };
-  
+
   const updatePost = async (updatedPost: BusinessBlogPost) => {
-    if (!isSupabaseConfigured) { 
-      toast.error("Preview Mode: Cannot update post."); 
+    if (!isSupabaseConfigured) {
+      toast.error("Preview Mode: Cannot update post.");
       throw new Error("Preview Mode: Cannot update post.");
     }
     try {
@@ -353,10 +353,10 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       throw error;
     }
   };
-  
+
   const deletePost = async (postId: string) => {
-    if (!isSupabaseConfigured) { 
-      toast.error("Preview Mode: Cannot delete post."); 
+    if (!isSupabaseConfigured) {
+      toast.error("Preview Mode: Cannot delete post.");
       throw new Error("Preview Mode: Cannot delete post.");
     }
     try {
@@ -389,7 +389,11 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
   const getPostsByBusinessId = (businessId: number) => posts.filter(p => p.businessId === businessId);
   const incrementViewCount = async (postId: string) => {
     if (!isSupabaseConfigured) return;
-    /* ... implementation unchanged ... */
+    try {
+      await supabase.rpc('increment_business_blog_view_count', { p_post_id: postId });
+    } catch (e) {
+      console.error('Failed to increment view count', e);
+    }
   };
   const addReview = async (reviewData: { business_id: number; rating: number; comment: string; userProfile: Profile }) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add review."); throw new Error("Preview Mode"); }
@@ -414,8 +418,8 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     }
   };
   const addReply = async (reviewId: string, replyContent: string) => {
-    if (!isSupabaseConfigured) { 
-      toast.error("Preview Mode: Cannot add reply."); 
+    if (!isSupabaseConfigured) {
+      toast.error("Preview Mode: Cannot add reply.");
       throw new Error("Preview Mode: Cannot add reply.");
     }
     try {
@@ -434,8 +438,8 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     }
   };
   const toggleReviewVisibility = async (reviewId: string) => {
-    if (!isSupabaseConfigured) { 
-      toast.error("Preview Mode: Cannot change review visibility."); 
+    if (!isSupabaseConfigured) {
+      toast.error("Preview Mode: Cannot change review visibility.");
       throw new Error("Preview Mode: Cannot change review visibility.");
     }
     try {
@@ -474,8 +478,8 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
   };
 
   const updateAppointmentStatus = async (appointmentId: string, status: AppointmentStatus) => {
-    if (!isSupabaseConfigured) { 
-      toast.error("Preview Mode: Cannot update appointment status."); 
+    if (!isSupabaseConfigured) {
+      toast.error("Preview Mode: Cannot update appointment status.");
       throw new Error("Preview Mode: Cannot update appointment status.");
     }
     try {

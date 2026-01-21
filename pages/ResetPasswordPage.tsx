@@ -2,15 +2,15 @@
 // Tuân thủ ARCHITECTURE.md, sử dụng schema/RLS/contexts hiện có
 // 100% hoàn thiện, không placeholder, chuẩn SEO cơ bản
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useUserSession } from '../contexts/UserSessionContext.tsx';
+import { useAuth } from '../providers/AuthProvider.tsx';
 import SEOHead from '../components/SEOHead.tsx';
 
 type PageState = 'form' | 'success';
 
 const ResetPasswordPage: React.FC = () => {
-    const { resetPassword } = useUserSession();
+    const { resetPassword } = useAuth();
 
     const [pageState, setPageState] = useState<PageState>('form');
     const [password, setPassword] = useState('');
@@ -46,7 +46,7 @@ const ResetPasswordPage: React.FC = () => {
     const renderContent = () => {
         switch (pageState) {
             case 'success':
-                 return (
+                return (
                     <>
                         <h1 className="text-2xl font-bold text-center text-green-600 font-serif">Password Updated!</h1>
                         <p className="text-center text-gray-600 mt-4">
@@ -114,7 +114,7 @@ const ResetPasswordPage: React.FC = () => {
 
     return (
         <>
-            <SEOHead 
+            <SEOHead
                 title={seoTitle}
                 description={seoDescription}
                 keywords="đặt lại mật khẩu, reset password, quên mật khẩu"

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useBusinessAuth } from '../contexts/BusinessContext.tsx';
-import { useUserSession } from '../contexts/UserSessionContext.tsx';
+import { useAuth } from '../providers/AuthProvider.tsx';
 import { useStaff } from '../contexts/StaffContext.tsx';
-import { BusinessStaff, StaffPermissions } from '../types.ts';
+import { StaffPermissions } from '../types.ts';
 
 /**
  * Hook to check if current user has staff permissions for the current business
@@ -10,9 +10,9 @@ import { BusinessStaff, StaffPermissions } from '../types.ts';
  */
 export const useStaffPermissions = (): StaffPermissions => {
   const { currentBusiness } = useBusinessAuth();
-  const { currentUser } = useUserSession();
+  const { user: currentUser } = useAuth();
   const { getStaffPermissions, isStaffMember } = useStaff();
-  
+
   const [permissions, setPermissions] = useState<StaffPermissions>({
     canEditLandingPage: false,
     canEditBlog: false,
@@ -41,8 +41,8 @@ export const useStaffPermissions = (): StaffPermissions => {
       }
 
       // Check if user is business owner
-      const isOwner = currentBusiness.owner_id === currentUser.id || 
-                     (currentBusiness as any).ownerId === currentUser.id;
+      const isOwner = currentBusiness.owner_id === currentUser.id ||
+        (currentBusiness as any).ownerId === currentUser.id;
 
       if (isOwner) {
         // Business owners have all permissions
@@ -61,7 +61,7 @@ export const useStaffPermissions = (): StaffPermissions => {
 
       // Check if user is staff member
       const isStaff = await isStaffMember(currentUser.id, currentBusiness.id);
-      
+
       if (!isStaff) {
         setPermissions({
           canEditLandingPage: false,
@@ -78,7 +78,7 @@ export const useStaffPermissions = (): StaffPermissions => {
 
       // Get staff permissions
       const staffPerms = await getStaffPermissions(currentUser.id, currentBusiness.id);
-      
+
       if (!staffPerms) {
         setPermissions({
           canEditLandingPage: false,

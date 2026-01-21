@@ -210,9 +210,21 @@ const AccountPageRouter: React.FC = () => {
         return <UserAccountPage />;
     }
 
+    // Role resolution is complete, but verify we have profile data before routing
+    if (!profile && !roleLoading && state === 'authenticated') {
+        return (
+            <div className="flex items-center justify-center h-[50vh]">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-lg font-semibold">Đang chuẩn bị hồ sơ...</p>
+                </div>
+            </div>
+        );
+    }
+
     // Route based on resolved role - NO DEFAULT REDIRECT
     // Only route to pages that actually exist and are implemented
-    if ((role === 'business_owner' || role === 'business_staff') && profile.businessId) {
+    if (profile && (role === 'business_owner' || role === 'business_staff') && profile.businessId) {
         // Business owner/staff → business dashboard (fully implemented)
         return <UserBusinessDashboardPage />;
     }
@@ -257,12 +269,12 @@ const PublicDataLayout: React.FC = () => {
 // App content (rendered after auth is resolved)
 const AppContent: React.FC = () => {
     const { isInitializing } = useAppInitialization();
-    
+
     // Show unified loading screen during initialization
     if (isInitializing) {
         return <AppInitializationScreen message="Đang khởi tạo ứng dụng..." />;
     }
-    
+
     return (
         <ErrorLoggerProvider>
             <ThemeProvider>
@@ -287,7 +299,7 @@ const AppContent: React.FC = () => {
                                                 </ProtectedRoute>
                                             } />
                                         </Route>
-                                        
+
                                         {/* Public pages that DON'T need public data */}
                                         <Route path="about" element={<AboutPage />} />
                                         <Route path="contact" element={<ContactPage />} />
@@ -355,17 +367,17 @@ const App: React.FC = () => {
                     <AppInitializationProvider>
                         <WebVitalsTracker />
                         <PageTracking />
-                        <Toaster 
-                          position="top-center" 
-                          reverseOrder={false}
-                          toastOptions={{
-                            duration: 3000,
-                            maxToasts: 3,
-                            style: {
-                              maxWidth: '500px',
-                            },
-                          }}
-                          gutter={8}
+                        <Toaster
+                            position="top-center"
+                            reverseOrder={false}
+                            toastOptions={{
+                                duration: 3000,
+                                maxToasts: 3,
+                                style: {
+                                    maxWidth: '500px',
+                                },
+                            }}
+                            gutter={8}
                         />
                         <AuthProvider>
                             <AuthGate>
