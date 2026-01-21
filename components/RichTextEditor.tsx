@@ -20,7 +20,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
             const toolbarOptions = [
                 [{ 'header': [2, 3, false] }], // h2, h3
                 ['bold', 'italic', 'underline'],
-                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
                 ['link', 'image'],
                 ['blockquote', 'code-block'],
                 ['clean']
@@ -39,7 +39,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
             quill.clipboard.dangerouslyPasteHTML(value || '');
 
             // Add listener for text changes
-            quill.on('text-change', (delta: any, oldDelta: any, source: string) => {
+            quill.on('text-change', (_delta: any, _oldDelta: any, source: string) => {
                 if (source === 'user') {
                     onChange(quill.root.innerHTML);
                 }
@@ -49,7 +49,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
         // Cleanup function to destroy the Quill instance
         return () => {
             if (quillRef.current && quillRef.current.container) {
-                 quillRef.current.container.innerHTML = ''; // Clean up DOM
+                quillRef.current.container.innerHTML = ''; // Clean up DOM
             }
             quillRef.current = null;
         };

@@ -56,7 +56,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
         if (!selectedService || !selectedDate || !selectedTime) return;
 
         setIsSubmitting(true);
-        
+
         const dateStr = selectedDate instanceof Date ? selectedDate.toISOString().split('T')[0] : (selectedDate ?? '');
         if (!dateStr) {
             setIsSubmitting(false);
@@ -79,9 +79,9 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
 
         // Simulate async operation
         await new Promise(resolve => setTimeout(resolve, 1000));
-        
+
         addAppointment(newAppointment);
-        
+
         // Track conversion
         trackConversion('booking', business.id, 'landing_page', {
             serviceId: selectedService.id,
@@ -89,23 +89,23 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
             date: dateStr,
             timeSlot: ensureString(selectedTime),
         }, currentUser?.id);
-        
+
         setIsSubmitting(false);
         setStep(4); // Move to confirmation step
     };
-    
+
     // --- Time Slot Generation Logic ---
     const generateTimeSlots = (date: Date): string[] => {
         if (!selectedService) return [];
-        
+
         const serviceDuration = ensureNumber(selectedService?.duration_minutes, 60);
         const slots: string[] = [];
         const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' });
-        
-        const workingHoursEntry = Object.entries(business?.workingHours || {}).find(([day]) => 
+
+        const workingHoursEntry = Object.entries(business?.workingHours || {}).find(([day]) =>
             day.toLowerCase().includes(dayOfWeek.toLowerCase())
         );
-        
+
         let startTime: string, endTime: string;
         if (workingHoursEntry) {
             const hours = workingHoursEntry[1];
@@ -124,7 +124,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
             startTime = '09:00';
             endTime = '18:00';
         }
-        
+
         const timeArray = [startTime, endTime].map(time => {
             const parts = time.split(':');
             const h = parts[0] ?? '9';
@@ -133,10 +133,10 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
             d.setHours(parseInt(h, 10), parseInt(m, 10), 0, 0);
             return d;
         });
-        
+
         const start = timeArray[0] ?? new Date();
         const end = timeArray[1] ?? new Date(start.getTime() + 8 * 60 * 60 * 1000);
-        
+
         const dateStr = date.toISOString().split('T')[0];
         const existingAppointmentsOnDate = ensureArray(appointments).filter(
             appt => appt?.businessId === business.id && appt?.date === dateStr
@@ -146,7 +146,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
         while (currentTime < end) {
             const slotTime = new Date(currentTime);
             const slotEnd = new Date(slotTime.getTime() + serviceDuration * 60000);
-            
+
             const isBooked = existingAppointmentsOnDate.some(appt => {
                 const apptTime = new Date(`${appt?.date ?? dateStr}T${appt?.timeSlot ?? '00:00'}`);
                 const apptService = ensureArray(business?.services).find(s => s?.id === appt?.serviceId);
@@ -161,12 +161,12 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
             if (!isBooked && !isPast) {
                 slots.push(slotTime.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
             }
-            
+
             currentTime = new Date(currentTime.getTime() + 30 * 60000); // Generate slots every 30 mins
         }
         return slots;
     };
-    
+
     const timeSlots = selectedDate ? generateTimeSlots(selectedDate) : [];
 
     const resetBooking = () => {
@@ -186,7 +186,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
                     <h2 className="text-xl font-bold font-serif text-neutral-dark">Đặt lịch tại {business.name}</h2>
                     <button onClick={resetBooking} className="text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
                 </header>
-                
+
                 <main className="p-6 overflow-y-auto">
                     {step < 4 && <StepIndicator current={step} total={3} />}
 
@@ -195,9 +195,9 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
                         <div>
                             <h3 className="font-semibold text-lg mb-4">1. Chọn dịch vụ</h3>
                             <div className="space-y-3 max-h-96 overflow-y-auto">
-                                {business.services.map(service => (
-                                    <button 
-                                        key={service.id} 
+                                {ensureArray(business.services).map(service => (
+                                    <button
+                                        key={service.id}
                                         onClick={() => { setSelectedServiceId(service.id); setStep(2); }}
                                         className="w-full text-left p-4 border rounded-lg hover:border-primary hover:bg-primary/5 transition-colors flex items-center gap-4"
                                     >
@@ -216,8 +216,8 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
                             </div>
                         </div>
                     )}
-                    
-                     {/* Step 2: Select Date & Time */}
+
+                    {/* Step 2: Select Date & Time */}
                     {step === 2 && (
                         <div>
                             <button onClick={() => setStep(1)} className="text-sm text-secondary font-semibold mb-4">&larr; Quay lại chọn dịch vụ</button>
@@ -240,8 +240,8 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
                                     </div>
                                 </div>
                                 <div>
-                                     <p className="font-medium text-center mb-2">Giờ</p>
-                                     {selectedDate ? (
+                                    <p className="font-medium text-center mb-2">Giờ</p>
+                                    {selectedDate ? (
                                         timeSlots.length > 0 ? (
                                             <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
                                                 {timeSlots.map(time => (
@@ -253,19 +253,19 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
                                         ) : (
                                             <p className="text-center text-sm text-gray-500">Không có lịch trống trong ngày này.</p>
                                         )
-                                     ) : (
-                                         <p className="text-center text-sm text-gray-500">Vui lòng chọn ngày.</p>
-                                     )}
+                                    ) : (
+                                        <p className="text-center text-sm text-gray-500">Vui lòng chọn ngày.</p>
+                                    )}
                                 </div>
                             </div>
-                             {selectedTime && (
+                            {selectedTime && (
                                 <div className="text-right mt-6">
                                     <button onClick={() => setStep(3)} className="px-6 py-2 bg-primary text-white rounded-md font-semibold">Tiếp tục</button>
                                 </div>
                             )}
                         </div>
                     )}
-                    
+
                     {/* Step 3: Customer Information */}
                     {step === 3 && (
                         <div>
@@ -285,7 +285,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
                                         <label htmlFor="customer-email" className="block text-sm font-medium text-gray-700">Email</label>
                                         <input type="email" id="customer-email" name="email" value={customerInfo.email} onChange={handleCustomerInfoChange} required placeholder="Nhập email" className="mt-1 w-full p-2 border rounded-md" />
                                     </div>
-                                     <div>
+                                    <div>
                                         <label htmlFor="customer-phone" className="block text-sm font-medium text-gray-700">Số điện thoại</label>
                                         <input type="tel" id="customer-phone" name="phone" value={customerInfo.phone} onChange={handleCustomerInfoChange} required placeholder="Nhập số điện thoại" className="mt-1 w-full p-2 border rounded-md" />
                                     </div>
@@ -311,7 +311,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
                             </svg>
                             <h3 className="text-2xl font-bold font-serif text-neutral-dark">Đặt lịch thành công!</h3>
                             <p className="mt-2 text-gray-600">Yêu cầu đặt lịch của bạn đã được gửi. Chúng tôi sẽ liên hệ để xác nhận sớm nhất có thể.</p>
-                             <div className="mt-4 p-3 bg-gray-100 rounded-lg text-sm text-left">
+                            <div className="mt-4 p-3 bg-gray-100 rounded-lg text-sm text-left">
                                 <p><strong>Dịch vụ:</strong> {selectedService?.name}</p>
                                 <p><strong>Thời gian:</strong> {selectedTime}, {selectedDate?.toLocaleDateString('vi-VN')}</p>
                             </div>

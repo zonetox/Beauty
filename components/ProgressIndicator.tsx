@@ -15,10 +15,9 @@ interface ProgressIndicatorProps {
   className?: string;
 }
 
-const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({ 
-  steps, 
-  currentStep,
-  className = '' 
+const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
+  steps,
+  className = ''
 }) => {
   const getStepIcon = (status: ProgressStep['status'], index: number) => {
     switch (status) {
@@ -61,27 +60,25 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
             <div className="flex flex-col items-center flex-1">
               {getStepIcon(step.status, index)}
               <div className="mt-2 text-center">
-                <p className={`text-sm font-medium ${
-                  step.status === 'active' 
-                    ? 'text-primary' 
-                    : step.status === 'completed'
+                <p className={`text-sm font-medium ${step.status === 'active'
+                  ? 'text-primary'
+                  : step.status === 'completed'
                     ? 'text-green-600'
                     : step.status === 'error'
-                    ? 'text-red-600'
-                    : 'text-gray-500'
-                }`}>
+                      ? 'text-red-600'
+                      : 'text-gray-500'
+                  }`}>
                   {step.label}
                 </p>
               </div>
             </div>
             {index < steps.length - 1 && (
-              <div className={`flex-1 h-0.5 mx-2 ${
-                step.status === 'completed' 
-                  ? 'bg-green-500' 
-                  : step.status === 'error'
+              <div className={`flex-1 h-0.5 mx-2 ${step.status === 'completed'
+                ? 'bg-green-500'
+                : step.status === 'error'
                   ? 'bg-red-500'
                   : 'bg-gray-300'
-              }`} />
+                }`} />
             )}
           </React.Fragment>
         ))}

@@ -1,7 +1,6 @@
 // G1.2 - Unit Tests for LoadingState Component
 // Tuân thủ Master Plan v1.1
 
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import LoadingState from '../LoadingState';
 

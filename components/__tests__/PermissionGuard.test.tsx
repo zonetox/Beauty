@@ -15,7 +15,6 @@ jest.mock('../../contexts/AdminContext', () => {
   };
 });
 
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import PermissionGuard from '../PermissionGuard';
@@ -122,7 +121,7 @@ describe('PermissionGuard', () => {
 
     render(
       <MemoryRouter>
-        <PermissionGuard 
+        <PermissionGuard
           permission="canManageBusinesses"
           fallback={<div>Custom Fallback</div>}
           showForbiddenState={false}

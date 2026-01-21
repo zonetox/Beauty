@@ -1,7 +1,7 @@
 
 import React from 'react';
 import toast from 'react-hot-toast';
-import { AdminUser, AdminUserRole } from '../types.ts';
+import { AdminUser } from '../types.ts';
 import { useAdminAuth } from '../contexts/AdminContext.tsx';
 
 interface UserManagementTableProps {
@@ -52,14 +52,14 @@ const UserManagementTable: React.FC<UserManagementTableProps> = ({ users, onUpda
                                 </span>
                             </td>
                             <td className="px-6 py-4">
-                                {user.lastLogin 
+                                {user.lastLogin
                                     ? new Date(user.lastLogin).toLocaleString('en-US', {
                                         year: 'numeric',
                                         month: 'short',
                                         day: 'numeric',
                                         hour: '2-digit',
                                         minute: '2-digit',
-                                      })
+                                    })
                                     : <span className="text-gray-400 italic">Never</span>
                                 }
                             </td>

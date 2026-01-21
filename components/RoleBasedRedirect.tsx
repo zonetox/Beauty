@@ -17,10 +17,10 @@ interface RoleBasedRedirectProps {
   redirectTo?: string;
 }
 
-const RoleBasedRedirect: React.FC<RoleBasedRedirectProps> = ({ 
-  children, 
+const RoleBasedRedirect: React.FC<RoleBasedRedirectProps> = ({
+  children,
   requiredRole,
-  redirectTo 
+  redirectTo
 }) => {
   const { user, profile, state } = useAuth();
   const navigate = useNavigate();
@@ -48,7 +48,7 @@ const RoleBasedRedirect: React.FC<RoleBasedRedirectProps> = ({
       // Resolve role
       try {
         const roleResult = await resolveUserRole(user);
-        
+
         if (roleResult.error) {
           setRole('error');
           setError(roleResult.error);
@@ -78,7 +78,7 @@ const RoleBasedRedirect: React.FC<RoleBasedRedirectProps> = ({
       } catch (err: unknown) {
         console.error('Error resolving user role:', err);
         setRole('error');
-        setError(`Role resolution failed: ${err.message}`);
+        setError(`Role resolution failed: ${(err as Error).message}`);
       }
     };
 

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useBusinessAuth } from '../contexts/BusinessContext.tsx';
 import { useStaff } from '../contexts/StaffContext.tsx';
-import { useUserSession } from '../contexts/UserSessionContext.tsx';
 import { BusinessStaff, StaffMemberRole } from '../types.ts';
 import StaffInviteModal from './StaffInviteModal.tsx';
 import LoadingState from './LoadingState.tsx';
@@ -11,14 +10,13 @@ import ConfirmDialog from './ConfirmDialog.tsx';
 
 const StaffManagement: React.FC = () => {
   const { currentBusiness } = useBusinessAuth();
-  const { currentUser } = useUserSession();
-  const { 
-    staff, 
-    loading, 
-    getStaffByBusinessId, 
-    updateStaff, 
+  const {
+    staff,
+    loading,
+    getStaffByBusinessId,
+    updateStaff,
     removeStaff,
-    refreshStaff 
+    refreshStaff
   } = useStaff();
 
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -50,7 +48,7 @@ const StaffManagement: React.FC = () => {
 
   const confirmRemoveStaff = async () => {
     if (!confirmDialog.staffId) return;
-    
+
     try {
       await removeStaff(confirmDialog.staffId);
       toast.success('Staff removed successfully');
@@ -132,11 +130,10 @@ const StaffManagement: React.FC = () => {
                     {staffMember.user_email || staffMember.user_id.substring(0, 8) + '...'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                      staffMember.role === StaffMemberRole.ADMIN
-                        ? 'bg-purple-100 text-purple-800'
-                        : 'bg-blue-100 text-blue-800'
-                    }`}>
+                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${staffMember.role === StaffMemberRole.ADMIN
+                      ? 'bg-purple-100 text-purple-800'
+                      : 'bg-blue-100 text-blue-800'
+                      }`}>
                       {staffMember.role}
                     </span>
                   </td>
@@ -231,7 +228,7 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onSave, onClose 
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
         <h3 className="text-lg font-bold mb-4">Edit Staff Member</h3>
-        
+
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
           <select

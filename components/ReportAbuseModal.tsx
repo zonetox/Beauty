@@ -3,7 +3,6 @@
 
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabaseClient.ts';
-import { AbuseReport } from '../types.ts';
 import toast from 'react-hot-toast';
 import { useUserSession } from '../contexts/UserSessionContext.tsx';
 
@@ -58,7 +57,7 @@ const ReportAbuseModal: React.FC<ReportAbuseModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('abuse_reports')
         .insert({
           review_id: reviewId,
@@ -75,7 +74,7 @@ const ReportAbuseModal: React.FC<ReportAbuseModalProps> = ({
 
       toast.success('Thank you for reporting. We will review this report shortly.');
       onClose();
-      
+
       // Reset form
       setSelectedReason('');
       setCustomReason('');

@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode } from 'react';
 import { BusinessAnalytics } from '../types.ts';
 
 interface AnalyticsDataContextType {
