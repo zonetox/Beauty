@@ -138,15 +138,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setState('unauthenticated');
       }
 
-      // Safety Timeout: Force initialization to complete after 10 seconds
-      // to prevent permanent hangs on "Initializing..." screen
-      const safetyTimeoutId = setTimeout(() => {
-        if (mounted && state === 'loading') {
-          console.warn('Auth initialization timed out after 10s - forcing unauthenticated state');
-          setState('unauthenticated');
-        }
-      }, 10000);
-
       // Subscribe to auth changes
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         async (event, newSession) => {
@@ -157,19 +148,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       );
 
       authSubscription = subscription;
-
-      // Clear safety timeout if initialized manually above (this won't reach here if blocked)
-      // but the 10s timer ensures the app is usable anyway
-      return () => {
-        clearTimeout(safetyTimeoutId);
-      };
     };
+
+    // Safety Timeout: Force initialization to complete after 10 seconds
+    // to prevent permanent hangs on "Initializing..." screen.
+    // USES FUNCTIONAL STATE TO AVOID STALE CLOSURE.
+    const safetyTimeoutId = setTimeout(() => {
+      if (mounted) {
+        setState(current => {
+          if (current === 'loading') {
+            console.warn('Auth initialization timed out after 10s - forcing unauthenticated state');
+            return 'unauthenticated';
+          }
+          return current;
+        });
+      }
+    }, 10000);
 
     initialize();
 
     return () => {
       mounted = false;
-      authSubscription?.unsubscribe();
+      clearTimeout(safetyTimeoutId);
+      if (authSubscription) {
+        authSubscription.unsubscribe();
+      }
     };
   }, [handleAuthChange, fetchProfile]);
 

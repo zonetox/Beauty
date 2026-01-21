@@ -414,7 +414,7 @@ const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         if (isInitializing || state === 'loading') {
             const timer = setTimeout(() => {
                 setShowBypassMenu(true);
-            }, 12000); // 12 seconds - slightly more than AuthProvider timeout
+            }, 7000); // 7 seconds - show recovery menu faster
             return () => clearTimeout(timer);
         } else {
             setShowBypassMenu(false);
