@@ -249,6 +249,10 @@ export const TOAST_MESSAGES = {
 // Validation constants for forms
 export const VALIDATION = {
     PASSWORD_MIN_LENGTH: 6,
+    MIN_PASSWORD_LENGTH: 6,
+    MAX_TITLE_LENGTH: 200,
+    MAX_DESCRIPTION_LENGTH: 5000,
+    MAX_EXCERPT_LENGTH: 500,
     PHONE_REGEX: /^(0|\+84)(\s|\.)?((3[2-9])|(5[689])|(7[06-9])|(8[1-689])|(9[0-46-9]))(\d)(\s|\.)?(\d{3})(\s|\.)?(\d{3})$/, // Simple Vietnam phone regex
     EMAIL_REGEX: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
 };
