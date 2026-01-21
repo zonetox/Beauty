@@ -65,7 +65,7 @@ export function useUserRole(): UseUserRoleResult {
 
       setIsLoading(true);
       const result = await resolveUserRole(user);
-      
+
       setRoleResult({
         role: result.role,
         error: result.error || null,
@@ -78,7 +78,9 @@ export function useUserRole(): UseUserRoleResult {
     };
 
     resolveRole();
-  }, [user, state]);
+    // BREAKING THE LOOP: Only re-run if user ID changes or auth state changes.
+    // Do NOT depend on the 'user' object itself as it changes reference frequently.
+  }, [user?.id, state]);
 
   return {
     role: roleResult.role,

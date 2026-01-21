@@ -38,8 +38,10 @@ export const AppInitializationProvider: React.FC<{ children: ReactNode }> = ({ c
     // which marks it as complete when auth state resolves.
   }, []);
 
+  const value = React.useMemo(() => ({ isInitializing, setInitializing }), [isInitializing]);
+
   return (
-    <AppInitializationContext.Provider value={{ isInitializing, setInitializing }}>
+    <AppInitializationContext.Provider value={value}>
       {children}
     </AppInitializationContext.Provider>
   );
