@@ -396,6 +396,7 @@ const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { state, logout } = useAuth();
     const { isInitializing, setInitializing } = useAppInitialization();
     const [showBypassMenu, setShowBypassMenu] = useState(false);
+    const [showInitialLoading, setShowInitialLoading] = useState(false);
 
     // Track initialization state - mark as complete when auth resolves
     useEffect(() => {
@@ -412,11 +413,22 @@ const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     // Safety timeout for the initialization screen UI
     useEffect(() => {
         if (isInitializing || state === 'loading') {
-            const timer = setTimeout(() => {
+            // Only show the "Initializing" screen after 400ms
+            // This makes the app feel instant for most guests
+            const loadingTimer = setTimeout(() => {
+                setShowInitialLoading(true);
+            }, 400);
+
+            const bypassTimer = setTimeout(() => {
                 setShowBypassMenu(true);
-            }, 7000); // 7 seconds - show recovery menu faster
-            return () => clearTimeout(timer);
+            }, 7000); // 7 seconds
+
+            return () => {
+                clearTimeout(loadingTimer);
+                clearTimeout(bypassTimer);
+            };
         } else {
+            setShowInitialLoading(false);
             setShowBypassMenu(false);
         }
         return undefined;
@@ -461,7 +473,14 @@ const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 </div>
             );
         }
-        return <AppInitializationScreen message="Đang khởi tạo ứng dụng..." />;
+
+        // Only show message if it's taking more than 400ms
+        if (showInitialLoading) {
+            return <AppInitializationScreen message="Đang khởi tạo ứng dụng..." />;
+        }
+
+        // Return empty div (effectively invisible) for fast loads
+        return <div className="bg-white fixed inset-0 z-[9999]" />;
     }
 
     // Auth state is resolved (authenticated or unauthenticated)

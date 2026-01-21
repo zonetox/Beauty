@@ -18,7 +18,7 @@ const AppInitializationContext = createContext<AppInitializationContextType | un
 export const useAppInitialization = () => {
   const context = useContext(AppInitializationContext);
   if (!context) {
-    return { isInitializing: false, setInitializing: () => {} };
+    return { isInitializing: false, setInitializing: () => { } };
   }
   return context;
 };
@@ -33,12 +33,9 @@ export const AppInitializationProvider: React.FC<{ children: ReactNode }> = ({ c
   };
 
   useEffect(() => {
-    // Mark initialization as complete after a short delay to ensure all contexts are mounted
-    const timer = setTimeout(() => {
-      setInitializing(false);
-    }, 2000); // 2 seconds should be enough for initial auth check
-
-    return () => clearTimeout(timer);
+    // We no longer use a hardcoded delay.
+    // Initialization is controlled by the AuthGate component
+    // which marks it as complete when auth state resolves.
   }, []);
 
   return (
