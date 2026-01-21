@@ -20,29 +20,29 @@ const StatCard: React.FC<{ title: string, value: string | number, icon: React.Re
     </div>
 );
 
-const ReplyForm: React.FC<{ 
-    initialContent?: string; 
-    onSubmit: (content: string) => Promise<void>; 
+const ReplyForm: React.FC<{
+    initialContent?: string;
+    onSubmit: (content: string) => Promise<void>;
     onCancel: () => void;
     isSubmitting?: boolean;
 }> = ({ initialContent = '', onSubmit, onCancel, isSubmitting = false }) => {
     const [content, setContent] = useState(initialContent);
     const [error, setError] = useState<string>('');
-    
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         // Validation
         if (!content.trim()) {
             setError('Reply content is required');
             return;
         }
-        
+
         if (content.length > 1000) {
             setError('Reply must be less than 1000 characters');
             return;
         }
-        
+
         setError('');
         try {
             await onSubmit(content);
@@ -50,7 +50,7 @@ const ReplyForm: React.FC<{
             // Error handled by parent with toast
         }
     };
-    
+
     return (
         <form onSubmit={handleSubmit} className="mt-2 space-y-2">
             <textarea
@@ -61,9 +61,8 @@ const ReplyForm: React.FC<{
                 }}
                 rows={3}
                 maxLength={1000}
-                className={`w-full p-3 border rounded-md focus:outline-none focus:ring-primary focus:border-primary ${
-                    error ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`w-full p-3 border rounded-md focus:outline-none focus:ring-primary focus:border-primary ${error ? 'border-red-500' : 'border-gray-300'
+                    }`}
                 placeholder="Write your reply..."
                 disabled={isSubmitting}
             />
@@ -108,6 +107,42 @@ const ReviewsManager: React.FC = () => {
     const [statusFilter, setStatusFilter] = useState<'all' | ReviewStatus>('all');
     const [ratingFilter, setRatingFilter] = useState<number | 'all'>('all');
 
+    const allReviews = getReviewsByBusinessId(currentBusiness?.id || -1);
+
+    // Apply filters
+    const reviews = useMemo(() => {
+        if (!currentBusiness) return [];
+        let filtered = allReviews;
+
+        if (statusFilter !== 'all') {
+            filtered = filtered.filter(r => r.status === statusFilter);
+        }
+
+        if (ratingFilter !== 'all') {
+            filtered = filtered.filter(r => r.rating === ratingFilter);
+        }
+
+        return filtered;
+    }, [allReviews, statusFilter, ratingFilter, currentBusiness]);
+
+    const averageRating = useMemo(() => {
+        if (!currentBusiness || allReviews.length === 0) return 0;
+        const total = allReviews.reduce((acc, r) => acc + r.rating, 0);
+        return total / allReviews.length;
+    }, [allReviews, currentBusiness]);
+
+    // Rating distribution
+    const ratingDistribution = useMemo(() => {
+        const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+        if (!currentBusiness) return distribution;
+        allReviews.forEach(r => {
+            if (r.rating >= 1 && r.rating <= 5) {
+                distribution[r.rating as keyof typeof distribution]++;
+            }
+        });
+        return distribution;
+    }, [allReviews, currentBusiness]);
+
     if (!currentBusiness) {
         return (
             <div className="p-8">
@@ -119,45 +154,11 @@ const ReviewsManager: React.FC = () => {
         );
     }
 
-    const allReviews = getReviewsByBusinessId(currentBusiness.id);
-    
-    // Apply filters
-    const reviews = useMemo(() => {
-        let filtered = allReviews;
-        
-        if (statusFilter !== 'all') {
-            filtered = filtered.filter(r => r.status === statusFilter);
-        }
-        
-        if (ratingFilter !== 'all') {
-            filtered = filtered.filter(r => r.rating === ratingFilter);
-        }
-        
-        return filtered;
-    }, [allReviews, statusFilter, ratingFilter]);
-
-    const averageRating = useMemo(() => {
-        if (allReviews.length === 0) return 0;
-        const total = allReviews.reduce((acc, r) => acc + r.rating, 0);
-        return total / allReviews.length;
-    }, [allReviews]);
-
-    // Rating distribution
-    const ratingDistribution = useMemo(() => {
-        const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-        allReviews.forEach(r => {
-            if (r.rating >= 1 && r.rating <= 5) {
-                distribution[r.rating as keyof typeof distribution]++;
-            }
-        });
-        return distribution;
-    }, [allReviews]);
-
     const getRatingPercentage = (rating: number) => {
         if (allReviews.length === 0) return 0;
         return (ratingDistribution[rating as keyof typeof ratingDistribution] / allReviews.length) * 100;
     };
-    
+
     const handleReplySubmit = async (reviewId: string, content: string) => {
         setIsReplying(true);
         try {
@@ -198,22 +199,22 @@ const ReviewsManager: React.FC = () => {
 
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <StatCard 
-                    title="Average Rating" 
-                    value={averageRating.toFixed(1)} 
-                    icon={<StarRating rating={averageRating} />} 
+                <StatCard
+                    title="Average Rating"
+                    value={averageRating.toFixed(1)}
+                    icon={<StarRating rating={averageRating} />}
                 />
-                <StatCard 
-                    title="Total Reviews" 
-                    value={allReviews.length} 
+                <StatCard
+                    title="Total Reviews"
+                    value={allReviews.length}
                     icon={
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2V7a2 2 0 012-2h4l2-2v2z" />
                         </svg>
-                    } 
+                    }
                 />
-                <StatCard 
-                    title="Visible Reviews" 
+                <StatCard
+                    title="Visible Reviews"
                     value={allReviews.filter(r => r.status === ReviewStatus.VISIBLE).length}
                     icon={
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -222,8 +223,8 @@ const ReviewsManager: React.FC = () => {
                         </svg>
                     }
                 />
-                <StatCard 
-                    title="Hidden Reviews" 
+                <StatCard
+                    title="Hidden Reviews"
                     value={allReviews.filter(r => r.status === ReviewStatus.HIDDEN).length}
                     icon={
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -337,9 +338,8 @@ const ReviewsManager: React.FC = () => {
                     {reviews.map(review => (
                         <div
                             key={review.id}
-                            className={`p-4 rounded-lg border ${
-                                review.status === ReviewStatus.HIDDEN ? 'bg-red-50 border-red-200' : 'bg-white'
-                            }`}
+                            className={`p-4 rounded-lg border ${review.status === ReviewStatus.HIDDEN ? 'bg-red-50 border-red-200' : 'bg-white'
+                                }`}
                         >
                             <div className="flex justify-between items-start">
                                 <div className="flex gap-4 flex-1">

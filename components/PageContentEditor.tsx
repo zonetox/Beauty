@@ -18,7 +18,7 @@ const PageContentEditor: React.FC = () => {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-blue-900 mb-2">Trang chủ sử dụng Homepage Editor</h3>
                 <p className="text-blue-700 mb-4">
-                    Để chỉnh sửa trang chủ, vui lòng chuyển sang tab <strong>"Homepage Editor"</strong> trong menu bên trái.
+                    Để chỉnh sửa trang chủ, vui lòng chuyển sang tab <strong>&quot;Homepage Editor&quot;</strong> trong menu bên trái.
                 </p>
                 <p className="text-sm text-blue-600">
                     Homepage Editor cho phép bạn chỉnh sửa Hero Slides và các sections trên trang chủ.
@@ -30,7 +30,7 @@ const PageContentEditor: React.FC = () => {
     const pageData = getPageContent(selectedPage);
 
     if (!pageData) {
-        return <p>Error: Could not load page data for "{selectedPage}".</p>;
+        return <p>Error: Could not load page data for &quot;{selectedPage}&quot;.</p>;
     }
 
     const handleSave = (newLayout: LayoutItem[], newVisibility: { [key: string]: boolean }) => {
@@ -67,7 +67,7 @@ const PageContentEditor: React.FC = () => {
                     </button>
                 )}
             </div>
-            
+
             {isEditing ? (
                 <LayoutEditor
                     currentLayout={pageData.layout}
@@ -78,7 +78,7 @@ const PageContentEditor: React.FC = () => {
             ) : (
                 <div className="bg-gray-100 p-6 rounded-lg border">
                     <h3 className="text-lg font-semibold mb-2">Current Layout Preview</h3>
-                    <p className="text-sm text-gray-600 mb-4">This is a simplified view of the sections on the "{selectedPage}" page. Click "Edit Layout" to reorder, hide, or add elements.</p>
+                    <p className="text-sm text-gray-600 mb-4">This is a simplified view of the sections on the &quot;{selectedPage}&quot; page. Click &quot;Edit Layout&quot; to reorder, hide, or add elements.</p>
                     <div className="space-y-2">
                         {pageData.layout.map(item => (
                             <div key={item.id} className={`p-3 rounded-md ${pageData.visibility[item.key || ''] === false ? 'bg-gray-300' : 'bg-white border'}`}>

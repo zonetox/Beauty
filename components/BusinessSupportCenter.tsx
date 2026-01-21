@@ -34,7 +34,7 @@ const BusinessSupportCenter: React.FC = () => {
         const filtered = getTicketsForBusiness(currentBusiness.id);
         if (statusFilter === 'all') return filtered;
         return filtered.filter(t => t.status === statusFilter);
-    }, [getTicketsForBusiness, currentBusiness?.id, statusFilter, tickets]);
+    }, [getTicketsForBusiness, currentBusiness, statusFilter, tickets]);
 
     const sortedTickets = useMemo(() => {
         return [...myTickets].sort((a, b) => {
@@ -43,6 +43,16 @@ const BusinessSupportCenter: React.FC = () => {
             return dateB - dateA;
         });
     }, [myTickets]);
+
+    // Refresh selected ticket from context when tickets update
+    useEffect(() => {
+        if (selectedTicket && view === 'detail') {
+            const updatedTicket = tickets.find(t => t.id === selectedTicket.id);
+            if (updatedTicket) {
+                setSelectedTicket(updatedTicket);
+            }
+        }
+    }, [tickets, selectedTicket, view]);
 
     if (!currentBusiness) {
         return (
@@ -342,14 +352,6 @@ const BusinessSupportCenter: React.FC = () => {
     );
 
     // Refresh selected ticket from context when tickets update
-    useEffect(() => {
-        if (selectedTicket && view === 'detail') {
-            const updatedTicket = tickets.find(t => t.id === selectedTicket.id);
-            if (updatedTicket) {
-                setSelectedTicket(updatedTicket);
-            }
-        }
-    }, [tickets, selectedTicket, view]);
 
     const renderDetailView = () => {
         if (!selectedTicket) {
@@ -397,8 +399,8 @@ const BusinessSupportCenter: React.FC = () => {
                                 <div
                                     key={reply.id || index}
                                     className={`p-4 rounded-md border ${reply.author === 'Admin' || reply.author.toLowerCase().includes('admin')
-                                            ? 'bg-blue-50 border-blue-200'
-                                            : 'bg-green-50 border-green-200'
+                                        ? 'bg-blue-50 border-blue-200'
+                                        : 'bg-green-50 border-green-200'
                                         }`}
                                 >
                                     <div className="flex justify-between items-start mb-2">

@@ -149,10 +149,10 @@ const BusinessOnboardingWizard: React.FC = () => {
                 window.location.reload();
             }, 1000);
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Onboarding Error:", error);
             // D3.4 FIX: Always show error feedback to user
-            const errorMessage = error.message || "Failed to create business. Please try again.";
+            const errorMessage = error instanceof Error ? error.message : "Failed to create business. Please try again.";
             toast.error(errorMessage);
 
             // D3.1 FIX: Set form-level error for better UX

@@ -52,7 +52,6 @@ const FunnelStage: React.FC<{ stage: FunnelStageData, baseValue: number }> = ({ 
     const percentage = baseValue > 0 ? (stage.value / baseValue) * 100 : 0;
     return (
         <div className="flex items-center justify-center">
-            {/* eslint-disable jsx-a11y/no-static-element-interactions */}
             <div className={`relative ${stage.color} text-white font-bold py-4 text-center transition-all`} style={{ width: `${Math.max(percentage, 10)}%`, minWidth: '60px' }}>
                 <div className="px-2">
                     <p className="text-lg">{stage.value}</p>

@@ -90,7 +90,7 @@ const AdminSupportTickets: React.FC = () => {
             <h2 className="text-xl font-semibold text-neutral-dark mb-4">Support Tickets</h2>
             <div className="mb-4">
                 <label htmlFor="status-filter-select" className="text-sm font-medium">Filter by status: </label>
-                <select id="status-filter-select" title="Filter tickets by status" value={statusFilter} onChange={e => setStatusFilter(e.target.value as any)} className="p-2 border rounded-md bg-gray-50">
+                <select id="status-filter-select" title="Filter tickets by status" value={statusFilter} onChange={e => setStatusFilter(e.target.value as TicketStatus | 'all')} className="p-2 border rounded-md bg-gray-50">
                     <option value="all">All</option>
                     {Object.values(TicketStatus).map(s => <option key={s} value={s}>{s}</option>)}
                 </select>

@@ -95,15 +95,15 @@ const Header: React.FC = () => {
       toast.error("API is not configured for this preview environment.");
       return;
     }
-    const checkPromise = new Promise(async (resolve, reject) => {
+    const checkPromise = (async () => {
       // Use a lightweight query to check connectivity
       const { error } = await supabase.from('businesses').select('id', { count: 'exact', head: true });
       if (error) {
         console.error("Supabase health check failed:", error.message);
-        return reject(new Error(`API Error: ${error.message}`));
+        throw new Error(`API Error: ${error.message}`);
       }
-      return resolve('Connection successful.');
-    });
+      return 'Connection successful.';
+    })();
 
     toast.promise(checkPromise, {
       loading: 'Checking Supabase connection...',

@@ -92,7 +92,7 @@ const BookingsManager: React.FC = () => {
                 [AppointmentStatus.COMPLETED]: 'completed',
             };
             toast.success(`Appointment ${statusLabels[status]} successfully!`);
-        } catch (error) {
+        } catch (_error) {
             // Error already handled in context with toast
         } finally {
             setUpdatingId(null);

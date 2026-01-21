@@ -46,6 +46,35 @@ const MembershipAndBilling: React.FC = () => {
     const [confirmUpgrade, setConfirmUpgrade] = useState<{ isOpen: boolean; package: MembershipPackage | null }>({ isOpen: false, package: null });
     const [uploadProgress, setUploadProgress] = useState(0);
 
+    const currentPackage = packages.find(p => p.tier === currentBusiness?.membershipTier);
+
+    const businessOrders = useMemo(() => {
+        if (!currentBusiness) return [];
+        return orders.filter(o => o.businessId === currentBusiness.id).sort((a, b) =>
+            new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
+        );
+    }, [orders, currentBusiness?.id]);
+
+    // Find the latest order awaiting confirmation (for payment proof upload)
+    const latestPendingOrder = useMemo(() => {
+        return businessOrders.find(o =>
+            o.status === OrderStatus.AWAITING_CONFIRMATION || o.status === OrderStatus.PENDING
+        ) || null;
+    }, [businessOrders]);
+
+    const isExpired = useMemo(() => {
+        if (!currentBusiness?.membershipExpiryDate) return false;
+        return new Date(currentBusiness.membershipExpiryDate) < new Date();
+    }, [currentBusiness?.membershipExpiryDate]);
+
+    const daysUntilExpiry = useMemo(() => {
+        if (!currentBusiness?.membershipExpiryDate) return null;
+        const expiry = new Date(currentBusiness.membershipExpiryDate);
+        const now = new Date();
+        const diff = expiry.getTime() - now.getTime();
+        return Math.ceil(diff / (1000 * 60 * 60 * 24));
+    }, [currentBusiness?.membershipExpiryDate]);
+
     if (!currentBusiness) {
         return (
             <div className="p-8">
@@ -56,20 +85,6 @@ const MembershipAndBilling: React.FC = () => {
             </div>
         );
     }
-
-    const currentPackage = packages.find(p => p.tier === currentBusiness.membershipTier);
-    const businessOrders = useMemo(() => {
-        return orders.filter(o => o.businessId === currentBusiness.id).sort((a, b) =>
-            new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
-        );
-    }, [orders, currentBusiness.id]);
-
-    // Find the latest order awaiting confirmation (for payment proof upload)
-    const latestPendingOrder = useMemo(() => {
-        return businessOrders.find(o =>
-            o.status === OrderStatus.AWAITING_CONFIRMATION || o.status === OrderStatus.PENDING
-        ) || null;
-    }, [businessOrders]);
 
     const handleUpgradeRequest = (pkg: MembershipPackage) => {
         if (pkg.id === currentPackage?.id) {
@@ -177,18 +192,6 @@ const MembershipAndBilling: React.FC = () => {
         });
     };
 
-    const isExpired = useMemo(() => {
-        if (!currentBusiness.membershipExpiryDate) return false;
-        return new Date(currentBusiness.membershipExpiryDate) < new Date();
-    }, [currentBusiness.membershipExpiryDate]);
-
-    const daysUntilExpiry = useMemo(() => {
-        if (!currentBusiness.membershipExpiryDate) return null;
-        const expiry = new Date(currentBusiness.membershipExpiryDate);
-        const now = new Date();
-        const diff = expiry.getTime() - now.getTime();
-        return Math.ceil(diff / (1000 * 60 * 60 * 24));
-    }, [currentBusiness.membershipExpiryDate]);
 
     const featureRows = [
         { key: 'permissions.customLandingPage', label: 'Custom Landing Page' },

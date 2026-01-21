@@ -52,7 +52,7 @@ const AdminAnnouncementsManager: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700">Type</label>
                         <select
                             value={type}
-                            onChange={e => setType(e.target.value as any)}
+                            onChange={e => setType(e.target.value as 'info' | 'warning' | 'success')}
                             className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm"
                         >
                             <option value="info">Info (Blue)</option>
@@ -69,8 +69,8 @@ const AdminAnnouncementsManager: React.FC = () => {
             </div>
 
             <div className="bg-white p-6 rounded-lg shadow">
-                 <h2 className="text-xl font-semibold text-neutral-dark mb-4">Sent Announcements</h2>
-                 <div className="space-y-4">
+                <h2 className="text-xl font-semibold text-neutral-dark mb-4">Sent Announcements</h2>
+                <div className="space-y-4">
                     {announcements.map(ann => (
                         <div key={ann.id} className="p-4 border rounded-md bg-gray-50 flex justify-between items-start">
                             <div>
@@ -89,7 +89,7 @@ const AdminAnnouncementsManager: React.FC = () => {
                         </div>
                     ))}
                     {announcements.length === 0 && <p className="text-center text-gray-500 py-4">No announcements sent yet.</p>}
-                 </div>
+                </div>
             </div>
             <ConfirmDialog
                 isOpen={confirmDelete.isOpen}
@@ -99,10 +99,10 @@ const AdminAnnouncementsManager: React.FC = () => {
                 cancelText="Cancel"
                 variant="danger"
                 onConfirm={() => {
-                  if (confirmDelete.announcementId) {
-                    deleteAnnouncement(confirmDelete.announcementId);
-                    setConfirmDelete({ isOpen: false, announcementId: null });
-                  }
+                    if (confirmDelete.announcementId) {
+                        deleteAnnouncement(confirmDelete.announcementId);
+                        setConfirmDelete({ isOpen: false, announcementId: null });
+                    }
                 }}
                 onCancel={() => setConfirmDelete({ isOpen: false, announcementId: null })}
             />

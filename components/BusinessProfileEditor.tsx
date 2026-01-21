@@ -136,19 +136,22 @@ const BusinessProfileEditor: React.FC = () => {
 
     // Update formData when workingHoursList changes
     useEffect(() => {
-        if (formData) {
+        setFormData((prev) => {
+            if (!prev) return null;
             const workingHoursObject = workingHoursList.reduce((acc, curr) => {
                 if (curr.day.trim()) {
                     acc[curr.day.trim()] = curr.time.trim();
                 }
                 return acc;
             }, {} as { [key: string]: string });
-            setFormData((prev) => {
-                if (!prev) return null;
-                const updated: Business = { ...prev, workingHours: workingHoursObject };
-                return updated;
-            });
-        }
+
+            // Only update if changed to avoid extra renders
+            if (JSON.stringify(prev.workingHours) === JSON.stringify(workingHoursObject)) {
+                return prev;
+            }
+
+            return { ...prev, workingHours: workingHoursObject };
+        });
     }, [workingHoursList]);
 
     // Loading state

@@ -25,9 +25,8 @@ const StatDisplay: React.FC<{ label: string; value: number; limit: number }> = (
                 </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2.5">
-                {/* eslint-disable jsx-a11y/no-static-element-interactions */}
-                <div 
-                    className={`h-2.5 rounded-full ${isOverLimit ? 'bg-red-500' : 'bg-primary'}`} 
+                <div
+                    className={`h-2.5 rounded-full ${isOverLimit ? 'bg-red-500' : 'bg-primary'}`}
                     /* Dynamic width calculation - CSS inline necessary for dynamic percentages */
                     style={{ width: `${Math.min(percentage, 100)}%`, minWidth: '2px' }}
                 ></div>
@@ -53,7 +52,7 @@ const MediaLibrary: React.FC = () => {
     const [localMedia, setLocalMedia] = useState<MediaItem[]>([]);
     const dragItem = useRef<number | null>(null);
     const dragOverItem = useRef<number | null>(null);
-    
+
     // Sync local state when context data changes
     useEffect(() => {
         setLocalMedia(currentBusiness?.gallery || []);
@@ -145,11 +144,11 @@ const MediaLibrary: React.FC = () => {
                 }, 200);
 
                 await addMediaItem(file, currentBusiness.id);
-                
+
                 clearInterval(progressInterval);
                 uploadProgress.set(file.name, 100);
                 setUploadingFiles(new Map(uploadProgress));
-                
+
                 // Remove from progress after a short delay
                 setTimeout(() => {
                     uploadProgress.delete(file.name);
@@ -180,7 +179,7 @@ const MediaLibrary: React.FC = () => {
             handleFileUpload(e.dataTransfer.files);
         }
     };
-    
+
     // --- Item Actions ---
     const handleDelete = async (item: MediaItem) => {
         setConfirmDelete({ isOpen: true, item });
@@ -188,7 +187,7 @@ const MediaLibrary: React.FC = () => {
 
     const confirmDeleteItem = async () => {
         if (!confirmDelete.item) return;
-        
+
         setIsDeleting(confirmDelete.item.id);
         try {
             await deleteMediaItem(confirmDelete.item);
@@ -211,7 +210,7 @@ const MediaLibrary: React.FC = () => {
             // Don't close modal on error
         }
     };
-    
+
     // --- Drag and Drop Handlers ---
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
         const filteredItem = filteredMedia[index];
@@ -221,7 +220,7 @@ const MediaLibrary: React.FC = () => {
         }
         e.dataTransfer.effectAllowed = 'move';
     };
-    
+
     const handleDragEnter = (e: React.DragEvent<HTMLDivElement>, index: number) => {
         e.preventDefault();
         const filteredItem = filteredMedia[index];
@@ -230,7 +229,7 @@ const MediaLibrary: React.FC = () => {
             dragOverItem.current = originalIndex;
         }
     };
-    
+
     const handleDragEnd = async () => {
         if (dragItem.current === null || dragOverItem.current === null || dragItem.current === dragOverItem.current) {
             dragItem.current = null;
@@ -243,12 +242,12 @@ const MediaLibrary: React.FC = () => {
         if (draggedItemContent) {
             newMedia.splice(dragOverItem.current, 0, draggedItemContent);
         }
-        
+
         dragItem.current = null;
         dragOverItem.current = null;
-        
+
         setLocalMedia(newMedia); // Optimistic UI update
-        
+
         // Send update to backend
         setIsReordering(true);
         try {
@@ -287,9 +286,9 @@ const MediaLibrary: React.FC = () => {
     return (
         <div className="p-8">
             {editingItem && (
-                <EditMediaModal 
-                    item={editingItem} 
-                    onSave={handleEditSave} 
+                <EditMediaModal
+                    item={editingItem}
+                    onSave={handleEditSave}
                     onClose={() => setEditingItem(null)}
                 />
             )}
@@ -303,9 +302,8 @@ const MediaLibrary: React.FC = () => {
             </div>
 
             <div
-                className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors mb-8 ${
-                    isDraggingOver ? 'border-primary bg-primary/10' : 'border-gray-300 bg-white'
-                } ${uploadingFiles.size > 0 ? 'opacity-50 pointer-events-none' : ''}`}
+                className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors mb-8 ${isDraggingOver ? 'border-primary bg-primary/10' : 'border-gray-300 bg-white'
+                    } ${uploadingFiles.size > 0 ? 'opacity-50 pointer-events-none' : ''}`}
                 onDragOver={(e) => { e.preventDefault(); setIsDraggingOver(true); }}
                 onDragLeave={() => setIsDraggingOver(false)}
                 onDrop={handleDrop}
@@ -319,8 +317,8 @@ const MediaLibrary: React.FC = () => {
                     accept="image/png, image/jpeg, image/webp, video/mp4, video/webm, video/quicktime"
                     disabled={uploadingFiles.size > 0}
                 />
-                <label 
-                    htmlFor="file-upload" 
+                <label
+                    htmlFor="file-upload"
                     className={`cursor-pointer ${uploadingFiles.size > 0 ? 'cursor-not-allowed opacity-50' : ''}`}
                 >
                     <p className="font-semibold text-neutral-dark">Drag & drop files here</p>
@@ -336,9 +334,8 @@ const MediaLibrary: React.FC = () => {
                                     <span>{progress}%</span>
                                 </div>
                                 <div className="w-full bg-gray-200 rounded-full h-2">
-                                    {/* eslint-disable jsx-a11y/no-static-element-interactions */}
-                                    <div 
-                                        className="bg-primary h-2 rounded-full transition-all duration-300" 
+                                    <div
+                                        className="bg-primary h-2 rounded-full transition-all duration-300"
                                         /* Dynamic progress - CSS inline necessary for upload progress calculation */
                                         style={{ width: `${progress}%`, minWidth: '2px' }}
                                     ></div>
@@ -348,18 +345,17 @@ const MediaLibrary: React.FC = () => {
                     </div>
                 )}
             </div>
-            
+
             <div className="border-b mb-6">
                 <nav className="flex space-x-4">
                     {['all', ...Object.values(MediaCategory)].map(cat => (
-                        <button 
-                            key={cat} 
-                            onClick={() => setActiveFilter(cat as any)} 
-                            className={`px-3 py-2 text-sm font-medium rounded-t-md capitalize transition-colors ${
-                                activeFilter === cat 
-                                    ? 'border-b-2 border-primary text-primary' 
-                                    : 'text-gray-500 hover:text-neutral-dark'
-                            }`}
+                        <button
+                            key={cat}
+                            onClick={() => setActiveFilter(cat as any)}
+                            className={`px-3 py-2 text-sm font-medium rounded-t-md capitalize transition-colors ${activeFilter === cat
+                                ? 'border-b-2 border-primary text-primary'
+                                : 'text-gray-500 hover:text-neutral-dark'
+                                }`}
                             disabled={isReordering}
                         >
                             {cat}
@@ -367,7 +363,7 @@ const MediaLibrary: React.FC = () => {
                     ))}
                 </nav>
                 {!canDrag && activeFilter !== 'all' && (
-                    <p className="text-xs text-yellow-600 pt-2">Sorting is only available in the 'All' view.</p>
+                    <p className="text-xs text-yellow-600 pt-2">Sorting is only available in the &apos;All&apos; view.</p>
                 )}
                 {isReordering && (
                     <p className="text-xs text-blue-600 pt-2">Saving new order...</p>
@@ -377,12 +373,12 @@ const MediaLibrary: React.FC = () => {
             {filteredMedia.length === 0 ? (
                 <EmptyState
                     title={activeFilter === 'all' ? 'No media yet' : `No media in ${activeFilter} category`}
-                    message={activeFilter === 'all' 
+                    message={activeFilter === 'all'
                         ? 'Get started by uploading your first photos or videos to showcase your business.'
                         : 'Try selecting a different category or upload new media.'}
                     action={activeFilter === 'all' ? (
-                        <label 
-                            htmlFor="file-upload" 
+                        <label
+                            htmlFor="file-upload"
                             className="cursor-pointer bg-secondary text-white px-4 py-2 rounded-md font-semibold text-sm hover:opacity-90 inline-block"
                         >
                             Upload Your First Media
@@ -399,24 +395,23 @@ const MediaLibrary: React.FC = () => {
                             onDragEnter={(e) => canDrag && handleDragEnter(e, index)}
                             onDragEnd={canDrag ? handleDragEnd : undefined}
                             onDragOver={(e) => canDrag && e.preventDefault()}
-                            className={`group relative aspect-square bg-gray-100 rounded-lg overflow-hidden border ${
-                                canDrag ? 'cursor-grab active:cursor-grabbing' : ''
-                            } ${isDeleting === item.id ? 'opacity-50' : ''}`}
+                            className={`group relative aspect-square bg-gray-100 rounded-lg overflow-hidden border ${canDrag ? 'cursor-grab active:cursor-grabbing' : ''
+                                } ${isDeleting === item.id ? 'opacity-50' : ''}`}
                         >
                             {item.type === MediaType.IMAGE ? (
-                                <img 
-                                    src={item.url} 
-                                    alt={item.title || 'Media item'} 
+                                <img
+                                    src={item.url}
+                                    alt={item.title || 'Media item'}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
                                         (e.target as HTMLImageElement).src = 'https://placehold.co/400x400/E6A4B4/FFFFFF?text=Image+Error';
                                     }}
                                 />
                             ) : (
-                                <video 
-                                    src={item.url} 
-                                    className="w-full h-full object-cover bg-black" 
-                                    muted 
+                                <video
+                                    src={item.url}
+                                    className="w-full h-full object-cover bg-black"
+                                    muted
                                     playsInline
                                     onError={(e) => {
                                         (e.target as HTMLVideoElement).style.display = 'none';
@@ -431,12 +426,12 @@ const MediaLibrary: React.FC = () => {
                                     </svg>
                                 </div>
                             )}
-                            
+
                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2">
                                 <p className="text-white text-xs font-semibold truncate">{item.title || 'Untitled'}</p>
                                 <div className="flex justify-end gap-1">
-                                    <button 
-                                        onClick={() => setEditingItem(item)} 
+                                    <button
+                                        onClick={() => setEditingItem(item)}
                                         className="bg-white/80 rounded-full p-1.5 hover:bg-white text-neutral-dark disabled:opacity-50 disabled:cursor-not-allowed"
                                         disabled={isDeleting !== null || isReordering}
                                         title="Edit"
@@ -445,8 +440,8 @@ const MediaLibrary: React.FC = () => {
                                             <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                                         </svg>
                                     </button>
-                                    <button 
-                                        onClick={() => handleDelete(item)} 
+                                    <button
+                                        onClick={() => handleDelete(item)}
                                         className="bg-red-500/80 rounded-full p-1.5 hover:bg-red-500 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                                         disabled={isDeleting === item.id || isDeleting !== null || isReordering}
                                         title="Delete"

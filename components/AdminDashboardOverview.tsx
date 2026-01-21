@@ -40,24 +40,23 @@ const ActivityItem: React.FC<{ icon: React.ReactNode, text: React.ReactNode, tim
     </div>
 );
 
-const Chart: React.FC<{data: {label: string, value: number}[]}> = ({data}) => {
+const Chart: React.FC<{ data: { label: string, value: number }[] }> = ({ data }) => {
     const maxValue = Math.max(...data.map(d => d.value), 1);
     return (
-      <div className="bg-white p-6 rounded-lg shadow h-full flex flex-col">
-        <h3 className="text-lg font-semibold text-neutral-dark mb-4">New Businesses (Last 7 Days)</h3>
-        <div className="flex-grow flex items-end justify-around gap-2 pt-4">
-            {data.map(item => (
-                <div key={item.label} className="flex flex-col items-center flex-1 h-full text-center group">
-                     <span className="text-xs font-bold text-neutral-dark opacity-0 group-hover:opacity-100 transition-opacity -mb-1">{item.value}</span>
-                    <div className="flex-grow flex items-end w-full">
-                       {/* eslint-disable jsx-a11y/no-static-element-interactions */}
-                       <div className="w-full bg-primary/20 hover:bg-primary/40 rounded-t" /* Dynamic height based on data - CSS inline necessary for dynamic calculations */ style={{height: `${Math.max((item.value / maxValue) * 100, 5)}%`, minHeight: '5px'}} title={`${item.value} new businesses`}></div>
+        <div className="bg-white p-6 rounded-lg shadow h-full flex flex-col">
+            <h3 className="text-lg font-semibold text-neutral-dark mb-4">New Businesses (Last 7 Days)</h3>
+            <div className="flex-grow flex items-end justify-around gap-2 pt-4">
+                {data.map(item => (
+                    <div key={item.label} className="flex flex-col items-center flex-1 h-full text-center group">
+                        <span className="text-xs font-bold text-neutral-dark opacity-0 group-hover:opacity-100 transition-opacity -mb-1">{item.value}</span>
+                        <div className="flex-grow flex items-end w-full">
+                            <div className="w-full bg-primary/20 hover:bg-primary/40 rounded-t" /* Dynamic height based on data - CSS inline necessary for dynamic calculations */ style={{ height: `${Math.max((item.value / maxValue) * 100, 5)}%`, minHeight: '5px' }} title={`${item.value} new businesses`}></div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">{item.label}</p>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">{item.label}</p>
-                </div>
-            ))}
+                ))}
+            </div>
         </div>
-      </div>
     );
 };
 
@@ -74,7 +73,7 @@ const AdminDashboardOverview: React.FC<DashboardOverviewProps> = ({ businesses, 
         const pendingOrders = orders.filter(o => o.status === OrderStatus.PENDING || o.status === OrderStatus.AWAITING_CONFIRMATION).length;
         const pendingRegistrations = registrationRequests.filter(r => r.status === 'Pending').length;
         const activeBusinesses = businesses.filter(b => b.isActive).length;
-        
+
         return { revenueThisMonth, pendingOrders, pendingRegistrations, activeBusinesses };
     }, [businesses, orders, registrationRequests]);
 
@@ -96,10 +95,10 @@ const AdminDashboardOverview: React.FC<DashboardOverviewProps> = ({ businesses, 
             .sort((a, b) => b.date.getTime() - a.date.getTime())
             .slice(0, 5);
     }, [orders, registrationRequests]);
-    
+
     const chartData = useMemo(() => {
         const data: { [key: string]: { value: number; label: string } } = {};
-        
+
         for (let i = 6; i >= 0; i--) {
             const d = new Date();
             d.setDate(d.getDate() - i);
@@ -107,11 +106,11 @@ const AdminDashboardOverview: React.FC<DashboardOverviewProps> = ({ businesses, 
             const key = d.toISOString().split('T')[0];
             data[key] = { value: 0, label: d.toLocaleDateString('en-US', { day: 'numeric' }) };
         }
-        
+
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
         sevenDaysAgo.setHours(0, 0, 0, 0);
-        
+
         businesses.forEach(b => {
             const joinDate = new Date(b?.joinedDate ?? new Date());
             joinDate.setHours(0, 0, 0, 0);
@@ -122,7 +121,7 @@ const AdminDashboardOverview: React.FC<DashboardOverviewProps> = ({ businesses, 
                 }
             }
         });
-        
+
         return Object.values(data);
     }, [businesses]);
 
@@ -144,7 +143,7 @@ const AdminDashboardOverview: React.FC<DashboardOverviewProps> = ({ businesses, 
                     <h3 className="text-lg font-semibold text-neutral-dark mb-4">Recent Activity</h3>
                     <div className="space-y-2">
                         {recentActivities.map(activity => {
-                             if (activity.type === 'order') {
+                            if (activity.type === 'order') {
                                 const order = activity.data as Order;
                                 return <ActivityItem key={activity.id} icon={<OrderIcon />} text={<>New order from <strong>{order.businessName}</strong>.</>} time={timeSince(activity.date)} onClick={() => onNavigate('orders')} />
                             }
@@ -154,7 +153,7 @@ const AdminDashboardOverview: React.FC<DashboardOverviewProps> = ({ businesses, 
                             }
                             return null;
                         })}
-                         {recentActivities.length === 0 && <p className="text-sm text-center text-gray-500 py-8">No recent activity.</p>}
+                        {recentActivities.length === 0 && <p className="text-sm text-center text-gray-500 py-8">No recent activity.</p>}
                     </div>
                 </div>
             </div>

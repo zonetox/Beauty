@@ -49,9 +49,10 @@ const AdminLandingPageModeration: React.FC = () => {
             toast.success(`Landing page status updated to ${newStatus}`);
             // Refresh businesses data
             window.location.reload();
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error updating landing page status:', error);
-            toast.error(`Failed to update status: ${error.message}`);
+            const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+            toast.error(`Failed to update status: ${message}`);
         }
     };
 
@@ -134,8 +135,8 @@ const AdminLandingPageModeration: React.FC = () => {
                     <button
                         onClick={() => setStatusFilter('all')}
                         className={`px-4 py-2 rounded-md font-medium transition-colors ${statusFilter === 'all'
-                                ? 'bg-primary text-white'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            ? 'bg-primary text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                     >
                         All
@@ -143,8 +144,8 @@ const AdminLandingPageModeration: React.FC = () => {
                     <button
                         onClick={() => setStatusFilter('Pending')}
                         className={`px-4 py-2 rounded-md font-medium transition-colors ${statusFilter === 'Pending'
-                                ? 'bg-yellow-500 text-white'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            ? 'bg-yellow-500 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                     >
                         Pending
@@ -152,8 +153,8 @@ const AdminLandingPageModeration: React.FC = () => {
                     <button
                         onClick={() => setStatusFilter('Needs Review')}
                         className={`px-4 py-2 rounded-md font-medium transition-colors ${statusFilter === 'Needs Review'
-                                ? 'bg-orange-500 text-white'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                     >
                         Needs Review

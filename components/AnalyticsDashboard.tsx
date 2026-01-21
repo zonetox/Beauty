@@ -42,8 +42,7 @@ const BarChart: React.FC<{ data: AnalyticsDataPoint[]; dataKey: 'pageViews' | 't
                 {data.map((item, index) => (
                     <div key={item?.date ?? `slot-${index}`} className="flex flex-col items-center flex-1 h-full">
                         <div className="flex-grow flex items-end w-full">
-                           {/* eslint-disable jsx-a11y/no-static-element-interactions */}
-                           <div
+                            <div
                                 className="w-full bg-primary/20 rounded-t-md hover:bg-primary/40 transition-colors cursor-pointer"
                                 /* Dynamic height based on data - CSS inline necessary for dynamic calculations */
                                 style={{ height: `${(values[index] / maxValue) * 100}%`, minHeight: '2px' }}
@@ -85,7 +84,6 @@ const TrafficSources: React.FC<{ sources: TrafficSource[] }> = ({ sources }) => 
                             <span className="text-gray-500">{source.percentage}%</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2.5">
-                            {/* eslint-disable jsx-a11y/no-static-element-interactions */}
                             <div className={`${sourceColors[source.source] || 'bg-gray-400'} h-2.5 rounded-full transition-all`} /* Dynamic width based on data - CSS inline necessary for dynamic calculations */ style={{ width: `${Math.max(source.percentage, 0.5)}%`, minWidth: '2px' }}></div>
                         </div>
                     </div>
@@ -111,10 +109,10 @@ const AnalyticsDashboard: React.FC = () => {
     // Filter data by time range
     const filteredData = useMemo(() => {
         if (!analytics) return { timeSeries: [], trafficSources: [] };
-        
+
         const now = new Date();
         let cutoffDate: Date;
-        
+
         switch (timeRange) {
             case '7d':
                 cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -128,7 +126,7 @@ const AnalyticsDashboard: React.FC = () => {
             default:
                 cutoffDate = new Date(0);
         }
-        
+
         const filtered = analytics.timeSeries.filter(item => new Date(item.date) >= cutoffDate);
         return {
             timeSeries: filtered,
@@ -151,7 +149,7 @@ const AnalyticsDashboard: React.FC = () => {
             totalConversions: totalClicks
         };
     }, [filteredData, analytics]);
-    
+
     const handleExport = () => {
         if (!analytics || filteredData.timeSeries.length === 0) {
             toast.error('No data to export');
