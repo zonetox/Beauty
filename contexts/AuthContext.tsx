@@ -1,13 +1,9 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
-import { AdminUser, AdminPermissions } from '../types.ts';
+import { AdminUser, AuthenticatedAdmin } from '../types.ts';
 import { supabase } from '../lib/supabaseClient.ts';
 import { useAdminPlatform } from './AdminPlatformContext.tsx';
-import { Session, User } from '@supabase/supabase-js';
-
-// Combined Admin User type including Auth data
-export interface AuthenticatedAdmin extends AdminUser {
-  authUser: User;
-}
+import { snakeToCamel } from '../lib/utils.ts';
+import { User } from '@supabase/supabase-js';
 
 interface AdminAuthContextType {
   currentUser: AuthenticatedAdmin | null;
@@ -26,7 +22,7 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [currentUser, setCurrentUser] = useState<AuthenticatedAdmin | null>(null);
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const { logAdminAction } = useAdminPlatform();
+  const { logAdminAction: _logAdminAction } = useAdminPlatform();
 
   const fetchAdminUsers = useCallback(async () => {
     const { data, error } = await supabase.from('admin_users').select('*').order('id');
@@ -34,22 +30,24 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
       console.error("Failed to fetch admin users:", error);
       return [];
     }
-    return data || [];
+    return snakeToCamel(data || []) as AdminUser[];
   }, []);
 
   useEffect(() => {
     const checkUser = async (user: User | null) => {
       if (user) {
         // User is logged in via Supabase Auth, check if they are an admin
+        if (!user.email) { setCurrentUser(null); setLoading(false); return; }
         const { data: adminProfile, error } = await supabase
           .from('admin_users')
           .select('*')
           .eq('email', user.email)
           .maybeSingle(); // Use maybeSingle() instead of single() to avoid error when no row found
-        
+
         if (adminProfile && !adminProfile.is_locked) {
           // It's a valid, active admin. Combine auth user with admin profile.
-          setCurrentUser({ ...adminProfile, authUser: user });
+          const camelProfile = snakeToCamel(adminProfile) as AdminUser;
+          setCurrentUser({ ...camelProfile, authUser: user });
         } else {
           // Logged in, but not a valid admin or is locked.
           if (error && error.code !== 'PGRST116') {
@@ -73,23 +71,23 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
     };
 
     const initialize = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        await checkUser(session?.user ?? null);
-        
-        // Also fetch the list of all admin users for management purposes
-        const users = await fetchAdminUsers();
-        setAdminUsers(users);
+      const { data: { session } } = await supabase.auth.getSession();
+      await checkUser(session?.user ?? null);
+
+      // Also fetch the list of all admin users for management purposes
+      const users = await fetchAdminUsers();
+      setAdminUsers(users);
     };
 
     initialize();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        setLoading(true);
-        checkUser(session?.user ?? null);
+      setLoading(true);
+      checkUser(session?.user ?? null);
     });
 
     return () => {
-        subscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, [fetchAdminUsers]);
 
@@ -103,9 +101,24 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
     if (error) throw error;
   };
 
-  const addAdminUser = async (newUser: Omit<AdminUser, 'id' | 'lastLogin' | 'isLocked'>) => { /* ... implementation unchanged ... */ };
-  const updateAdminUser = async (userId: number, updates: Partial<AdminUser>) => { /* ... implementation unchanged ... */ };
-  const deleteAdminUser = async (userId: number) => { /* ... implementation unchanged ... */ };
+  const addAdminUser = async (newUser: Omit<AdminUser, 'id' | 'lastLogin' | 'isLocked'>) => {
+    const { error } = await supabase.functions.invoke('create-admin-user', { body: newUser });
+    if (error) throw error;
+    const users = await fetchAdminUsers();
+    setAdminUsers(users);
+  };
+  const updateAdminUser = async (userId: number, updates: Partial<AdminUser>) => {
+    const { error } = await supabase.from('admin_users').update(updates as any).eq('id', userId);
+    if (error) throw error;
+    const users = await fetchAdminUsers();
+    setAdminUsers(users);
+  };
+  const deleteAdminUser = async (userId: number) => {
+    const { error } = await supabase.from('admin_users').delete().eq('id', userId);
+    if (error) throw error;
+    const users = await fetchAdminUsers();
+    setAdminUsers(users);
+  };
 
   return (
     <AdminAuthContext.Provider value={{ currentUser, loading, adminUsers, adminLogin, adminLogout, addAdminUser, updateAdminUser, deleteAdminUser }}>

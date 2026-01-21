@@ -214,8 +214,7 @@ const BusinessProfileEditor: React.FC = () => {
         const isNumeric = type === 'number';
         setFormData((prev) => {
             if (!prev) return null;
-            const updated: Business = { ...prev, [name]: isNumeric ? parseFloat(value) : value };
-            return updated;
+            return { ...prev, [name]: isNumeric ? parseFloat(value) : value } as Business;
         });
         // Clear error for this field when user starts typing
         if (errors[name as keyof FormErrors]) {
@@ -230,14 +229,12 @@ const BusinessProfileEditor: React.FC = () => {
         setFormData((prev: Business | null) => {
             if (!prev) return null;
             const currentCategories = prev.categories || [];
-            let updated: Business;
             if (checked) {
-                updated = { ...prev, categories: [...new Set([...currentCategories, category])] };
+                return { ...prev, categories: [...new Set([...currentCategories, category])] } as Business;
             } else {
                 const newCategories = currentCategories.filter((c: BusinessCategory) => c !== category);
-                updated = { ...prev, categories: newCategories.length > 0 ? newCategories : currentCategories };
+                return { ...prev, categories: newCategories.length > 0 ? newCategories : currentCategories } as Business;
             }
-            return updated;
         });
         // Clear error when category is selected
         if (errors.categories) {
@@ -313,16 +310,14 @@ const BusinessProfileEditor: React.FC = () => {
         const { name, value } = e.target;
         setFormData((prev) => {
             if (!prev) return null;
-            const updated: Business = { ...prev, seo: { ...(prev.seo || {}), [name]: value } };
-            return updated;
+            return { ...prev, seo: { ...(prev.seo || {}), [name]: value } } as Business;
         });
     };
 
     const handleLandingPageConfigChange = (newConfig: LandingPageConfig) => {
         setFormData((prev) => {
             if (!prev) return null;
-            const updated: Business = { ...prev, landingPageConfig: newConfig };
-            return updated;
+            return { ...prev, landingPageConfig: newConfig } as Business;
         });
     };
 
@@ -330,8 +325,7 @@ const BusinessProfileEditor: React.FC = () => {
         const { name, value } = e.target;
         setFormData((prev) => {
             if (!prev) return null;
-            const updated: Business = { ...prev, socials: { ...(prev.socials || {}), [name]: value } };
-            return updated;
+            return { ...prev, socials: { ...(prev.socials || {}), [name]: value } } as Business;
         });
     };
 

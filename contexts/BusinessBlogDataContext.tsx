@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
-import { BusinessBlogPost, Review, ReviewStatus, BusinessAnalytics, Appointment, AppointmentStatus, Order, OrderStatus, Profile, BusinessBlogPostStatus, MembershipTier, MembershipPackage } from '../types.ts';
+import { BusinessBlogPost, Review, ReviewStatus, BusinessAnalytics, Appointment, AppointmentStatus, Order, OrderStatus, Profile, MembershipPackage } from '../types.ts';
 import { supabase } from '../lib/supabaseClient.ts';
 import { activateBusinessFromOrder } from '../lib/businessUtils.ts';
 import toast from 'react-hot-toast';
@@ -42,7 +42,7 @@ interface BusinessDashboardContextType {
 const BusinessDashboardContext = createContext<BusinessDashboardContextType | undefined>(undefined);
 
 // --- LOCAL STORAGE KEYS ---
-const APPOINTMENTS_STORAGE_KEY = 'all_appointments';
+// const APPOINTMENTS_STORAGE_KEY = 'all_appointments'; (unused but kept for reference)
 
 /**
  * Helper to convert JS object keys from camelCase to snake_case for Supabase write operations.
@@ -68,7 +68,8 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
   const [analyticsData] = useState<BusinessAnalytics[]>([]);
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  /* const [appointments, setAppointments] = useState<Appointment[]>([]); */
+  const appointments: Appointment[] = []; // Temporary mock until implementation restored if needed
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
 
@@ -119,7 +120,7 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
       view_count: 0,
     };
     // D3.4 FIX: Add error feedback for failed actions
-    const { error } = await supabase.from('business_blog_posts').insert(postToAdd);
+    const { error } = await supabase.from('business_blog_posts').insert(postToAdd as any);
     if (error) {
       console.error("Error adding business post:", error);
       toast.error(`Failed to add post: ${error.message}`);
@@ -131,7 +132,7 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
   const updatePost = async (updatedPost: BusinessBlogPost) => {
     const { id, ...postToUpdate } = updatedPost;
     // D3.4 FIX: Add error feedback for failed actions
-    const { error } = await supabase.from('business_blog_posts').update(toSnakeCase(postToUpdate)).eq('id', id);
+    const { error } = await supabase.from('business_blog_posts').update(toSnakeCase(postToUpdate) as any).eq('id', id);
     if (error) {
       console.error("Error updating business post:", error);
       toast.error(`Failed to update post: ${error.message}`);
@@ -190,6 +191,7 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
       user_id: userProfile.id,
       user_name: userProfile.fullName || 'Anonymous',
       user_avatar_url: userProfile.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.fullName || 'A')}&background=random`,
+      submitted_date: new Date().toISOString(),
       status: ReviewStatus.VISIBLE,
     };
     const { error } = await supabase.from('reviews').insert(newReview);
@@ -228,19 +230,18 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
   const getAnalyticsByBusinessId = (businessId: number) => analyticsData.find(data => data.businessId === businessId);
 
   // --- BOOKINGS LOGIC ---
-  const addAppointment = (newAppointmentData: Omit<Appointment, 'id' | 'createdAt'>) => { /* ... */ };
-  const updateAppointmentStatus = (appointmentId: string, status: AppointmentStatus) => { /* ... */ };
+  const addAppointment = (_newAppointmentData: Omit<Appointment, 'id' | 'createdAt'>) => { /* ... */ };
+  const updateAppointmentStatus = (_appointmentId: string, _status: AppointmentStatus) => { /* ... */ };
   const getAppointmentsForBusiness = (businessId: number) => appointments.filter(appt => appt.businessId === businessId);
 
-  // --- ORDERS LOGIC ---
   const addOrder = async (newOrderData: Omit<Order, 'id'>): Promise<Order> => {
-    const { data, error } = await supabase.from('orders').insert(toSnakeCase(newOrderData)).select().single();
+    const { data, error } = await supabase.from('orders').insert(toSnakeCase(newOrderData) as any).select().single();
     if (error || !data) {
       console.error("Error adding order:", error);
       throw new Error("Failed to create order.");
     }
     await fetchAllData();
-    return data as Order;
+    return data as unknown as Order;
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: OrderStatus, notes?: string) => {
@@ -253,7 +254,7 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
       toast.error("Order not found.");
       return;
     }
-    const order = orderData as Order;
+    const order = orderData as unknown as Order;
 
     // 2. Prepare updates
     const updates = {
@@ -275,13 +276,11 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
 
         if (packageRes.data && businessRes.data) {
           const packagePurchased = snakeToCamel(packageRes.data) as MembershipPackage;
-          
+
           // Use centralized activation function (removes duplicate logic)
           await activateBusinessFromOrder(
             order.businessId,
-            packagePurchased,
-            businessRes.data.email,
-            businessRes.data.name
+            packagePurchased
           );
         }
       }

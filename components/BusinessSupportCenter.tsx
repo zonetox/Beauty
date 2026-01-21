@@ -6,8 +6,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useAdmin } from '../contexts/AdminContext.tsx';
 import { useBusinessAuth } from '../contexts/BusinessContext.tsx';
-import { SupportTicket, TicketStatus, TicketReply } from '../types.ts';
-import LoadingState from './LoadingState.tsx';
+import { SupportTicket, TicketStatus } from '../types.ts';
 import EmptyState from './EmptyState.tsx';
 
 const statusStyles: { [key in TicketStatus]: string } = {
@@ -19,7 +18,7 @@ const statusStyles: { [key in TicketStatus]: string } = {
 const BusinessSupportCenter: React.FC = () => {
     const { currentBusiness } = useBusinessAuth();
     const { getTicketsForBusiness, addTicket, addReply, tickets } = useAdmin();
-    
+
     const [view, setView] = useState<'list' | 'create' | 'detail'>('list');
     const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
     const [newTicketSubject, setNewTicketSubject] = useState('');
@@ -58,7 +57,7 @@ const BusinessSupportCenter: React.FC = () => {
 
     const validateTicket = (): boolean => {
         const newErrors: { subject?: string; message?: string } = {};
-        
+
         if (!newTicketSubject.trim()) {
             newErrors.subject = 'Subject is required';
         } else if (newTicketSubject.trim().length < 5) {
@@ -98,7 +97,7 @@ const BusinessSupportCenter: React.FC = () => {
 
     const handleCreateTicket = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (!validateTicket()) {
             toast.error('Please fix the errors before submitting');
             return;
@@ -127,9 +126,9 @@ const BusinessSupportCenter: React.FC = () => {
 
     const handleReply = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (!selectedTicket) return;
-        
+
         if (!validateReply()) {
             return;
         }
@@ -203,7 +202,7 @@ const BusinessSupportCenter: React.FC = () => {
                     </button>
                 </div>
             </div>
-            
+
             {sortedTickets.length === 0 ? (
                 <EmptyState
                     title={statusFilter === 'all' ? "No support tickets" : `No ${statusFilter} tickets`}
@@ -225,7 +224,7 @@ const BusinessSupportCenter: React.FC = () => {
                                 <p className="text-xs text-gray-500 mt-1">
                                     {ticket.replies.length > 0 ? (
                                         <>
-                                            {ticket.replies.length} {ticket.replies.length === 1 ? 'reply' : 'replies'} • 
+                                            {ticket.replies.length} {ticket.replies.length === 1 ? 'reply' : 'replies'} •
                                         </>
                                     ) : null}
                                     {' '}Last updated: {formatDate(ticket.lastReplyAt || ticket.createdAt)}
@@ -240,7 +239,7 @@ const BusinessSupportCenter: React.FC = () => {
             )}
         </div>
     );
-    
+
     const renderCreateView = () => (
         <div>
             <button
@@ -268,9 +267,8 @@ const BusinessSupportCenter: React.FC = () => {
                             setNewTicketSubject(e.target.value);
                             if (errors.subject) setErrors(prev => ({ ...prev, subject: undefined }));
                         }}
-                        className={`mt-1 w-full p-3 border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent ${
-                            errors.subject ? 'border-red-500' : ''
-                        }`}
+                        className={`mt-1 w-full p-3 border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent ${errors.subject ? 'border-red-500' : ''
+                            }`}
                         placeholder="Brief description of your issue"
                         maxLength={200}
                         disabled={isSubmitting}
@@ -295,9 +293,8 @@ const BusinessSupportCenter: React.FC = () => {
                             if (errors.message) setErrors(prev => ({ ...prev, message: undefined }));
                         }}
                         rows={8}
-                        className={`mt-1 w-full p-3 border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent resize-y ${
-                            errors.message ? 'border-red-500' : ''
-                        }`}
+                        className={`mt-1 w-full p-3 border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent resize-y ${errors.message ? 'border-red-500' : ''
+                            }`}
                         placeholder="Please provide as much detail as possible about your issue..."
                         maxLength={5000}
                         disabled={isSubmitting}
@@ -399,11 +396,10 @@ const BusinessSupportCenter: React.FC = () => {
                             {selectedTicket.replies.map((reply, index) => (
                                 <div
                                     key={reply.id || index}
-                                    className={`p-4 rounded-md border ${
-                                        reply.author === 'Admin' || reply.author.toLowerCase().includes('admin')
+                                    className={`p-4 rounded-md border ${reply.author === 'Admin' || reply.author.toLowerCase().includes('admin')
                                             ? 'bg-blue-50 border-blue-200'
                                             : 'bg-green-50 border-green-200'
-                                    }`}
+                                        }`}
                                 >
                                     <div className="flex justify-between items-start mb-2">
                                         <p className="text-sm font-semibold">
@@ -431,9 +427,8 @@ const BusinessSupportCenter: React.FC = () => {
                                 if (errors.reply) setErrors(prev => ({ ...prev, reply: undefined }));
                             }}
                             rows={4}
-                            className={`w-full p-3 border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent resize-y ${
-                                errors.reply ? 'border-red-500' : ''
-                            }`}
+                            className={`w-full p-3 border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent resize-y ${errors.reply ? 'border-red-500' : ''
+                                }`}
                             placeholder="Type your reply here..."
                             maxLength={5000}
                             disabled={isSubmitting}

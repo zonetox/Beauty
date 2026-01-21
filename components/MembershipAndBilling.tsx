@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import { useBusinessAuth, useOrderData } from '../contexts/BusinessContext.tsx';
 import { useMembershipPackageData } from '../contexts/BusinessDataContext.tsx';
 import { useAdmin } from '../contexts/AdminContext.tsx';
-import { OrderStatus, MembershipPackage, Order } from '../types.ts';
+import { OrderStatus, MembershipPackage } from '../types.ts';
 import LoadingState from './LoadingState.tsx';
 import EmptyState from './EmptyState.tsx';
 import { uploadFile } from '../lib/storage.ts';
@@ -59,14 +59,14 @@ const MembershipAndBilling: React.FC = () => {
 
     const currentPackage = packages.find(p => p.tier === currentBusiness.membershipTier);
     const businessOrders = useMemo(() => {
-        return orders.filter(o => o.businessId === currentBusiness.id).sort((a, b) => 
+        return orders.filter(o => o.businessId === currentBusiness.id).sort((a, b) =>
             new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
         );
     }, [orders, currentBusiness.id]);
 
     // Find the latest order awaiting confirmation (for payment proof upload)
     const latestPendingOrder = useMemo(() => {
-        return businessOrders.find(o => 
+        return businessOrders.find(o =>
             o.status === OrderStatus.AWAITING_CONFIRMATION || o.status === OrderStatus.PENDING
         ) || null;
     }, [businessOrders]);
@@ -108,7 +108,7 @@ const MembershipAndBilling: React.FC = () => {
             setIsSubmitting(false);
         }
     };
-    
+
     const handleScrollToCompare = () => {
         document.getElementById('compare-plans-section')?.scrollIntoView({ behavior: 'smooth' });
     };
@@ -150,7 +150,7 @@ const MembershipAndBilling: React.FC = () => {
             }
 
             toast.success('Payment proof uploaded successfully!');
-            
+
             // Refresh orders
             window.location.reload(); // Simple refresh - could be improved with context update
         } catch (error) {
@@ -200,7 +200,7 @@ const MembershipAndBilling: React.FC = () => {
         { key: 'permissions.featuredPostLimit', label: 'Featured Posts' },
         { key: 'permissions.featuredLevel', label: 'Featured Level' },
     ];
-    
+
     /**
      * Gets a nested value from an object using dot notation path
      * @param obj - The object to get value from
@@ -230,7 +230,7 @@ const MembershipAndBilling: React.FC = () => {
      */
     const renderPermission = (value: unknown, key: string): React.ReactNode => {
         if (key.endsWith('featuredLevel')) {
-            return <span className="font-semibold">{formatFeaturedLevel(value)}</span>;
+            return <span className="font-semibold">{formatFeaturedLevel(value as number)}</span>;
         }
         if (typeof value === 'boolean') {
             return value ? <CheckIcon className="text-green-500 mx-auto" /> : <CrossIcon className="text-red-400 mx-auto" />;
@@ -239,7 +239,7 @@ const MembershipAndBilling: React.FC = () => {
             if (value === 0) return <span className="text-gray-400">—</span>;
             return <span className="font-semibold">{value === -1 ? 'Unlimited' : value}</span>;
         }
-        return value;
+        return String(value);
     };
 
     if (ordersLoading) {
@@ -253,7 +253,7 @@ const MembershipAndBilling: React.FC = () => {
     return (
         <div className="p-8 space-y-8">
             <h2 className="text-2xl font-bold font-serif text-neutral-dark">Membership & Billing</h2>
-            
+
             {showPaymentInfo && selectedPackageForPayment && settings?.bankDetails && (
                 <div className="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg">
                     <div className="flex justify-between items-start">
@@ -276,7 +276,7 @@ const MembershipAndBilling: React.FC = () => {
                         <p><strong>Amount:</strong> <strong className="text-primary">{formatPrice(selectedPackageForPayment.price)}</strong></p>
                         <p><strong>Transfer Note:</strong> {settings.bankDetails.transferNote.replace('[Tên doanh nghiệp]', currentBusiness.name).replace('[Mã đơn hàng]', 'UPGRADE')}</p>
                     </div>
-                    
+
                     {/* Payment Proof Upload */}
                     {latestPendingOrder && (
                         <div className="mt-4 p-4 bg-white rounded border border-blue-200">
@@ -301,8 +301,8 @@ const MembershipAndBilling: React.FC = () => {
                                     {isUploadingProof && (
                                         <div className="mt-2">
                                             <div className="w-full bg-gray-200 rounded-full h-2">
-                                                <div 
-                                                    className="bg-primary h-2 rounded-full transition-all duration-300" 
+                                                <div
+                                                    className="bg-primary h-2 rounded-full transition-all duration-300"
                                                     style={{ width: `${uploadProgress}%` }}
                                                 ></div>
                                             </div>
@@ -313,11 +313,11 @@ const MembershipAndBilling: React.FC = () => {
                             )}
                         </div>
                     )}
-                    
+
                     <p className="text-xs text-blue-600 mt-2">Your plan will be activated once our team confirms the payment.</p>
                 </div>
             )}
-            
+
             <div>
                 <div className={`p-6 rounded-lg border ${isExpired ? 'bg-red-50 border-red-200' : 'bg-primary/10 border-primary/20'}`}>
                     <h3 className="text-xl font-bold text-neutral-dark mb-4">Current Plan</h3>
@@ -393,7 +393,7 @@ const MembershipAndBilling: React.FC = () => {
                                     <tr className="border-t bg-gray-50/50">
                                         <td colSpan={packages.length + 1} className="p-3 font-semibold text-neutral-dark">Core Features</td>
                                     </tr>
-                                    {featureRows.map(({key, label}) => (
+                                    {featureRows.map(({ key, label }) => (
                                         <tr key={key} className="border-t">
                                             <td className="p-4">{label}</td>
                                             {packages.map(pkg => (

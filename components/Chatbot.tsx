@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CATEGORIES, LOCATIONS_HIERARCHY, CITIES } from '../constants.ts';
+import { LOCATIONS_HIERARCHY, CITIES } from '../constants.ts';
 import { BusinessCategory } from '../types.ts';
 import { generateChatbotResponse, isGeminiAvailable } from '../lib/geminiService.ts';
 
@@ -29,7 +29,7 @@ const Chatbot: React.FC = () => {
     useEffect(() => {
         scrollToBottom();
     }, [messages, scrollToBottom]);
-    
+
     useEffect(() => {
         // Cleanup: Clear all timeouts when component unmounts or chat closes
         if (!isOpen) {
@@ -41,7 +41,7 @@ const Chatbot: React.FC = () => {
     const processUserMessage = async (text: string) => {
         const lowerText = text.toLowerCase();
         const params = new URLSearchParams();
-        
+
         // Try to extract search parameters (category, location, keyword)
         // 1. Find Category
         for (const category of Object.values(BusinessCategory)) {
@@ -65,10 +65,10 @@ const Chatbot: React.FC = () => {
                         break;
                     }
                 }
-                break; 
+                break;
             }
         }
-        
+
         // 3. Use the rest as keyword
         const keywords = lowerText
             .replace(/spa|nail|tóc|salon/g, '')
@@ -76,7 +76,7 @@ const Chatbot: React.FC = () => {
             .replace(/hà nội|tp. hồ chí minh|đà nẵng|hải phòng|cần thơ/g, '')
             .replace(/quận \d+/g, '')
             .trim();
-        
+
         if (keywords) {
             params.set('keyword', keywords);
         }
@@ -93,10 +93,10 @@ const Chatbot: React.FC = () => {
                     }));
 
                 const aiResponse = await generateChatbotResponse(text, history);
-                
+
                 if (aiResponse) {
                     addBotMessage(aiResponse);
-                    
+
                     // If we have search parameters, offer to search
                     if (params.toString()) {
                         const timeout1 = setTimeout(() => {
@@ -165,7 +165,7 @@ const Chatbot: React.FC = () => {
 
         // Show loading message
         addBotMessage("Để tôi xem nào...");
-        
+
         // Process message (async)
         await processUserMessage(messageText);
     };
@@ -207,7 +207,7 @@ const Chatbot: React.FC = () => {
                                 </div>
                             ))}
                         </div>
-                         <div ref={messagesEndRef} />
+                        <div ref={messagesEndRef} />
                     </main>
                     <footer className="p-2 border-t">
                         <form onSubmit={handleSendMessage} className="flex gap-2">

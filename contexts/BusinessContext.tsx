@@ -406,7 +406,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       user_id: userProfile.id,
       user_name: userProfile.fullName || 'Anonymous',
       user_avatar_url: userProfile.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.fullName || 'A')}&background=random`,
-      status: 'Visible',
+      status: 'Visible' as any,
     };
     const { error } = await supabase.from('reviews').insert(newReview);
     if (error) {
@@ -507,7 +507,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     }
     hasFetchedRef.current = false; // Reset to allow refetch
     await fetchAllData();
-    return data as Order;
+    return snakeToCamel(data) as Order;
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: OrderStatus, notes?: string) => {
@@ -525,7 +525,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
 
     if (!error && data) {
       if (newStatus === OrderStatus.COMPLETED) {
-        const order = data as Order;
+        const order = snakeToCamel(data) as unknown as Order;
         const businessToUpdate = businesses.find(b => b.id === order.businessId);
         const packagePurchased = packages.find(p => p.id === order.packageId);
 
@@ -537,9 +537,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
           // Use centralized activation function (removes duplicate logic)
           const activated = await activateBusinessFromOrder(
             order.businessId,
-            packagePurchased,
-            businessToUpdate.email,
-            businessToUpdate.name
+            packagePurchased
           );
 
           if (activated) {

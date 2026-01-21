@@ -1,11 +1,9 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
-import { AdminLogEntry, Notification, Announcement, SupportTicket, TicketReply, TicketStatus, AppSettings, LayoutItem, RegistrationRequest } from '../types.ts';
+import { AdminLogEntry, Notification, Announcement, SupportTicket, TicketReply, TicketStatus, AppSettings, RegistrationRequest, PageData, PageName } from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { DEFAULT_PAGE_CONTENT } from './PageContentContext.tsx';
+import { snakeToCamel } from '../lib/utils.ts';
 import { useErrorHandler } from '../lib/useErrorHandler.ts';
-
-type PageName = 'about' | 'contact' | 'homepage';
-interface PageData { layout: LayoutItem[]; visibility: { [key: string]: boolean }; }
 
 interface AdminPlatformContextType {
   // Logs
@@ -28,7 +26,7 @@ interface AdminPlatformContextType {
   addTicket: (ticketData: Omit<SupportTicket, 'id' | 'createdAt' | 'lastReplyAt' | 'status' | 'replies'>) => Promise<void>;
   addReply: (ticketId: string, replyData: Omit<TicketReply, 'id' | 'createdAt'>) => Promise<void>;
   updateTicketStatus: (ticketId: string, status: TicketStatus) => Promise<void>;
-  // Registration Requests (moved from AdminPage)
+  // Registration Requests
   registrationRequests: RegistrationRequest[];
   approveRegistrationRequest: (requestId: string) => Promise<any>;
   rejectRegistrationRequest: (requestId: string) => Promise<void>;
@@ -44,7 +42,6 @@ const AdminPlatformContext = createContext<AdminPlatformContextType | undefined>
 
 const ANNOUNCEMENT_READ_KEY = 'read_announcements_by_business';
 
-
 export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [logs, setLogs] = useState<AdminLogEntry[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -52,585 +49,177 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [registrationRequests, setRegistrationRequests] = useState<RegistrationRequest[]>([]);
   const [settings, setSettings] = useState<AppSettings | null>(null);
-  const [pageContent, setPageContent] = useState<{ [key in PageName]?: PageData }>(DEFAULT_PAGE_CONTENT);
+  const [pageContent, setPageContent] = useState<Record<PageName, PageData>>(DEFAULT_PAGE_CONTENT as Record<PageName, PageData>);
   const { handleEdgeFunctionError } = useErrorHandler();
 
   const fetchAllAdminData = useCallback(async () => {
-    if (!isSupabaseConfigured) {
-      // Fallback mode - skip database queries
-      return;
-    }
-
-    // Add overall timeout for all queries (15 seconds)
-    const overallTimeout = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Admin data fetch timeout')), 15000);
-    });
-
-    // F2.1: Optimize queries - select only needed columns
-    // Add individual timeouts for each query (10 seconds each)
-    const queryWithTimeout = async <T,>(queryPromise: Promise<T>, timeoutMs = 10000): Promise<T> => {
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Query timeout')), timeoutMs);
-      });
-      return Promise.race([queryPromise, timeoutPromise]);
-    };
+    if (!isSupabaseConfigured) return;
 
     try {
-      const [
-        announcementsRes,
-        ticketsRes,
-        requestsRes,
-        settingsRes,
-        pageContentRes
-      ] = await Promise.race([
-        Promise.all([
-          queryWithTimeout(
-            supabase.from('announcements')
-              .select('id, title, content, type, created_at')
-              .order('created_at', { ascending: false })
-              .limit(50) // Limit to recent 50 announcements
-          ),
-          queryWithTimeout(
-            supabase.from('support_tickets')
-              .select(`
-                id, 
-                business_id, 
-                subject, 
-                message, 
-                status, 
-                created_at, 
-                last_reply_at, 
-                replies,
-                businesses!inner(name)
-              `)
-              .order('last_reply_at', { ascending: false })
-              .limit(100) // Limit to recent 100 tickets
-          ),
-          queryWithTimeout(
-            supabase.from('registration_requests')
-              .select('id, business_name, email, phone, address, category, tier, submitted_at, status')
-              .order('submitted_at', { ascending: false })
-              .limit(100) // Limit to recent 100 requests
-          ),
-          queryWithTimeout(
-            supabase.from('app_settings').select('settings_data').eq('id', 1).maybeSingle()
-          ),
-          queryWithTimeout(
-            supabase.from('page_content')
-              .select('page_name, content_data')
-          )
-        ]),
-        overallTimeout
+      const [announcementsRes, ticketsRes, requestsRes, settingsRes, pageContentRes] = await Promise.all([
+        supabase.from('announcements').select('id, title, content, type, created_at').order('created_at', { ascending: false }).limit(50),
+        supabase.from('support_tickets').select('id, business_id, subject, message, status, created_at, last_reply_at, replies, businesses!inner(name)').order('last_reply_at', { ascending: false }).limit(100),
+        supabase.from('registration_requests').select('id, business_name, email, phone, address, category, tier, submitted_at, status').order('submitted_at', { ascending: false }).limit(100),
+        supabase.from('app_settings').select('settings_data').eq('id', 1).maybeSingle(),
+        supabase.from('page_content').select('page_name, content_data')
       ]);
 
-    if (announcementsRes.data) {
-      // Map snake_case to camelCase
-      setAnnouncements(announcementsRes.data.map((a: any) => ({
-        id: a.id,
-        title: a.title,
-        content: a.content,
-        type: a.type,
-        createdAt: a.created_at || a.createdAt,
-        created_at: a.created_at, // Keep for compatibility
-      })));
-    }
-    if (ticketsRes.data) {
-      // Map snake_case to camelCase
-      setTickets(ticketsRes.data.map((t: any) => ({
-        id: t.id,
-        businessId: t.business_id,
-        businessName: t.businesses?.name || t.business_name || 'Unknown Business',
-        subject: t.subject,
-        message: t.message,
-        status: t.status,
-        createdAt: t.created_at || t.createdAt,
-        lastReplyAt: t.last_reply_at || t.lastReplyAt,
-        replies: t.replies || [],
-      })));
-    }
-    if (requestsRes.data) {
-      // Map snake_case to camelCase
-      setRegistrationRequests(requestsRes.data.map((r: any) => ({
-        id: r.id,
-        businessName: r.business_name,
-        email: r.email,
-        phone: r.phone,
-        address: r.address,
-        category: r.category,
-        tier: r.tier,
-        status: r.status,
-        submittedAt: r.submitted_at || r.submittedAt,
-      })));
-    }
-    if (settingsRes.data) setSettings(settingsRes.data.settings_data as AppSettings);
-
-    // Merge database page content with local defaults
-    const dbContent = pageContentRes.data?.reduce((acc, page) => {
-      acc[page.page_name as PageName] = page.content_data;
-      return acc;
-    }, {} as { [key in PageName]?: PageData }) || {};
-
-    const finalContent = { ...DEFAULT_PAGE_CONTENT };
-    for (const pageName of Object.keys(finalContent)) {
-      const key = pageName as PageName;
-      const defaultPage = DEFAULT_PAGE_CONTENT[key];
-      const dbPage = dbContent[key];
-
-      if (dbPage) {
-        finalContent[key] = {
-          layout: dbPage.layout || defaultPage.layout,
-          visibility: { ...defaultPage.visibility, ...dbPage.visibility },
-        };
+      if (announcementsRes.data) setAnnouncements(snakeToCamel(announcementsRes.data) as Announcement[]);
+      if (ticketsRes.data) {
+        const mappedTickets = (ticketsRes.data as any[]).map(t => ({
+          ...snakeToCamel(t),
+          businessName: t.businesses?.name || t.business_name || 'Unknown Business'
+        }));
+        setTickets(mappedTickets as SupportTicket[]);
       }
-    }
-    setPageContent(finalContent);
+      if (requestsRes.data) setRegistrationRequests(snakeToCamel(requestsRes.data) as RegistrationRequest[]);
+      if (settingsRes.data) setSettings(settingsRes.data.settings_data as unknown as AppSettings);
+
+      const dbContent = (pageContentRes.data as any[])?.reduce((acc, page) => {
+        acc[page.page_name as PageName] = page.content_data as PageData;
+        return acc;
+      }, {} as Record<PageName, PageData>) || {};
+
+      const finalContent = { ...(DEFAULT_PAGE_CONTENT as Record<PageName, PageData>) };
+      for (const pageName of Object.keys(finalContent)) {
+        const key = pageName as PageName;
+        const dbPage = dbContent[key];
+        if (dbPage) {
+          finalContent[key] = {
+            layout: dbPage.layout || finalContent[key].layout,
+            visibility: { ...finalContent[key].visibility, ...dbPage.visibility },
+          };
+        }
+      }
+      setPageContent(finalContent);
     } catch (error) {
       console.error('Error fetching admin platform data:', error);
-      // Don't throw - allow admin page to render with partial data
-      // Individual components will handle missing data gracefully
     }
   }, []);
 
-  // Lazy load admin platform data - only fetch when actually needed (not on mount)
-  // This prevents blocking admin page load
-  // Data will be fetched on-demand when specific tabs/components request it
-  // For now, we still fetch on mount but with better error handling
   useEffect(() => {
-    // Delay fetch by 3 seconds to let admin page render first
     const timer = setTimeout(() => {
-      fetchAllAdminData().catch((error) => {
-        console.error('Failed to fetch admin platform data:', error);
-        // Don't block UI - allow admin to use page even if some data fails to load
-      });
+      fetchAllAdminData().catch(console.error);
     }, 3000);
-
     return () => clearTimeout(timer);
-    // Supabase real-time subscription for new registrations
-    if (isSupabaseConfigured) {
-      const channel = supabase.channel('public:registration_requests')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'registration_requests' }, payload => {
-          console.log('Change received!', payload)
-          fetchAllAdminData(); // Refetch all data on change
-        })
-        .subscribe()
-
-      return () => {
-        supabase.removeChannel(channel);
-      }
-    }
   }, [fetchAllAdminData]);
 
-  // --- LOGS --- (C4.9: Database connection - 100%)
   const fetchLogs = useCallback(async () => {
-    if (!isSupabaseConfigured) {
-      // Fallback to localStorage if Supabase not configured
-      const savedLogs = localStorage.getItem('admin_activity_logs');
-      if (savedLogs) {
-        try {
-          setLogs(JSON.parse(savedLogs));
-        } catch (error) {
-          console.error('Failed to parse logs from localStorage:', error);
-        }
-      }
-      return;
-    }
-
-    try {
-      // PHASE 3: Optimize query - select only needed columns
-      const { data, error } = await supabase
-        .from('admin_activity_logs')
-        .select('id, timestamp, admin_username, action, details')
-        .order('timestamp', { ascending: false })
-        .limit(100);
-
-      if (error) {
-        console.error('Error fetching admin logs:', error);
-        // Fallback to localStorage
-        const savedLogs = localStorage.getItem('admin_activity_logs');
-        if (savedLogs) {
-          try {
-            setLogs(JSON.parse(savedLogs));
-          } catch (e) {
-            console.error('Failed to parse logs from localStorage:', e);
-          }
-        }
-      } else if (data) {
-        const mappedLogs: AdminLogEntry[] = data.map(log => ({
-          id: log.id,
-          timestamp: log.timestamp,
-          adminUsername: log.admin_username,
-          action: log.action,
-          details: log.details || '',
-        }));
-        setLogs(mappedLogs);
-      }
-    } catch (error) {
-      console.error('Error in fetchLogs:', error);
+    if (!isSupabaseConfigured) return;
+    const { data, error } = await supabase.from('admin_activity_logs').select('id, timestamp, admin_username, action, details').order('timestamp', { ascending: false }).limit(100);
+    if (!error && data) {
+      setLogs(data.map(log => ({ id: log.id, timestamp: log.timestamp || new Date().toISOString(), adminUsername: log.admin_username, action: log.action, details: log.details || '' })));
     }
   }, []);
 
-  useEffect(() => {
-    fetchLogs();
-  }, [fetchLogs]);
+  useEffect(() => { fetchLogs(); }, [fetchLogs]);
 
   const logAdminAction = async (adminUsername: string, action: string, details: string) => {
-    const newLog: AdminLogEntry = { 
-      id: crypto.randomUUID(), 
-      timestamp: new Date().toISOString(), 
-      adminUsername, 
-      action, 
-      details 
-    };
-
-    // Update local state immediately
-    setLogs(prev => {
-      const updated = [newLog, ...prev].slice(0, 100);
-      return updated;
-    });
-
-    if (!isSupabaseConfigured) {
-      // Fallback to localStorage if Supabase not configured
-      try {
-        localStorage.setItem('admin_activity_logs', JSON.stringify([newLog, ...logs].slice(0, 100)));
-      } catch (error) {
-        console.error('Failed to save logs to localStorage:', error);
-      }
-      return;
-    }
-
-    try {
-      // Save to database
-      const { error } = await supabase
-        .from('admin_activity_logs')
-        .insert({
-          admin_username: adminUsername,
-          action,
-          details,
-          timestamp: newLog.timestamp,
-        });
-
-      if (error) {
-        console.error('Error saving admin log:', error);
-        // Fallback to localStorage
-        try {
-          localStorage.setItem('admin_activity_logs', JSON.stringify([newLog, ...logs].slice(0, 100)));
-        } catch (e) {
-          console.error('Failed to save to localStorage:', e);
-        }
-      } else {
-        // Refresh logs from database
-        await fetchLogs();
-      }
-    } catch (error) {
-      console.error('Error in logAdminAction:', error);
-      // Fallback to localStorage
-      try {
-        localStorage.setItem('admin_activity_logs', JSON.stringify([newLog, ...logs].slice(0, 100)));
-      } catch (e) {
-        console.error('Failed to save to localStorage:', e);
-      }
-    }
+    if (!isSupabaseConfigured) return;
+    const { error } = await supabase.from('admin_activity_logs').insert({ admin_username: adminUsername, action, details, timestamp: new Date().toISOString() });
+    if (!error) fetchLogs();
   };
 
   const clearLogs = async () => {
-    setLogs([]);
-
-    if (!isSupabaseConfigured) {
-      localStorage.removeItem('admin_activity_logs');
-      return;
-    }
-
-    try {
-      // Delete all logs from database (admin only)
-      const { error } = await supabase
-        .from('admin_activity_logs')
-        .delete()
-        .neq('id', ''); // Delete all
-
-      if (error) {
-        console.error('Error clearing logs:', error);
-      }
-      localStorage.removeItem('admin_activity_logs');
-    } catch (error) {
-      console.error('Error in clearLogs:', error);
-    }
+    if (!isSupabaseConfigured) return;
+    const { error } = await supabase.from('admin_activity_logs').delete().neq('id', '');
+    if (!error) setLogs([]);
   };
 
-  // --- NOTIFICATIONS --- (C4.9: Database connection - 100%)
   const fetchNotifications = useCallback(async () => {
-    if (!isSupabaseConfigured) {
-      // Fallback to localStorage if Supabase not configured
-      const savedNotifications = localStorage.getItem('app_notifications');
-      if (savedNotifications) {
-        try {
-          setNotifications(JSON.parse(savedNotifications));
-        } catch (error) {
-          console.error('Failed to parse notifications from localStorage:', error);
-        }
-      }
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('email_notifications_log')
-        .select('*')
-        .order('sent_at', { ascending: false })
-        .limit(100);
-
-      if (error) {
-        console.error('Error fetching notifications:', error);
-        // Fallback to localStorage
-        const savedNotifications = localStorage.getItem('app_notifications');
-        if (savedNotifications) {
-          try {
-            setNotifications(JSON.parse(savedNotifications));
-          } catch (e) {
-            console.error('Failed to parse notifications from localStorage:', e);
-          }
-        }
-      } else if (data) {
-        const mappedNotifications: Notification[] = data.map(notif => ({
-          id: notif.id,
-          recipientEmail: notif.recipient_email,
-          subject: notif.subject,
-          body: notif.body,
-          sentAt: notif.sent_at,
-          read: notif.read || false,
-        }));
-        setNotifications(mappedNotifications);
-      }
-    } catch (error) {
-      console.error('Error in fetchNotifications:', error);
+    if (!isSupabaseConfigured) return;
+    const { data, error } = await supabase.from('email_notifications_log').select('*').order('sent_at', { ascending: false }).limit(100);
+    if (!error && data) {
+      setNotifications(data.map(notif => ({ id: notif.id, recipientEmail: notif.recipient_email, subject: notif.subject, body: notif.body, sentAt: notif.sent_at || new Date().toISOString(), read: notif.read || false })));
     }
   }, []);
 
-  useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
+  useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
 
   const addNotification = async (recipientEmail: string, subject: string, body: string) => {
-    // Use email service for better integration and database logging
     if (isSupabaseConfigured) {
-      try {
-        // Import email service dynamically to avoid circular dependencies
-        const { sendSimpleEmail } = await import('../lib/emailService');
-        const result = await sendSimpleEmail(recipientEmail, subject, body.replace(/\n/g, '<br>'));
-        if (!result.success) {
-          console.error('Error sending email:', result.error);
-        }
-      } catch (error) {
-        console.error('Error importing email service:', error);
-        // Fallback to direct Edge Function call
-        const { error: emailError } = await supabase.functions.invoke('send-email', {
-          body: { to: recipientEmail, subject, html: body.replace(/\n/g, '<br>') }
-        });
-        if (emailError) {
-          // FINAL PHASE FIX: Use standardized error handling
-          handleEdgeFunctionError(emailError, 'addNotification');
-        }
-      }
-    }
-
-    const newNotification: Notification = { 
-      id: crypto.randomUUID(), 
-      recipientEmail, 
-      subject, 
-      body, 
-      sentAt: new Date().toISOString(), 
-      read: false 
-    };
-
-    // Update local state immediately
-    setNotifications(prev => [newNotification, ...prev]);
-
-    if (!isSupabaseConfigured) {
-      // Fallback to localStorage if Supabase not configured
-      try {
-        localStorage.setItem('app_notifications', JSON.stringify([newNotification, ...notifications]));
-      } catch (error) {
-        console.error('Failed to save notifications to localStorage:', error);
-      }
-      return;
-    }
-
-    try {
-      // Save to database
-      const { error } = await supabase
-        .from('email_notifications_log')
-        .insert({
-          recipient_email: recipientEmail,
-          subject,
-          body,
-          sent_at: newNotification.sentAt,
-          read: false,
-        });
-
-      if (error) {
-        console.error('Error saving notification:', error);
-        // Fallback to localStorage
-        try {
-          localStorage.setItem('app_notifications', JSON.stringify([newNotification, ...notifications]));
-        } catch (e) {
-          console.error('Failed to save to localStorage:', e);
-        }
-      } else {
-        // Refresh notifications from database
-        await fetchNotifications();
-      }
-    } catch (error) {
-      console.error('Error in addNotification:', error);
-      // Fallback to localStorage
-      try {
-        localStorage.setItem('app_notifications', JSON.stringify([newNotification, ...notifications]));
-      } catch (e) {
-        console.error('Failed to save to localStorage:', e);
-      }
+      const { error } = await supabase.functions.invoke('send-email', { body: { to: recipientEmail, subject, html: body.replace(/\n/g, '<br>') } });
+      if (error) handleEdgeFunctionError(error, 'addNotification');
+      const { error: dbError } = await supabase.from('email_notifications_log').insert({ recipient_email: recipientEmail, subject, body, sent_at: new Date().toISOString(), read: false });
+      if (!dbError) fetchNotifications();
     }
   };
 
   const markNotificationAsRead = async (notificationId: string) => {
-    // Update local state immediately
-    setNotifications(prev => {
-      const updated = prev.map(n => n.id === notificationId ? { ...n, read: true } : n);
-      return updated;
-    });
-
-    if (!isSupabaseConfigured) {
-      // Fallback to localStorage if Supabase not configured
-      try {
-        const updated = notifications.map(n => n.id === notificationId ? { ...n, read: true } : n);
-        localStorage.setItem('app_notifications', JSON.stringify(updated));
-      } catch (error) {
-        console.error('Failed to save notifications to localStorage:', error);
-      }
-      return;
-    }
-
-    try {
-      // Update in database
-      const { error } = await supabase
-        .from('email_notifications_log')
-        .update({ 
-          read: true,
-          read_at: new Date().toISOString(),
-        })
-        .eq('id', notificationId);
-
-      if (error) {
-        console.error('Error updating notification:', error);
-        // Revert local state
-        setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, read: false } : n));
-      } else {
-        // Refresh notifications from database
-        await fetchNotifications();
-      }
-    } catch (error) {
-      console.error('Error in markNotificationAsRead:', error);
-    }
+    if (!isSupabaseConfigured) return;
+    const { error } = await supabase.from('email_notifications_log').update({ read: true, read_at: new Date().toISOString() }).eq('id', notificationId);
+    if (!error) fetchNotifications();
   };
 
-  // --- ANNOUNCEMENTS ---
   const addAnnouncement = async (title: string, content: string, type: 'info' | 'warning' | 'success') => {
-    if (!isSupabaseConfigured) {
-      console.warn('Supabase not configured, cannot save announcement');
-      return;
-    }
-    const { data, error } = await supabase.from('announcements').insert({ title, content, type }).select().single();
-    if (data) setAnnouncements(prev => [data, ...prev]);
+    if (!isSupabaseConfigured) return;
+    const { data: _data, error } = await supabase.from('announcements').insert({ title, content, type }).select().single();
+    if (!error && _data) setAnnouncements(prev => [snakeToCamel(_data) as Announcement, ...prev]);
   };
+
   const deleteAnnouncement = async (id: string) => {
-    if (!isSupabaseConfigured) {
-      console.warn('Supabase not configured, cannot delete announcement');
-      return;
-    }
+    if (!isSupabaseConfigured) return;
     const { error } = await supabase.from('announcements').delete().eq('id', id);
     if (!error) setAnnouncements(prev => prev.filter(a => a.id !== id));
   };
+
   const getUnreadAnnouncements = (businessId: number) => {
     const readKey = `${ANNOUNCEMENT_READ_KEY}_${businessId}`;
     const readIds: string[] = JSON.parse(localStorage.getItem(readKey) || '[]');
     return announcements.filter(ann => !readIds.includes(ann.id));
   };
+
   const markAnnouncementAsRead = (businessId: number, announcementId: string) => {
     const readKey = `${ANNOUNCEMENT_READ_KEY}_${businessId}`;
     const readIds: string[] = JSON.parse(localStorage.getItem(readKey) || '[]');
-    if (!readIds.includes(announcementId)) {
-      localStorage.setItem(readKey, JSON.stringify([...readIds, announcementId]));
-    }
+    if (!readIds.includes(announcementId)) localStorage.setItem(readKey, JSON.stringify([...readIds, announcementId]));
   };
 
-  // --- SUPPORT TICKETS ---
   const getTicketsForBusiness = (businessId: number) => tickets.filter(t => t.businessId === businessId);
+
   const addTicket = async (ticketData: Omit<SupportTicket, 'id' | 'createdAt' | 'lastReplyAt' | 'status' | 'replies'>) => {
-    if (!isSupabaseConfigured) {
-      console.warn('Supabase not configured, cannot save ticket');
-      return;
-    }
-    const { data, error } = await supabase.from('support_tickets').insert({ ...ticketData, status: TicketStatus.OPEN }).select().single();
-    if (data) setTickets(prev => [data, ...prev]);
+    if (!isSupabaseConfigured) return;
+    const { data: _data, error } = await supabase.from('support_tickets').insert({ business_id: ticketData.businessId, business_name: ticketData.businessName, subject: ticketData.subject, message: ticketData.message, status: TicketStatus.OPEN, replies: [] }).select().single();
+    if (!error && _data) setTickets(prev => [snakeToCamel(_data) as SupportTicket, ...prev]);
   };
+
   const addReply = async (ticketId: string, replyData: Omit<TicketReply, 'id' | 'createdAt'>) => {
-    if (!isSupabaseConfigured) {
-      console.warn('Supabase not configured, cannot add reply');
-      return;
-    }
+    if (!isSupabaseConfigured) return;
     const ticket = tickets.find(t => t.id === ticketId);
     if (!ticket) return;
-    const newReply = { ...replyData, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
-    const updatedReplies = [...ticket.replies, newReply];
-    const { data, error } = await supabase.from('support_tickets').update({ replies: updatedReplies, last_reply_at: new Date().toISOString() }).eq('id', ticketId).select().single();
-    if (data) setTickets(prev => prev.map(t => t.id === ticketId ? data : t));
-  };
-  const updateTicketStatus = async (ticketId: string, status: TicketStatus) => {
-    if (!isSupabaseConfigured) {
-      console.warn('Supabase not configured, cannot update ticket status');
-      return;
-    }
-    const { data, error } = await supabase.from('support_tickets').update({ status }).eq('id', ticketId).select().single();
-    if (data) setTickets(prev => prev.map(t => t.id === ticketId ? data : t));
+    const updatedReplies = [...(ticket.replies || []), { ...replyData, id: crypto.randomUUID(), createdAt: new Date().toISOString() }];
+    const { data: _data, error } = await supabase.from('support_tickets').update({ replies: updatedReplies as any, last_reply_at: new Date().toISOString() }).eq('id', ticketId).select().single();
+    if (!error && _data) setTickets(prev => prev.map(t => t.id === ticketId ? (snakeToCamel(_data) as SupportTicket) : t));
   };
 
-  // --- REGISTRATION REQUESTS ---
+  const updateTicketStatus = async (ticketId: string, status: TicketStatus) => {
+    if (!isSupabaseConfigured) return;
+    const { data: _data, error } = await supabase.from('support_tickets').update({ status }).eq('id', ticketId).select().single();
+    if (!error && _data) setTickets(prev => prev.map(t => t.id === ticketId ? (snakeToCamel(_data) as SupportTicket) : t));
+  };
+
   const approveRegistrationRequest = async (requestId: string) => {
-    const { data, error } = await supabase.functions.invoke('approve-registration', {
-      body: { requestId }
-    });
-    if (error) {
-      // FINAL PHASE FIX: Use standardized error handling
-      handleEdgeFunctionError(error, 'approveRegistrationRequest');
-      throw error; // Still throw for caller handling (existing behavior preserved)
-    }
-    // Data will refetch via real-time subscription
+    const { data, error } = await supabase.functions.invoke('approve-registration', { body: { requestId } });
+    if (error) { handleEdgeFunctionError(error, 'approveRegistrationRequest'); throw error; }
     return data;
   };
 
-  const rejectRegistrationRequest = async (requestId: string) => {
-    // A simple status update can be done on the client if RLS allows it for admins,
-    // or you could create a separate, simple edge function for this.
-    const { data, error } = await supabase.from('registration_requests').update({ status: 'Rejected' }).eq('id', requestId).select().single();
+  const rejectRegistrationRequest = async (requestId: string): Promise<void> => {
+    const { error } = await supabase.from('registration_requests').update({ status: 'Rejected' }).eq('id', requestId);
     if (error) throw error;
-    // Data will refetch via real-time subscription
   };
 
-  // --- SETTINGS ---
   const updateSettings = async (newSettings: AppSettings) => {
-    if (!isSupabaseConfigured) {
-      console.warn('Supabase not configured, cannot save settings');
-      return;
-    }
-    const { error } = await supabase.from('app_settings').update({ settings_data: newSettings }).eq('id', 1);
+    if (!isSupabaseConfigured) return;
+    const { error } = await supabase.from('app_settings').update({ settings_data: newSettings as any }).eq('id', 1);
     if (!error) setSettings(newSettings);
   };
 
-  // --- PAGE CONTENT ---
   const getPageContent = (page: PageName) => pageContent[page];
+
   const updatePageContent = async (page: PageName, newContent: PageData) => {
-    if (!isSupabaseConfigured) {
-      console.warn('Supabase not configured, cannot save page content');
-      return;
-    }
-    const { error } = await supabase.from('page_content').upsert({ page_name: page, content_data: newContent }, { onConflict: 'page_name' });
+    if (!isSupabaseConfigured) return;
+    const { error } = await supabase.from('page_content').upsert({ page_name: page, content_data: newContent as any } as any, { onConflict: 'page_name' });
     if (!error) setPageContent(prev => ({ ...prev, [page]: newContent }));
   };
 
@@ -644,19 +233,12 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
     getPageContent, updatePageContent
   };
 
-  return (
-    <AdminPlatformContext.Provider value={value}>
-      {children}
-    </AdminPlatformContext.Provider>
-  );
+  return <AdminPlatformContext.Provider value={value}>{children}</AdminPlatformContext.Provider>;
 };
 
-// --- CUSTOM HOOKS ---
 export const useAdminPlatform = () => {
   const context = useContext(AdminPlatformContext);
-  if (!context) {
-    throw new Error('useAdminPlatform must be used within an AdminPlatformProvider');
-  }
+  if (!context) throw new Error('useAdminPlatform must be used within an AdminPlatformProvider');
   return context;
 };
 

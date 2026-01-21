@@ -627,3 +627,10 @@ export interface Conversion {
   metadata?: Record<string, any>;
   converted_at: string;
 }
+
+export type PageName = 'about' | 'contact' | 'homepage';
+
+export interface PageData {
+  layout: LayoutItem[];
+  visibility: { [key: string]: boolean };
+}

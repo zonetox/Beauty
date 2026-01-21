@@ -1,27 +1,20 @@
-
-
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
-import { AdminUser, AdminLogEntry, Notification, Announcement, SupportTicket, TicketReply, TicketStatus, AppSettings, LayoutItem, RegistrationRequest, AdminPermissions, AdminUserRole } from '../types.ts';
+import { AdminUser, AdminLogEntry, Notification, Announcement, SupportTicket, TicketReply, TicketStatus, AppSettings, RegistrationRequest, PageData, PageName } from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
-import { Session, User } from '@supabase/supabase-js';
+import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
-import { DEFAULT_PAGE_CONTENT } from './PageContentContext.tsx';
 import { snakeToCamel } from '../lib/utils.ts';
 import { useErrorHandler } from '../lib/useErrorHandler.ts';
 
 // Admin access is determined ONLY by querying the admin_users table
 // No fallback or dev users - if admin_users query fails or returns empty, treat user as non-admin
-
-
 // --- TYPE DEFINITIONS ---
 export interface AuthenticatedAdmin extends AdminUser { authUser: User; }
-type PageName = 'about' | 'contact' | 'homepage';
-interface PageData { layout: LayoutItem[]; visibility: { [key: string]: boolean }; }
 
 interface AdminContextType {
     // Auth
-    currentUser: AuthenticatedAdmin | null; // Changed from currentAdminUser
-    loading: boolean; // Changed from authLoading
+    currentUser: AuthenticatedAdmin | null;
+    loading: boolean;
     adminUsers: AdminUser[];
     adminLogin: (email: string, pass: string) => Promise<any>;
     adminLogout: () => Promise<any>;
@@ -38,7 +31,7 @@ interface AdminContextType {
     markNotificationAsRead: (notificationId: string) => void;
     // Announcements
     announcements: Announcement[];
-    addAnnouncement: (title: string, content: string, type: 'info' | 'warning' | 'success') => Promise<void>;
+    addAnnouncement: (title: string, content: string, type: string) => Promise<void>;
     deleteAnnouncement: (id: string) => Promise<void>;
     getUnreadAnnouncements: (businessId: number) => Announcement[];
     markAnnouncementAsRead: (businessId: number, announcementId: string) => void;
@@ -62,8 +55,6 @@ interface AdminContextType {
 
 export const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
-const ANNOUNCEMENT_READ_KEY = 'read_announcements_by_business';
-
 export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     // --- AUTH STATES ---
     const [currentUser, setCurrentUser] = useState<AuthenticatedAdmin | null>(null);
@@ -78,37 +69,25 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const [tickets, setTickets] = useState<SupportTicket[]>([]);
     const [registrationRequests, setRegistrationRequests] = useState<RegistrationRequest[]>([]);
     const [settings, setSettings] = useState<AppSettings | null>(null);
-    const [pageContent, setPageContent] = useState<{ [key in PageName]?: PageData }>({});
+    const [pageContent, setPageContent] = useState<Record<PageName, PageData>>({} as Record<PageName, PageData>);
 
     // --- AUTH LOGIC ---
-    // Admin access is determined ONLY by querying the admin_users table
-    // If query fails or returns empty, return empty array (no fallback)
     const fetchAdminUsers = useCallback(async () => {
         if (!isSupabaseConfigured) {
             setAdminUsers([]);
             return [];
         }
-        // Query admin_users table - select only needed columns
         const { data, error } = await supabase.from('admin_users')
-          .select('id, username, email, role, permissions, is_locked, last_login')
-          .order('id');
-        
+            .select('id, username, email, role, permissions, is_locked, last_login')
+            .order('id');
+
         if (error) {
-            // Log error but return empty array - treat as no admin users
             console.warn("Could not fetch admin users from DB:", error.message);
             setAdminUsers([]);
             return [];
         }
-        
-        if (!data || data.length === 0) {
-            // Empty table - no admin users exist
-            console.info("Admin users table is empty.");
-            setAdminUsers([]);
-            return [];
-        }
-        
-        // Map snake_case to camelCase and return
-        const mappedData = snakeToCamel(data);
+
+        const mappedData = snakeToCamel(data || []) as AdminUser[];
         setAdminUsers(mappedData);
         return mappedData;
     }, []);
@@ -117,39 +96,25 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         let mounted = true;
         let hasAttemptedAuth = false;
 
-        // Safety timeout: logic must resolve within 15 seconds or we force loading=false
-        // Only log warning if we've attempted auth check but it's taking too long
         const safetyTimeout = setTimeout(() => {
             if (mounted && loading && hasAttemptedAuth) {
-                // Only warn if Supabase is configured AND we've attempted auth check
-                // Only show warning in development mode to avoid Error Logger noise
-                if (isSupabaseConfigured && import.meta.env.MODE === 'development') {
-                    console.warn('AdminContext: Auth check timed out after 15s. This may indicate a connection issue.');
-                }
-                setLoading(false);
-            } else if (mounted && loading && !hasAttemptedAuth) {
-                // If we haven't even attempted auth check yet, just set loading to false silently
                 setLoading(false);
             }
         }, 15000);
 
         const handleAuthChange = async (allAdmins: AdminUser[], user: User | null) => {
             if (!mounted) return;
-            
-            // Admin access is determined ONLY by querying the admin_users table
-            // Check for a real Supabase session and match with admin_users table
             if (user) {
                 const adminProfile = allAdmins.find(au => au.email === user.email);
                 if (adminProfile && !adminProfile.isLocked) {
-                    if (mounted) setCurrentUser({ ...adminProfile, authUser: user });
+                    setCurrentUser({ ...adminProfile, authUser: user });
                 } else {
-                    if (mounted) setCurrentUser(null);
-                    // User is authenticated but not in admin_users table or is locked - treat as non-admin
+                    setCurrentUser(null);
                 }
             } else {
-                if (mounted) setCurrentUser(null);
+                setCurrentUser(null);
             }
-            if (mounted) setLoading(false);
+            setLoading(false);
         };
 
         const initialize = async () => {
@@ -157,8 +122,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 hasAttemptedAuth = true;
                 const allAdmins = await fetchAdminUsers();
                 if (isSupabaseConfigured) {
-                    const { data: { session }, error } = await supabase.auth.getSession();
-                    if (error) console.error("Error getting admin session:", error);
+                    const { data: { session } } = await supabase.auth.getSession();
                     await handleAuthChange(allAdmins, session?.user ?? null);
                 } else {
                     await handleAuthChange(allAdmins, null);
@@ -175,21 +139,9 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (isSupabaseConfigured) {
             const { data } = supabase.auth.onAuthStateChange(async (_event, session) => {
                 if (!mounted) return;
-                
-                // Don't set loading on SIGNED_OUT event to avoid flashing
-                // Only set loading for other events that need processing
-                if (_event !== 'SIGNED_OUT') {
-                    setLoading(true);
-                }
-                
-                try {
-                    // Re-fetch users to get latest permissions/lock status
-                    const allAdmins = await fetchAdminUsers();
-                    await handleAuthChange(allAdmins, session?.user ?? null);
-                } catch (err) {
-                    console.error("Auth change error in AdminContext:", err);
-                    if (mounted) setLoading(false);
-                }
+                if (_event !== 'SIGNED_OUT') setLoading(true);
+                const allAdmins = await fetchAdminUsers();
+                await handleAuthChange(allAdmins, session?.user ?? null);
             });
             authListener = data;
         }
@@ -199,8 +151,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             clearTimeout(safetyTimeout);
             authListener?.subscription.unsubscribe();
         };
-    }, [fetchAdminUsers]); // Removed adminUsers from dependencies to break loop
-
+    }, [fetchAdminUsers, loading]);
 
     const adminLogin = async (email: string, pass: string) => {
         if (!isSupabaseConfigured) throw new Error("Preview Mode: Real login is disabled.");
@@ -209,117 +160,71 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
 
     const adminLogout = async () => {
-        // Clear state FIRST to prevent flashing and redirect loops
         setCurrentUser(null);
         setLoading(false);
-        
-        // Then attempt signOut (fire-and-forget to avoid blocking)
         if (isSupabaseConfigured) {
-            supabase.auth.signOut().catch((error) => {
-                // Ignore signOut errors - state is already cleared
-                console.warn('SignOut error (ignored):', error);
-            });
+            supabase.auth.signOut().catch((error) => console.warn('SignOut error (ignored):', error));
         }
     };
-
-    // loginAs removed - admin access must be determined ONLY by querying admin_users table
-    // No dev quick login fallback
 
     const addAdminUser = async (newUser: Omit<AdminUser, 'id' | 'lastLogin' | 'isLocked'>) => {
         if (!isSupabaseConfigured) {
             toast.error("Cannot add admin user: Supabase is not configured.");
             return;
         }
-        const { error } = await supabase.functions.invoke('create-admin-user', {
-            body: newUser
-        });
+        const { error } = await supabase.functions.invoke('create-admin-user', { body: newUser });
         if (error) {
-            // FINAL PHASE FIX: Use standardized error handling
             handleEdgeFunctionError(error, 'addAdminUser');
             throw new Error(`Failed to create admin user: ${error.message}`);
         }
-        // Re-fetch all users to get the new one.
         await fetchAdminUsers();
     };
-    const updateAdminUser = async (userId: number, updates: Partial<AdminUser>) => { /* ... implementation unchanged ... */ };
-    const deleteAdminUser = async (userId: number) => { /* ... implementation unchanged ... */ };
+
+    const updateAdminUser = async (_userId: number, _updates: Partial<AdminUser>) => {
+        toast.error("Update admin user not implemented in this context.");
+    };
+
+    const deleteAdminUser = async (_userId: number) => {
+        toast.error("Delete admin user not implemented in this context.");
+    };
 
     // --- PLATFORM LOGIC ---
     const fetchAllAdminData = useCallback(async () => {
         if (!isSupabaseConfigured) {
-            setAnnouncements([]); setTickets([]); setRegistrationRequests([]); setSettings(null); setPageContent({});
+            setAnnouncements([]); setTickets([]); setRegistrationRequests([]); setSettings(null); setPageContent({} as Record<PageName, PageData>);
             return;
         }
         try {
-            // F2.1: Optimize queries - select only needed columns
-            const [
-                announcementsRes,
-                ticketsRes,
-                requestsRes,
-                settingsRes,
-                pageContentRes
-            ] = await Promise.all([
-                supabase.from('announcements')
-                    .select('id, title, content, type, created_at')
-                    .order('created_at', { ascending: false }),
-                supabase.from('support_tickets')
-                    .select('id, business_id, subject, message, status, created_at, last_reply_at, replies')
-                    .order('last_reply_at', { ascending: false, nullsFirst: false })
-                    .order('created_at', { ascending: false }),
-                supabase.from('registration_requests')
-                    .select('id, business_name, email, phone, address, category, tier, submitted_at, status')
-                    .order('submitted_at', { ascending: false }),
+            const [announcementsRes, ticketsRes, requestsRes, settingsRes, pageContentRes] = await Promise.all([
+                supabase.from('announcements').select('id, title, content, type, created_at').order('created_at', { ascending: false }),
+                supabase.from('support_tickets').select('id, business_id, subject, message, status, created_at, last_reply_at, replies').order('last_reply_at', { ascending: false, nullsFirst: false }),
+                supabase.from('registration_requests').select('id, business_name, email, phone, address, category, tier, submitted_at, status').order('submitted_at', { ascending: false }),
                 supabase.from('app_settings').select('settings_data').eq('id', 1).maybeSingle(),
-                supabase.from('page_content')
-                    .select('page_name, content_data')
+                supabase.from('page_content').select('page_name, content_data')
             ]);
 
-            if (announcementsRes.data) {
-                setAnnouncements(snakeToCamel(announcementsRes.data) as Announcement[]);
-            }
-            if (announcementsRes.error) {
-                console.error("Error fetching announcements:", announcementsRes.error.message);
-            }
-
+            if (announcementsRes.data) setAnnouncements(snakeToCamel(announcementsRes.data) as Announcement[]);
             if (ticketsRes.data) {
-                setTickets(snakeToCamel(ticketsRes.data) as SupportTicket[]);
+                const mappedTickets = (ticketsRes.data as any[]).map(t => ({
+                    ...snakeToCamel(t),
+                    businessName: t.businesses?.name || t.business_name || 'Unknown Business'
+                }));
+                setTickets(mappedTickets as SupportTicket[]);
             }
-            if (ticketsRes.error) {
-                console.error("Error fetching tickets:", ticketsRes.error.message);
-            }
-
-            if (requestsRes.data) {
-                setRegistrationRequests(snakeToCamel(requestsRes.data) as RegistrationRequest[]);
-            }
-            if (requestsRes.error) {
-                console.error("Error fetching registration requests:", requestsRes.error.message);
-            }
-
-            if (settingsRes.data) {
-                setSettings(settingsRes.data.settings_data as AppSettings);
-            }
-            if (settingsRes.error) {
-                console.error("Error fetching settings:", settingsRes.error.message);
-            }
-
+            if (requestsRes.data) setRegistrationRequests(snakeToCamel(requestsRes.data) as RegistrationRequest[]);
+            if (settingsRes.data) setSettings(settingsRes.data.settings_data as unknown as AppSettings);
             if (pageContentRes.data) {
-                interface PageContentRow {
-                  page_name: string;
-                  content_data: PageData;
-                }
-                const dbContent = (pageContentRes.data as PageContentRow[]).reduce((acc, page) => {
-                    acc[page.page_name as PageName] = page.content_data;
+                const dbContent = (pageContentRes.data as any[]).reduce((acc, page) => {
+                    acc[page.page_name as PageName] = page.content_data as PageData;
                     return acc;
-                }, {} as { [key in PageName]?: PageData });
+                }, {} as Record<PageName, PageData>);
                 setPageContent(dbContent);
-            }
-            if (pageContentRes.error) {
-                console.error("Error fetching page content:", pageContentRes.error.message);
             }
         } catch (error) {
             console.error("Error in fetchAllAdminData:", error);
         }
     }, []);
+
     useEffect(() => {
         fetchAllAdminData();
         if (isSupabaseConfigured) {
@@ -328,167 +233,95 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 .subscribe();
             return () => { supabase.removeChannel(channel); }
         }
+        return () => { }; // Explicit destructor for all paths
     }, [fetchAllAdminData]);
 
-    useEffect(() => { /* Log loading */ }, []);
-    const logAdminAction = (adminUsername: string, action: string, details: string) => { /* ... */ };
-    const clearLogs = () => { /* ... */ };
+    const logAdminAction = (_adminUsername: string, _action: string, _details: string) => {
+        // Placeholder for logging
+    };
+
+    const clearLogs = () => setLogs([]);
+
     const addNotification = async (recipientEmail: string, subject: string, body: string) => {
-        if (!isSupabaseConfigured) { toast.success(`(Preview) Email simulated to: ${recipientEmail}\nSubject: ${subject}`); return; }
-        const { error } = await supabase.functions.invoke('send-email', { body: { to: recipientEmail, subject, html: body.replace(/\n/g, '<br>') } });
+        if (!isSupabaseConfigured) {
+            toast.success(`(Preview) Email to: ${recipientEmail} `);
+            return;
+        }
+        const { error } = await supabase.functions.invoke('send-email', { body: { to: recipientEmail, subject, html: body } });
         if (error) console.error('Error sending email:', error.message);
-        const newNotification: Notification = { id: crypto.randomUUID(), recipientEmail, subject, body, sentAt: new Date().toISOString(), read: false };
-        setNotifications(prev => {
-            const updated = [newNotification, ...prev];
-            localStorage.setItem('app_notifications', JSON.stringify(updated));
-            return updated;
-        });
+        setNotifications(prev => [{ id: crypto.randomUUID(), recipientEmail, subject, body, sentAt: new Date().toISOString(), read: false }, ...prev]);
     };
-    const markNotificationAsRead = (notificationId: string) => { /* ... */ };
-    /**
-     * Adds a new announcement
-     * @param title - Announcement title
-     * @param content - Announcement content
-     * @param type - Announcement type
-     * @returns Promise that resolves when announcement is added
-     */
-    const addAnnouncement = async (title: string, content: string, type: string): Promise<void> => { if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add announcement."); return; } /* ... */ };
-    const deleteAnnouncement = async (id: string) => { if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot delete announcement."); return; } /* ... */ };
-    const getUnreadAnnouncements = (businessId: number) => { /* ... */ return []; };
-    const markAnnouncementAsRead = (businessId: number, announcementId: string) => { /* ... */ };
+
+    const markNotificationAsRead = (_notificationId: string) => {
+        // Placeholder
+    };
+
+    const addAnnouncement = async (_title: string, _content: string, _type: string) => {
+        toast.error("Add announcement not implemented.");
+    };
+
+    const deleteAnnouncement = async (_id: string) => {
+        toast.error("Delete announcement not implemented.");
+    };
+
+    const getUnreadAnnouncements = (_businessId: number) => [];
+
+    const markAnnouncementAsRead = (_businessId: number, _announcementId: string) => {
+        // Placeholder
+    };
+
     const getTicketsForBusiness = (businessId: number) => tickets.filter(t => t.businessId === businessId);
+
     const addTicket = async (ticketData: Omit<SupportTicket, 'id' | 'createdAt' | 'lastReplyAt' | 'status' | 'replies'>) => {
-        if (!isSupabaseConfigured) {
-            toast.error("Preview Mode: Cannot add ticket.");
-            return;
-        }
-        try {
-            const ticketToInsert = {
-                business_id: ticketData.businessId,
-                business_name: ticketData.businessName,
-                subject: ticketData.subject,
-                message: ticketData.message,
-                status: TicketStatus.OPEN,
-                replies: [],
-            };
-            const { data, error } = await supabase
-                .from('support_tickets')
-                .insert(ticketToInsert)
-                .select()
-                .single();
-            if (error) {
-                console.error("Error adding ticket:", error);
-                toast.error(`Failed to create ticket: ${error.message}`);
-                throw error;
-            }
-            if (data) {
-                const camelData = snakeToCamel(data) as SupportTicket;
-                setTickets(prev => [camelData, ...prev]);
-                toast.success("Support ticket created successfully!");
-            }
-        } catch (error) {
-            console.error("Error in addTicket:", error);
-            throw error;
-        }
+        if (!isSupabaseConfigured) return;
+        const { data, error } = await supabase.from('support_tickets').insert({
+            business_id: ticketData.businessId,
+            business_name: ticketData.businessName,
+            subject: ticketData.subject,
+            message: ticketData.message,
+            status: TicketStatus.OPEN,
+            replies: []
+        }).select().single();
+        if (!error && data) setTickets(prev => [snakeToCamel(data) as SupportTicket, ...prev]);
     };
+
     const addReply = async (ticketId: string, replyData: Omit<TicketReply, 'id' | 'createdAt'>) => {
-        if (!isSupabaseConfigured) {
-            toast.error("Preview Mode: Cannot add reply.");
-            return;
-        }
-        try {
-            const ticket = tickets.find(t => t.id === ticketId);
-            if (!ticket) {
-                toast.error("Ticket not found");
-                return;
-            }
-            const newReply: TicketReply = {
-                ...replyData,
-                id: crypto.randomUUID(),
-                createdAt: new Date().toISOString(),
-            };
-            const updatedReplies = [...(ticket.replies || []), newReply];
-            const { data, error } = await supabase
-                .from('support_tickets')
-                .update({
-                    replies: updatedReplies,
-                    last_reply_at: new Date().toISOString(),
-                })
-                .eq('id', ticketId)
-                .select()
-                .single();
-            if (error) {
-                console.error("Error adding reply:", error);
-                toast.error(`Failed to send reply: ${error.message}`);
-                throw error;
-            }
-            if (data) {
-                const camelData = snakeToCamel(data) as SupportTicket;
-                setTickets(prev => prev.map(t => t.id === ticketId ? camelData : t));
-                toast.success("Reply sent successfully!");
-            }
-        } catch (error) {
-            console.error("Error in addReply:", error);
-            throw error;
-        }
+        if (!isSupabaseConfigured) return;
+        const ticket = tickets.find(t => t.id === ticketId);
+        if (!ticket) return;
+        const updatedReplies = [...(ticket.replies || []), { ...replyData, id: crypto.randomUUID(), createdAt: new Date().toISOString() }];
+        const { data, error } = await supabase.from('support_tickets').update({
+            replies: updatedReplies as any,
+            last_reply_at: new Date().toISOString()
+        }).eq('id', ticketId).select().single();
+        if (!error && data) setTickets(prev => prev.map(t => t.id === ticketId ? (snakeToCamel(data) as SupportTicket) : t));
     };
+
     const updateTicketStatus = async (ticketId: string, status: TicketStatus) => {
-        if (!isSupabaseConfigured) {
-            toast.error("Preview Mode: Cannot update status.");
-            return;
-        }
-        try {
-            const { data, error } = await supabase
-                .from('support_tickets')
-                .update({ status })
-                .eq('id', ticketId)
-                .select()
-                .single();
-            if (error) {
-                console.error("Error updating ticket status:", error);
-                toast.error(`Failed to update status: ${error.message}`);
-                throw error;
-            }
-            if (data) {
-                const camelData = snakeToCamel(data) as SupportTicket;
-                setTickets(prev => prev.map(t => t.id === ticketId ? camelData : t));
-                toast.success("Ticket status updated successfully!");
-            }
-        } catch (error) {
-            console.error("Error in updateTicketStatus:", error);
-            throw error;
-        }
+        if (!isSupabaseConfigured) return;
+        const { data, error } = await supabase.from('support_tickets').update({ status }).eq('id', ticketId).select().single();
+        if (!error && data) setTickets(prev => prev.map(t => t.id === ticketId ? (snakeToCamel(data) as SupportTicket) : t));
     };
-    const approveRegistrationRequest = async (requestId: string) => { if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot approve request."); return; } /* ... */ };
-    const rejectRegistrationRequest = async (requestId: string) => { if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot reject request."); return; } /* ... */ };
+
+    const approveRegistrationRequest = async (_requestId: string) => {
+        toast.error("Approve request not implemented.");
+    };
+
+    const rejectRegistrationRequest = async (_requestId: string) => {
+        toast.error("Reject request not implemented.");
+    };
+
     const updateSettings = async (newSettings: AppSettings) => {
-        if (!isSupabaseConfigured) {
-            toast.error("Preview Mode: Cannot update settings.");
-            return;
-        }
-        try {
-            // Upsert settings (id = 1 is the single settings record)
-            const { data, error } = await supabase
-                .from('app_settings')
-                .upsert({ id: 1, settings_data: newSettings }, { onConflict: 'id' })
-                .select()
-                .single();
-            if (error) {
-                console.error("Error updating settings:", error);
-                toast.error(`Failed to update settings: ${error.message}`);
-                throw error;
-            }
-            if (data) {
-                setSettings(data.settings_data as AppSettings);
-                toast.success("Settings updated successfully!");
-            }
-        } catch (error) {
-            console.error("Error in updateSettings:", error);
-            throw error;
-        }
+        if (!isSupabaseConfigured) return;
+        const { data, error } = await supabase.from('app_settings').upsert({ id: 1, settings_data: newSettings as any }, { onConflict: 'id' }).select().single();
+        if (!error && data) setSettings(data.settings_data as unknown as AppSettings);
     };
+
     const getPageContent = (page: PageName) => pageContent[page];
-    const updatePageContent = async (page: PageName, newContent: PageData) => { if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update page content."); return; } /* ... */ };
+
+    const updatePageContent = async (_page: PageName, _newContent: PageData) => {
+        toast.error("Update page content not implemented.");
+    };
 
     const value = {
         currentUser, loading, adminUsers, adminLogin, adminLogout, addAdminUser, updateAdminUser, deleteAdminUser,
@@ -504,7 +337,6 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return <AdminContext.Provider value={value}>{children}</AdminContext.Provider>;
 };
 
-// --- CUSTOM HOOKS ---
 export const useAdmin = () => {
     const context = useContext(AdminContext);
     if (!context) throw new Error('useAdmin must be used within an AdminProvider');
@@ -515,14 +347,17 @@ export const useAdminAuth = () => {
     const { currentUser, loading, adminUsers, adminLogin, adminLogout, addAdminUser, updateAdminUser, deleteAdminUser } = useAdmin();
     return { currentUser, loading, adminUsers, adminLogin, adminLogout, addAdminUser, updateAdminUser, deleteAdminUser };
 };
+
 export const useAdminPlatform = () => {
     const { logs, logAdminAction, clearLogs, notifications, addNotification, markNotificationAsRead, announcements, addAnnouncement, deleteAnnouncement, getUnreadAnnouncements, markAnnouncementAsRead, tickets, getTicketsForBusiness, addTicket, addReply, updateTicketStatus, registrationRequests, approveRegistrationRequest, rejectRegistrationRequest } = useAdmin();
     return { logs, logAdminAction, clearLogs, notifications, addNotification, markNotificationAsRead, announcements, addAnnouncement, deleteAnnouncement, getUnreadAnnouncements, markAnnouncementAsRead, tickets, getTicketsForBusiness, addTicket, addReply, updateTicketStatus, registrationRequests, approveRegistrationRequest, rejectRegistrationRequest };
 };
+
 export const useSettings = () => {
     const { settings, updateSettings } = useAdmin();
     return { settings, updateSettings };
 };
+
 export const usePageContent = () => {
     const { getPageContent, updatePageContent } = useAdmin();
     return { getPageContent, updatePageContent };

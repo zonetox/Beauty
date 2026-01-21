@@ -102,8 +102,11 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusi
             };
 
             window.addEventListener('resize', handleResize);
-            return () => window.removeEventListener('resize', handleResize);
+            return () => {
+                window.removeEventListener('resize', handleResize);
+            };
         }
+        return undefined;
     }, [onBoundsChange]);
 
     // --- Update Markers when businesses change ---

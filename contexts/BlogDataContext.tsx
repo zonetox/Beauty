@@ -35,37 +35,37 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
   // Fetch blog posts from Supabase
   useEffect(() => {
     let cancelled = false;
-    
+
     const fetchBlogPosts = async () => {
       setLoading(true);
       // OPTIMIZE: Blog list doesn't need full content, only excerpt
       const { data, error } = await supabase.from('blog_posts')
-        .select('id, slug, title, image_url, excerpt, author, date, category, view_count')
+        .select('id, slug, title, image_url, excerpt, author, date, category, view_count, content')
         .order('date', { ascending: false });
       if (error) {
         console.error("Error fetching blog posts:", error);
       } else if (data && !cancelled) {
         // Map snake_case to camelCase
-        setBlogPosts(data.map((post) => ({
+        setBlogPosts((data as any[]).map((post) => ({
           id: post.id,
           slug: post.slug,
           title: post.title,
-          imageUrl: post.image_url || post.imageUrl,
+          imageUrl: post.image_url,
           excerpt: post.excerpt,
           author: post.author,
           date: post.date,
           category: post.category,
           content: post.content,
-          viewCount: post.view_count || post.viewCount || 0,
+          viewCount: post.view_count || 0,
         })));
       }
       if (!cancelled) {
         setLoading(false);
       }
     };
-    
+
     fetchBlogPosts();
-    
+
     return () => {
       cancelled = true;
     };
@@ -112,7 +112,7 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
           authorName: comment.author_name,
           authorAvatarUrl: `https://picsum.photos/seed/${comment.author_name.replace(/\s+/g, '-')}/100/100`,
           content: comment.content,
-          date: comment.date || comment.created_at,
+          date: comment.date || comment.created_at || new Date().toISOString(),
         }));
         setComments(mappedComments);
       }
@@ -124,7 +124,7 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
   useEffect(() => {
     fetchComments();
   }, [fetchComments]);
-  
+
   // Load blog categories from localStorage on mount
   useEffect(() => {
     try {
@@ -135,7 +135,7 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
       console.error(`Failed to parse blog categories from localStorage:`, error);
       setBlogCategories(initialBlogCategories);
     }
-     
+
   }, []);
 
   const updateCategoriesLocalStorage = (categoriesToSave: BlogCategory[]) => {
@@ -150,31 +150,75 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
       date: new Date().toLocaleDateString('en-GB').replace(/\//g, '/'),
       viewCount: 0,
     };
-    const { data, error } = await supabase.from('blog_posts').insert(postToAdd).select().single();
+    const { data, error } = await supabase.from('blog_posts').insert({
+      title: postToAdd.title,
+      content: postToAdd.content,
+      author: postToAdd.author,
+      category: postToAdd.category,
+      excerpt: postToAdd.excerpt,
+      image_url: postToAdd.imageUrl,
+      slug: postToAdd.slug,
+      date: postToAdd.date,
+      view_count: postToAdd.viewCount
+    }).select().single();
     if (!error && data) {
-      setBlogPosts(prev => [data as BlogPost, ...prev]);
+      setBlogPosts(prev => [({
+        id: data.id,
+        slug: data.slug,
+        title: data.title,
+        imageUrl: data.image_url,
+        excerpt: data.excerpt,
+        author: data.author,
+        date: data.date,
+        category: data.category,
+        content: data.content,
+        viewCount: data.view_count || 0,
+      } as BlogPost), ...prev]);
     }
   };
 
   const updateBlogPost = async (updatedPost: BlogPost) => {
     const { id, ...postToUpdate } = updatedPost;
-    const { data, error } = await supabase.from('blog_posts').update(postToUpdate).eq('id', id).select().single();
+    const mappedUpdates = {
+      title: postToUpdate.title,
+      content: postToUpdate.content,
+      author: postToUpdate.author,
+      category: postToUpdate.category,
+      excerpt: postToUpdate.excerpt,
+      image_url: postToUpdate.imageUrl,
+      slug: postToUpdate.slug,
+      date: postToUpdate.date,
+      view_count: postToUpdate.viewCount
+    };
+    const { data, error } = await supabase.from('blog_posts').update(mappedUpdates).eq('id', id).select().single();
     if (!error && data) {
-      setBlogPosts(prev => prev.map(p => (p.id === id ? (data as BlogPost) : p)));
+      const updatedData = {
+        id: data.id,
+        slug: data.slug,
+        title: data.title,
+        imageUrl: data.image_url,
+        excerpt: data.excerpt,
+        author: data.author,
+        date: data.date,
+        category: data.category,
+        content: data.content,
+        viewCount: data.view_count || 0,
+      } as BlogPost;
+      setBlogPosts(prev => prev.map(p => (p.id === id ? updatedData : p)));
     }
   };
 
   const deleteBlogPost = async (postId: number) => {
     const { error } = await supabase.from('blog_posts').delete().eq('id', postId);
     if (!error) {
-        setBlogPosts(prev => prev.filter(p => p.id !== postId));
+      setBlogPosts(prev => prev.filter(p => p.id !== postId));
     }
   };
 
   const getPostBySlug = (slug: string) => {
     return blogPosts.find(p => p.slug === slug);
   };
-  
+
   const incrementViewCount = async (postId: number) => {
     const { error } = await supabase.rpc('increment_blog_view_count', { p_post_id: postId });
     if (!error) {
@@ -188,12 +232,12 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const addComment = async (postId: number, authorName: string, content: string) => {
     const newComment: BlogComment = {
-        id: crypto.randomUUID(),
-        postId,
-        authorName,
-        authorAvatarUrl: `https://picsum.photos/seed/${authorName.replace(/\s+/g, '-')}/100/100`,
-        content,
-        date: new Date().toISOString(),
+      id: crypto.randomUUID(),
+      postId,
+      authorName,
+      authorAvatarUrl: `https://picsum.photos/seed/${authorName.replace(/\s+/g, '-')}/100/100`,
+      content,
+      date: new Date().toISOString(),
     };
 
     // Update local state immediately
@@ -242,7 +286,7 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
       setComments(prev => prev.filter(c => c.id !== newComment.id));
     }
   };
-  
+
   const addBlogCategory = (name: string) => {
     if (name.trim() === '' || blogCategories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
       toast.error("Category name cannot be empty or duplicate.");
@@ -259,7 +303,7 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
     setBlogCategories(updatedCategories);
     updateCategoriesLocalStorage(updatedCategories);
   };
-  
+
   const deleteBlogCategory = (id: string) => {
     const updatedCategories = blogCategories.filter(c => c.id !== id);
     setBlogCategories(updatedCategories);

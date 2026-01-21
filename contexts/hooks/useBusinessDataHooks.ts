@@ -2,10 +2,10 @@
 // This file exports hooks that depend on PublicDataContext
 
 import { useContext } from 'react';
-import { PublicDataContext } from '../BusinessDataContext.tsx';
+import { PublicDataContext, PublicDataContextType } from '../BusinessDataContext.tsx';
 
 // Internal hook - must be used within PublicDataProvider
-function usePublicData() {
+function usePublicData(): PublicDataContextType {
   const context = useContext(PublicDataContext);
   if (!context) {
     throw new Error('usePublicData must be used within a PublicDataProvider');
