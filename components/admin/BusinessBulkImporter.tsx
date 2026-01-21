@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabaseClient.ts';
 import toast from 'react-hot-toast';
-import { BusinessCategory } from '../../types.ts';
 import ConfirmDialog from '../ConfirmDialog.tsx';
 
 // Helper to parse CSV manually to avoid dependencies
@@ -105,15 +104,16 @@ const BusinessBulkImporter: React.FC = () => {
                     latitude: row.latitude ? parseFloat(row.latitude) : null,
                     longitude: row.longitude ? parseFloat(row.longitude) : null,
                     description: row.description,
+                    image_url: row.image_url || `https://via.placeholder.com/400x300/E6A4B4/FFFFFF?text=${encodeURIComponent(row.name.substring(0, 20))}`,
                     is_active: true, // Auto-activate
                     is_verified: true, // Auto-verify
                     joined_date: new Date().toISOString(),
-                    membership_tier: 'FREE', // Default
+                    membership_tier: 'Free', // Default - matches enum value
                     membership_expiry_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year
                     working_hours: { "Thứ 2 - Thứ 6": `${row.working_hours_start || '09:00'} - ${row.working_hours_end || '20:00'}` }
                 };
 
-                const { error } = await supabase.from('businesses').insert(businessData);
+                const { error } = await supabase.from('businesses').insert(businessData as any);
 
                 if (error) throw error;
 
@@ -158,7 +158,6 @@ const BusinessBulkImporter: React.FC = () => {
                     accept=".csv"
                     onChange={handleFileUpload}
                     title="Chọn file CSV để import"
-                    placeholder="Chọn file CSV"
                     className="block w-full text-sm text-gray-500
                         file:mr-4 file:py-2 file:px-4
                         file:rounded-full file:border-0
