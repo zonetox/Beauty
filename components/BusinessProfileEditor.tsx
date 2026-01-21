@@ -143,7 +143,10 @@ const BusinessProfileEditor: React.FC = () => {
                 }
                 return acc;
             }, {} as { [key: string]: string });
-            setFormData((prev: Business | null) => prev ? ({ ...prev, workingHours: workingHoursObject } as Business) : null);
+            setFormData((prev) => {
+                if (!prev) return null;
+                return { ...prev, workingHours: workingHoursObject } as Business;
+            });
         }
     }, [workingHoursList]);
 
@@ -208,7 +211,10 @@ const BusinessProfileEditor: React.FC = () => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         const isNumeric = type === 'number';
-        setFormData((prev: Business | null) => prev ? ({ ...prev, [name]: isNumeric ? parseFloat(value) : value } as Business) : null);
+        setFormData((prev) => {
+            if (!prev) return null;
+            return { ...prev, [name]: isNumeric ? parseFloat(value) : value } as Business;
+        });
         // Clear error for this field when user starts typing
         if (errors[name as keyof FormErrors]) {
             setErrors((prev) => ({ ...prev, [name]: undefined }));
@@ -251,7 +257,10 @@ const BusinessProfileEditor: React.FC = () => {
 
             const folder = `business/${currentBusiness.id}`;
             const publicUrl = await uploadFile('business-logos', file, folder);
-            setFormData((prev: Business | null) => prev ? ({ ...prev, logoUrl: publicUrl } as Business) : null);
+            setFormData((prev) => {
+                if (!prev) return null;
+                return { ...prev, logoUrl: publicUrl } as Business;
+            });
             toast.success('Logo uploaded successfully!');
         } catch (error: unknown) {
             const err = error as Record<string, unknown>;
@@ -276,7 +285,10 @@ const BusinessProfileEditor: React.FC = () => {
             // Use business-gallery bucket with path: business/{business_id}/cover.{ext}
             const folder = `business/${currentBusiness.id}`;
             const publicUrl = await uploadFile('business-gallery', file, folder);
-            setFormData((prev: Business | null) => prev ? ({ ...prev, imageUrl: publicUrl } as Business) : null);
+            setFormData((prev) => {
+                if (!prev) return null;
+                return { ...prev, imageUrl: publicUrl } as Business;
+            });
             toast.success('Cover image uploaded successfully!');
             // Clear error if cover image was missing
             if (errors.imageUrl) {
@@ -293,16 +305,25 @@ const BusinessProfileEditor: React.FC = () => {
 
     const handleSeoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setFormData((prev: Business | null) => prev ? ({ ...prev, seo: { ...(prev.seo || {}), [name]: value } } as Business) : null);
+        setFormData((prev) => {
+            if (!prev) return null;
+            return { ...prev, seo: { ...(prev.seo || {}), [name]: value } } as Business;
+        });
     };
 
     const handleLandingPageConfigChange = (newConfig: LandingPageConfig) => {
-        setFormData((prev: Business | null) => prev ? ({ ...prev, landingPageConfig: newConfig } as Business) : null);
+        setFormData((prev) => {
+            if (!prev) return null;
+            return { ...prev, landingPageConfig: newConfig } as Business;
+        });
     };
 
     const handleSocialChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormData((prev: Business | null) => prev ? ({ ...prev, socials: { ...(prev.socials || {}), [name]: value } } as Business) : null);
+        setFormData((prev) => {
+            if (!prev) return null;
+            return { ...prev, socials: { ...(prev.socials || {}), [name]: value } } as Business;
+        });
     };
 
     const handleWorkingHoursListChange = (index: number, field: 'day' | 'time', value: string) => {
@@ -758,7 +779,10 @@ const BusinessProfileEditor: React.FC = () => {
                                                     onChange={(e) => {
                                                         const updated = [...(formData.trustIndicators || [])];
                                                         updated[index] = { ...updated[index], type: e.target.value as TrustIndicator['type'] };
-                                                        setFormData((prev: Business | null) => prev ? ({ ...prev, trustIndicators: updated } as Business) : null);
+                                                        setFormData((prev) => {
+                                                            if (!prev) return null;
+                                                            return { ...prev, trustIndicators: updated } as Business;
+                                                        });
                                                     }}
                                                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                                                 >
@@ -775,7 +799,10 @@ const BusinessProfileEditor: React.FC = () => {
                                                     onChange={(e) => {
                                                         const updated = [...(formData.trustIndicators || [])];
                                                         updated[index] = { ...updated[index], title: e.target.value };
-                                                        setFormData((prev: Business | null) => prev ? ({ ...prev, trustIndicators: updated } as Business) : null);
+                                                        setFormData((prev) => {
+                                                            if (!prev) return null;
+                                                            return { ...prev, trustIndicators: updated } as Business;
+                                                        });
                                                     }}
                                                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                                                     placeholder="e.g., Verified Business"
@@ -790,7 +817,10 @@ const BusinessProfileEditor: React.FC = () => {
                                                 onChange={(e) => {
                                                     const updated = [...(formData.trustIndicators || [])];
                                                     updated[index] = { ...updated[index], icon: e.target.value };
-                                                    setFormData((prev: Business | null) => prev ? ({ ...prev, trustIndicators: updated } as Business) : null);
+                                                    setFormData((prev) => {
+                                                        if (!prev) return null;
+                                                        return { ...prev, trustIndicators: updated } as Business;
+                                                    });
                                                 }}
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
                                                 placeholder="https://example.com/icon.png"
@@ -803,7 +833,10 @@ const BusinessProfileEditor: React.FC = () => {
                                                 onChange={(e) => {
                                                     const updated = [...(formData.trustIndicators || [])];
                                                     updated[index] = { ...updated[index], description: e.target.value };
-                                                    setFormData((prev: Business | null) => prev ? ({ ...prev, trustIndicators: updated } as Business) : null);
+                                                    setFormData((prev) => {
+                                                        if (!prev) return null;
+                                                        return { ...prev, trustIndicators: updated } as Business;
+                                                    });
                                                 }}
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
                                                 rows={2}
@@ -814,7 +847,10 @@ const BusinessProfileEditor: React.FC = () => {
                                             type="button"
                                             onClick={() => {
                                                 const updated = (formData.trustIndicators || []).filter((_: TrustIndicator, i: number) => i !== index);
-                                                setFormData((prev: Business | null) => prev ? ({ ...prev, trustIndicators: updated } as Business) : null);
+                                                setFormData((prev) => {
+                                                    if (!prev) return null;
+                                                    return { ...prev, trustIndicators: updated } as Business;
+                                                });
                                             }}
                                             className="text-red-600 hover:text-red-800 text-sm font-medium"
                                         >
@@ -827,10 +863,13 @@ const BusinessProfileEditor: React.FC = () => {
                                     type="button"
                                     onClick={() => {
                                         const newIndicator: TrustIndicator = { type: 'badge', title: '' };
-                                        setFormData((prev: Business | null) => prev ? ({
-                                            ...prev,
-                                            trustIndicators: [...(prev.trustIndicators || []), newIndicator]
-                                        } as Business) : null);
+                                        setFormData((prev) => {
+                                            if (!prev) return null;
+                                            return {
+                                                ...prev,
+                                                trustIndicators: [...(prev.trustIndicators || []), newIndicator]
+                                            } as Business;
+                                        });
                                     }}
                                     className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-primary hover:text-primary transition-colors"
                                 >
