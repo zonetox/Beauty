@@ -33,6 +33,7 @@ const UserAccountPage: React.FC = () => {
 
             return () => clearTimeout(timeoutId);
         }
+        return undefined;
     }, [loading]);
 
     // Reset timeout when loading completes
@@ -211,8 +212,15 @@ const UserAccountPage: React.FC = () => {
                                     >
                                         Yêu thích ({favoriteBusinesses.length})
                                     </button>
-                                    {/* Removed incomplete features: appointments, reviews */}
-                                    {/* Only show tabs for features that are ACTUALLY implemented */}
+                                    <div className="pt-4 mt-4 border-t border-gray-100">
+                                        <Link
+                                            to="/"
+                                            className="w-full flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary transition-colors"
+                                        >
+                                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                                            Về trang chủ
+                                        </Link>
+                                    </div>
                                 </nav>
                             </div>
                         </aside>

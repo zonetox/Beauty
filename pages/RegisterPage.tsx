@@ -288,7 +288,7 @@ const RegisterPage: React.FC = () => {
         }
 
         toast.success('Đăng ký thành công! Chào mừng bạn đến với 1Beauty.asia.');
-        navigate('/', { replace: true });
+        navigate('/account', { replace: true });
       }
 
     } catch (err: unknown) {
