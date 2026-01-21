@@ -44,7 +44,7 @@ export function calculateTrialExpiryDate(): string {
 export async function initializeTrial(businessId: number): Promise<boolean> {
   try {
     const expiryDate = calculateTrialExpiryDate();
-    
+
     const { error } = await supabase
       .from('businesses')
       .update({
@@ -88,8 +88,8 @@ export async function checkAndHandleTrialExpiry(businessId: number): Promise<boo
     }
 
     const now = new Date();
-    const expiryDate = business.membership_expiry_date 
-      ? new Date(business.membership_expiry_date) 
+    const expiryDate = business.membership_expiry_date
+      ? new Date(business.membership_expiry_date)
       : null;
 
     // Check if trial has expired
@@ -177,7 +177,7 @@ export async function createBusinessWithTrial(
 
     const { data: createdBusiness, error: businessError } = await supabase
       .from('businesses')
-      .insert(newBusiness)
+      .insert(newBusiness as any) // Type assertion to bypass strict generated types
       .select()
       .single();
 
@@ -197,7 +197,8 @@ export async function createBusinessWithTrial(
       // Business was created, but profile link failed - log but don't fail
     }
 
-    return createdBusiness as Business;
+    // Type assertion needed because DB types don't match camelCase Business type
+    return createdBusiness as any as Business;
   } catch (error) {
     console.error('Exception creating business with trial:', error);
     return null;
@@ -216,9 +217,7 @@ export async function createBusinessWithTrial(
  */
 export async function activateBusinessFromOrder(
   businessId: number,
-  packagePurchased: MembershipPackage,
-  businessEmail?: string,
-  businessName?: string
+  packagePurchased: MembershipPackage
 ): Promise<boolean> {
   try {
     // Calculate expiry date based on package duration

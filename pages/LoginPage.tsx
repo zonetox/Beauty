@@ -2,24 +2,21 @@
 // Tuân thủ ARCHITECTURE.md, sử dụng schema/RLS/contexts hiện có
 // 100% hoàn thiện, không placeholder, chuẩn SEO cơ bản
 
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../providers/AuthProvider.tsx';
 import ForgotPasswordModal from '../components/ForgotPasswordModal.tsx';
 import SEOHead from '../components/SEOHead.tsx';
-import { resolveUserRole } from '../lib/roleResolution';
 
 const LoginPage: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const navigate = useNavigate();
-    const location = useLocation();
     const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
 
     // Get auth context - must be called unconditionally (React Hook rules)
-    const { login, profile, user, state } = useAuth();
+    const { login } = useAuth();
 
     // Unified redirection is handled by AccountPageRouter at /account 
     // or by ProtectedRoute if the user was trying to access a specific page.

@@ -216,3 +216,39 @@ export const DEFAULT_HOMEPAGE_DATA: HomepageData = {
         },
     ],
 };
+// Toast messages used throughout the application
+export const TOAST_MESSAGES = {
+    SUCCESS: {
+        LOGIN: 'Đăng nhập thành công!',
+        REGISTER: 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực.',
+        LOGOUT: 'Đã đăng xuất thành công.',
+        UPDATE_PROFILE: 'Cập nhật hồ sơ thành công!',
+        UPDATE_BUSINESS: 'Cập nhật thông tin doanh nghiệp thành công!',
+        CHANGE_PASSWORD: 'Đổi mật khẩu thành công.',
+        SEND_RESET_EMAIL: 'Đã gửi email khôi phục mật khẩu. Vui lòng kiểm tra hộp thư.',
+        RESET_PASSWORD: 'Đặt lại mật khẩu thành công. Bạn có thể đăng nhập ngay bây giờ.',
+        DELETE_ACCOUNT: 'Tài khoản đã được xóa vĩnh viễn.',
+        CREATED: 'Tạo mới thành công!',
+        UPDATED: 'Cập nhật thành công!',
+        DELETED: 'Xóa thành công!',
+    },
+    ERROR: {
+        GENERIC: 'Đã xảy ra lỗi. Vui lòng thử lại sau.',
+        LOGIN_FAILED: 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.',
+        REGISTER_FAILED: 'Đăng ký thất bại. Email có thể đã tồn tại.',
+        PERMISSION_DENIED: 'Bạn không có quyền thực hiện hành động này.',
+        DATA_FETCH_FAILED: 'Không thể tải dữ liệu. Vui lòng kiểm tra kết nối mạng.',
+        INVALID_INPUT: 'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại các trường.',
+    },
+    INFO: {
+        LOADING: 'Đang xử lý...',
+        AUTH_REQUIRED: 'Vui lòng đăng nhập để tiếp tục.',
+    }
+};
+
+// Validation constants for forms
+export const VALIDATION = {
+    PASSWORD_MIN_LENGTH: 6,
+    PHONE_REGEX: /^(0|\+84)(\s|\.)?((3[2-9])|(5[689])|(7[06-9])|(8[1-689])|(9[0-46-9]))(\d)(\s|\.)?(\d{3})(\s|\.)?(\d{3})$/, // Simple Vietnam phone regex
+    EMAIL_REGEX: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+};

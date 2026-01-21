@@ -32,7 +32,7 @@ export function getAbortController(key: string): AbortController {
   if (existing) {
     existing.abort();
   }
-  
+
   const controller = new AbortController();
   abortControllers.set(key, controller);
   return controller;
@@ -61,15 +61,14 @@ export async function safeFetch<T>(
     retry = true,
     retryDelay = 1000,
     abortController,
-    priority = 'medium',
     silent = false
   } = options;
 
   const controller = abortController || new AbortController();
   const signal = controller.signal;
 
-  const isDevelopment = typeof import.meta !== 'undefined' 
-    ? import.meta.env?.MODE === 'development' 
+  const isDevelopment = typeof import.meta !== 'undefined'
+    ? import.meta.env?.MODE === 'development'
     : process.env.NODE_ENV !== 'production';
 
   const attemptFetch = async (): Promise<T> => {
@@ -89,12 +88,12 @@ export async function safeFetch<T>(
       if (signal.aborted) {
         throw new Error('Request aborted');
       }
-      
+
       // Don't retry on timeout (timeout is expected in slow networks)
       if (error.message === 'Request timeout') {
         throw error;
       }
-      
+
       throw error;
     }
   };
@@ -107,7 +106,7 @@ export async function safeFetch<T>(
     if (retry && !signal.aborted && error.message !== 'Request timeout') {
       // Wait before retry
       await new Promise(resolve => setTimeout(resolve, retryDelay));
-      
+
       try {
         const data = await attemptFetch();
         return { data, error: null };
@@ -211,7 +210,7 @@ export async function prioritySafeFetch<T>(
   options: SafeFetchOptions = {}
 ): Promise<SafeFetchResult<T>> {
   const priority = options.priority || 'medium';
-  
+
   return priorityQueue.enqueue(
     () => safeFetch(fetchFn, options),
     priority

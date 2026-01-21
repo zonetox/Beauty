@@ -15,7 +15,7 @@ import { useEffect } from 'react';
 
 const ForBusinessPage: React.FC = () => {
     const { user, state } = useAuth();
-    const { role, isBusinessOwner, isBusinessStaff, isLoading } = useUserRole();
+    const { isBusinessOwner, isBusinessStaff, isLoading } = useUserRole();
     const navigate = useNavigate();
 
     // BLOCK ACCESS: Redirect business owners and staff
@@ -65,7 +65,7 @@ const ForBusinessPage: React.FC = () => {
                             Đưa Doanh Nghiệp Của Bạn Lên Một Tầm Cao Mới
                         </h1>
                         <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                            Tham gia BeautyDir ngay hôm nay để kết nối với hàng triệu khách hàng tiềm năng, 
+                            Tham gia BeautyDir ngay hôm nay để kết nối với hàng triệu khách hàng tiềm năng,
                             xây dựng một trang landing page chuyên nghiệp, và quản lý hoạt động kinh doanh của bạn một cách dễ dàng.
                         </p>
                     </div>

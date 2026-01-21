@@ -12,6 +12,7 @@ interface ImportMetaEnv {
   readonly VITE_POSTHOG_API_KEY?: string;
   readonly VITE_POSTHOG_HOST?: string;
   readonly GEMINI_API_KEY?: string;
+  readonly VITE_GEMINI_API_KEY?: string;
   // You can define other environment variables here as needed
 
   // Vite-specific environment variables

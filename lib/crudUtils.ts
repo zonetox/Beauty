@@ -5,7 +5,7 @@
 
 import { SupabaseClient } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
-import { handleSupabaseError, getUserFriendlyMessage, ErrorCode } from './errorHandler';
+import { handleSupabaseError, getUserFriendlyMessage } from './errorHandler';
 import { TOAST_MESSAGES } from '../constants';
 
 // ============================================
@@ -75,7 +75,7 @@ export async function createRecord<T extends { id: string | number }>(
 
     return null;
   } catch (error) {
-    const standardError = error instanceof Error 
+    const standardError = error instanceof Error
       ? handleSupabaseError(error)
       : handleSupabaseError(new Error(String(error)));
 
@@ -124,7 +124,7 @@ export async function updateRecord<T extends { id: string | number }>(
 
     return null;
   } catch (error) {
-    const standardError = error instanceof Error 
+    const standardError = error instanceof Error
       ? handleSupabaseError(error)
       : handleSupabaseError(new Error(String(error)));
 
@@ -165,7 +165,7 @@ export async function deleteRecord(
     onSuccess?.();
     return true;
   } catch (error) {
-    const standardError = error instanceof Error 
+    const standardError = error instanceof Error
       ? handleSupabaseError(error)
       : handleSupabaseError(new Error(String(error)));
 
