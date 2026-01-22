@@ -53,7 +53,6 @@ const LandingPagePreview: React.FC<LandingPagePreviewProps> = ({ business, confi
 
   const handleBookNowClick = () => {
     // In preview, just show a message or do nothing
-    console.log('Book now clicked in preview');
   };
 
   return (

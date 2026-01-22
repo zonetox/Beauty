@@ -46,7 +46,7 @@ const ReplyForm: React.FC<{
         setError('');
         try {
             await onSubmit(content);
-        } catch (error) {
+        } catch (_error) {
             // Error handled by parent with toast
         }
     };
@@ -165,7 +165,7 @@ const ReviewsManager: React.FC = () => {
             await addReply(reviewId, content);
             toast.success('Reply saved successfully!');
             setReplyingTo(null);
-        } catch (error) {
+        } catch (_error) {
             // Error already handled in context with toast
         } finally {
             setIsReplying(false);

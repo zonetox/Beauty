@@ -21,6 +21,46 @@ const statusStyles: { [key in OrderStatus]: string } = {
     [OrderStatus.REJECTED]: 'bg-red-100 text-red-800',
 };
 
+// --- Helper Functions Moved Outside Component ---
+const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+};
+
+const formatDate = (dateString?: string) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('vi-VN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+};
+
+const formatFeaturedLevel = (level: number) => {
+    if (level === 2) return 'Top';
+    if (level === 1) return 'Featured';
+    return 'Standard';
+};
+
+const getNestedValue = (obj: MembershipPackage, path: string): unknown => {
+    return path.split('.').reduce((o, k) => {
+        if (o && typeof o === 'object' && k in o) {
+            return (o as Record<string, unknown>)[k];
+        }
+        return undefined;
+    }, obj as unknown);
+};
+
+const featureRows = [
+    { key: 'permissions.customLandingPage', label: 'Custom Landing Page' },
+    { key: 'permissions.seoSupport', label: 'SEO Support' },
+    { key: 'permissions.privateBlog', label: 'Private Blog' },
+    { key: 'permissions.photoLimit', label: 'Photo Limit' },
+    { key: 'permissions.videoLimit', label: 'Video Limit' },
+    { key: 'permissions.monthlyPostLimit', label: 'Monthly Blog Posts' },
+    { key: 'permissions.featuredPostLimit', label: 'Featured Posts' },
+    { key: 'permissions.featuredLevel', label: 'Featured Level' },
+];
+
 // --- Icons for comparison table ---
 const CheckIcon: React.FC<{ className?: string }> = ({ className = '' }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 ${className}`} viewBox="0 0 20 20" fill="currentColor">
@@ -75,16 +115,25 @@ const MembershipAndBilling: React.FC = () => {
         return Math.ceil(diff / (1000 * 60 * 60 * 24));
     }, [currentBusiness?.membershipExpiryDate]);
 
-    if (!currentBusiness) {
-        return (
-            <div className="p-8">
-                <EmptyState
-                    title="No business found"
-                    message="Please select a business to manage membership and billing."
-                />
-            </div>
-        );
-    }
+    /**
+     * Renders a permission value with appropriate formatting
+     * @param value - The permission value to render
+     * @param key - The permission key
+     * @returns React element representing the permission
+     */
+    const renderPermission = React.useCallback((value: unknown, key: string): React.ReactNode => {
+        if (key.endsWith('featuredLevel')) {
+            return <span className="font-semibold">{formatFeaturedLevel(value as number)}</span>;
+        }
+        if (typeof value === 'boolean') {
+            return value ? <CheckIcon className="text-green-500 mx-auto" /> : <CrossIcon className="text-red-400 mx-auto" />;
+        }
+        if (typeof value === 'number') {
+            if (value === 0) return <span className="text-gray-400">—</span>;
+            return <span className="font-semibold">{value === -1 ? 'Unlimited' : value}</span>;
+        }
+        return String(value);
+    }, []);
 
     const handleUpgradeRequest = (pkg: MembershipPackage) => {
         if (pkg.id === currentPackage?.id) {
@@ -96,7 +145,7 @@ const MembershipAndBilling: React.FC = () => {
     };
 
     const confirmUpgradeRequest = async () => {
-        if (!confirmUpgrade.package) return;
+        if (!confirmUpgrade.package || !currentBusiness) return;
         const pkg = confirmUpgrade.package;
         setConfirmUpgrade({ isOpen: false, package: null });
 
@@ -179,71 +228,16 @@ const MembershipAndBilling: React.FC = () => {
         }
     };
 
-    const formatPrice = (price: number) => {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
-    };
-
-    const formatDate = (dateString?: string) => {
-        if (!dateString) return 'N/A';
-        return new Date(dateString).toLocaleDateString('vi-VN', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-    };
-
-
-    const featureRows = [
-        { key: 'permissions.customLandingPage', label: 'Custom Landing Page' },
-        { key: 'permissions.seoSupport', label: 'SEO Support' },
-        { key: 'permissions.privateBlog', label: 'Private Blog' },
-        { key: 'permissions.photoLimit', label: 'Photo Limit' },
-        { key: 'permissions.videoLimit', label: 'Video Limit' },
-        { key: 'permissions.monthlyPostLimit', label: 'Monthly Blog Posts' },
-        { key: 'permissions.featuredPostLimit', label: 'Featured Posts' },
-        { key: 'permissions.featuredLevel', label: 'Featured Level' },
-    ];
-
-    /**
-     * Gets a nested value from an object using dot notation path
-     * @param obj - The object to get value from
-     * @param path - Dot notation path (e.g., 'permissions.featuredLevel')
-     * @returns The value at the path or undefined
-     */
-    const getNestedValue = (obj: MembershipPackage, path: string): unknown => {
-        return path.split('.').reduce((o, k) => {
-            if (o && typeof o === 'object' && k in o) {
-                return (o as Record<string, unknown>)[k];
-            }
-            return undefined;
-        }, obj as unknown);
-    };
-
-    const formatFeaturedLevel = (level: number) => {
-        if (level === 2) return 'Top';
-        if (level === 1) return 'Featured';
-        return 'Standard';
-    };
-
-    /**
-     * Renders a permission value with appropriate formatting
-     * @param value - The permission value to render
-     * @param key - The permission key
-     * @returns React element representing the permission
-     */
-    const renderPermission = React.useCallback((value: unknown, key: string): React.ReactNode => {
-        if (key.endsWith('featuredLevel')) {
-            return <span className="font-semibold">{formatFeaturedLevel(value as number)}</span>;
-        }
-        if (typeof value === 'boolean') {
-            return value ? <CheckIcon className="text-green-500 mx-auto" /> : <CrossIcon className="text-red-400 mx-auto" />;
-        }
-        if (typeof value === 'number') {
-            if (value === 0) return <span className="text-gray-400">—</span>;
-            return <span className="font-semibold">{value === -1 ? 'Unlimited' : value}</span>;
-        }
-        return String(value);
-    }, []);
+    if (!currentBusiness) {
+        return (
+            <div className="p-8">
+                <EmptyState
+                    title="No business found"
+                    message="Please select a business to manage membership and billing."
+                />
+            </div>
+        );
+    }
 
     if (ordersLoading) {
         return (
