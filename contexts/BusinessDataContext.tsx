@@ -166,7 +166,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
           p_category: (options.category || null) as any,
           p_city: (options.location || null) as any,
           p_district: (options.district || null) as any,
-          p_tags: null as any, // Tags filter not used in current frontend, but supported
+          p_tags: null as string[] | null, // Tags filter not used in current frontend, but supported
           p_limit: PAGE_SIZE,
           p_offset: from
         });
@@ -205,7 +205,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
           console.error('Error fetching business details:', fetchError.message);
           toast.error('Failed to load businesses');
         } else if (orderedFullData && orderedFullData.length > 0) {
-          const mapped = (snakeToCamel(orderedFullData) as any[]).map((b) => ({
+          const mapped = (snakeToCamel(orderedFullData) as Business[]).map((b) => ({
             ...(b as Business),
             services: [],
             gallery: [],
@@ -274,7 +274,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
         // Fallback to cache or empty if search fails
         // toast.error('Failed to load businesses');
       } else if (data) {
-        const mapped = (snakeToCamel(data) as any[]).map((b) => ({
+        const mapped = (snakeToCamel(data) as Business[]).map((b) => ({
           ...(b as Business),
           services: [],
           gallery: [],

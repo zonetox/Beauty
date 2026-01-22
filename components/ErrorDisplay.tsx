@@ -144,7 +144,7 @@ const ErrorDisplay: React.FC = () => {
           <div className="p-3 bg-gray-50 border-b flex flex-wrap gap-2">
             <select
               value={filter}
-              onChange={(e) => setFilter(e.target.value as any)}
+              onChange={(e) => setFilter(e.target.value as 'all' | 'error' | 'warning' | 'info')}
               className="px-3 py-1 border rounded text-sm"
             >
               <option value="all">Tất cả ({errors.length})</option>

@@ -16,8 +16,8 @@ interface AdminContextType {
     currentUser: AuthenticatedAdmin | null;
     loading: boolean;
     adminUsers: AdminUser[];
-    adminLogin: (email: string, pass: string) => Promise<any>;
-    adminLogout: () => Promise<any>;
+    adminLogin: (email: string, pass: string) => Promise<void>;
+    adminLogout: () => Promise<void>;
     addAdminUser: (newUser: Omit<AdminUser, 'id' | 'lastLogin' | 'isLocked'>) => Promise<void>;
     updateAdminUser: (userId: number, updates: Partial<AdminUser>) => Promise<void>;
     deleteAdminUser: (userId: number) => Promise<void>;
@@ -43,7 +43,7 @@ interface AdminContextType {
     updateTicketStatus: (ticketId: string, status: TicketStatus) => Promise<void>;
     // Registration Requests
     registrationRequests: RegistrationRequest[];
-    approveRegistrationRequest: (requestId: string) => Promise<any>;
+    approveRegistrationRequest: (requestId: string) => Promise<void>;
     rejectRegistrationRequest: (requestId: string) => Promise<void>;
     // Settings
     settings: AppSettings | null;
@@ -205,16 +205,16 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
             if (announcementsRes.data) setAnnouncements(snakeToCamel(announcementsRes.data) as Announcement[]);
             if (ticketsRes.data) {
-                const mappedTickets = (ticketsRes.data as any[]).map(t => ({
-                    ...(snakeToCamel(t) as any),
-                    businessName: t.businesses?.name || t.business_name || 'Unknown Business'
+                const mappedTickets = (ticketsRes.data as unknown as (SupportTicket & { businesses?: { name: string } })[]).map(t => ({
+                    ...(snakeToCamel(t) as SupportTicket),
+                    businessName: t.businesses?.name || (t as any).business_name || 'Unknown Business'
                 }));
                 setTickets(mappedTickets as SupportTicket[]);
             }
             if (requestsRes.data) setRegistrationRequests(snakeToCamel(requestsRes.data) as RegistrationRequest[]);
             if (settingsRes.data) setSettings(settingsRes.data.settings_data as unknown as AppSettings);
             if (pageContentRes.data) {
-                const dbContent = (pageContentRes.data as any[]).reduce((acc, page) => {
+                const dbContent = (pageContentRes.data as { page_name: string; content_data: unknown }[]).reduce((acc, page) => {
                     acc[page.page_name as PageName] = page.content_data as PageData;
                     return acc;
                 }, {} as Record<PageName, PageData>);

@@ -56,7 +56,7 @@ const toSnakeCase = <T,>(obj: T): T => {
   if (Array.isArray(obj)) return obj.map(toSnakeCase) as unknown as T;
   return Object.keys(obj as object).reduce((acc: Record<string, unknown>, key: string) => {
     const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-    acc[snakeKey] = toSnakeCase((obj as any)[key]);
+    acc[snakeKey] = toSnakeCase((obj as Record<string, unknown>)[key]);
     return acc;
   }, {}) as unknown as T;
 };
@@ -192,13 +192,13 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
         const businessOrders = ordersRes.data.filter((o: { business_id: number | null }) => o.business_id === businessId);
 
         // Get page views for this business (from page_views table where page_id = businessId or page_type = 'business')
-        const businessPageViews = (pageViewsRes.data as any[])?.filter((pv: any) =>
+        const businessPageViews = (pageViewsRes.data as { page_type: string; page_id: string; business_id: number; viewed_at: string }[])?.filter((pv) =>
           (pv.page_type === 'business' && pv.page_id === String(businessId)) ||
           (pv.business_id === businessId)
         ) || [];
 
         // Get conversions for this business
-        const businessConversions = (conversionsRes.data as any[])?.filter((c: any) => c.business_id === businessId) || [];
+        const businessConversions = (conversionsRes.data as { business_id: number; conversion_type: string; converted_at: string }[])?.filter((c) => c.business_id === businessId) || [];
 
         // Calculate time series for last 30 days
         const timeSeries: AnalyticsDataPoint[] = [];
@@ -212,22 +212,22 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
           const dateStr = date.toISOString().split('T')[0];
 
           // Count page views for this day
-          const dayPageViews = businessPageViews.filter((pv: any) => {
+          const dayPageViews = businessPageViews.filter((pv) => {
             const viewDate = new Date(pv.viewed_at);
             viewDate.setHours(0, 0, 0, 0);
             return viewDate.getTime() === date.getTime();
           }).length;
 
           // Count conversions by type for this day
-          const dayConversions = businessConversions.filter((c: any) => {
+          const dayConversions = businessConversions.filter((c) => {
             const convDate = new Date(c.converted_at);
             convDate.setHours(0, 0, 0, 0);
             return convDate.getTime() === date.getTime();
           });
 
-          const dayCallClicks = dayConversions.filter((c: any) => c.conversion_type === 'call').length;
-          const dayContactClicks = dayConversions.filter((c: any) => c.conversion_type === 'contact').length;
-          const dayBookingClicks = dayConversions.filter((c: any) => c.conversion_type === 'booking').length;
+          const dayCallClicks = dayConversions.filter((c) => c.conversion_type === 'call').length;
+          const dayContactClicks = dayConversions.filter((c) => c.conversion_type === 'contact').length;
+          const dayBookingClicks = dayConversions.filter((c) => c.conversion_type === 'booking').length;
           // const dayCtaClicks = dayConversions.filter((c: any) => c.conversion_type === 'click').length;
 
           timeSeries.push({

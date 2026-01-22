@@ -351,7 +351,7 @@ const MediaLibrary: React.FC = () => {
                     {['all', ...Object.values(MediaCategory)].map(cat => (
                         <button
                             key={cat}
-                            onClick={() => setActiveFilter(cat as any)}
+                            onClick={() => setActiveFilter(cat as MediaCategory | 'all')}
                             className={`px-3 py-2 text-sm font-medium rounded-t-md capitalize transition-colors ${activeFilter === cat
                                 ? 'border-b-2 border-primary text-primary'
                                 : 'text-gray-500 hover:text-neutral-dark'

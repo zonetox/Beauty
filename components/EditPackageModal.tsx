@@ -13,7 +13,7 @@ interface EditPackageModalProps {
 const EditPackageModal: React.FC<EditPackageModalProps> = ({ isOpen, onClose, onSave, packageToEdit }) => {
   const isEditMode = Boolean(packageToEdit);
 
-  const getInitialFormData = (): Omit<MembershipPackage, 'id'> => {
+  const getInitialFormData = React.useCallback((): Omit<MembershipPackage, 'id'> => {
     if (packageToEdit) {
       return { ...packageToEdit };
     }
@@ -37,7 +37,7 @@ const EditPackageModal: React.FC<EditPackageModalProps> = ({ isOpen, onClose, on
       isPopular: false,
       isActive: true,
     };
-  };
+  }, [packageToEdit]);
 
   const [formData, setFormData] = useState<Partial<MembershipPackage>>(getInitialFormData());
 
@@ -46,7 +46,7 @@ const EditPackageModal: React.FC<EditPackageModalProps> = ({ isOpen, onClose, on
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData(getInitialFormData());
     }
-  }, [packageToEdit, isOpen]);
+  }, [isOpen, getInitialFormData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;

@@ -231,7 +231,7 @@ const MembershipAndBilling: React.FC = () => {
      * @param key - The permission key
      * @returns React element representing the permission
      */
-    const renderPermission = (value: unknown, key: string): React.ReactNode => {
+    const renderPermission = React.useCallback((value: unknown, key: string): React.ReactNode => {
         if (key.endsWith('featuredLevel')) {
             return <span className="font-semibold">{formatFeaturedLevel(value as number)}</span>;
         }
@@ -243,7 +243,7 @@ const MembershipAndBilling: React.FC = () => {
             return <span className="font-semibold">{value === -1 ? 'Unlimited' : value}</span>;
         }
         return String(value);
-    };
+    }, []);
 
     if (ordersLoading) {
         return (

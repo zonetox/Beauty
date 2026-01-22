@@ -38,7 +38,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, categories, locations, 
   const locationUrl = useLocation();
   const navigate = useNavigate();
 
-  const getFiltersFromUrl = () => {
+  const getFiltersFromUrl = React.useCallback(() => {
     const params = new URLSearchParams(locationUrl.search);
     return {
       keyword: params.get('keyword') || '',
@@ -46,7 +46,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, categories, locations, 
       location: params.get('location') || '',
       district: params.get('district') || '',
     };
-  };
+  }, [locationUrl.search]);
 
   const [filters, setFilters] = useState(getFiltersFromUrl());
   const [districts, setDistricts] = useState<string[]>([]);
@@ -65,7 +65,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, categories, locations, 
     }
     // If city is cleared, also clear district
     if (!filters.location) {
-       
+
       setFilters(prev => ({ ...prev, district: '' }));
     }
   }, [filters.location, locationsHierarchy]);
@@ -74,7 +74,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, categories, locations, 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setFilters(getFiltersFromUrl());
-  }, [locationUrl.search]);
+  }, [getFiltersFromUrl]);
 
   // Effect to trigger the search operation when debounced filters change
   useEffect(() => {
@@ -89,7 +89,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, categories, locations, 
         onSearch(debouncedFilters);
       }
     }
-  }, [debouncedFilters, onSearch, locationUrl.pathname]);
+  }, [debouncedFilters, onSearch, locationUrl.pathname, getFiltersFromUrl]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

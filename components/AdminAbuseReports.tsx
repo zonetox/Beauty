@@ -99,9 +99,10 @@ const AdminAbuseReports: React.FC = () => {
       toast.success('Report status updated successfully.');
       setSelectedReport(null);
       setAdminNotes('');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating report:', error);
-      toast.error(error?.message || 'Failed to update report status.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update report status.';
+      toast.error(errorMessage);
     } finally {
       setIsUpdating(false);
     }

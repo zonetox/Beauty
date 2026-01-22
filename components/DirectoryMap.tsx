@@ -10,7 +10,7 @@ interface DirectoryMapProps {
     businesses: Business[];
     highlightedBusinessId: number | null;
     selectedBusinessId: number | null;
-    onBoundsChange: (bounds: any) => void;
+    onBoundsChange: (bounds: unknown) => void;
     onMarkerClick: (businessId: number) => void;
     onPopupClose: () => void;
     onMarkerMouseEnter: (businessId: number) => void;
@@ -20,19 +20,19 @@ interface DirectoryMapProps {
 
 const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusinessId, selectedBusinessId, onBoundsChange, onMarkerClick, onPopupClose, onMarkerMouseEnter, onMarkerMouseLeave, shouldFitBounds }) => {
     const mapContainerRef = useRef<HTMLDivElement>(null);
-    const mapRef = useRef<any>(null); // To hold the Leaflet map instance
-    const markersRef = useRef<{ [key: number]: any }>({}); // To hold marker instances
+    const mapRef = useRef<L.Map | null>(null); // To hold the Leaflet map instance
+    const markersRef = useRef<{ [key: number]: L.Marker }>({}); // To hold marker instances
 
     // --- Custom Category Icons ---
-    const categoryIcons: Record<string, string> = {
+    const categoryIcons: Record<string, string> = React.useMemo(() => ({
         [BusinessCategory.SPA]: `<path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />`, // Heart
         [BusinessCategory.SALON]: `<g transform="scale(1.2) translate(-2 -2)"><circle cx="6.5" cy="6" r="2.5"/><circle cx="6.5" cy="18" r="2.5"/><line x1="8" y1="7.5" x2="16" y2="16"/><line x1="8" y1="16.5" x2="16" y2="8"/></g>`, // Scissors
         [BusinessCategory.NAIL]: `<g transform="scale(1.1) translate(-1 -2)"><rect x="6" y="4" width="12" height="4" rx="1" /><path d="M8 9 L 16 9 L 14.5 20 L 9.5 20 Z" /></g>`, // Polish Bottle
         [BusinessCategory.CLINIC]: `<path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />`, // Plus
         [BusinessCategory.DENTAL]: `<path d="M6 9 C6 4, 18 4, 18 9 C18 14, 15 15, 15 19 C15 22, 9 22, 9 19 C9 15, 6 14, 6 9 Z" />`, // Tooth
-    };
+    }), []);
 
-    const getIcon = (category: BusinessCategory, isHighlighted: boolean) => {
+    const getIcon = React.useCallback((category: BusinessCategory, isHighlighted: boolean) => {
         const iconSvg = categoryIcons[category] || `<circle cx="12" cy="12" r="4" />`;
         const isFilled = category === BusinessCategory.DENTAL || category === BusinessCategory.NAIL;
         const fillColor = isFilled ? 'currentColor' : 'none';
@@ -70,7 +70,7 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusi
             iconAnchor: [size / 2, size],
             popupAnchor: [0, -size]
         });
-    };
+    }, [categoryIcons]);
 
     // --- Map Initialization ---
     useEffect(() => {
@@ -85,7 +85,9 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusi
             }).addTo(mapRef.current);
 
             mapRef.current.on('moveend', () => {
-                onBoundsChange(mapRef.current.getBounds());
+                if (mapRef.current) {
+                    onBoundsChange(mapRef.current.getBounds());
+                }
             });
 
             // Ensure map fills container correctly (fixes "Gray Area" issue)
@@ -114,7 +116,7 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusi
         if (!mapRef.current) return;
 
         // Clear old markers
-        Object.values(markersRef.current).forEach((marker: any) => marker.remove());
+        Object.values(markersRef.current).forEach((marker) => marker.remove());
         markersRef.current = {};
 
         const validBusinesses = businesses.filter(b => b.latitude && b.longitude);
@@ -125,7 +127,6 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusi
             const icon = getIcon(category, false);
 
             const marker = L.marker([business.latitude!, business.longitude!], { icon })
-                .addTo(mapRef.current)
                 .bindPopup(popupContent)
                 .on('click', () => {
                     onMarkerClick(business.id);
@@ -140,16 +141,22 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusi
                     onMarkerMouseLeave();
                 });
 
+            if (mapRef.current) {
+                marker.addTo(mapRef.current);
+            }
+
             markersRef.current[business.id] = marker;
         });
 
         // Fit map to markers only if a search is active
         if (shouldFitBounds && validBusinesses.length > 0) {
             const group = L.featureGroup(Object.values(markersRef.current));
-            mapRef.current.fitBounds(group.getBounds().pad(0.2));
+            if (mapRef.current) {
+                mapRef.current.fitBounds(group.getBounds().pad(0.2));
+            }
         }
 
-    }, [businesses, shouldFitBounds, onMarkerClick, onPopupClose, onMarkerMouseEnter, onMarkerMouseLeave]);
+    }, [businesses, shouldFitBounds, onMarkerClick, onPopupClose, onMarkerMouseEnter, onMarkerMouseLeave, getIcon]);
 
     // --- Handle Selection (Click) ---
     useEffect(() => {
@@ -187,7 +194,7 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusi
             }
         });
 
-    }, [highlightedBusinessId, selectedBusinessId, businesses]);
+    }, [highlightedBusinessId, selectedBusinessId, businesses, getIcon]);
 
     return <div ref={mapContainerRef} className="h-full w-full relative z-10" />;
 };

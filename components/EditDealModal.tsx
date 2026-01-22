@@ -50,7 +50,7 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
         discount_percentage: undefined,
         status: DealStatus.ACTIVE
     });
-    
+
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [isUploading, setIsUploading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -119,14 +119,14 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
-        let processedValue: any = value;
+        let processedValue: string | number | undefined = value;
 
         if (type === 'number') {
             processedValue = value === '' ? undefined : parseFloat(value);
         }
 
         setFormData(prev => ({ ...prev, [name]: processedValue }));
-        
+
         // Clear error when user starts typing
         if (errors[name]) {
             setErrors(prev => {
@@ -191,7 +191,7 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
         if (!e.target.files || !e.target.files[0]) return;
 
         const file = e.target.files[0];
-        
+
         // Validate file type
         const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
         if (!validTypes.includes(file.type)) {
@@ -231,7 +231,7 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
             // Upload to Supabase Storage
             const folder = `business/${businessId}/deals`;
             const imageUrl = await uploadFile('business-gallery', file, folder);
-            
+
             // Delete old image if editing and image changed
             if (isEditMode && oldImageUrl && oldImageUrl !== imageUrl && oldImageUrl.startsWith('http')) {
                 try {
@@ -260,7 +260,7 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (!validateForm()) {
             toast.error('Please fix the errors in the form');
             return;
@@ -323,9 +323,8 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
                                 name="title"
                                 value={formData.title || ''}
                                 onChange={handleChange}
-                                className={`mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary ${
-                                    errors.title ? 'border-red-500' : 'border-gray-300'
-                                }`}
+                                className={`mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary ${errors.title ? 'border-red-500' : 'border-gray-300'
+                                    }`}
                                 placeholder="e.g., Summer Special - 50% Off"
                                 disabled={isSaving || isUploading}
                             />
@@ -342,9 +341,8 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
                                 value={formData.description || ''}
                                 onChange={handleChange}
                                 rows={4}
-                                className={`mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary ${
-                                    errors.description ? 'border-red-500' : 'border-gray-300'
-                                }`}
+                                className={`mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary ${errors.description ? 'border-red-500' : 'border-gray-300'
+                                    }`}
                                 placeholder="Describe your deal in detail..."
                                 disabled={isSaving || isUploading}
                             />
@@ -378,9 +376,8 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
                                 <div className="flex-1">
                                     <label
                                         htmlFor="deal-image-upload"
-                                        className={`cursor-pointer bg-secondary text-white px-3 py-2 text-sm font-semibold rounded-md hover:opacity-90 inline-block ${
-                                            isUploading || isSaving ? 'opacity-50 cursor-not-allowed' : ''
-                                        }`}
+                                        className={`cursor-pointer bg-secondary text-white px-3 py-2 text-sm font-semibold rounded-md hover:opacity-90 inline-block ${isUploading || isSaving ? 'opacity-50 cursor-not-allowed' : ''
+                                            }`}
                                     >
                                         {isUploading ? 'Uploading...' : 'Choose Image'}
                                     </label>
@@ -409,9 +406,8 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
                                     name="start_date"
                                     value={formData.start_date || ''}
                                     onChange={handleChange}
-                                    className={`mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary ${
-                                        errors.start_date ? 'border-red-500' : 'border-gray-300'
-                                    }`}
+                                    className={`mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary ${errors.start_date ? 'border-red-500' : 'border-gray-300'
+                                        }`}
                                     disabled={isSaving || isUploading}
                                 />
                                 {errors.start_date && <p className="mt-1 text-sm text-red-600">{errors.start_date}</p>}
@@ -425,9 +421,8 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
                                     name="end_date"
                                     value={formData.end_date || ''}
                                     onChange={handleChange}
-                                    className={`mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary ${
-                                        errors.end_date ? 'border-red-500' : 'border-gray-300'
-                                    }`}
+                                    className={`mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary ${errors.end_date ? 'border-red-500' : 'border-gray-300'
+                                        }`}
                                     disabled={isSaving || isUploading}
                                 />
                                 {errors.end_date && <p className="mt-1 text-sm text-red-600">{errors.end_date}</p>}
@@ -447,9 +442,8 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
                                     onChange={handleChange}
                                     min="0"
                                     step="1000"
-                                    className={`mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary ${
-                                        errors.original_price ? 'border-red-500' : 'border-gray-300'
-                                    }`}
+                                    className={`mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary ${errors.original_price ? 'border-red-500' : 'border-gray-300'
+                                        }`}
                                     placeholder="e.g., 1000000"
                                     disabled={isSaving || isUploading}
                                 />
@@ -466,9 +460,8 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
                                     onChange={handleChange}
                                     min="0"
                                     step="1000"
-                                    className={`mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary ${
-                                        errors.deal_price ? 'border-red-500' : 'border-gray-300'
-                                    }`}
+                                    className={`mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary ${errors.deal_price ? 'border-red-500' : 'border-gray-300'
+                                        }`}
                                     placeholder="e.g., 500000"
                                     disabled={isSaving || isUploading}
                                 />
@@ -489,9 +482,8 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
                                     onChange={handleChange}
                                     min="0"
                                     max="100"
-                                    className={`mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary ${
-                                        errors.discount_percentage ? 'border-red-500' : 'border-gray-300'
-                                    }`}
+                                    className={`mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary ${errors.discount_percentage ? 'border-red-500' : 'border-gray-300'
+                                        }`}
                                     placeholder="Auto-calculated"
                                     disabled={isSaving || isUploading}
                                 />

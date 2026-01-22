@@ -30,7 +30,7 @@ const PERMISSION_DESCRIPTIONS: { [key in keyof AdminPermissions]: string } = {
 const EditAdminUserModal: React.FC<EditAdminUserModalProps> = ({ isOpen, onClose, onSave, userToEdit }) => {
   const isEditMode = Boolean(userToEdit);
 
-  const getInitialFormData = () => {
+  const getInitialFormData = React.useCallback(() => {
     if (userToEdit) {
       return { ...userToEdit, password: '' }; // Don't show password on edit
     }
@@ -41,7 +41,7 @@ const EditAdminUserModal: React.FC<EditAdminUserModalProps> = ({ isOpen, onClose
       role: AdminUserRole.EDITOR,
       permissions: PERMISSION_PRESETS.Editor,
     };
-  };
+  }, [userToEdit]);
 
   const [formData, setFormData] = useState<Partial<AdminUser>>(getInitialFormData);
 
@@ -50,7 +50,7 @@ const EditAdminUserModal: React.FC<EditAdminUserModalProps> = ({ isOpen, onClose
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData(getInitialFormData());
     }
-  }, [userToEdit, isOpen]);
+  }, [isOpen, getInitialFormData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

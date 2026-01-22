@@ -15,11 +15,11 @@ const AIQuickReplyModal: React.FC<AIQuickReplyModalProps> = ({ isOpen, onClose, 
     const [error, setError] = useState('');
     const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
-    const contextToActionMap = {
+    const contextToActionMap = React.useMemo(() => ({
         'confirm': 'Confirming the appointment and expressing excitement to welcome the customer.',
         'cancel': 'Informing the customer that their requested appointment has been cancelled.',
         'suggest_reschedule': 'Informing the customer their requested time is unavailable and suggesting an alternative time.',
-    };
+    }), []);
 
     const generateReplies = React.useCallback(async () => {
         setLoading(true);
@@ -62,7 +62,7 @@ const AIQuickReplyModal: React.FC<AIQuickReplyModalProps> = ({ isOpen, onClose, 
         } finally {
             setLoading(false);
         }
-    }, [appointment, context]); // Removed dependency on 'contextToActionMap' if it's constant, else move it inside or memoize it.
+    }, [appointment, context, contextToActionMap]);
 
     useEffect(() => {
         if (isOpen) {

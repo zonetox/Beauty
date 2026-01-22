@@ -2,7 +2,7 @@
 import React, { useRef, useEffect } from 'react';
 
 // Quill is loaded from a CDN script, so we declare it to satisfy TypeScript.
-declare const Quill: any;
+declare const Quill: any; // External global
 
 interface RichTextEditorProps {
     value: string;

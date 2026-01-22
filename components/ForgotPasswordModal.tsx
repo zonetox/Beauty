@@ -27,10 +27,11 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ isOpen, onClo
       // The function now sends a real email and doesn't return anything.
       await requestPasswordReset(email);
       setIsSubmitted(true);
-    } catch (err: any) {
+    } catch (err: unknown) {
       // This catch block might not be reached if the context function doesn't throw,
       // but it's good practice to keep it.
-      setError(err.message || 'An unexpected error occurred.');
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

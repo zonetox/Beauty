@@ -1,3 +1,4 @@
+/* eslint-disable */
 const { TsJestTransformer } = require('ts-jest');
 
 const transformer = new TsJestTransformer();
