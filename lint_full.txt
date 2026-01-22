@@ -1,0 +1,868 @@
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\App.tsx[24m[0m
+[0m  [2m123:13[22m  [31merror[39m  Error: Calling setState synchronously within an effect can trigger cascading renders[0m
+[0m[0m
+[0mEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:[0m
+[0m* Update external systems with the latest state from React.[0m
+[0m* Subscribe for updates from some external system, calling setState in a callback function when external state changes.[0m
+[0m[0m
+[0mCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\App.tsx:123:13[0m
+[0m  121 |     useEffect(() => {[0m
+[0m  122 |         if (state !== 'loading' && !roleLoading) {[0m
+[0m> 123 |             setLoadTimeout(false);[0m
+[0m      |             ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect[0m
+[0m  124 |         }[0m
+[0m  125 |     }, [state, roleLoading]);[0m
+[0m  126 |                               [2mreact-hooks/set-state-in-effect[22m[0m
+[0m  [2m138:13[22m  [31merror[39m  Error: Calling setState synchronously within an effect can trigger cascading renders[0m
+[0m[0m
+[0mEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:[0m
+[0m* Update external systems with the latest state from React.[0m
+[0m* Subscribe for updates from some external system, calling setState in a callback function when external state changes.[0m
+[0m[0m
+[0mCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\App.tsx:138:13[0m
+[0m  136 |             }, 400); // 400ms grace period[0m
+[0m  137 |         } else {[0m
+[0m> 138 |             setShowLoading(false);[0m
+[0m      |             ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect[0m
+[0m  139 |         }[0m
+[0m  140 |         return () => clearTimeout(timer);[0m
+[0m  141 |     }, [state, roleLoading]);  [2mreact-hooks/set-state-in-effect[22m[0m
+[0m  [2m448:13[22m  [31merror[39m  Error: Calling setState synchronously within an effect can trigger cascading renders[0m
+[0m[0m
+[0mEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:[0m
+[0m* Update external systems with the latest state from React.[0m
+[0m* Subscribe for updates from some external system, calling setState in a callback function when external state changes.[0m
+[0m[0m
+[0mCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\App.tsx:448:13[0m
+[0m  446 |             };[0m
+[0m  447 |         } else {[0m
+[0m> 448 |             setShowInitialLoading(false);[0m
+[0m      |             ^^^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect[0m
+[0m  449 |             setShowBypassMenu(false);[0m
+[0m  450 |         }[0m
+[0m  451 |         return undefined;                        [2mreact-hooks/set-state-in-effect[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\AIQuickReplyModal.tsx[24m[0m
+[0m  [2m65:8[22m  [33mwarning[39m  React Hook React.useCallback has a missing dependency: 'contextToActionMap'. Either include it or remove the dependency array  [2mreact-hooks/exhaustive-deps[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\AdminAbuseReports.tsx[24m[0m
+[0m  [2m102:21[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\DirectoryMap.tsx[24m[0m
+[0m   [2m13:30[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                    [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m23:27[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                    [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m24:48[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                    [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m117:60[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                    [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m152:8[22m   [33mwarning[39m  React Hook useEffect has a missing dependency: 'getIcon'. Either include it or remove the dependency array  [2mreact-hooks/exhaustive-deps[22m[0m
+[0m  [2m190:8[22m   [33mwarning[39m  React Hook useEffect has a missing dependency: 'getIcon'. Either include it or remove the dependency array  [2mreact-hooks/exhaustive-deps[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\DoughnutChart.tsx[24m[0m
+[0m  [2m28:9[22m  [31merror[39m  Error: Cannot reassign variable after render completes[0m
+[0m[0m
+[0mReassigning `cumulativePercent` after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\DoughnutChart.tsx:28:9[0m
+[0m  26 |         const dashOffset = Math.max(dashArray * (1 - percent), 0);[0m
+[0m  27 |         const rotation = Math.max(cumulativePercent * 360, 0);[0m
+[0m> 28 |         cumulativePercent += percent;[0m
+[0m     |         ^^^^^^^^^^^^^^^^^ Cannot reassign `cumulativePercent` after render completes[0m
+[0m  29 |[0m
+[0m  30 |         // Ensure all values are finite[0m
+[0m  31 |         const safePercent = isFinite(percent) ? percent : 0;  [2mreact-hooks/immutability[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\EditAdminUserModal.tsx[24m[0m
+[0m  [2m50:7[22m  [33mwarning[39m  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')[0m
+[0m  [2m53:6[22m  [33mwarning[39m  React Hook useEffect has a missing dependency: 'getInitialFormData'. Either include it or remove the dependency array  [2mreact-hooks/exhaustive-deps[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\EditDealModal.tsx[24m[0m
+[0m  [2m122:29[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\EditPackageModal.tsx[24m[0m
+[0m  [2m46:7[22m  [31merror[39m    Error: Calling setState synchronously within an effect can trigger cascading renders[0m
+[0m[0m
+[0mEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:[0m
+[0m* Update external systems with the latest state from React.[0m
+[0m* Subscribe for updates from some external system, calling setState in a callback function when external state changes.[0m
+[0m[0m
+[0mCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\EditPackageModal.tsx:46:7[0m
+[0m  44 |   useEffect(() => {[0m
+[0m  45 |     if (isOpen) {[0m
+[0m> 46 |       setFormData(getInitialFormData());[0m
+[0m     |       ^^^^^^^^^^^ Avoid calling setState() directly within an effect[0m
+[0m  47 |     }[0m
+[0m  48 |   }, [packageToEdit, isOpen]);[0m
+[0m  49 |  [2mreact-hooks/set-state-in-effect[22m[0m
+[0m  [2m48:6[22m  [33mwarning[39m  React Hook useEffect has a missing dependency: 'getInitialFormData'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            [2mreact-hooks/exhaustive-deps[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\ErrorDisplay.tsx[24m[0m
+[0m  [2m147:60[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\ForgotPasswordModal.tsx[24m[0m
+[0m  [2m30:19[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\Header.tsx[24m[0m
+[0m  [2m153:14[22m  [31merror[39m  Error: Cannot create components during render[0m
+[0m[0m
+[0mComponents created during render will reset their state each time they are created. Declare components outside of render.[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\Header.tsx:153:14[0m
+[0m  151 |           {/* Desktop Navigation */}[0m
+[0m  152 |           <nav className="hidden md:flex items-center space-x-1">[0m
+[0m> 153 |             <NavLinks />[0m
+[0m      |              ^^^^^^^^ This component is created during render[0m
+[0m  154 |           </nav>[0m
+[0m  155 |[0m
+[0m  156 |           {/* Right side buttons - Desktop */}[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\Header.tsx:116:52[0m
+[0m  114 |[0m
+[0m  115 |   // This will render the navigation links for both desktop and mobile[0m
+[0m> 116 |   const NavLinks: React.FC<{ mobile?: boolean }> = ({ mobile = false }) => {[0m
+[0m      |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m> 117 |     const classNameFunc = mobile ? mobileNavLinkClass : navLinkClass;[0m
+[0m      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m> 118 |     const handleLinkClick = () => setIsMenuOpen(false);[0m
+[0m      …[0m
+[0m      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m> 131 |     );[0m
+[0m      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m> 132 |   };[0m
+[0m      | ^^^^ The component is created during render here[0m
+[0m  133 |[0m
+[0m  134 |   return ([0m
+[0m  135 |     <header className="glass-header sticky top-0 z-50">                                                                                                                                                                                                                                                                                                                                               [2mreact-hooks/static-components[22m[0m
+[0m  [2m304:14[22m  [31merror[39m  Error: Cannot create components during render[0m
+[0m[0m
+[0mComponents created during render will reset their state each time they are created. Declare components outside of render.[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\Header.tsx:304:14[0m
+[0m  302 |         <div className="md:hidden" id="mobile-menu">[0m
+[0m  303 |           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">[0m
+[0m> 304 |             <NavLinks mobile />[0m
+[0m      |              ^^^^^^^^ This component is created during render[0m
+[0m  305 |             {/* API Status chỉ hiển thị cho admin trong development */}[0m
+[0m  306 |             {isAdmin && (typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'development') && ([0m
+[0m  307 |               <button onClick={() => { handleHealthCheck(); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-amber-700 hover:bg-amber-100">[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\Header.tsx:116:52[0m
+[0m  114 |[0m
+[0m  115 |   // This will render the navigation links for both desktop and mobile[0m
+[0m> 116 |   const NavLinks: React.FC<{ mobile?: boolean }> = ({ mobile = false }) => {[0m
+[0m      |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m> 117 |     const classNameFunc = mobile ? mobileNavLinkClass : navLinkClass;[0m
+[0m      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m> 118 |     const handleLinkClick = () => setIsMenuOpen(false);[0m
+[0m      …[0m
+[0m      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m> 131 |     );[0m
+[0m      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m> 132 |   };[0m
+[0m      | ^^^^ The component is created during render here[0m
+[0m  133 |[0m
+[0m  134 |   return ([0m
+[0m  135 |     <header className="glass-header sticky top-0 z-50">  [2mreact-hooks/static-components[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\LandingPagePreview.tsx[24m[0m
+[0m  [2m27:91[22m  [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m56:5[22m   [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\MediaLibrary.tsx[24m[0m
+[0m  [2m169:22[22m  [33mwarning[39m  'error' is defined but never used         [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m195:18[22m  [33mwarning[39m  'error' is defined but never used         [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m208:18[22m  [33mwarning[39m  'error' is defined but never used         [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m255:18[22m  [33mwarning[39m  'error' is defined but never used         [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m354:67[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\MembershipAndBilling.tsx[24m[0m
+[0m  [2m56:8[22m  [33mwarning[39m  React Hook useMemo has a missing dependency: 'currentBusiness'. Either include it or remove the dependency array  [2mreact-hooks/exhaustive-deps[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\PageRenderer.tsx[24m[0m
+[0m  [2m28:58[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\RecentlyViewed.tsx[24m[0m
+[0m  [2m21:17[22m  [31merror[39m  Error: Calling setState synchronously within an effect can trigger cascading renders[0m
+[0m[0m
+[0mEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:[0m
+[0m* Update external systems with the latest state from React.[0m
+[0m* Subscribe for updates from some external system, calling setState in a callback function when external state changes.[0m
+[0m[0m
+[0mCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\RecentlyViewed.tsx:21:17[0m
+[0m  19 |                     .filter((b): b is Business => b !== undefined);[0m
+[0m  20 |[0m
+[0m> 21 |                 setViewedBusinesses(hydratedBusinesses);[0m
+[0m     |                 ^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect[0m
+[0m  22 |             }[0m
+[0m  23 |         } catch (error) {[0m
+[0m  24 |             console.error("Failed to load recently viewed businesses:", error);  [2mreact-hooks/set-state-in-effect[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\ReportAbuseModal.tsx[24m[0m
+[0m  [2m81:21[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\ReviewsManager.tsx[24m[0m
+[0m   [2m49:18[22m  [33mwarning[39m  'error' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m168:18[22m  [33mwarning[39m  'error' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m181:18[22m  [33mwarning[39m  'error' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\RichTextEditor.tsx[24m[0m
+[0m   [2m5:22[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                       [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m15:29[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                       [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m42:46[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                       [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m42:62[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                       [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m56:8[22m   [33mwarning[39m  React Hook useEffect has missing dependencies: 'onChange', 'placeholder', and 'value'. Either include them or remove the dependency array. If 'onChange' changes too often, find the parent component that defines it and wrap that definition in useCallback  [2mreact-hooks/exhaustive-deps[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\SEOHead.tsx[24m[0m
+[0m  [2m174:20[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m178:28[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m197:31[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m230:32[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m273:24[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m288:32[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\SearchBar.tsx[24m[0m
+[0m  [2m61:11[22m  [31merror[39m    Error: Calling setState synchronously within an effect can trigger cascading renders[0m
+[0m[0m
+[0mEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:[0m
+[0m* Update external systems with the latest state from React.[0m
+[0m* Subscribe for updates from some external system, calling setState in a callback function when external state changes.[0m
+[0m[0m
+[0mCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\SearchBar.tsx:61:11[0m
+[0m  59 |   useEffect(() => {[0m
+[0m  60 |       if (filters.location && locationsHierarchy) {[0m
+[0m> 61 |           setDistricts(locationsHierarchy[filters.location] || []);[0m
+[0m     |           ^^^^^^^^^^^^ Avoid calling setState() directly within an effect[0m
+[0m  62 |       } else {[0m
+[0m  63 |           setDistricts([]);[0m
+[0m  64 |       }                                                   [2mreact-hooks/set-state-in-effect[22m[0m
+[0m  [2m73:5[22m   [31merror[39m    Error: Calling setState synchronously within an effect can trigger cascading renders[0m
+[0m[0m
+[0mEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:[0m
+[0m* Update external systems with the latest state from React.[0m
+[0m* Subscribe for updates from some external system, calling setState in a callback function when external state changes.[0m
+[0m[0m
+[0mCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\SearchBar.tsx:73:5[0m
+[0m  71 |   // Effect to sync component state with URL when it changes (e.g., back/forward buttons)[0m
+[0m  72 |   useEffect(() => {[0m
+[0m> 73 |     setFilters(getFiltersFromUrl());[0m
+[0m     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect[0m
+[0m  74 |   }, [locationUrl.search]);[0m
+[0m  75 |[0m
+[0m  76 |   // Effect to trigger the search operation when debounced filters change  [2mreact-hooks/set-state-in-effect[22m[0m
+[0m  [2m74:6[22m   [33mwarning[39m  React Hook useEffect has a missing dependency: 'getFiltersFromUrl'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        [2mreact-hooks/exhaustive-deps[22m[0m
+[0m  [2m89:6[22m   [33mwarning[39m  React Hook useEffect has a missing dependency: 'getFiltersFromUrl'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        [2mreact-hooks/exhaustive-deps[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\ServicesManager.tsx[24m[0m
+[0m   [2m48:18[22m  [33mwarning[39m  'error' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m64:18[22m  [33mwarning[39m  'error' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m104:18[22m  [33mwarning[39m  'error' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\SystemSettings.tsx[24m[0m
+[0m   [2m71:37[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m80:37[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m82:41[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m303:65[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m305:69[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\__tests__\PermissionGuard.test.tsx[24m[0m
+[0m   [2m39:25[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m68:25[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m115:25[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\__tests__\ProtectedRoute.test.tsx[24m[0m
+[0m  [2m22:51[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\admin\BusinessBulkImporter.tsx[24m[0m
+[0m   [2m37:18[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m42:52[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m116:92[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\business-landing\VideoSection.tsx[24m[0m
+[0m  [2m21:14[22m  [33mwarning[39m  'e' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\AdminContext.tsx[24m[0m
+[0m   [2m19:58[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m20:32[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m46:64[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m208:59[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m217:59[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m229:9[22m    [31merror[39m    Error: Calling setState synchronously within an effect can trigger cascading renders[0m
+[0m[0m
+[0mEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:[0m
+[0m* Update external systems with the latest state from React.[0m
+[0m* Subscribe for updates from some external system, calling setState in a callback function when external state changes.[0m
+[0m[0m
+[0mCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\AdminContext.tsx:229:9[0m
+[0m  227 |[0m
+[0m  228 |     useEffect(() => {[0m
+[0m> 229 |         fetchAllAdminData();[0m
+[0m      |         ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect[0m
+[0m  230 |         if (isSupabaseConfigured) {[0m
+[0m  231 |             const channel = supabase.channel('public:registration_requests')[0m
+[0m  232 |                 .on('postgres_changes', { event: '*', schema: 'public', table: 'registration_requests' }, () => fetchAllAdminData())  [2mreact-hooks/set-state-in-effect[22m[0m
+[0m  [2m294:40[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m316:115[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\AdminPlatformContext.tsx[24m[0m
+[0m   [2m31:62[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m69:51[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m78:49[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m115:21[22m   [31merror[39m    Error: Calling setState synchronously within an effect can trigger cascading renders[0m
+[0m[0m
+[0mEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:[0m
+[0m* Update external systems with the latest state from React.[0m
+[0m* Subscribe for updates from some external system, calling setState in a callback function when external state changes.[0m
+[0m[0m
+[0mCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\AdminPlatformContext.tsx:115:21[0m
+[0m  113 |   }, []);[0m
+[0m  114 |[0m
+[0m> 115 |   useEffect(() => { fetchLogs(); }, [fetchLogs]);[0m
+[0m      |                     ^^^^^^^^^ Avoid calling setState() directly within an effect[0m
+[0m  116 |[0m
+[0m  117 |   const logAdminAction = async (adminUsername: string, action: string, details: string) => {[0m
+[0m  118 |     if (!isSupabaseConfigured) return;                      [2mreact-hooks/set-state-in-effect[22m[0m
+[0m  [2m137:21[22m   [31merror[39m    Error: Calling setState synchronously within an effect can trigger cascading renders[0m
+[0m[0m
+[0mEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:[0m
+[0m* Update external systems with the latest state from React.[0m
+[0m* Subscribe for updates from some external system, calling setState in a callback function when external state changes.[0m
+[0m[0m
+[0mCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\AdminPlatformContext.tsx:137:21[0m
+[0m  135 |   }, []);[0m
+[0m  136 |[0m
+[0m> 137 |   useEffect(() => { fetchNotifications(); }, [fetchNotifications]);[0m
+[0m      |                     ^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect[0m
+[0m  138 |[0m
+[0m  139 |   const addNotification = async (recipientEmail: string, subject: string, body: string) => {[0m
+[0m  140 |     if (isSupabaseConfigured) {  [2mreact-hooks/set-state-in-effect[22m[0m
+[0m  [2m191:111[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m214:98[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m222:113[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m222:122[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\AuthContext.tsx[24m[0m
+[0m   [2m12:56[22m  [33mwarning[39m  Unexpected any. Specify a different type              [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m13:30[22m  [33mwarning[39m  Unexpected any. Specify a different type              [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m25:27[22m  [33mwarning[39m  '_logAdminAction' is assigned a value but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m111:76[22m  [33mwarning[39m  Unexpected any. Specify a different type              [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\BlogDataContext.tsx[24m[0m
+[0m   [2m49:31[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m125:5[22m   [31merror[39m    Error: Calling setState synchronously within an effect can trigger cascading renders[0m
+[0m[0m
+[0mEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:[0m
+[0m* Update external systems with the latest state from React.[0m
+[0m* Subscribe for updates from some external system, calling setState in a callback function when external state changes.[0m
+[0m[0m
+[0mCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\BlogDataContext.tsx:125:5[0m
+[0m  123 |[0m
+[0m  124 |   useEffect(() => {[0m
+[0m> 125 |     fetchComments();[0m
+[0m      |     ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect[0m
+[0m  126 |   }, [fetchComments]);[0m
+[0m  127 |[0m
+[0m  128 |   // Load blog categories from localStorage on mount                                                                                                                                                                                                                                                                              [2mreact-hooks/set-state-in-effect[22m[0m
+[0m  [2m133:7[22m   [31merror[39m    Error: Calling setState synchronously within an effect can trigger cascading renders[0m
+[0m[0m
+[0mEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:[0m
+[0m* Update external systems with the latest state from React.[0m
+[0m* Subscribe for updates from some external system, calling setState in a callback function when external state changes.[0m
+[0m[0m
+[0mCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\BlogDataContext.tsx:133:7[0m
+[0m  131 |       const savedCategoriesJSON = localStorage.getItem(CATEGORIES_LOCAL_STORAGE_KEY);[0m
+[0m  132 |       const categories = savedCategoriesJSON ? JSON.parse(savedCategoriesJSON) : initialBlogCategories;[0m
+[0m> 133 |       setBlogCategories(categories);[0m
+[0m      |       ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect[0m
+[0m  134 |     } catch (error) {[0m
+[0m  135 |       console.error(`Failed to parse blog categories from localStorage:`, error);[0m
+[0m  136 |       setBlogCategories(initialBlogCategories);  [2mreact-hooks/set-state-in-effect[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\BusinessBlogDataContext.tsx[24m[0m
+[0m  [2m111:5[22m    [31merror[39m    Error: Calling setState synchronously within an effect can trigger cascading renders[0m
+[0m[0m
+[0mEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:[0m
+[0m* Update external systems with the latest state from React.[0m
+[0m* Subscribe for updates from some external system, calling setState in a callback function when external state changes.[0m
+[0m[0m
+[0mCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\BusinessBlogDataContext.tsx:111:5[0m
+[0m  109 |[0m
+[0m  110 |   useEffect(() => {[0m
+[0m> 111 |     fetchAllData();[0m
+[0m      |     ^^^^^^^^^^^^ Avoid calling setState() directly within an effect[0m
+[0m  112 |   }, [fetchAllData]);[0m
+[0m  113 |[0m
+[0m  114 |   // --- BUSINESS BLOG LOGIC ---  [2mreact-hooks/set-state-in-effect[22m[0m
+[0m  [2m123:86[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m135:102[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m167:11[22m   [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       [2mno-console[22m[0m
+[0m  [2m177:9[22m    [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       [2mno-console[22m[0m
+[0m  [2m238:95[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\BusinessContext.tsx[24m[0m
+[0m   [2m54:27[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                               [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m54:33[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                               [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m57:40[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                               [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m69:9[22m   [33mwarning[39m  The 'businesses' logical expression could make the dependencies of useEffect Hook (at line 98) change on every render. To fix this, wrap the initialization of 'businesses' in its own useMemo() Hook  [2mreact-hooks/exhaustive-deps[22m[0m
+[0m  [2m188:80[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                               [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m190:60[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                               [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m191:70[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                               [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m192:58[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                               [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m195:66[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                               [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m201:69[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                               [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m215:62[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                               [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m222:65[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                               [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m228:59[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                               [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m229:62[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                               [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m230:62[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                               [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\BusinessDataContext.tsx[24m[0m
+[0m   [2m102:44[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m165:102[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m166:53[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m167:49[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m168:53[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m169:27[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m208:64[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m233:11[22m   [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error                                                                                                                                                                               [2mno-console[22m[0m
+[0m   [2m275:51[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m329:68[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m365:44[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m430:80[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m435:11[22m   [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error                                                                                                                                                                               [2mno-console[22m[0m
+[0m   [2m452:50[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m453:51[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m454:50[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m455:48[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m459:38[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m478:51[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m522:19[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m524:43[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m544:19[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m546:43[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m633:13[22m   [33mwarning[39m  'id' is assigned a value but never used                                                                                                                                                                                                                         [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m633:17[22m   [33mwarning[39m  'services' is assigned a value but never used                                                                                                                                                                                                                   [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m633:27[22m   [33mwarning[39m  'gallery' is assigned a value but never used                                                                                                                                                                                                                    [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m633:36[22m   [33mwarning[39m  'team' is assigned a value but never used                                                                                                                                                                                                                       [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m633:42[22m   [33mwarning[39m  'deals' is assigned a value but never used                                                                                                                                                                                                                      [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m633:49[22m   [33mwarning[39m  'reviews' is assigned a value but never used                                                                                                                                                                                                                    [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m634:99[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m648:17[22m   [33mwarning[39m  'services' is assigned a value but never used                                                                                                                                                                                                                   [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m648:27[22m   [33mwarning[39m  'gallery' is assigned a value but never used                                                                                                                                                                                                                    [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m648:36[22m   [33mwarning[39m  'team' is assigned a value but never used                                                                                                                                                                                                                       [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m648:42[22m   [33mwarning[39m  'deals' is assigned a value but never used                                                                                                                                                                                                                      [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m648:49[22m   [33mwarning[39m  'reviews' is assigned a value but never used                                                                                                                                                                                                                    [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m649:97[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m691:5[22m    [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error                                                                                                                                                                               [2mno-console[22m[0m
+[0m   [2m694:7[22m    [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error                                                                                                                                                                               [2mno-console[22m[0m
+[0m   [2m701:5[22m    [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error                                                                                                                                                                               [2mno-console[22m[0m
+[0m   [2m712:7[22m    [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error                                                                                                                                                                               [2mno-console[22m[0m
+[0m   [2m716:5[22m    [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error                                                                                                                                                                               [2mno-console[22m[0m
+[0m   [2m720:5[22m    [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error                                                                                                                                                                               [2mno-console[22m[0m
+[0m   [2m749:5[22m    [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error                                                                                                                                                                               [2mno-console[22m[0m
+[0m   [2m760:50[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m761:46[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m762:42[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m763:44[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m764:48[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m767:5[22m    [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error                                                                                                                                                                               [2mno-console[22m[0m
+[0m   [2m775:6[22m    [33mwarning[39m  React Hook useCallback has an unnecessary dependency: 'isSupabaseConfigured'. Either exclude it or remove the dependency array. Outer scope values like 'isSupabaseConfigured' aren't valid dependencies because mutating them doesn't re-render the component  [2mreact-hooks/exhaustive-deps[22m[0m
+[0m   [2m785:11[22m   [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error                                                                                                                                                                               [2mno-console[22m[0m
+[0m   [2m789:44[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m795:9[22m    [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error                                                                                                                                                                               [2mno-console[22m[0m
+[0m  [2m1170:16[22m   [33mwarning[39m  'e' is defined but never used                                                                                                                                                                                                                                   [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m1243:11[22m   [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error                                                                                                                                                                               [2mno-console[22m[0m
+[0m  [2m1247:43[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m1253:9[22m    [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error                                                                                                                                                                               [2mno-console[22m[0m
+[0m  [2m1328:37[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m1442:46[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m1459:26[22m   [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                        [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\HomepageDataContext.tsx[24m[0m
+[0m   [2m71:16[22m  [33mwarning[39m  'error' is defined but never used                                                  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m90:7[22m   [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m  [2m145:78[22m  [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m148:11[22m  [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m  [2m199:43[22m  [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m203:57[22m  [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m226:39[22m  [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m230:53[22m  [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m298:36[22m  [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\MembershipPackageContext.tsx[24m[0m
+[0m  [2m32:9[22m  [31merror[39m  Error: Calling setState synchronously within an effect can trigger cascading renders[0m
+[0m[0m
+[0mEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:[0m
+[0m* Update external systems with the latest state from React.[0m
+[0m* Subscribe for updates from some external system, calling setState in a callback function when external state changes.[0m
+[0m[0m
+[0mCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\MembershipPackageContext.tsx:32:9[0m
+[0m  30 |           }[0m
+[0m  31 |         });[0m
+[0m> 32 |         setPackages(mergedPackages);[0m
+[0m     |         ^^^^^^^^^^^ Avoid calling setState() directly within an effect[0m
+[0m  33 |       } else {[0m
+[0m  34 |         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_MEMBERSHIP_PACKAGES));[0m
+[0m  35 |       }  [2mreact-hooks/set-state-in-effect[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\OrderDataContext.tsx[24m[0m
+[0m  [2m18:27[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m18:33[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m21:40[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m46:5[22m   [31merror[39m    Error: Calling setState synchronously within an effect can trigger cascading renders[0m
+[0m[0m
+[0mEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:[0m
+[0m* Update external systems with the latest state from React.[0m
+[0m* Subscribe for updates from some external system, calling setState in a callback function when external state changes.[0m
+[0m[0m
+[0mCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\OrderDataContext.tsx:46:5[0m
+[0m  44 |[0m
+[0m  45 |   useEffect(() => {[0m
+[0m> 46 |     fetchOrders();[0m
+[0m     |     ^^^^^^^^^^^ Avoid calling setState() directly within an effect[0m
+[0m  47 |   }, [fetchOrders]);[0m
+[0m  48 |[0m
+[0m  49 |  [2mreact-hooks/set-state-in-effect[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\PublicPageContentContext.tsx[24m[0m
+[0m  [2m49:32[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\ReviewsDataContext.tsx[24m[0m
+[0m  [2m23:9[22m  [31merror[39m  Error: Calling setState synchronously within an effect can trigger cascading renders[0m
+[0m[0m
+[0mEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:[0m
+[0m* Update external systems with the latest state from React.[0m
+[0m* Subscribe for updates from some external system, calling setState in a callback function when external state changes.[0m
+[0m[0m
+[0mCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\ReviewsDataContext.tsx:23:9[0m
+[0m  21 |       const savedJSON = localStorage.getItem(LOCAL_STORAGE_KEY);[0m
+[0m  22 |       if (savedJSON) {[0m
+[0m> 23 |         setReviews(JSON.parse(savedJSON));[0m
+[0m     |         ^^^^^^^^^^ Avoid calling setState() directly within an effect[0m
+[0m  24 |       } else {[0m
+[0m  25 |         const initialReviews: Review[] = [];[0m
+[0m  26 |         setReviews(initialReviews);  [2mreact-hooks/set-state-in-effect[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\SettingsContext.tsx[24m[0m
+[0m  [2m32:9[22m  [31merror[39m  Error: Calling setState synchronously within an effect can trigger cascading renders[0m
+[0m[0m
+[0mEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:[0m
+[0m* Update external systems with the latest state from React.[0m
+[0m* Subscribe for updates from some external system, calling setState in a callback function when external state changes.[0m
+[0m[0m
+[0mCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\SettingsContext.tsx:32:9[0m
+[0m  30 |         const savedData = JSON.parse(savedDataJSON);[0m
+[0m  31 |         // Merge with defaults to ensure all keys exist[0m
+[0m> 32 |         setSettings({ ...DEFAULT_SETTINGS, ...savedData });[0m
+[0m     |         ^^^^^^^^^^^ Avoid calling setState() directly within an effect[0m
+[0m  33 |       } else {[0m
+[0m  34 |         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_SETTINGS));[0m
+[0m  35 |       }  [2mreact-hooks/set-state-in-effect[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\StaffContext.tsx[24m[0m
+[0m  [2m45:49[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m46:45[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\ThemeContext.tsx[24m[0m
+[0m  [2m132:49[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m186:64[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m194:58[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\UserAuthContext.tsx[24m[0m
+[0m   [2m9:51[22m  [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m10:25[22m  [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m48:11[22m  [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\UserSessionContext.tsx[24m[0m
+[0m   [2m14:51[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                    [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m15:25[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                    [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m134:24[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                    [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m219:6[22m   [33mwarning[39m  React Hook useEffect has a missing dependency: 'loading'. Either include it or remove the dependency array  [2mreact-hooks/exhaustive-deps[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\__tests__\BusinessDataContext.test.tsx[24m[0m
+[0m  [2m25:53[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m26:18[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m37:58[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m45:18[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m52:18[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m79:47[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\hooks\useConfirmDialog.ts[24m[0m
+[0m  [2m50:37[22m  [31merror[39m    Compilation Skipped: Existing memoization could not be preserved[0m
+[0m[0m
+[0mReact Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `dialog`, but the source dependencies were [dialog.onConfirm]. Inferred less specific property than source.[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\hooks\useConfirmDialog.ts:50:37[0m
+[0m  48 |   }, []);[0m
+[0m  49 |[0m
+[0m> 50 |   const handleConfirm = useCallback(() => {[0m
+[0m     |                                     ^^^^^^^[0m
+[0m> 51 |     if (dialog.onConfirm) {[0m
+[0m     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m> 52 |       dialog.onConfirm();[0m
+[0m     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m> 53 |     }[0m
+[0m     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m> 54 |     setDialog(prev => ({ ...prev, isOpen: false, onConfirm: null }));[0m
+[0m     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m> 55 |   }, [dialog.onConfirm]);[0m
+[0m     | ^^^^ Could not preserve existing manual memoization[0m
+[0m  56 |[0m
+[0m  57 |   const handleCancel = useCallback(() => {[0m
+[0m  58 |     setDialog(prev => ({ ...prev, isOpen: false, onConfirm: null }));  [2mreact-hooks/preserve-manual-memoization[22m[0m
+[0m  [2m55:6[22m   [33mwarning[39m  React Hook useCallback has a missing dependency: 'dialog'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        [2mreact-hooks/exhaustive-deps[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\hooks\useLazyData.ts[24m[0m
+[0m  [2m215:6[22m  [33mwarning[39m  React Hook useCallback has a missing dependency: 'state'. Either include it or remove the dependency array  [2mreact-hooks/exhaustive-deps[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\hooks\usePerformanceMonitoring.ts[24m[0m
+[0m   [2m17:41[22m  [31merror[39m    Error: Cannot call impure function during render[0m
+[0m[0m
+[0m`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\hooks\usePerformanceMonitoring.ts:17:41[0m
+[0m  15 |[0m
+[0m  16 | export const usePerformanceMonitoring = (componentName: string) => {[0m
+[0m> 17 |   const mountStartTime = useRef<number>(Date.now());[0m
+[0m     |                                         ^^^^^^^^^^ Cannot call impure function[0m
+[0m  18 |   const renderStartTime = useRef<number>(Date.now());[0m
+[0m  19 |   const apiCallTimes = useRef<Map<string, number>>(new Map());[0m
+[0m  20 |                                   [2mreact-hooks/purity[22m[0m
+[0m   [2m18:42[22m  [31merror[39m    Error: Cannot call impure function during render[0m
+[0m[0m
+[0m`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\hooks\usePerformanceMonitoring.ts:18:42[0m
+[0m  16 | export const usePerformanceMonitoring = (componentName: string) => {[0m
+[0m  17 |   const mountStartTime = useRef<number>(Date.now());[0m
+[0m> 18 |   const renderStartTime = useRef<number>(Date.now());[0m
+[0m     |                                          ^^^^^^^^^^ Cannot call impure function[0m
+[0m  19 |   const apiCallTimes = useRef<Map<string, number>>(new Map());[0m
+[0m  20 |[0m
+[0m  21 |   // Track component mount time  [2mreact-hooks/purity[22m[0m
+[0m  [2m187:51[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m187:84[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m191:85[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m198:48[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m200:35[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m200:68[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m205:72[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m213:48[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m220:73[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\hooks\useStaffPermissions.ts[24m[0m
+[0m  [2m45:29[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\hooks\useUserRole.ts[24m[0m
+[0m  [2m83:6[22m  [33mwarning[39m  React Hook useEffect has a missing dependency: 'user'. Either include it or remove the dependency array  [2mreact-hooks/exhaustive-deps[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\jest.config.cjs[24m[0m
+[0m  [2m107:2[22m  [31merror[39m  Parsing error: Property assignment expected[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\lib\__tests__\utils-extended.test.ts[24m[0m
+[0m   [2m9:39[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m18:39[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m30:39[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m36:39[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m44:18[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m45:39[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m51:39[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\lib\analytics.ts[24m[0m
+[0m   [2m48:75[22m   [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m53:7[22m    [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m   [2m63:7[22m    [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m   [2m75:74[22m   [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m105:7[22m    [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m  [2m112:101[22m  [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m122:91[22m   [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m132:98[22m   [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m141:69[22m   [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\lib\businessUtils.ts[24m[0m
+[0m  [2m180:30[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m201:31[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\lib\cache.ts[24m[0m
+[0m   [2m36:14[22m  [33mwarning[39m  'error' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m40:16[22m  [33mwarning[39m  'e' is defined but never used      [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m77:14[22m  [33mwarning[39m  'error' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m103:14[22m  [33mwarning[39m  'error' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m125:14[22m  [33mwarning[39m  'error' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m143:14[22m  [33mwarning[39m  'error' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\lib\cacheManager.ts[24m[0m
+[0m  [2m170:16[22m  [33mwarning[39m  'e' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\lib\emailService.ts[24m[0m
+[0m   [2m92:19[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m152:19[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\lib\roleResolution.ts[24m[0m
+[0m  [2m116:89[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\lib\safeFetch.ts[24m[0m
+[0m   [2m86:21[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m104:19[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m113:28[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m148:37[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m149:39[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m150:36[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m185:32[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\lib\session.ts[24m[0m
+[0m  [2m43:12[22m  [33mwarning[39m  'error' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\lib\useErrorHandler.ts[24m[0m
+[0m  [2m20:12[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m51:20[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\lib\usePageTracking.ts[24m[0m
+[0m   [2m85:7[22m   [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m   [2m94:9[22m   [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m  [2m166:29[22m  [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m210:7[22m   [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m  [2m219:9[22m   [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\lib\utils.ts[24m[0m
+[0m  [2m13:45[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m37:14[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\pages\BlogListPage.tsx[24m[0m
+[0m   [2m50:5[22m   [31merror[39m    Error: Calling setState synchronously within an effect can trigger cascading renders[0m
+[0m[0m
+[0mEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:[0m
+[0m* Update external systems with the latest state from React.[0m
+[0m* Subscribe for updates from some external system, calling setState in a callback function when external state changes.[0m
+[0m[0m
+[0mCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\pages\BlogListPage.tsx:50:5[0m
+[0m  48 |     const category = params.get('category') || '';[0m
+[0m  49 |     const page = parseInt(params.get('page') || '1', 10);[0m
+[0m> 50 |     setSelectedCategory(category);[0m
+[0m     |     ^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect[0m
+[0m  51 |     setCurrentPage(page);[0m
+[0m  52 |   }, [location.search, setSelectedCategory, setCurrentPage]);[0m
+[0m  53 |  [2mreact-hooks/set-state-in-effect[22m[0m
+[0m  [2m123:5[22m   [31merror[39m    Error: Calling setState synchronously within an effect can trigger cascading renders[0m
+[0m[0m
+[0mEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:[0m
+[0m* Update external systems with the latest state from React.[0m
+[0m* Subscribe for updates from some external system, calling setState in a callback function when external state changes.[0m
+[0m[0m
+[0mCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\pages\BlogListPage.tsx:123:5[0m
+[0m  121 |   // Reset to page 1 when search or category changes[0m
+[0m  122 |   useEffect(() => {[0m
+[0m> 123 |     setCurrentPage(1);[0m
+[0m      |     ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect[0m
+[0m  124 |   }, [searchQuery, selectedCategory, setCurrentPage]);[0m
+[0m  125 |[0m
+[0m  126 |   // Pagination logic                                                          [2mreact-hooks/set-state-in-effect[22m[0m
+[0m  [2m236:65[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\pages\BusinessDetailPage.tsx[24m[0m
+[0m  [2m59:17[22m  [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m  [2m61:17[22m  [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m  [2m69:21[22m  [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\pages\ConnectionTestPage.tsx[24m[0m
+[0m  [2m159:25[22m  [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m  [2m163:73[22m  [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m164:40[22m  [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\pages\UserAccountPage.tsx[24m[0m
+[0m  [2m42:13[22m  [31merror[39m  Error: Calling setState synchronously within an effect can trigger cascading renders[0m
+[0m[0m
+[0mEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:[0m
+[0m* Update external systems with the latest state from React.[0m
+[0m* Subscribe for updates from some external system, calling setState in a callback function when external state changes.[0m
+[0m[0m
+[0mCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).[0m
+[0m[0m
+[0mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\pages\UserAccountPage.tsx:42:13[0m
+[0m  40 |     useEffect(() => {[0m
+[0m  41 |         if (!loading) {[0m
+[0m> 42 |             setLoadTimeout(false);[0m
+[0m     |             ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect[0m
+[0m  43 |         }[0m
+[0m  44 |     }, [loading]);[0m
+[0m  45 |  [2mreact-hooks/set-state-in-effect[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\providers\AuthProvider.tsx[24m[0m
+[0m   [2m27:73[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m59:30[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m215:31[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\supabase\functions\approve-registration\index.ts[24m[0m
+[0m    [2m5:21[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m226:19[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\supabase\functions\create-admin-user\index.ts[24m[0m
+[0m    [2m4:21[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m150:19[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\supabase\functions\invite-staff\index.ts[24m[0m
+[0m    [2m4:21[22m  [33mwarning[39m  Unexpected any. Specify a different type              [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m99:43[22m  [33mwarning[39m  'profileError' is assigned a value but never used     [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m167:41[22m  [33mwarning[39m  'staffCheckError' is assigned a value but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m205:19[22m  [33mwarning[39m  Unexpected any. Specify a different type              [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\supabase\functions\send-email\index.ts[24m[0m
+[0m    [2m6:21[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m106:19[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\supabase\functions\send-templated-email\index.ts[24m[0m
+[0m    [2m3:21[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m449:19[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\tests\regression\critical-paths.test.ts[24m[0m
+[0m  [2m141:24[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\tests\setup.ts[24m[0m
+[0m   [2m11:18[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m61:39[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m81:14[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m108:6[22m   [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m116:6[22m   [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mC:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\types.ts[24m[0m
+[0m  [2m627:29[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[31m[1m✖ 300 problems (27 errors, 273 warnings)[22m[39m[0m
+[0m[31m[1m[22m[39m[31m[1m  0 errors and 1 warning potentially fixable with the `--fix` option.[22m[39m[0m
+[0m[31m[1m[22m[39m[0m

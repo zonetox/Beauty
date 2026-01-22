@@ -78,6 +78,7 @@ if (typeof globalThis.process === 'undefined') {
 
   // Define import.meta as a global property for Node.js environment
   // Note: This won't work for actual import.meta syntax, but we'll handle it in transform
+  (global as any).importMeta = mockImportMeta;
   (global as any).import = { meta: mockImportMeta };
 }
 

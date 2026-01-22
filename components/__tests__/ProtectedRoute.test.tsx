@@ -3,17 +3,27 @@
 // 100% hoàn thiện - không placeholder
 
 
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import ProtectedRoute from '../ProtectedRoute';
 import { User } from '@supabase/supabase-js';
 
 
-// Mock useUserSession hook
-const mockUseUserSession = jest.fn();
-jest.mock('../../contexts/UserSessionContext', () => ({
-  ...jest.requireActual('../../contexts/UserSessionContext'),
-  useUserSession: () => mockUseUserSession(),
+// Mock useAuth và useAppInitialization hooks
+const mockUseAuth = jest.fn();
+const mockUseAppInitialization = jest.fn();
+
+jest.mock('../../providers/AuthProvider.tsx', () => ({
+  useAuth: () => mockUseAuth(),
+}));
+
+jest.mock('../../contexts/AppInitializationContext.tsx', () => ({
+  useAppInitialization: () => mockUseAppInitialization(),
+}));
+
+// Mock role resolution
+jest.mock('../../lib/roleResolution', () => ({
+  resolveUserRole: jest.fn().mockResolvedValue({ role: 'user', error: null }),
 }));
 
 // Mock react-router-dom Navigate
@@ -31,16 +41,18 @@ describe('ProtectedRoute', () => {
     jest.clearAllMocks();
   });
 
-  it('should render children when user is authenticated', () => {
+  it('should render children when user is authenticated', async () => {
     const mockUser = {
       id: '123',
       email: 'test@example.com',
     } as User;
 
-    mockUseUserSession.mockReturnValue({
-      currentUser: mockUser,
-      loading: false,
+    mockUseAuth.mockReturnValue({
+      user: mockUser,
+      profile: { id: '123' },
+      state: 'authenticated',
     });
+    mockUseAppInitialization.mockReturnValue({ isInitializing: false });
 
     render(
       <MemoryRouter>
@@ -50,14 +62,17 @@ describe('ProtectedRoute', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('Protected Content')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Protected Content')).toBeInTheDocument();
+    });
   });
 
   it('should show loading state when loading', () => {
-    mockUseUserSession.mockReturnValue({
-      currentUser: null,
-      loading: true,
+    mockUseAuth.mockReturnValue({
+      user: null,
+      state: 'loading',
     });
+    mockUseAppInitialization.mockReturnValue({ isInitializing: false });
 
     render(
       <MemoryRouter>
@@ -67,15 +82,16 @@ describe('ProtectedRoute', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('Checking authentication...')).toBeInTheDocument();
+    expect(screen.getByText('Đang kiểm tra quyền truy cập...')).toBeInTheDocument();
     expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
   });
 
-  it('should redirect to login when user is not authenticated', () => {
-    mockUseUserSession.mockReturnValue({
-      currentUser: null,
-      loading: false,
+  it('should redirect to login when user is not authenticated', async () => {
+    mockUseAuth.mockReturnValue({
+      user: null,
+      state: 'unauthenticated',
     });
+    mockUseAppInitialization.mockReturnValue({ isInitializing: false });
 
     render(
       <MemoryRouter initialEntries={['/dashboard']}>
@@ -85,17 +101,20 @@ describe('ProtectedRoute', () => {
       </MemoryRouter>
     );
 
-    const navigate = screen.getByTestId('navigate');
-    expect(navigate).toBeInTheDocument();
-    expect(navigate.getAttribute('data-to')).toBe('/login');
+    await waitFor(() => {
+      const navigate = screen.getByTestId('navigate');
+      expect(navigate).toBeInTheDocument();
+      expect(navigate.getAttribute('data-to')).toBe('/login');
+    });
     expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
   });
 
-  it('should preserve location state when redirecting', () => {
-    mockUseUserSession.mockReturnValue({
-      currentUser: null,
-      loading: false,
+  it('should preserve location state when redirecting', async () => {
+    mockUseAuth.mockReturnValue({
+      user: null,
+      state: 'unauthenticated',
     });
+    mockUseAppInitialization.mockReturnValue({ isInitializing: false });
 
     render(
       <MemoryRouter initialEntries={['/dashboard']}>
@@ -105,9 +124,11 @@ describe('ProtectedRoute', () => {
       </MemoryRouter>
     );
 
-    const navigate = screen.getByTestId('navigate');
-    const state = JSON.parse(navigate.getAttribute('data-state') || '{}');
-    expect(state.from).toBeDefined();
+    await waitFor(() => {
+      const navigate = screen.getByTestId('navigate');
+      const state = JSON.parse(navigate.getAttribute('data-state') || '{}');
+      expect(state.from).toBeDefined();
+    });
   });
 });
 

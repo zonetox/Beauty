@@ -19,6 +19,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     useEffect(() => {
         const verifyAccess = async () => {
             if (state === 'loading' || !user) {
+                if (!user) setRoleResolved(true);
                 return;
             }
 
@@ -31,7 +32,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
             // MANDATORY: Resolve role to ensure operational state
             const roleResult = await resolveUserRole(user);
-            
+
             if (roleResult.error) {
                 // Role resolution failed - BLOCK ACCESS
                 setInitError(roleResult.error);
@@ -46,7 +47,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
                 setRoleResolved(true);
                 return;
             }
-            
+
             setRoleResolved(true);
         };
 

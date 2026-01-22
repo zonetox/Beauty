@@ -42,7 +42,8 @@ module.exports = {
     '.*antigravity.*',
     '.*Trợ lý AI.*',
     '.*Partner Relationship.*',
-    '<rootDir>/tests/setup.ts' // Exclude setup file from being treated as a test
+    '<rootDir>/tests/setup.ts', // Exclude setup file from being treated as a test
+    '<rootDir>/tests/mocks/import-meta.ts' // Exclude mock file from being treated as a test
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
@@ -68,22 +69,8 @@ module.exports = {
       statements: 50
     }
   },
-  globals: {
-    'ts-jest': {
-      tsconfig: {
-        jsx: 'react-jsx',
-        module: 'commonjs',
-        esModuleInterop: true,
-        allowSyntheticDefaultImports: true,
-        target: 'ES2020',
-        lib: ['ES2020', 'DOM', 'DOM.Iterable'],
-        types: ['jest', '@testing-library/jest-dom', 'node']
-      },
-      useESM: false
-    }
-  },
   transform: {
-    '^.+\\.(ts|tsx)$': ['ts-jest', {
+    '^.+\\.(ts|tsx)$': ['<rootDir>/scripts/jest-transformer.cjs', {
       tsconfig: {
         jsx: 'react-jsx',
         module: 'commonjs',
@@ -94,7 +81,6 @@ module.exports = {
         types: ['jest', '@testing-library/jest-dom', 'node'],
         moduleResolution: 'node'
       },
-      isolatedModules: true,
       useESM: false
     }]
   },
@@ -104,5 +90,4 @@ module.exports = {
     'node_modules/(?!(react-router-dom|react-router|@supabase|@google/genai)/)'
   ],
   extensionsToTreatAsEsm: [],
-  // Add globals for import.meta support
 };
