@@ -21,125 +21,100 @@ test.describe('Critical User Flows', () => {
   test('User Registration Flow', async ({ page }) => {
     test.setTimeout(60000); // Increase timeout for registration flow
 
-    // Navigate to register page
+    // Step 1: Navigate to register selection page
     await page.goto('/register');
-    await expect(page).toHaveURL(/.*\/register/);
+    await expect(page).toHaveURL(/.*\/register$/);
 
-    // Wait for loading spinner to disappear
-    // This allows time for AuthProvider to timeout (10s) + resolveUserRole
-    await expect(page.locator('.animate-spin')).not.toBeVisible({ timeout: 45000 });
+    // Wait for page to load (no spinner)
+    await expect(page.locator('.animate-spin')).not.toBeVisible({ timeout: 15000 });
 
-    // Debug: Check if redirecting explicitly
-    const isRedirecting = await page.getByText('Đang chuyển hướng...').isVisible();
-    if (isRedirecting) {
-      console.log('Test failed: Page is redirecting instead of showing form.');
-    }
+    // Step 2: Click on "Người dùng" card to go to user registration
+    await page.click('a[href="/register/user"]');
+    await expect(page).toHaveURL(/.*\/register\/user/);
 
-    // Wait for form
-    try {
-      await expect(page.locator('form')).toBeVisible({ timeout: 10000 });
-    } catch (e) {
-      console.log('Form not visible. Current page content:', await page.content());
-      throw e;
-    }
+    // Wait for form to load
+    await expect(page.locator('form')).toBeVisible({ timeout: 10000 });
 
-    // Fill registration form
+    // Step 3: Fill user registration form
     const timestamp = Date.now();
     const testEmail = `testuser${timestamp}@example.com`;
     const testPassword = 'TestPassword123!';
 
-    await page.fill('#user-email', testEmail);
-    await page.fill('#user-password', testPassword);
-    await page.fill('#user-confirm-password', testPassword);
     await page.fill('#full_name', 'Test User');
+    await page.fill('#email', testEmail);
+    await page.fill('#phone', '0987654321');
+    await page.fill('#password', testPassword);
+    await page.fill('#confirmPassword', testPassword);
 
     // Submit form
     await page.click('button[type="submit"]');
 
     // Wait for redirect or success message
-    await page.waitForTimeout(5000); // Give it time to process
+    await page.waitForTimeout(5000);
 
-    // Should redirect to account page or show success
+    // Should redirect to account page
     const currentUrl = page.url();
-    expect(currentUrl).toMatch(/.*\/(account|login|register)/); // Might stay on register if success message shows
+    expect(currentUrl).toMatch(/.*\/(account|register)/);
   });
 
   test('Business Registration Flow', async ({ page }) => {
-    test.setTimeout(60000); // Increase timeout
+    test.setTimeout(90000); // Longer timeout for multi-step flow
 
+    // Step 1: Navigate to register selection page
     await page.goto('/register');
+    await expect(page).toHaveURL(/.*\/register$/);
 
-    // Wait for loading spinner to disappear
-    await expect(page.locator('.animate-spin')).not.toBeVisible({ timeout: 45000 });
+    // Wait for page to load
+    await expect(page.locator('.animate-spin')).not.toBeVisible({ timeout: 15000 });
 
-    // Debug: Check if redirecting explicitly
-    const isRedirecting = await page.getByText('Đang chuyển hướng...').isVisible();
-    if (isRedirecting) {
-      console.log('Test failed: Page is redirecting instead of showing form.');
-    }
+    // Step 2: Click on "Doanh nghiệp" card to go to business registration
+    await page.click('a[href="/register/business"]');
+    await expect(page).toHaveURL(/.*\/register\/business/);
 
-    // Wait for form
-    try {
-      await expect(page.locator('form')).toBeVisible({ timeout: 10000 });
-    } catch (e) {
-      console.log('Form not visible. Current page content:', await page.content());
-      throw e;
-    }
+    // Wait for form to load
+    await expect(page.locator('form')).toBeVisible({ timeout: 10000 });
 
-    // Select business registration option
-    // Explicitly click the unique description text to ensure we hit the right card
-    await page.locator('text=Quảng bá dịch vụ').click();
-
-    // Verify radio is checked (hidden input)
-    await expect(page.locator('input[name="userType"][value="business"]')).toBeChecked();
-
-    // Verify Business Form is showing (check for Business Name input)
-    // Add wait to ensure transition happens
-    await expect(page.locator('#business_name')).toBeVisible({ timeout: 10000 });
-
-    // Fill business registration form
+    // Step 3: Fill business registration form (account creation only)
     const timestamp = Date.now();
     const testEmail = `business${timestamp}@example.com`;
     const testPassword = 'TestPassword123!';
 
-    await page.fill('#business-email', testEmail);
-    await page.fill('#business-password', testPassword);
-    await page.fill('#business-confirm-password', testPassword);
     await page.fill('#business_name', 'Test Business');
-    await page.fill('#business-phone', '0123456789');
-    await page.fill('input[name="address"]', '123 Test Street');
+    await page.fill('#email', testEmail);
+    await page.fill('#password', testPassword);
+    await page.fill('#confirmPassword', testPassword);
 
     // Submit form
     await page.click('button[type="submit"]');
 
-    // Wait for redirect and check for errors
+    // Wait for redirect to business setup page
     await page.waitForTimeout(5000);
 
-    // Debug: Check for error messages
-    const errorElements = await page.locator('.text-red-500, .text-red-700, .text-red-800').all();
-    if (errorElements.length > 0) {
-      console.log('Found error messages on page:');
-      for (const el of errorElements) {
-        const text = await el.textContent();
-        console.log('  -', text);
-      }
+    // Should redirect to business setup page
+    let currentUrl = page.url();
+    console.log('After registration URL:', currentUrl);
+
+    // If redirected to setup page, fill business details
+    if (currentUrl.includes('/account/business/setup')) {
+      // Wait for setup form
+      await expect(page.locator('form')).toBeVisible({ timeout: 10000 });
+
+      // Fill business setup form
+      await page.fill('#phone', '0123456789');
+      await page.fill('#address', '123 Test Street');
+
+      // Submit business setup
+      await page.click('button[type="submit"]');
+
+      // Wait for final redirect
+      await page.waitForTimeout(5000);
+      currentUrl = page.url();
     }
 
-    // Should redirect to account page
-    const currentUrl = page.url();
-    console.log('Current URL after submission:', currentUrl);
+    console.log('Final URL:', currentUrl);
 
-    if (!currentUrl.includes('/account')) {
-      console.log('Failed to redirect. Page content:', (await page.content()).slice(0, 2000));
-    }
-
-    expect(currentUrl).toContain('/account');
-
-    // Verify Business Dashboard specific content
-    // Verify Business Dashboard specific content
-    // We rely on URL check as text rendering might be delayed or locale-dependent
-    // The presence of /account after business registration implies successful redirect to dashboard
-    expect(currentUrl).toContain('/account');
+    // Should eventually be at /account (dashboard)
+    expect(currentUrl).toMatch(/.*\/account/);
   });
 
   test('Login Flow', async ({ page }) => {
