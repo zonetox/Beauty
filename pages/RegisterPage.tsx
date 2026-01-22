@@ -2,7 +2,7 @@
 // Tuân thủ ARCHITECTURE.md, sử dụng schema/RLS/contexts hiện có
 // 100% hoàn thiện, không placeholder, chuẩn SEO cơ bản
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate, Link } from 'react-router-dom';
 import { BusinessCategory } from '../types.ts';
@@ -52,21 +52,33 @@ const RegisterPage: React.FC = () => {
   // BLOCK ACCESS: Business owners, staff, and admins should not see registration form
   // Only anonymous users and regular users (without business access) can register
 
+  // Block access if user already has business access or is admin
+  // Use useEffect for navigation to avoid returning null indefinitely if manual navigation is slow
+  useEffect(() => {
+    if (user && (isBusinessOwner || isBusinessStaff || role === 'admin')) {
+      navigate('/account', { replace: true });
+    }
+  }, [user, isBusinessOwner, isBusinessStaff, role, navigate]);
+
   // Show loading state while checking access
   if (state === 'loading' || roleLoading) {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-128px)]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-lg font-semibold">Đang kiểm tra quyền truy cập...</p>
         </div>
       </div>
     );
   }
 
-  // Block access if user already has business access or is admin
   if (user && (isBusinessOwner || isBusinessStaff || role === 'admin')) {
-    return null; // Navigation is handled by routing system (e.g. ProtectedRoute or manual logic)
+    return (
+      <div className="flex items-center justify-center min-h-[calc(100vh-128px)]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+        </div>
+      </div>
+    );
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -276,6 +288,8 @@ const RegisterPage: React.FC = () => {
         }
 
         toast.success('Đăng ký thành công! Tài khoản doanh nghiệp của bạn đã được tạo với gói dùng thử 30 ngày.');
+        // Small delay to ensure toast is seen and state is updated
+        await new Promise(resolve => setTimeout(resolve, 1000));
         navigate('/account', { replace: true });
       } else {
         // User registration - complete
@@ -288,6 +302,8 @@ const RegisterPage: React.FC = () => {
         }
 
         toast.success('Đăng ký thành công! Chào mừng bạn đến với 1Beauty.asia.');
+        // Small delay to ensure toast is seen and state is updated
+        await new Promise(resolve => setTimeout(resolve, 1000));
         navigate('/account', { replace: true });
       }
 

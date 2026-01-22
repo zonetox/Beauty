@@ -10,14 +10,14 @@ interface EmptyStateProps {
   action?: React.ReactNode;
 }
 
-const EmptyState: React.FC<EmptyStateProps> = ({ 
+const EmptyState: React.FC<EmptyStateProps> = ({
   title = 'No data found',
   message = 'There is no data to display at the moment.',
   icon,
   action
 }) => {
   return (
-    <div className="flex flex-col items-center justify-center py-12 px-4 bg-white">
+    <div className="empty-state flex flex-col items-center justify-center py-12 px-4 bg-white">
       {icon && <div className="mb-4 text-gray-400 text-6xl">{icon}</div>}
       <h3 className="text-xl font-semibold text-gray-900 mb-2">{title}</h3>
       <p className="text-gray-600 text-center max-w-md mb-6">{message}</p>

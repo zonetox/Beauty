@@ -132,12 +132,23 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
       .limit(1)
       .maybeSingle();
 
-    // Execute all checks in parallel
+    // Execute all checks in parallel with timeout
+    const permissionTimeout = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Permission checks timeout')), 10000);
+    });
+
     const [
       { data: adminUser, error: adminError },
       { data: businessOwner },
       { data: staffRecord }
-    ] = await Promise.all([adminCheck, ownerCheck, staffCheck]);
+    ] = await Promise.race([
+      Promise.all([adminCheck, ownerCheck, staffCheck]),
+      permissionTimeout
+    ]) as [
+        { data: { id: string; is_locked: boolean } | null; error: unknown },
+        { data: { id: number; owner_id: string } | null },
+        { data: { business_id: number } | null }
+      ];
 
     // EVALUATE RESULTS (Order of Precedence)
 
@@ -257,12 +268,22 @@ export async function verifyProfileExists(userId: string): Promise<{ exists: boo
  */
 export async function verifyBusinessLinked(userId: string): Promise<{ exists: boolean; businessId: number | null; error?: string }> {
   try {
-    // Check profile has business_id
-    const { data: profile, error: profileError } = await supabase
+    // Add timeout for verification (10 seconds)
+    const verificationTimeout = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Business verification timeout')), 10000);
+    });
+
+    // Check profile has business_id with timeout
+    const profileQuery = supabase
       .from('profiles')
       .select('business_id')
       .eq('id', userId)
       .single();
+
+    const { data: profile, error: profileError } = await Promise.race([
+      profileQuery,
+      verificationTimeout
+    ]) as { data: { business_id: number | null } | null; error: any };
 
     if (profileError || !profile) {
       return {
@@ -280,13 +301,18 @@ export async function verifyBusinessLinked(userId: string): Promise<{ exists: bo
       };
     }
 
-    // Verify business exists and user is owner (MANDATORY: businesses.owner_id = auth.uid())
-    const { data: business, error: businessError } = await supabase
+    // Verify business exists and user is owner with timeout
+    const businessQuery = supabase
       .from('businesses')
       .select('id, owner_id')
       .eq('id', profile.business_id)
       .eq('owner_id', userId)
       .single();
+
+    const { data: business, error: businessError } = await Promise.race([
+      businessQuery,
+      verificationTimeout
+    ]) as { data: { id: number; owner_id: string } | null; error: any };
 
     if (businessError || !business) {
       return {

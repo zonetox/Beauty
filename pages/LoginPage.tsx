@@ -3,12 +3,13 @@
 // 100% hoàn thiện, không placeholder, chuẩn SEO cơ bản
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../providers/AuthProvider.tsx';
 import ForgotPasswordModal from '../components/ForgotPasswordModal.tsx';
 import SEOHead from '../components/SEOHead.tsx';
 
 const LoginPage: React.FC = () => {
+    const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -34,8 +35,8 @@ const LoginPage: React.FC = () => {
 
         try {
             await login(email, password);
-            // Auth state will update via subscription
-            // useEffect above will handle redirect based on user type
+            // Explicitly navigate to account page after success
+            navigate('/account', { replace: true });
         } catch (err) {
             if (err instanceof Error) {
                 // Translate common error messages to Vietnamese

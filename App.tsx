@@ -155,8 +155,6 @@ const AccountPageRouter: React.FC = () => {
             <div className="flex items-center justify-center h-[50vh]">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                    <p className="text-lg font-semibold">Đang tải thông tin tài khoản...</p>
-                    <p className="text-gray-500">Vui lòng đợi.</p>
                 </div>
             </div>
         );
@@ -241,7 +239,6 @@ const AccountPageRouter: React.FC = () => {
             <div className="flex items-center justify-center h-[50vh]">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                    <p className="text-lg font-semibold">Đang chuẩn bị hồ sơ...</p>
                 </div>
             </div>
         );
@@ -455,7 +452,7 @@ const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         } else {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             if (showInitialLoading) setShowInitialLoading(false);
-             
+
             if (showBypassMenu) setShowBypassMenu(false);
         }
         return undefined;
