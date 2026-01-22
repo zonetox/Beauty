@@ -21,26 +21,14 @@ const AIQuickReplyModal: React.FC<AIQuickReplyModalProps> = ({ isOpen, onClose, 
         'suggest_reschedule': 'Informing the customer their requested time is unavailable and suggesting an alternative time.',
     };
 
-    useEffect(() => {
-        if (isOpen) {
-            generateReplies();
-        } else {
-            // Reset state when closed
-            setReplies([]);
-            setLoading(false);
-            setError('');
-            setCopiedIndex(null);
-        }
-    }, [isOpen]);
-
-    const generateReplies = async () => {
+    const generateReplies = React.useCallback(async () => {
         setLoading(true);
         setError('');
         try {
             if (!isGeminiAvailable()) {
                 throw new Error("Gemini API key chưa được cấu hình. Vui lòng set VITE_GEMINI_API_KEY");
             }
-            
+
             const prompt = `Bạn là trợ lý hữu ích cho chủ salon làm đẹp tại Việt Nam. Tạo 3 tin nhắn phản hồi chuyên nghiệp và thân thiện bằng tiếng Việt cho tình huống sau:
             - Tên khách hàng: ${appointment.customerName}
             - Dịch vụ: ${appointment.serviceName}
@@ -52,7 +40,7 @@ const AIQuickReplyModal: React.FC<AIQuickReplyModalProps> = ({ isOpen, onClose, 
             1. [Phản hồi đầu tiên]
             2. [Phản hồi thứ hai]
             3. [Phản hồi thứ ba]`;
-            
+
             const response = await generateWithGemini({ prompt });
 
             if (!response) {
@@ -64,7 +52,7 @@ const AIQuickReplyModal: React.FC<AIQuickReplyModalProps> = ({ isOpen, onClose, 
                 .filter(line => line.match(/^\d+[.)]/))
                 .map(line => line.replace(/^\d+[.)]\s*/, '').trim())
                 .filter(line => line.length > 0);
-            
+
             setReplies(generatedReplies);
 
         } catch (e) {
@@ -74,7 +62,19 @@ const AIQuickReplyModal: React.FC<AIQuickReplyModalProps> = ({ isOpen, onClose, 
         } finally {
             setLoading(false);
         }
-    };
+    }, [appointment, context]); // Removed dependency on 'contextToActionMap' if it's constant, else move it inside or memoize it.
+
+    useEffect(() => {
+        if (isOpen) {
+            generateReplies();
+        } else {
+            // Reset state when closed
+            setReplies([]);
+            setLoading(false);
+            setError('');
+            setCopiedIndex(null);
+        }
+    }, [isOpen, generateReplies]);
 
     const handleCopy = (text: string, index: number) => {
         navigator.clipboard.writeText(text);

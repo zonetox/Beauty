@@ -51,7 +51,7 @@ const AdminAbuseReports: React.FC = () => {
             setReviews(reviewsMap);
           }
         }
-      } catch (error: any) {
+      } catch (error) {
         console.error('Error fetching abuse reports:', error);
         toast.error('Failed to load abuse reports.');
       } finally {
@@ -72,7 +72,7 @@ const AdminAbuseReports: React.FC = () => {
   const handleUpdateStatus = async (reportId: string, newStatus: AbuseReport['status'], notes?: string) => {
     setIsUpdating(true);
     try {
-      const updateData: any = {
+      const updateData: Partial<AbuseReport> = {
         status: newStatus,
         reviewed_by: currentUser?.authUser?.id,
         reviewed_at: new Date().toISOString(),
@@ -90,8 +90,8 @@ const AdminAbuseReports: React.FC = () => {
       if (error) throw error;
 
       // Update local state
-      setReports(prev => prev.map(r => 
-        r.id === reportId 
+      setReports(prev => prev.map(r =>
+        r.id === reportId
           ? { ...r, status: newStatus, admin_notes: notes, reviewed_by: currentUser?.authUser?.id, reviewed_at: new Date().toISOString() }
           : r
       ));
@@ -134,7 +134,7 @@ const AdminAbuseReports: React.FC = () => {
           <label className="text-sm font-medium text-gray-700">Filter:</label>
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
+            onChange={(e) => setStatusFilter(e.target.value as AbuseReport['status'])}
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-primary focus:border-primary"
           >
             <option value="all">All</option>

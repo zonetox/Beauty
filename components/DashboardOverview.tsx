@@ -76,10 +76,8 @@ const BarChart: React.FC<{ data: AnalyticsDataPoint[]; dataKey: 'pageViews'; tit
 const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) => {
     const {
         currentBusiness,
-        appointments,
         orders,
         ordersLoading,
-        reviews,
         reviewsLoading,
         getAppointmentsForBusiness,
         getReviewsByBusinessId
@@ -128,12 +126,12 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
     const businessAppointments = useMemo(() => {
         if (!currentBusiness) return [];
         return getAppointmentsForBusiness(currentBusiness.id);
-    }, [currentBusiness, appointments, getAppointmentsForBusiness]);
+    }, [currentBusiness, getAppointmentsForBusiness]);
 
     const businessReviews = useMemo(() => {
         if (!currentBusiness) return [];
         return getReviewsByBusinessId(currentBusiness.id);
-    }, [currentBusiness, reviews, getReviewsByBusinessId]);
+    }, [currentBusiness, getReviewsByBusinessId]);
 
     const businessOrders = useMemo(() => {
         if (!currentBusiness) return [];
@@ -375,8 +373,8 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
                             onClick={() => setActiveTab('blog')}
                             disabled={!isVip}
                             className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl font-bold transition-all ${isVip
-                                    ? 'bg-neutral-dark text-white hover:scale-[1.02] active:scale-[0.98]'
-                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                ? 'bg-neutral-dark text-white hover:scale-[1.02] active:scale-[0.98]'
+                                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                 }`}
                         >
                             <span>Thêm bài viết Blog</span>

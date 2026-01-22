@@ -34,7 +34,7 @@ const BusinessSupportCenter: React.FC = () => {
         const filtered = getTicketsForBusiness(currentBusiness.id);
         if (statusFilter === 'all') return filtered;
         return filtered.filter(t => t.status === statusFilter);
-    }, [getTicketsForBusiness, currentBusiness, statusFilter, tickets]);
+    }, [getTicketsForBusiness, currentBusiness, statusFilter]);
 
     const sortedTickets = useMemo(() => {
         return [...myTickets].sort((a, b) => {
