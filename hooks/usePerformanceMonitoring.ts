@@ -21,13 +21,13 @@ export const usePerformanceMonitoring = (componentName: string) => {
   // Track component mount time
   useEffect(() => {
     const mountTime = Date.now() - mountStartTime.current;
-    
+
     if (mountTime > 1000) { // Only track slow mounts (>1s)
       const metrics: PerformanceMetrics = {
         componentName,
         mountTime,
       };
-      
+
       // Send to Sentry if mount is very slow (>3s)
       if (mountTime > 3000) {
         Sentry.addBreadcrumb({
@@ -37,7 +37,7 @@ export const usePerformanceMonitoring = (componentName: string) => {
           data: metrics,
         });
       }
-      
+
       // Track in analytics
       trackEvent('component_mount', {
         component: componentName,
@@ -50,7 +50,7 @@ export const usePerformanceMonitoring = (componentName: string) => {
   const trackRender = useCallback(() => {
     const renderTime = Date.now() - renderStartTime.current;
     renderStartTime.current = Date.now();
-    
+
     if (renderTime > 100) { // Only track slow renders (>100ms)
       trackEvent('component_render', {
         component: componentName,
@@ -66,12 +66,12 @@ export const usePerformanceMonitoring = (componentName: string) => {
   ): Promise<T> => {
     const startTime = Date.now();
     const callId = `${callName}_${Date.now()}`;
-    
+
     try {
       const result = await apiCall();
       const duration = Date.now() - startTime;
       apiCallTimes.current.set(callId, duration);
-      
+
       // Track slow API calls
       if (duration > 1000) {
         trackEvent('slow_api_call', {
@@ -79,7 +79,7 @@ export const usePerformanceMonitoring = (componentName: string) => {
           api_call: callName,
           duration,
         });
-        
+
         // Send to Sentry if very slow (>5s)
         if (duration > 5000) {
           Sentry.addBreadcrumb({
@@ -93,7 +93,7 @@ export const usePerformanceMonitoring = (componentName: string) => {
           });
         }
       }
-      
+
       return result;
     } catch (error) {
       const duration = Date.now() - startTime;
@@ -111,11 +111,11 @@ export const usePerformanceMonitoring = (componentName: string) => {
   const trackInteraction = useCallback((interactionName: string, handler: () => void | Promise<void>) => {
     return async () => {
       const startTime = Date.now();
-      
+
       try {
         await handler();
         const duration = Date.now() - startTime;
-        
+
         if (duration > 500) { // Track slow interactions (>500ms)
           trackEvent('slow_interaction', {
             component: componentName,
@@ -189,7 +189,9 @@ export const useWebVitals = () => {
           if (lcp > 2500) Sentry.addBreadcrumb({ category: 'performance', message: 'Poor LCP', level: 'warning', data: { lcp } });
         });
         lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true } as any);
-      } catch (e) {}
+      } catch {
+        // Ignore error if observer is not supported
+      }
 
       try {
         fidObserver = new PerformanceObserver((list) => {
@@ -201,7 +203,9 @@ export const useWebVitals = () => {
           });
         });
         fidObserver.observe({ type: 'first-input', buffered: true } as any);
-      } catch (e) {}
+      } catch {
+        // Ignore error if observer is not supported
+      }
 
       try {
         let clsValue = 0;
@@ -214,7 +218,9 @@ export const useWebVitals = () => {
           if (clsValue > 0.25) Sentry.addBreadcrumb({ category: 'performance', message: 'Poor CLS', level: 'warning', data: { cls: clsValue } });
         });
         clsObserver.observe({ type: 'layout-shift', buffered: true } as any);
-      } catch (e) {}
+      } catch {
+        // Ignore error if observer is not supported
+      }
 
       // no-op: observers will be cleaned up in cleanup
       return () => {
