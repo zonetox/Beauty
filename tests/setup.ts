@@ -9,26 +9,26 @@ import '@testing-library/jest-dom';
 // Create a chainable mock builder that properly chains methods
 const createMockQueryBuilder = () => {
   const builder: any = {};
-  
+
   // Chainable methods that return the builder itself
   const chainableMethods = [
     'select', 'insert', 'update', 'delete', 'eq', 'neq', 'gt', 'gte', 'lt', 'lte',
     'like', 'ilike', 'is', 'in', 'contains', 'order', 'limit', 'range', 'upsert'
   ];
-  
+
   chainableMethods.forEach(method => {
     builder[method] = jest.fn().mockReturnValue(builder);
   });
-  
+
   // Methods that return promises
   builder.single = jest.fn().mockResolvedValue({ data: null, error: null });
   builder.maybeSingle = jest.fn().mockResolvedValue({ data: null, error: null });
-  
+
   // Default resolved value for the builder itself (when used as a promise)
   builder.then = jest.fn((resolve) => {
     return Promise.resolve({ data: [], error: null }).then(resolve);
   });
-  
+
   return builder;
 };
 
@@ -36,8 +36,8 @@ jest.mock('../lib/supabaseClient', () => ({
   supabase: {
     auth: {
       getSession: jest.fn().mockResolvedValue({ data: { session: null }, error: null }),
-      onAuthStateChange: jest.fn(() => ({ 
-        data: { subscription: { unsubscribe: jest.fn() } } 
+      onAuthStateChange: jest.fn(() => ({
+        data: { subscription: { unsubscribe: jest.fn() } }
       })),
       signInWithPassword: jest.fn(),
       signOut: jest.fn(),
@@ -53,10 +53,12 @@ jest.mock('../lib/supabaseClient', () => ({
 }));
 
 // Mock TextEncoder/TextDecoder for Node.js environment
+import { TextEncoder, TextDecoder } from 'util';
+
+// Mock TextEncoder/TextDecoder for Node.js environment
 if (typeof global.TextEncoder === 'undefined') {
-  const { TextEncoder, TextDecoder } = require('util');
   global.TextEncoder = TextEncoder;
-  global.TextDecoder = TextDecoder;
+  global.TextDecoder = TextDecoder as any;
 }
 
 // Mock import.meta.env for Jest
@@ -73,7 +75,7 @@ if (typeof globalThis.process === 'undefined') {
       PROD: false,
     },
   };
-  
+
   // Define import.meta as a global property for Node.js environment
   // Note: This won't work for actual import.meta syntax, but we'll handle it in transform
   (global as any).import = { meta: mockImportMeta };
@@ -96,21 +98,21 @@ Object.defineProperty(window, 'matchMedia', {
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
-  constructor() {}
-  disconnect() {}
-  observe() {}
+  constructor() { }
+  disconnect() { }
+  observe() { }
   takeRecords() {
     return [];
   }
-  unobserve() {}
+  unobserve() { }
 } as any;
 
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
-  constructor() {}
-  disconnect() {}
-  observe() {}
-  unobserve() {}
+  constructor() { }
+  disconnect() { }
+  observe() { }
+  unobserve() { }
 } as any;
 
 // Suppress console errors in tests (optional)

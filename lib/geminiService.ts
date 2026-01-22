@@ -4,11 +4,11 @@ import { GoogleGenAI } from "@google/genai";
 // Get API key from environment
 const getApiKey = (): string | null => {
   // Try both env variable names for compatibility
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 
-                 import.meta.env.GEMINI_API_KEY || 
-                 (typeof process !== 'undefined' ? process.env?.GEMINI_API_KEY : null) ||
-                 (typeof process !== 'undefined' ? process.env?.API_KEY : null);
-  
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY ||
+    import.meta.env.GEMINI_API_KEY ||
+    (typeof process !== 'undefined' ? process.env?.GEMINI_API_KEY : null) ||
+    (typeof process !== 'undefined' ? process.env?.API_KEY : null);
+
   return apiKey || null;
 };
 
@@ -19,7 +19,7 @@ const getGeminiClient = (): GoogleGenAI | null => {
     console.warn('Gemini API key not found. AI features will be disabled.');
     return null;
   }
-  
+
   try {
     return new GoogleGenAI({ apiKey });
   } catch (error) {
@@ -45,7 +45,7 @@ export const generateWithGemini = async (
   options: GeminiGenerateOptions
 ): Promise<string | null> => {
   const { prompt, model = 'gemini-2.5-flash', maxTokens, temperature } = options;
-  
+
   try {
     const client = getGeminiClient();
     if (!client) {
@@ -88,7 +88,7 @@ export const generateBlogPost = async (
   content: string;
 } | null> => {
   const { topic, category, tone = 'professional', length = 'medium' } = options;
-  
+
   const lengthWords = {
     short: 300,
     medium: 600,
@@ -121,7 +121,7 @@ Trả về JSON format:
       // Remove markdown code blocks if present
       const cleanedResponse = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       const parsed = JSON.parse(cleanedResponse);
-      
+
       return {
         title: parsed.title || '',
         excerpt: parsed.excerpt || '',
@@ -130,11 +130,11 @@ Trả về JSON format:
     } catch (parseError) {
       // If JSON parsing fails, try to extract from text
       console.warn('Failed to parse JSON, trying to extract from text:', parseError);
-      
+
       // Fallback: extract title, excerpt, and content from text
       const lines = response.split('\n').filter(line => line.trim());
-      const title = lines.find(line => line.includes('title') || line.match(/^[A-ZÀ-Ỹ]/))?.replace(/title[:\-]?\s*/i, '').trim() || topic;
-      const excerpt = lines.find(line => line.includes('excerpt') || line.length < 150)?.replace(/excerpt[:\-]?\s*/i, '').trim() || '';
+      const title = lines.find(line => line.includes('title') || line.match(/^[A-ZÀ-Ỹ]/))?.replace(/title[:-]?\s*/i, '').trim() || topic;
+      const excerpt = lines.find(line => line.includes('excerpt') || line.length < 150)?.replace(/excerpt[:-]?\s*/i, '').trim() || '';
       const content = response;
 
       return {
@@ -171,12 +171,12 @@ Người dùng: ${userMessage}
 Bot:`;
 
   try {
-    const response = await generateWithGemini({ 
+    const response = await generateWithGemini({
       prompt: systemPrompt,
       temperature: 0.7,
       maxTokens: 200,
     });
-    
+
     return response;
   } catch (error) {
     console.error('Error generating chatbot response:', error);
@@ -195,20 +195,20 @@ Hãy đề xuất 3-5 từ khóa tìm kiếm liên quan, ngắn gọn, bằng ti
 Format: Mỗi đề xuất trên một dòng, không đánh số.`;
 
   try {
-    const response = await generateWithGemini({ 
+    const response = await generateWithGemini({
       prompt,
       temperature: 0.5,
       maxTokens: 100,
     });
-    
+
     if (!response) return null;
-    
+
     const suggestions = response
       .split('\n')
       .map(line => line.trim())
-      .filter(line => line.length > 0 && !line.match(/^\d+[\.\)]/))
+      .filter(line => line.length > 0 && !line.match(/^\d+[.)]/))
       .slice(0, 5);
-    
+
     return suggestions.length > 0 ? suggestions : null;
   } catch (error) {
     console.error('Error generating search suggestions:', error);
