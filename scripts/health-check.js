@@ -30,8 +30,8 @@ async function checkSupabaseConnection() {
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const { data, error } = await supabase.from('profiles').select('count').limit(1);
-    
+    const { error } = await supabase.from('profiles').select('count').limit(1);
+
     if (error) {
       logCheck('Supabase Connection', 'fail', error.message);
       errors.push(`Supabase connection failed: ${error.message}`);
@@ -116,7 +116,7 @@ function checkTypeScriptConfig() {
   try {
     const tsconfigPath = join(process.cwd(), 'tsconfig.json');
     const tsconfig = JSON.parse(readFileSync(tsconfigPath, 'utf-8'));
-    
+
     if (!tsconfig.compilerOptions) {
       logCheck('TypeScript Config', 'warn', 'No compilerOptions found');
       warnings.push('TypeScript config missing compilerOptions');
@@ -134,7 +134,7 @@ function checkPackageJson() {
   try {
     const packagePath = join(process.cwd(), 'package.json');
     const pkg = JSON.parse(readFileSync(packagePath, 'utf-8'));
-    
+
     const requiredDeps = [
       'react',
       'react-dom',
@@ -144,7 +144,7 @@ function checkPackageJson() {
     ];
 
     const missingDeps = requiredDeps.filter(dep => !pkg.dependencies?.[dep]);
-    
+
     if (missingDeps.length > 0) {
       logCheck('Package Dependencies', 'fail', `Missing: ${missingDeps.join(', ')}`);
       errors.push(`Missing dependencies: ${missingDeps.join(', ')}`);

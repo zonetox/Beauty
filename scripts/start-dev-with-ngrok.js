@@ -2,9 +2,9 @@
 // Script to start Vite dev server with Ngrok tunnel
 // Usage: npm run dev:ngrok
 
-const { spawn } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+import { spawn } from 'child_process';
+import fs from 'fs';
+import path from 'path';
 
 const VITE_PORT = process.env.VITE_PORT || 3000;
 const NGROK_PORT = process.env.NGROK_PORT || VITE_PORT;
@@ -52,27 +52,27 @@ const startVite = () => {
 const startNgrok = () => {
   return new Promise((resolve) => {
     console.log(`🌐 Starting Ngrok tunnel on port ${NGROK_PORT}...\n`);
-    
+
     const ngrok = spawn('ngrok', ['http', NGROK_PORT.toString()], {
       stdio: 'pipe',
       shell: true,
     });
 
     let ngrokOutput = '';
-    
+
     ngrok.stdout.on('data', (data) => {
       const output = data.toString();
       ngrokOutput += output;
       process.stdout.write(output);
-      
+
       // Try to extract URL from output
-      const urlMatch = output.match(/https:\/\/[a-z0-9-]+\.ngrok-free\.app/);
+      const urlMatch = ngrokOutput.match(/https:\/\/[a-z0-9-]+\.ngrok-free\.app/);
       if (urlMatch) {
         const url = urlMatch[0];
         console.log('\n✅ Ngrok tunnel established!');
         console.log(`\n🌍 Public URL: ${url}`);
         console.log(`📊 Web Interface: http://127.0.0.1:4040\n`);
-        
+
         // Save URL to file for other scripts
         const urlFile = path.join(process.cwd(), '.ngrok-url');
         fs.writeFileSync(urlFile, url);
@@ -117,13 +117,13 @@ const startNgrok = () => {
     console.log('\n\n🛑 Shutting down...');
     viteProcess.kill();
     ngrokProcess.kill();
-    
+
     // Clean up URL file
     const urlFile = path.join(process.cwd(), '.ngrok-url');
     if (fs.existsSync(urlFile)) {
       fs.unlinkSync(urlFile);
     }
-    
+
     process.exit(0);
   };
 

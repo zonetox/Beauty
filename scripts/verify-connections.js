@@ -27,28 +27,28 @@ function loadEnvFile(filePath) {
   if (!fs.existsSync(filePath)) {
     return {};
   }
-  
+
   const content = fs.readFileSync(filePath, 'utf-8');
   const env = {};
-  
+
   content.split('\n').forEach(line => {
     line = line.trim();
     if (!line || line.startsWith('#')) return;
-    
+
     const match = line.match(/^([^=]+)=(.*)$/);
     if (match) {
       const key = match[1].trim();
       let value = match[2].trim();
-      
-      if ((value.startsWith('"') && value.endsWith('"')) || 
-          (value.startsWith("'") && value.endsWith("'"))) {
+
+      if ((value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))) {
         value = value.slice(1, -1);
       }
-      
+
       env[key] = value;
     }
   });
-  
+
   return env;
 }
 
@@ -81,7 +81,7 @@ function logWarning(testName, message) {
 async function testSupabaseConnection() {
   console.log('\n🔍 KIỂM TRA KẾT NỐI SUPABASE\n');
   console.log('='.repeat(60));
-  
+
   // Test 1: Environment Variables
   console.log('\n1. Kiểm tra Environment Variables...');
   if (!supabaseUrl) {
@@ -89,17 +89,17 @@ async function testSupabaseConnection() {
     return;
   }
   logResult('VITE_SUPABASE_URL', true, supabaseUrl);
-  
+
   if (!supabaseAnonKey) {
     logResult('VITE_SUPABASE_ANON_KEY', false, 'Không tìm thấy');
     return;
   }
-  
-  const keyType = supabaseAnonKey.startsWith('sb_publishable_') ? 'Publishable Key (mới)' : 
-                  supabaseAnonKey.startsWith('eyJ') ? 'Anon Key (legacy JWT)' : 
-                  'Unknown format';
+
+  const keyType = supabaseAnonKey.startsWith('sb_publishable_') ? 'Publishable Key (mới)' :
+    supabaseAnonKey.startsWith('eyJ') ? 'Anon Key (legacy JWT)' :
+      'Unknown format';
   logResult('VITE_SUPABASE_ANON_KEY', true, `${keyType} - ${supabaseAnonKey.substring(0, 30)}...`);
-  
+
   // Test 2: Create Supabase Client
   console.log('\n2. Tạo Supabase Client...');
   let supabase;
@@ -110,7 +110,7 @@ async function testSupabaseConnection() {
     logResult('Create Client', false, error.message);
     return;
   }
-  
+
   // Test 3: Test Database Connection
   console.log('\n3. Kiểm tra kết nối Database...');
   try {
@@ -118,7 +118,7 @@ async function testSupabaseConnection() {
       .from('businesses')
       .select('id')
       .limit(1);
-    
+
     if (error) {
       logResult('Database Query', false, error.message);
     } else {
@@ -127,7 +127,7 @@ async function testSupabaseConnection() {
   } catch (error) {
     logResult('Database Query', false, error.message);
   }
-  
+
   // Test 4: Test RLS Policies
   console.log('\n4. Kiểm tra RLS Policies...');
   try {
@@ -136,7 +136,7 @@ async function testSupabaseConnection() {
       .select('id, name')
       .eq('is_active', true)
       .limit(5);
-    
+
     if (error) {
       if (error.code === '42501') {
         logWarning('RLS Policies', 'Có thể có vấn đề với RLS policies');
@@ -149,7 +149,7 @@ async function testSupabaseConnection() {
   } catch (error) {
     logResult('RLS Test', false, error.message);
   }
-  
+
   // Test 5: Test Authentication
   console.log('\n5. Kiểm tra Authentication...');
   try {
@@ -166,15 +166,15 @@ async function testSupabaseConnection() {
   } catch (error) {
     logResult('Auth Session', false, error.message);
   }
-  
+
   // Test 6: Test Storage
   console.log('\n6. Kiểm tra Storage...');
   try {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .storage
       .from('avatars')
       .list('', { limit: 1 });
-    
+
     if (error) {
       if (error.message.includes('not found')) {
         logWarning('Storage', 'Bucket "avatars" không tồn tại hoặc không có quyền truy cập');
@@ -187,7 +187,7 @@ async function testSupabaseConnection() {
   } catch (error) {
     logWarning('Storage Test', error.message);
   }
-  
+
   // Test 7: Test Edge Functions (via HTTP)
   console.log('\n7. Kiểm tra Edge Functions...');
   try {
@@ -199,7 +199,7 @@ async function testSupabaseConnection() {
         'apikey': supabaseAnonKey
       }
     });
-    
+
     if (response.ok || response.status === 200 || response.status === 404) {
       logResult('Edge Functions', true, `Functions accessible (status: ${response.status})`);
     } else {
@@ -208,7 +208,7 @@ async function testSupabaseConnection() {
   } catch (error) {
     logWarning('Edge Functions', error.message);
   }
-  
+
   // Test 8: Check Key Format
   console.log('\n8. Kiểm tra Key Format...');
   if (supabaseAnonKey.startsWith('sb_publishable_')) {
@@ -223,14 +223,14 @@ async function testSupabaseConnection() {
 async function testEnvironmentSync() {
   console.log('\n\n🔍 KIỂM TRA ĐỒNG BỘ ENVIRONMENT VARIABLES\n');
   console.log('='.repeat(60));
-  
+
   // Check .env.local
   console.log('\n1. Kiểm tra .env.local...');
   const envLocalPath = path.join(rootDir, '.env.local');
   if (fs.existsSync(envLocalPath)) {
     const envLocal = loadEnvFile(envLocalPath);
     logResult('.env.local exists', true, `${Object.keys(envLocal).length} keys`);
-    
+
     if (envLocal.VITE_SUPABASE_URL && envLocal.VITE_SUPABASE_ANON_KEY) {
       logResult('.env.local keys', true, 'Có đủ keys cần thiết');
     } else {
@@ -239,14 +239,14 @@ async function testEnvironmentSync() {
   } else {
     logResult('.env.local exists', false, 'File không tồn tại');
   }
-  
+
   // Check .env.vercel
   console.log('\n2. Kiểm tra .env.vercel...');
   const possiblePaths = [
     path.join(rootDir, '.env.vercel'),
     path.join(rootDir, 'docs', '.env.vercel'),
   ];
-  
+
   let foundVercel = false;
   for (const vercelPath of possiblePaths) {
     if (fs.existsSync(vercelPath)) {
@@ -257,7 +257,7 @@ async function testEnvironmentSync() {
       break;
     }
   }
-  
+
   if (!foundVercel) {
     logWarning('.env.vercel', 'Không tìm thấy file');
   }
@@ -266,26 +266,26 @@ async function testEnvironmentSync() {
 function printSummary() {
   console.log('\n\n📊 TÓM TẮT KẾT QUẢ\n');
   console.log('='.repeat(60));
-  
+
   console.log(`\n✅ PASSED: ${results.passed.length}`);
   results.passed.forEach(test => console.log(`   ✅ ${test}`));
-  
+
   if (results.failed.length > 0) {
     console.log(`\n❌ FAILED: ${results.failed.length}`);
     results.failed.forEach(({ test, message }) => {
       console.log(`   ❌ ${test}: ${message}`);
     });
   }
-  
+
   if (results.warnings.length > 0) {
     console.log(`\n⚠️  WARNINGS: ${results.warnings.length}`);
     results.warnings.forEach(({ test, message }) => {
       console.log(`   ⚠️  ${test}: ${message}`);
     });
   }
-  
+
   console.log('\n' + '='.repeat(60));
-  
+
   if (results.failed.length === 0) {
     console.log('\n🎉 TẤT CẢ KIỂM TRA ĐÃ PASS!');
     console.log('✅ Frontend và Database đã đồng bộ thành công.\n');
@@ -299,7 +299,7 @@ async function main() {
   console.log('🔍 KIỂM TRA KẾT NỐI FRONTEND - DATABASE');
   console.log('='.repeat(60));
   console.log('Sau khi đổi password và cập nhật Vercel\n');
-  
+
   await testEnvironmentSync();
   await testSupabaseConnection();
   printSummary();

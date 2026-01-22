@@ -172,7 +172,7 @@ async function showStatus() {
   console.log('📊 Environment Variables Status\n');
 
   const localVars = readEnvFile(ENV_LOCAL_PATH);
-  const exampleVars = readEnvFile(ENV_EXAMPLE_PATH);
+
 
   console.log('Local (.env.local):');
   if (Object.keys(localVars).length === 0) {

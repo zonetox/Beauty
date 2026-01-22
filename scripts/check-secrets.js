@@ -34,11 +34,11 @@ console.log(`${colors.cyan}========================================${colors.rese
 let envContent = '';
 try {
     envContent = fs.readFileSync(path.join(process.cwd(), '.env.local'), 'utf8');
-} catch (e) {
+} catch {
     console.log(`${colors.yellow}⚠️  No .env.local found. Checking .env...${colors.reset}`);
     try {
         envContent = fs.readFileSync(path.join(process.cwd(), '.env'), 'utf8');
-    } catch (e) {
+    } catch {
         console.log(`${colors.red}❌ No .env files found. Cannot audit values.${colors.reset}`);
         process.exit(1);
     }

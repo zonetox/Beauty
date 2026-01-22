@@ -107,7 +107,7 @@ function checkFile(filePath, relativePath) {
         }
       });
     });
-  } catch (error) {
+  } catch {
     // File không đọc được hoặc binary
   }
 }
@@ -136,7 +136,7 @@ function checkGitHistory() {
         console.log(`⚠️  Secret cũ còn trong git history: ${secret.substring(0, 20)}...`);
         console.log(`   Commits: ${result.trim().split('\n').length} commits`);
       }
-    } catch (error) {
+    } catch {
       // Secret không tìm thấy trong history (tốt)
     }
   });
@@ -196,7 +196,7 @@ function checkTrackedFiles() {
       results.passed.push('Không có .env files được track');
       console.log('✅ Không có .env files được track');
     }
-  } catch (error) {
+  } catch {
     console.log('⚠️  Không thể kiểm tra tracked files');
   }
 }

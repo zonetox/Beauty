@@ -7,7 +7,6 @@
 
 import { execSync } from 'child_process';
 import fs from 'fs';
-import path from 'path';
 
 const PROJECT_ID = 'fdklazlcbxaiapsnnbqq';
 const TYPES_PATH = './types/supabase.ts';
@@ -23,7 +22,7 @@ async function runMaintenance() {
         const content = fs.readFileSync(TYPES_PATH, 'utf16le');
         fs.writeFileSync(TYPES_PATH, content, 'utf8');
         console.log('✅ Types synchronized and encoded correctly.');
-    } catch (err) {
+    } catch {
         console.error('❌ Failed to sync types. Ensure you have network access or run "supabase login".');
     }
 

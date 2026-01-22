@@ -175,7 +175,7 @@ async function testSupabaseConnection(url, key) {
             note: 'Auth endpoint works, but RLS may block table access (this is OK)'
           };
         }
-      } catch (authErr) {
+      } catch {
         // Continue to raw fetch test
       }
 

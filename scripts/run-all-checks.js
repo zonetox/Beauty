@@ -5,7 +5,6 @@
  */
 
 import { execSync } from 'child_process';
-import { readFileSync } from 'fs';
 
 const checks = [
   { name: 'TypeScript Check', command: 'npm run type-check', critical: true },
@@ -21,15 +20,15 @@ console.log('🔍 Running All Checks...\n');
 for (const check of checks) {
   console.log(`\n📋 Running: ${check.name}`);
   console.log('─'.repeat(50));
-  
+
   try {
     execSync(check.command, { stdio: 'inherit' });
     results.push({ name: check.name, status: 'pass', critical: check.critical });
     console.log(`\n✅ ${check.name} passed`);
-  } catch (error) {
+  } catch {
     results.push({ name: check.name, status: 'fail', critical: check.critical });
     console.log(`\n❌ ${check.name} failed`);
-    
+
     if (check.critical) {
       console.log(`\n⚠️  Critical check failed. Stopping.`);
       process.exit(1);

@@ -2,7 +2,7 @@
 // Script to get current Ngrok URL from web interface
 // Usage: node scripts/get-ngrok-url.js
 
-const http = require('http');
+import http from 'http';
 
 const NGROK_WEB_INTERFACE = 'http://127.0.0.1:4040';
 
@@ -28,7 +28,7 @@ const getNgrokUrl = () => {
           } else {
             reject(new Error('No tunnels found. Is Ngrok running?'));
           }
-        } catch (error) {
+        } catch {
           reject(new Error('Failed to parse Ngrok API response'));
         }
       });
