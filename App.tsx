@@ -43,7 +43,10 @@ const BusinessPostPage = lazy(() => import('./pages/BusinessPostPage.tsx'));
 const AboutPage = lazy(() => import('./pages/AboutPage.tsx'));
 const ContactPage = lazy(() => import('./pages/ContactPage.tsx'));
 const ForBusinessPage = lazy(() => import('./pages/ForBusinessPage.tsx'));
-const RegisterPage = lazy(() => import('./pages/RegisterPage.tsx'));
+const RegisterSelectPage = lazy(() => import('./pages/RegisterSelectPage.tsx'));
+const RegisterUserPage = lazy(() => import('./pages/RegisterUserPage.tsx'));
+const RegisterBusinessPage = lazy(() => import('./pages/RegisterBusinessPage.tsx'));
+const BusinessSetupPage = lazy(() => import('./pages/BusinessSetupPage.tsx'));
 const AdminPage = lazy(() => import('./pages/AdminPage.tsx'));
 const AdminLoginPage = lazy(() => import('./pages/AdminLoginPage.tsx'));
 const AdminProtectedRoute = lazy(() => import('./components/AdminProtectedRoute.tsx'));
@@ -326,7 +329,14 @@ const AppContent: React.FC = () => {
                                         <Route path="about" element={<AboutPage />} />
                                         <Route path="contact" element={<ContactPage />} />
                                         <Route path="for-business" element={<ForBusinessPage />} />
-                                        <Route path="register" element={<RegisterPage />} />
+                                        <Route path="register" element={<RegisterSelectPage />} />
+                                        <Route path="register/user" element={<RegisterUserPage />} />
+                                        <Route path="register/business" element={<RegisterBusinessPage />} />
+                                        <Route path="account/business/setup" element={
+                                            <ProtectedRoute>
+                                                <BusinessSetupPage />
+                                            </ProtectedRoute>
+                                        } />
                                         <Route path="/partner-registration" element={<PartnerRegistrationPage />} />
                                         <Route path="login" element={<LoginPage />} />
                                         <Route path="reset-password" element={<ResetPasswordPage />} />

@@ -250,7 +250,7 @@ test.describe('Critical User Flows', () => {
 });
 
 test.describe('Error Handling', () => {
-  test.skip('Handles network errors gracefully', async ({ page }) => {
+  test.skip('Handles network errors gracefully', async () => {
     // Skipping this test reliably in local dev environment
     /* 
     try {
