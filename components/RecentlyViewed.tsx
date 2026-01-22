@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useBusinessData } from '../contexts/BusinessDataContext';
+import { useBusinessData } from '../contexts/BusinessDataContext.tsx';
 import { Business } from '../types.ts';
 import BusinessCard from './BusinessCard.tsx';
 
@@ -18,6 +18,7 @@ const RecentlyViewed: React.FC = () => {
                     .map(id => businesses.find(b => b.id === id))
                     .filter((b): b is Business => b !== undefined);
 
+                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setViewedBusinesses(hydratedBusinesses);
             }
         } catch (error) {

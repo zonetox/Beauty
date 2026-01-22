@@ -166,7 +166,7 @@ const MediaLibrary: React.FC = () => {
             try {
                 await Promise.all(uploadPromises);
                 toast.success(`Successfully uploaded ${validFiles.length} file(s)!`);
-            } catch (error) {
+            } catch {
                 // Individual errors already handled above
             }
         }
@@ -192,7 +192,7 @@ const MediaLibrary: React.FC = () => {
         try {
             await deleteMediaItem(confirmDelete.item);
             // Success toast is handled in context
-        } catch (error) {
+        } catch {
             // Error already handled in context with toast
         } finally {
             setIsDeleting(null);
@@ -205,7 +205,7 @@ const MediaLibrary: React.FC = () => {
             await updateMediaItem(updatedItem);
             setEditingItem(null);
             // Success toast is handled in context
-        } catch (error) {
+        } catch {
             // Error already handled in context with toast
             // Don't close modal on error
         }
@@ -252,7 +252,7 @@ const MediaLibrary: React.FC = () => {
         setIsReordering(true);
         try {
             await updateMediaOrder(newMedia);
-        } catch (error) {
+        } catch {
             // Revert on error
             setLocalMedia(currentBusiness?.gallery || []);
             toast.error('Failed to save media order. Please try again.');

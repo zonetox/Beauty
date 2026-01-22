@@ -56,17 +56,28 @@ const BusinessDetailPage: React.FC = () => {
             }
 
             try {
-                console.log('Loading business with slug:', slug);
+                if (import.meta.env.MODE === 'development') {
+                    // eslint-disable-next-line no-console
+                    console.log('Loading business with slug:', slug);
+                }
                 const data = await fetchBusinessBySlug(slug);
-                console.log('Business data loaded:', data ? 'Success' : 'Not found', data);
+
+                if (import.meta.env.MODE === 'development') {
+                    // eslint-disable-next-line no-console
+                    console.log('Business data loaded:', data ? 'Success' : 'Not found');
+                }
 
                 if (!isMounted) return; // Component unmounted, skip state update
 
                 if (!data) {
-                    console.warn('Business not found for slug:', slug);
+                    if (import.meta.env.MODE === 'development') {
+                        console.warn('Business not found for slug:', slug);
+                    }
                     setError('Business not found');
                 } else {
-                    console.log('Setting business data:', data.name, 'Services:', data.services?.length, 'Deals:', data.deals?.length, 'Reviews:', data.reviews?.length);
+                    if (import.meta.env.MODE === 'development') {
+                        console.warn('Setting business data:', data.name, 'Services:', data.services?.length, 'Deals:', data.deals?.length, 'Reviews:', data.reviews?.length);
+                    }
                     setBusiness(data);
                 }
             } catch (err) {

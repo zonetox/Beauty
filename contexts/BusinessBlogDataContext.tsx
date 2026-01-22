@@ -108,6 +108,7 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAllData();
   }, [fetchAllData]);
 

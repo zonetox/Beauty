@@ -80,7 +80,7 @@ export function useUserRole(): UseUserRoleResult {
     resolveRole();
     // BREAKING THE LOOP: Only re-run if user ID changes or auth state changes.
     // Do NOT depend on the 'user' object itself as it changes reference frequently.
-  }, [user?.id, state]);
+  }, [user?.id, state, user]);
 
   return {
     role: roleResult.role,

@@ -24,7 +24,7 @@ export interface AuthContextType {
   // Actions
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  register: (email: string, password: string, metadata?: Record<string, any>) => Promise<void>;
+  register: (email: string, password: string, metadata?: Record<string, unknown>) => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (newPassword: string) => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -56,7 +56,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const { data, error } = await getUserProfile(userId);
 
-      if (error && (error as any).code === 'PGRST116') {
+      if (error && (error as { code?: string }).code === 'PGRST116') {
         // Profile doesn't exist - CRITICAL ERROR
         // Attempt to create (trigger may have failed)
         const { data: newProfile, error: insertError } = await supabase
@@ -212,7 +212,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = useCallback(async (
     email: string,
     password: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ) => {
     const { data, error } = await supabase.auth.signUp({
       email,

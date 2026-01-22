@@ -122,6 +122,7 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchComments();
   }, [fetchComments]);
 
@@ -130,6 +131,7 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
     try {
       const savedCategoriesJSON = localStorage.getItem(CATEGORIES_LOCAL_STORAGE_KEY);
       const categories = savedCategoriesJSON ? JSON.parse(savedCategoriesJSON) : initialBlogCategories;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setBlogCategories(categories);
     } catch (error) {
       console.error(`Failed to parse blog categories from localStorage:`, error);

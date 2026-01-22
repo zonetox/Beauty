@@ -47,7 +47,7 @@ const EditAdminUserModal: React.FC<EditAdminUserModalProps> = ({ isOpen, onClose
 
   useEffect(() => {
     if (isOpen) {
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData(getInitialFormData());
     }
   }, [userToEdit, isOpen]);

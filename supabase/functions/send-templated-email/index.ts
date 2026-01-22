@@ -1,6 +1,11 @@
 // supabase/functions/send-templated-email/index.ts
 // E1 Email System - Tuân thủ Master Plan v1.1
-declare const Deno: any;
+declare const Deno: {
+    env: {
+        get(key: string): string | undefined;
+    };
+    serve(handler: (req: Request) => Promise<Response>): void;
+};
 
 import { Resend } from "resend";
 
@@ -9,51 +14,51 @@ const resend = new Resend(RESEND_API_KEY);
 
 // CORS headers for security - only allow specific origins
 function getCorsHeaders(origin: string | null) {
-  // Allowed origins from env or fallback to production domain
-  const allowedOrigins = Deno.env.get('ALLOWED_ORIGINS')?.split(',') || [
-    'https://1beauty.asia',
-    'https://beauty-red.vercel.app',
-    'http://localhost:5173',
-    'http://localhost:3000',
-  ];
-  
-  const allowedOrigin = origin && allowedOrigins.includes(origin) 
-    ? origin 
-    : allowedOrigins[0]; // Default to first allowed origin (production)
-  
-  return {
-    'Access-Control-Allow-Origin': allowedOrigin,
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  };
+    // Allowed origins from env or fallback to production domain
+    const allowedOrigins = Deno.env.get('ALLOWED_ORIGINS')?.split(',') || [
+        'https://1beauty.asia',
+        'https://beauty-red.vercel.app',
+        'http://localhost:5173',
+        'http://localhost:3000',
+    ];
+
+    const allowedOrigin = origin && allowedOrigins.includes(origin)
+        ? origin
+        : allowedOrigins[0]; // Default to first allowed origin (production)
+
+    return {
+        'Access-Control-Allow-Origin': allowedOrigin,
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    };
 }
 
 // PHASE 2: Standardized error response helper
 // Helper function to create standardized error responses
 function createErrorResponse(message: string, statusCode: number, origin: string | null, code?: string): Response {
-  const corsHeaders = getCorsHeaders(origin);
-  const errorResponse: { error: string; code?: string; statusCode?: number } = {
-    error: message,
-    statusCode,
-  };
-  if (code) {
-    errorResponse.code = code;
-  }
-  return new Response(JSON.stringify(errorResponse), {
-    status: statusCode,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
+    const corsHeaders = getCorsHeaders(origin);
+    const errorResponse: { error: string; code?: string; statusCode?: number } = {
+        error: message,
+        statusCode,
+    };
+    if (code) {
+        errorResponse.code = code;
+    }
+    return new Response(JSON.stringify(errorResponse), {
+        status: statusCode,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
 }
 
 interface TemplateData {
-  [key: string]: string | number | boolean;
+    [key: string]: string | number | boolean;
 }
 
 /**
  * Get email template HTML
  */
 function getEmailTemplate(templateName: string, templateData: TemplateData): { subject: string; html: string } {
-  const baseStyles = `
+    const baseStyles = `
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
     .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
     .header { background: linear-gradient(135deg, #E6A4B4 0%, #C86B85 100%); padding: 30px 20px; text-align: center; color: white; }
@@ -73,13 +78,13 @@ function getEmailTemplate(templateName: string, templateData: TemplateData): { s
     }
   `;
 
-  let subject = '';
-  let htmlContent = '';
+    let subject = '';
+    let htmlContent = '';
 
-  switch (templateName) {
-    case 'invite':
-      subject = `Chào mừng ${templateData.name || 'bạn'} đến với 1Beauty.asia!`;
-      htmlContent = `
+    switch (templateName) {
+        case 'invite':
+            subject = `Chào mừng ${templateData.name || 'bạn'} đến với 1Beauty.asia!`;
+            htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -108,11 +113,11 @@ function getEmailTemplate(templateName: string, templateData: TemplateData): { s
     </div>
 </body>
 </html>`;
-      break;
+            break;
 
-    case 'welcome':
-      subject = 'Chào mừng bạn đến với 1Beauty.asia!';
-      htmlContent = `
+        case 'welcome':
+            subject = 'Chào mừng bạn đến với 1Beauty.asia!';
+            htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -145,11 +150,11 @@ function getEmailTemplate(templateName: string, templateData: TemplateData): { s
     </div>
 </body>
 </html>`;
-      break;
+            break;
 
-    case 'order_confirmation':
-      subject = `Xác nhận đơn hàng #${templateData.orderId || 'N/A'}`;
-      htmlContent = `
+        case 'order_confirmation':
+            subject = `Xác nhận đơn hàng #${templateData.orderId || 'N/A'}`;
+            htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -186,11 +191,11 @@ function getEmailTemplate(templateName: string, templateData: TemplateData): { s
     </div>
 </body>
 </html>`;
-      break;
+            break;
 
-    case 'booking_confirmation':
-      subject = `Xác nhận lịch hẹn tại ${templateData.businessName || 'đối tác'}`;
-      htmlContent = `
+        case 'booking_confirmation':
+            subject = `Xác nhận lịch hẹn tại ${templateData.businessName || 'đối tác'}`;
+            htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -231,11 +236,11 @@ function getEmailTemplate(templateName: string, templateData: TemplateData): { s
     </div>
 </body>
 </html>`;
-      break;
+            break;
 
-    case 'booking_cancelled':
-      subject = `Hủy lịch hẹn tại ${templateData.businessName || 'đối tác'}`;
-      htmlContent = `
+        case 'booking_cancelled':
+            subject = `Hủy lịch hẹn tại ${templateData.businessName || 'đối tác'}`;
+            htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -275,11 +280,11 @@ function getEmailTemplate(templateName: string, templateData: TemplateData): { s
     </div>
 </body>
 </html>`;
-      break;
+            break;
 
-    case 'password_reset':
-      subject = 'Đặt lại mật khẩu - 1Beauty.asia';
-      htmlContent = `
+        case 'password_reset':
+            subject = 'Đặt lại mật khẩu - 1Beauty.asia';
+            htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -307,11 +312,11 @@ function getEmailTemplate(templateName: string, templateData: TemplateData): { s
     </div>
 </body>
 </html>`;
-      break;
+            break;
 
-    case 'membership_expiry':
-      subject = `Cảnh báo: Gói thành viên sắp hết hạn`;
-      htmlContent = `
+        case 'membership_expiry':
+            subject = `Cảnh báo: Gói thành viên sắp hết hạn`;
+            htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -348,11 +353,11 @@ function getEmailTemplate(templateName: string, templateData: TemplateData): { s
     </div>
 </body>
 </html>`;
-      break;
+            break;
 
-    case 'review_received':
-      subject = `Bạn có đánh giá mới từ ${templateData.customerName || 'khách hàng'}`;
-      htmlContent = `
+        case 'review_received':
+            subject = `Bạn có đánh giá mới từ ${templateData.customerName || 'khách hàng'}`;
+            htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -372,9 +377,9 @@ function getEmailTemplate(templateName: string, templateData: TemplateData): { s
                 <div class="info-row">
                     <span class="info-label">Đánh giá:</span>
                     <span class="info-value">
-                        ${Array.from({ length: 5 }, (_, i) => 
-                          `<span style="color: ${i < parseInt(templateData.rating?.toString() || '0') ? '#ffc107' : '#ddd'}; font-size: 20px;">★</span>`
-                        ).join('')}
+                        ${Array.from({ length: 5 }, (_, i) =>
+                `<span style="color: ${i < parseInt(templateData.rating?.toString() || '0') ? '#ffc107' : '#ddd'}; font-size: 20px;">★</span>`
+            ).join('')}
                         <strong>${templateData.rating}/5</strong>
                     </span>
                 </div>
@@ -394,59 +399,59 @@ function getEmailTemplate(templateName: string, templateData: TemplateData): { s
     </div>
 </body>
 </html>`;
-      break;
+            break;
 
-    default:
-      throw new Error(`Template '${templateName}' not found.`);
-  }
+        default:
+            throw new Error(`Template '${templateName}' not found.`);
+    }
 
-  // Replace placeholders in the template
-  for (const key in templateData) {
-    const regex = new RegExp(`{{${key}}}`, 'g');
-    const value = String(templateData[key] || '');
-    htmlContent = htmlContent.replace(regex, value);
-    subject = subject.replace(regex, value);
-  }
+    // Replace placeholders in the template
+    for (const key in templateData) {
+        const regex = new RegExp(`{{${key}}}`, 'g');
+        const value = String(templateData[key] || '');
+        htmlContent = htmlContent.replace(regex, value);
+        subject = subject.replace(regex, value);
+    }
 
-  return { subject, html: htmlContent };
+    return { subject, html: htmlContent };
 }
 
 Deno.serve(async (req: Request) => {
-  const corsHeaders = getCorsHeaders(req.headers.get('origin'));
-  
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
+    const corsHeaders = getCorsHeaders(req.headers.get('origin'));
 
-  try {
-    const { to, templateName, templateData, subject: subjectOverride } = await req.json();
-
-    if (!to || !templateName || !templateData) {
-      throw new Error("Missing 'to', 'templateName', or 'templateData'.");
+    if (req.method === "OPTIONS") {
+        return new Response("ok", { headers: corsHeaders });
     }
 
-    // Get template
-    const { subject, html } = getEmailTemplate(templateName, templateData);
-    const finalSubject = subjectOverride || subject;
+    try {
+        const { to, templateName, templateData, subject: subjectOverride } = await req.json();
 
-    // Send email via Resend
-    const { data, error } = await resend.emails.send({
-      from: '1Beauty Asia <noreply@1beauty.asia>',
-      to: [to],
-      subject: finalSubject,
-      html: html,
-    });
+        if (!to || !templateName || !templateData) {
+            throw new Error("Missing 'to', 'templateName', or 'templateData'.");
+        }
 
-    if (error) {
-      console.error("Resend API Error:", error);
-      throw new Error(error.message || "Failed to send email");
+        // Get template
+        const { subject, html } = getEmailTemplate(templateName, templateData);
+        const finalSubject = subjectOverride || subject;
+
+        // Send email via Resend
+        const { data, error } = await resend.emails.send({
+            from: '1Beauty Asia <noreply@1beauty.asia>',
+            to: [to],
+            subject: finalSubject,
+            html: html,
+        });
+
+        if (error) {
+            console.error("Resend API Error:", error);
+            throw new Error(error.message || "Failed to send email");
+        }
+
+        return new Response(JSON.stringify(data), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+
+    } catch (error: unknown) {
+        return createErrorResponse(error instanceof Error ? error.message : 'An unexpected error occurred', 400, req.headers.get('origin'), 'BAD_REQUEST');
     }
-
-    return new Response(JSON.stringify(data), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-
-  } catch (error: any) {
-    return createErrorResponse(error.message || 'An unexpected error occurred', 400, req.headers.get('origin'), 'BAD_REQUEST');
-  }
 });

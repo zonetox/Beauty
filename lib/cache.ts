@@ -33,11 +33,11 @@ class CacheManager {
       }
 
       return entry.data;
-    } catch (error) {
+    } catch {
       // Invalid cache entry, remove it
       try {
         localStorage.removeItem(`${this.prefix}${key}`);
-      } catch (e) {
+      } catch {
         // Ignore errors during cleanup
       }
       return null;
@@ -74,7 +74,7 @@ class CacheManager {
   invalidate(key: string): void {
     try {
       localStorage.removeItem(`${this.prefix}${key}`);
-    } catch (error) {
+    } catch {
       // Ignore errors
     }
   }
@@ -86,7 +86,7 @@ class CacheManager {
     try {
       const regex = typeof pattern === 'string' ? new RegExp(pattern) : pattern;
       const keys: string[] = [];
-      
+
       // Get all localStorage keys
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
@@ -100,7 +100,7 @@ class CacheManager {
 
       // Remove matching keys
       keys.forEach(key => localStorage.removeItem(key));
-    } catch (error) {
+    } catch {
       // Ignore errors
     }
   }
@@ -111,7 +111,7 @@ class CacheManager {
   clear(): void {
     try {
       const keys: string[] = [];
-      
+
       // Get all cache keys
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
@@ -122,7 +122,7 @@ class CacheManager {
 
       // Remove all cache keys
       keys.forEach(key => localStorage.removeItem(key));
-    } catch (error) {
+    } catch {
       // Ignore errors
     }
   }
@@ -140,7 +140,7 @@ class CacheManager {
         }
       }
       return count;
-    } catch (error) {
+    } catch {
       return 0;
     }
   }

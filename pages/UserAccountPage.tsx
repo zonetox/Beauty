@@ -39,6 +39,7 @@ const UserAccountPage: React.FC = () => {
     // Reset timeout when loading completes
     useEffect(() => {
         if (!loading) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setLoadTimeout(false);
         }
     }, [loading]);

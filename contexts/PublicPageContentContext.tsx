@@ -46,7 +46,7 @@ export const PublicPageContentProvider: React.FC<{ children: ReactNode }> = ({ c
         } else {
           const contentMap: { [key in PageName]?: PageData } = {};
           if (data) {
-            data.forEach((row: any) => {
+            (data as { page_name: string; content_data: unknown }[]).forEach((row) => {
               if (row.page_name === 'about' || row.page_name === 'contact') {
                 contentMap[row.page_name as PageName] = row.content_data as PageData;
               }

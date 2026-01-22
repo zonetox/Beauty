@@ -156,12 +156,15 @@ const ConnectionTestPage: React.FC = () => {
                 <p>Nếu bạn thấy &quot;Clean Client Worked&quot; nhưng SDK chính bị lỗi, hãy bấm nút dưới đây để xóa bộ nhớ đệm bị lỗi.</p>
                 <button
                     onClick={() => {
-                        console.log('Clearing storage...');
+                        if (import.meta.env.MODE === 'development') {
+                            console.warn('Clearing storage...');
+                        }
                         localStorage.clear();
                         sessionStorage.clear();
                         // Use toast notification instead of alert
-                        if (typeof window !== 'undefined' && (window as any).toast) {
-                            (window as any).toast.success('Đã xóa dữ liệu đệm! Trang sẽ tự tải lại.');
+                        const win = window as unknown as { toast?: { success: (m: string) => void } };
+                        if (typeof window !== 'undefined' && win.toast) {
+                            win.toast.success('Đã xóa dữ liệu đệm! Trang sẽ tự tải lại.');
                         }
                         setTimeout(() => {
                             window.location.reload();

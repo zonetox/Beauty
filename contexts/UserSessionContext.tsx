@@ -11,8 +11,8 @@ interface UserSessionContextType {
   currentUser: User | null;
   profile: Profile | null;
   loading: boolean;
-  login: (email: string, pass: string) => Promise<any>;
-  logout: () => Promise<any>;
+  login: (email: string, pass: string) => Promise<void>;
+  logout: () => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (newPass: string) => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
@@ -70,13 +70,13 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
             .from('profiles')
             .insert({ id: user.id, full_name: user.user_metadata.full_name, email: user.email })
             .select().single();
-          
+
           const insertTimeoutPromise = new Promise<never>((_, reject) => {
             setTimeout(() => reject(new Error('Profile insert timeout')), 5000);
           });
 
           const { data: newProfile, error: insertError } = await Promise.race([insertQuery, insertTimeoutPromise]);
-          
+
           if (insertError) {
             console.error('Error creating profile:', insertError.message);
           } else if (newProfile && mounted) {
@@ -122,7 +122,7 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
     // Get initial session
     if (isSupabaseConfigured) {
       hasAttemptedAuth = true;
-      
+
       // Add timeout to prevent hanging (8 seconds)
       const getSessionTimeout = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error('getSession timeout')), 8000);
@@ -131,9 +131,9 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
       Promise.race([
         supabase.auth.getSession(),
         getSessionTimeout
-      ]).then((result: any) => {
-        const { data: { session }, error } = result;
-        
+      ]).then((result) => {
+        const { data: { session }, error } = result as { data: { session: Session | null }; error: { message?: string } | null };
+
         // Handle invalid refresh token errors
         if (error && (error.message?.includes('Invalid Refresh Token') || error.message?.includes('Refresh Token Not Found'))) {
           // Clear invalid session
@@ -158,7 +158,7 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
       }).catch(err => {
         // Handle network, timeout, or other errors
         const errorMessage = err?.message || String(err);
-        
+
         if (errorMessage.includes('timeout')) {
           // Timeout - assume no session
           if (mounted) {
@@ -216,7 +216,7 @@ export const UserSessionProvider: React.FC<{ children: ReactNode }> = ({ childre
       if (mounted) setLoading(false);
       return () => { mounted = false; clearTimeout(safetyTimeout); };
     }
-  }, []);
+  }, [loading]);
 
   const login = async (email: string, pass: string) => {
     if (!isSupabaseConfigured) { throw new Error("Preview Mode: Real login is disabled."); }
@@ -333,13 +333,13 @@ export const useUserSession = (): UserSessionContextType => {
       profile: null,
       loading: false,
       login: async () => { throw new Error('UserSessionProvider not available'); },
-      logout: async () => {},
-      requestPasswordReset: async () => {},
-      resetPassword: async () => {},
-      updateProfile: async () => {},
-      refreshProfile: async () => {},
+      logout: async () => { },
+      requestPasswordReset: async () => { },
+      resetPassword: async () => { },
+      updateProfile: async () => { },
+      refreshProfile: async () => { },
       isFavorite: () => false,
-      toggleFavorite: async () => {},
+      toggleFavorite: async () => { },
     };
   }
   return context;

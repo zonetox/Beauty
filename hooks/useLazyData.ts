@@ -163,7 +163,7 @@ export function useLazyData() {
 
   const loadMarkers = useCallback(async () => {
     // Check cache first
-    const cached = cacheManager.get<typeof state.markers>(CACHE_KEYS.MARKERS);
+    const cached = cacheManager.get<LazyDataState['markers']>(CACHE_KEYS.MARKERS);
     if (cached) {
       setState(prev => ({
         ...prev,
@@ -200,7 +200,7 @@ export function useLazyData() {
       }
     );
 
-    const markers = result.data ? (snakeToCamel(result.data) as typeof state.markers) : [];
+    const markers = result.data ? (snakeToCamel(result.data) as LazyDataState['markers']) : [];
 
     // Cache the result
     if (markers.length > 0) {

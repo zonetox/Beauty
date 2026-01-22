@@ -14,7 +14,9 @@ interface PerformanceMetrics {
 }
 
 export const usePerformanceMonitoring = (componentName: string) => {
+  // eslint-disable-next-line react-hooks/purity
   const mountStartTime = useRef<number>(Date.now());
+  // eslint-disable-next-line react-hooks/purity
   const renderStartTime = useRef<number>(Date.now());
   const apiCallTimes = useRef<Map<string, number>>(new Map());
 

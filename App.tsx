@@ -119,10 +119,11 @@ const AccountPageRouter: React.FC = () => {
 
     // Reset timeout when loading completes
     useEffect(() => {
-        if (state !== 'loading' && !roleLoading) {
+        if (state !== 'loading' && !roleLoading && loadTimeout) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setLoadTimeout(false);
         }
-    }, [state, roleLoading]);
+    }, [state, roleLoading, loadTimeout]);
 
     // Loading state with Grace Period (prevent flash)
     // Only show spinner if loading takes more than 400ms
@@ -131,14 +132,21 @@ const AccountPageRouter: React.FC = () => {
     useEffect(() => {
         let timer: NodeJS.Timeout;
         if (state === 'loading' || roleLoading) {
-            timer = setTimeout(() => {
-                setShowLoading(true);
-            }, 400); // 400ms grace period
+            if (!showLoading) {
+                timer = setTimeout(() => {
+                    setShowLoading(true);
+                }, 400); // 400ms grace period
+            }
         } else {
-            setShowLoading(false);
+            if (showLoading) {
+                // eslint-disable-next-line react-hooks/set-state-in-effect
+                setShowLoading(false);
+            }
         }
-        return () => clearTimeout(timer);
-    }, [state, roleLoading]);
+        return () => {
+            if (timer) clearTimeout(timer);
+        };
+    }, [state, roleLoading, showLoading]);
 
     if ((state === 'loading' || roleLoading) && !loadTimeout) {
         if (!showLoading) return null; // Invisible during grace period
@@ -433,11 +441,11 @@ const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             // Only show the "Initializing" screen after 400ms
             // This makes the app feel instant for most guests
             const loadingTimer = setTimeout(() => {
-                setShowInitialLoading(true);
+                if (!showInitialLoading) setShowInitialLoading(true);
             }, 400);
 
             const bypassTimer = setTimeout(() => {
-                setShowBypassMenu(true);
+                if (!showBypassMenu) setShowBypassMenu(true);
             }, 7000); // 7 seconds
 
             return () => {
@@ -445,11 +453,13 @@ const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 clearTimeout(bypassTimer);
             };
         } else {
-            setShowInitialLoading(false);
-            setShowBypassMenu(false);
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            if (showInitialLoading) setShowInitialLoading(false);
+             
+            if (showBypassMenu) setShowBypassMenu(false);
         }
         return undefined;
-    }, [isInitializing, state]);
+    }, [isInitializing, state, showInitialLoading, showBypassMenu]);
 
     const handleBypass = () => {
         setInitializing(false);

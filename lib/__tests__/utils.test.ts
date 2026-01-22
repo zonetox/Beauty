@@ -70,11 +70,11 @@ describe('snakeToCamel', () => {
     };
     const result = snakeToCamel(input);
     // These keys should be filtered out, so they should not exist in result's own keys
-    const resultKeys = Object.keys(result);
+    const resultKeys = Object.keys(result as any);
     expect(resultKeys).not.toContain('__proto__');
     expect(resultKeys).not.toContain('constructor');
     expect(resultKeys).not.toContain('prototype');
-    expect(result.normalKey).toBe('value');
+    expect((result as any).normalKey).toBe('value');
   });
 
   it('should handle empty objects and arrays', () => {

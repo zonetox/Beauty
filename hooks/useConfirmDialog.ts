@@ -3,7 +3,7 @@
  * Replaces window.confirm() with in-app modal
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 interface ConfirmDialogState {
   isOpen: boolean;
@@ -52,16 +52,17 @@ export const useConfirmDialog = () => {
       dialog.onConfirm();
     }
     setDialog(prev => ({ ...prev, isOpen: false, onConfirm: null }));
-  }, [dialog.onConfirm]);
+  }, [dialog]);
 
   const handleCancel = useCallback(() => {
     setDialog(prev => ({ ...prev, isOpen: false, onConfirm: null }));
   }, []);
 
-  return {
+  // Memoize the return value to satisfy react-hooks/preserve-manual-memoization
+  return useMemo(() => ({
     dialog,
     showConfirm,
     handleConfirm,
     handleCancel,
-  };
+  }), [dialog, showConfirm, handleConfirm, handleCancel]);
 };

@@ -1,6 +1,3 @@
-
-
-
 import React, { useState } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -27,6 +24,35 @@ const CloseIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
+// Navigation links component moved outside to satisfy react-hooks/static-components
+const NavLinks: React.FC<{
+  mobile?: boolean;
+  isAdmin: boolean;
+  onLinkClick: () => void;
+  navLinkClass: (props: { isActive: boolean }) => string;
+  mobileNavLinkClass: (props: { isActive: boolean }) => string;
+}> = ({
+  mobile = false,
+  isAdmin,
+  onLinkClick,
+  navLinkClass,
+  mobileNavLinkClass
+}) => {
+    const classNameFunc = mobile ? mobileNavLinkClass : navLinkClass;
+    return (
+      <>
+        <NavLink to="/" className={classNameFunc} onClick={onLinkClick}>Trang chủ</NavLink>
+        <NavLink to="/directory" className={classNameFunc} onClick={onLinkClick}>Danh bạ</NavLink>
+        <NavLink to="/blog" className={classNameFunc} onClick={onLinkClick}>Blog</NavLink>
+        <NavLink to="/about" className={classNameFunc} onClick={onLinkClick}>Về chúng tôi</NavLink>
+        <NavLink to="/contact" className={classNameFunc} onClick={onLinkClick}>Liên hệ</NavLink>
+        {/* Admin link chỉ hiển thị cho admin */}
+        {isAdmin && (
+          <NavLink to="/admin" className={classNameFunc} onClick={onLinkClick}>Admin</NavLink>
+        )}
+      </>
+    );
+  };
 
 const Header: React.FC = () => {
   const { user, logout, profile } = useAuth();
@@ -47,19 +73,13 @@ const Header: React.FC = () => {
       setIsDropdownOpen(false); // Close dropdown on logout
 
       // Navigate to home first (before logout completes) for better UX
-      // The state change to 'unauthenticated' will naturally trigger 
-      // the routing system to protect routes if needed.
       navigate('/', { replace: true });
 
       // Perform logout
       await logout();
-
-      // Silent logout is better UX - no success toast needed
     } catch (error: unknown) {
       console.error('Logout error:', error);
-      // Even if logout fails, ensure we're on home page
       navigate('/', { replace: true });
-      // Only show error toast if logout actually failed
       const errorMessage = error instanceof Error ? error.message : 'Vui lòng thử lại';
       toast.error('Lỗi khi đăng xuất: ' + errorMessage, { id: 'logout-error' });
     }
@@ -96,7 +116,6 @@ const Header: React.FC = () => {
       return;
     }
     const checkPromise = (async () => {
-      // Use a lightweight query to check connectivity
       const { error } = await supabase.from('businesses').select('id', { count: 'exact', head: true });
       if (error) {
         console.error("Supabase health check failed:", error.message);
@@ -110,25 +129,6 @@ const Header: React.FC = () => {
       success: 'Supabase connection is healthy.',
       error: (err) => `Connection failed: ${err.message}`,
     });
-  };
-
-  // This will render the navigation links for both desktop and mobile
-  const NavLinks: React.FC<{ mobile?: boolean }> = ({ mobile = false }) => {
-    const classNameFunc = mobile ? mobileNavLinkClass : navLinkClass;
-    const handleLinkClick = () => setIsMenuOpen(false);
-    return (
-      <>
-        <NavLink to="/" className={classNameFunc} onClick={handleLinkClick}>Trang chủ</NavLink>
-        <NavLink to="/directory" className={classNameFunc} onClick={handleLinkClick}>Danh bạ</NavLink>
-        <NavLink to="/blog" className={classNameFunc} onClick={handleLinkClick}>Blog</NavLink>
-        <NavLink to="/about" className={classNameFunc} onClick={handleLinkClick}>Về chúng tôi</NavLink>
-        <NavLink to="/contact" className={classNameFunc} onClick={handleLinkClick}>Liên hệ</NavLink>
-        {/* Admin link chỉ hiển thị cho admin */}
-        {isAdmin && (
-          <NavLink to="/admin" className={classNameFunc} onClick={handleLinkClick}>Admin</NavLink>
-        )}
-      </>
-    );
   };
 
   return (
@@ -150,7 +150,12 @@ const Header: React.FC = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-1">
-            <NavLinks />
+            <NavLinks
+              isAdmin={isAdmin}
+              onLinkClick={() => setIsMenuOpen(false)}
+              navLinkClass={navLinkClass}
+              mobileNavLinkClass={mobileNavLinkClass}
+            />
           </nav>
 
           {/* Right side buttons - Desktop */}
@@ -200,7 +205,6 @@ const Header: React.FC = () => {
                           </p>
                           <p className="text-xs text-gray-500 truncate">{user.email}</p>
                         </div>
-                        {/* Account/Dashboard Link - Show based on role with finalized naming */}
                         {hasBusinessAccess ? (
                           <Link
                             to="/account"
@@ -230,7 +234,6 @@ const Header: React.FC = () => {
                             </div>
                           </Link>
                         )}
-                        {/* Register Business Link - Only show for regular users (not owner, not staff, not admin) */}
                         {role === 'user' && !hasBusinessAccess && (
                           <Link
                             to="/for-business"
@@ -269,7 +272,6 @@ const Header: React.FC = () => {
                 <NavLink to="/login" className={`${navLinkClass({ isActive: false })} ml-2`}>
                   Đăng nhập
                 </NavLink>
-                {/* "For Business" - Only visible to anonymous users */}
                 {role === 'anonymous' && (
                   <Link
                     to="/for-business"
@@ -282,7 +284,6 @@ const Header: React.FC = () => {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
           <div className="md:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -297,12 +298,16 @@ const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile menu, show/hide based on menu state. */}
       {isMenuOpen && (
         <div className="md:hidden" id="mobile-menu">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <NavLinks mobile />
-            {/* API Status chỉ hiển thị cho admin trong development */}
+            <NavLinks
+              mobile
+              isAdmin={isAdmin}
+              onLinkClick={() => setIsMenuOpen(false)}
+              navLinkClass={navLinkClass}
+              mobileNavLinkClass={mobileNavLinkClass}
+            />
             {isAdmin && (typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'development') && (
               <button onClick={() => { handleHealthCheck(); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-amber-700 hover:bg-amber-100">
                 Check API Status
@@ -312,7 +317,6 @@ const Header: React.FC = () => {
           <div className="pt-4 pb-3 border-t border-gray-200">
             {user && !roleLoading ? (
               <div className="px-2 space-y-1">
-                {/* User Info */}
                 <div className="px-3 py-2 mb-2">
                   <div className="flex items-center gap-3">
                     {profile?.avatarUrl ? (
@@ -332,7 +336,6 @@ const Header: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                {/* Account/Dashboard Link - Show based on role with finalized naming */}
                 {hasBusinessAccess ? (
                   <NavLink
                     to="/account"
@@ -352,7 +355,6 @@ const Header: React.FC = () => {
                     <span>Tài khoản của tôi</span>
                   </NavLink>
                 )}
-                {/* Register Business Link - Only show for regular users */}
                 {role === 'user' && !hasBusinessAccess && (
                   <Link
                     to="/for-business"
@@ -379,7 +381,6 @@ const Header: React.FC = () => {
             ) : (
               <div className="px-2 space-y-1">
                 <NavLink to="/login" className={mobileNavLinkClass} onClick={() => setIsMenuOpen(false)}>Đăng nhập</NavLink>
-                {/* "For Business" - Only visible to anonymous users */}
                 {role === 'anonymous' && (
                   <Link
                     to="/for-business"

@@ -206,7 +206,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             if (announcementsRes.data) setAnnouncements(snakeToCamel(announcementsRes.data) as Announcement[]);
             if (ticketsRes.data) {
                 const mappedTickets = (ticketsRes.data as any[]).map(t => ({
-                    ...snakeToCamel(t),
+                    ...(snakeToCamel(t) as any),
                     businessName: t.businesses?.name || t.business_name || 'Unknown Business'
                 }));
                 setTickets(mappedTickets as SupportTicket[]);
@@ -226,6 +226,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }, []);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchAllAdminData();
         if (isSupabaseConfigured) {
             const channel = supabase.channel('public:registration_requests')

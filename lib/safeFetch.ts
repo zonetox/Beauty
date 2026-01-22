@@ -83,14 +83,15 @@ export async function safeFetch<T>(
       // Race between fetch and timeout
       const result = await Promise.race([fetchFn(), timeoutPromise]);
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       // Don't retry if aborted
       if (signal.aborted) {
         throw new Error('Request aborted');
       }
 
       // Don't retry on timeout (timeout is expected in slow networks)
-      if (error.message === 'Request timeout') {
+      if (errorMessage === 'Request timeout') {
         throw error;
       }
 
@@ -101,33 +102,35 @@ export async function safeFetch<T>(
   try {
     const data = await attemptFetch();
     return { data, error: null };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     // Retry once if enabled and not aborted
-    if (retry && !signal.aborted && error.message !== 'Request timeout') {
+    if (retry && !signal.aborted && errorMessage !== 'Request timeout') {
       // Wait before retry
       await new Promise(resolve => setTimeout(resolve, retryDelay));
 
       try {
         const data = await attemptFetch();
         return { data, error: null };
-      } catch (retryError: any) {
+      } catch (retryError: unknown) {
+        const retryErrorMessage = retryError instanceof Error ? retryError.message : 'Unknown error';
         // Only log fatal errors (not timeouts, not aborted)
-        if (!silent && !retryError.message.includes('timeout') && !retryError.message.includes('aborted')) {
+        if (!silent && !retryErrorMessage.includes('timeout') && !retryErrorMessage.includes('aborted')) {
           if (isDevelopment) {
             console.error('[SafeFetch] Fatal error after retry:', retryError);
           }
         }
-        return { data: null, error: retryError };
+        return { data: null, error: retryError as any };
       }
     }
 
     // Handle timeout gracefully (not an error in slow networks)
-    if (error.message === 'Request timeout') {
+    if (errorMessage === 'Request timeout') {
       return { data: null, error: null }; // Graceful fallback - return null data, no error
     }
 
     // Handle abort gracefully
-    if (error.message === 'Request aborted') {
+    if (errorMessage === 'Request aborted') {
       return { data: null, error: null }; // Graceful fallback
     }
 
@@ -136,7 +139,7 @@ export async function safeFetch<T>(
       console.error('[SafeFetch] Fatal error:', error);
     }
 
-    return { data: null, error };
+    return { data: null, error: error as any };
   }
 }
 
@@ -145,9 +148,9 @@ export async function safeFetch<T>(
  * High priority requests are executed first
  */
 class PriorityQueue {
-  private high: Array<() => Promise<any>> = [];
-  private medium: Array<() => Promise<any>> = [];
-  private low: Array<() => Promise<any>> = [];
+  private high: Array<() => Promise<unknown>> = [];
+  private medium: Array<() => Promise<unknown>> = [];
+  private low: Array<() => Promise<unknown>> = [];
   private running = 0;
   private maxConcurrent = 6; // Max concurrent requests
 
@@ -182,7 +185,7 @@ class PriorityQueue {
 
   private process(): void {
     while (this.running < this.maxConcurrent) {
-      let task: (() => Promise<any>) | undefined;
+      let task: (() => Promise<unknown>) | undefined;
 
       if (this.high.length > 0) {
         task = this.high.shift();

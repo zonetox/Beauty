@@ -1,8 +1,12 @@
 // supabase/functions/approve-registration/index.ts
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-// Fix: Declare the Deno global object to satisfy TypeScript in environments where Deno types are not globally available.
-declare const Deno: any;
+declare const Deno: {
+  env: {
+    get(key: string): string | undefined;
+  };
+  serve(handler: (req: Request) => Promise<Response>): void;
+};
 
 // CORS headers for security - only allow specific origins
 function getCorsHeaders(origin: string | null) {
@@ -13,11 +17,11 @@ function getCorsHeaders(origin: string | null) {
     'http://localhost:5173',
     'http://localhost:3000',
   ];
-  
-  const allowedOrigin = origin && allowedOrigins.includes(origin) 
-    ? origin 
+
+  const allowedOrigin = origin && allowedOrigins.includes(origin)
+    ? origin
     : allowedOrigins[0]; // Default to first allowed origin (production)
-  
+
   return {
     'Access-Control-Allow-Origin': allowedOrigin,
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -49,7 +53,7 @@ interface ApproveRequestBody {
 
 Deno.serve(async (req: Request) => {
   const corsHeaders = getCorsHeaders(req.headers.get('origin'));
-  
+
   // Handle preflight CORS request.
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -58,7 +62,7 @@ Deno.serve(async (req: Request) => {
   try {
     // PHASE 1 FIX: Input validation
     const { requestId }: ApproveRequestBody = await req.json();
-    
+
     // Validate requestId
     if (!requestId || typeof requestId !== 'string' || requestId.trim().length === 0) {
       return createErrorResponse('Invalid request ID. Request ID is required and must be a non-empty string.', 400, req.headers.get('origin'), 'VALIDATION_ERROR');
@@ -75,8 +79,8 @@ Deno.serve(async (req: Request) => {
     // Note: Supabase doesn't allow secrets with SUPABASE_ prefix, so we use SECRET_KEY
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SECRET_KEY') ?? 
-      Deno.env.get('SUPABASE_SECRET') ?? 
+      Deno.env.get('SECRET_KEY') ??
+      Deno.env.get('SUPABASE_SECRET') ??
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
@@ -101,11 +105,11 @@ Deno.serve(async (req: Request) => {
     // 2. Create a new business record based on the request.
     // TRIAL LOGIC: Always start with Premium tier, 30 days trial (ignore requested tier)
     const slug = request.business_name.toLowerCase().replace(/\s+/g, '-') + `-${Date.now()}`;
-    
+
     // Calculate trial expiry date (30 days from now)
     const trialExpiryDate = new Date();
     trialExpiryDate.setDate(trialExpiryDate.getDate() + 30);
-    
+
     const { data: newBusiness, error: businessError } = await supabaseAdmin
       .from('businesses')
       .insert({
@@ -223,7 +227,7 @@ Deno.serve(async (req: Request) => {
       status: 200,
     });
 
-  } catch (error: any) {
-    return createErrorResponse(error.message || 'An unexpected error occurred', 500, req.headers.get('origin'), 'INTERNAL_ERROR');
+  } catch (error: unknown) {
+    return createErrorResponse(error instanceof Error ? error.message : 'An unexpected error occurred', 500, req.headers.get('origin'), 'INTERNAL_ERROR');
   }
 });

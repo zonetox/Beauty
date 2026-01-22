@@ -130,7 +130,7 @@ const DirectoryPage: React.FC = () => {
         fetchBusinesses, loading: contextLoading
     } = useBusinessData();
 
-    const [mapVisibleBusinesses, setMapVisibleBusinesses] = useState<Business[]>([]);
+    // const [mapVisibleBusinesses, setMapVisibleBusinesses] = useState<Business[]>([]); // Refactored to useMemo below
     const [highlightedBusinessId, setHighlightedBusinessId] = useState<number | null>(null);
     const [selectedBusinessId, setSelectedBusinessId] = useState<number | null>(null);
     const [mapBounds, setMapBounds] = useState<{ contains?: (point: [number, number]) => boolean } | null>(null);
@@ -169,8 +169,7 @@ const DirectoryPage: React.FC = () => {
             district: filters.district,
             category: filters.category
         });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [location.search]); // Only depend on location.search to prevent navigation throttling
+    }, [location.search, fetchBusinesses, getFiltersFromUrl]);
 
     // Fast marker filtering for Map (uses the lightweight markers state)
     const filteredMarkers = useMemo(() => {
@@ -242,15 +241,13 @@ const DirectoryPage: React.FC = () => {
     }, [businesses, activeFilters.hasDeals, activeFilters.isVerified, activeFilters.isOpenNow, activeFilters.sort, activeFilters.keyword]);
 
     // List View filtering (depends on Map Bounds if enabled)
-    useEffect(() => {
+    const mapVisibleBusinesses = useMemo(() => {
         if (filterByMap && mapBounds) {
-            const visible = filteredBusinesses.filter(b =>
+            return filteredBusinesses.filter(b =>
                 b.latitude && b.longitude && mapBounds.contains?.([b.latitude, b.longitude])
             );
-            setMapVisibleBusinesses(visible);
-        } else {
-            setMapVisibleBusinesses(filteredBusinesses);
         }
+        return filteredBusinesses;
     }, [mapBounds, filteredBusinesses, filterByMap]);
 
     // Scroll to selected business in the list when a marker is clicked
@@ -360,8 +357,8 @@ const DirectoryPage: React.FC = () => {
                             <button
                                 onClick={() => setViewMode('map')}
                                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'map'
-                                        ? 'bg-primary text-white'
-                                        : 'text-gray-700 hover:bg-gray-100'
+                                    ? 'bg-primary text-white'
+                                    : 'text-gray-700 hover:bg-gray-100'
                                     }`}
                             >
                                 Bản đồ
@@ -369,8 +366,8 @@ const DirectoryPage: React.FC = () => {
                             <button
                                 onClick={() => setViewMode('list')}
                                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'list'
-                                        ? 'bg-primary text-white'
-                                        : 'text-gray-700 hover:bg-gray-100'
+                                    ? 'bg-primary text-white'
+                                    : 'text-gray-700 hover:bg-gray-100'
                                     }`}
                             >
                                 Danh sách

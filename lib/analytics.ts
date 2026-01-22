@@ -45,12 +45,12 @@ export const initAnalytics = () => {
 
 // Track custom events
 // CRITICAL: Tracking is best-effort ONLY. Failures must NEVER surface as errors.
-export const trackEvent = (eventName: string, properties?: Record<string, any>) => {
+export const trackEvent = (eventName: string, properties?: Record<string, unknown>) => {
   if (!isInitialized) {
     // Only show warning in development mode, and only for non-critical events
     // Web vitals are non-critical, so we silently skip them if analytics isn't ready
     if (import.meta.env.MODE === 'development' && !eventName.includes('web_vital') && !eventName.includes('component_')) {
-      console.debug('[Tracking] Analytics not initialized. Event not tracked:', eventName);
+      console.warn('[Tracking] Analytics not initialized. Event not tracked:', eventName);
     }
     return;
   }
@@ -60,7 +60,7 @@ export const trackEvent = (eventName: string, properties?: Record<string, any>) 
     // CRITICAL: Catch ALL errors (network, CORS, adblock, etc.) and silently fail
     if (import.meta.env.MODE === 'development') {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.debug('[Tracking] Event tracking failed (best-effort):', eventName, errorMessage);
+      console.warn('[Tracking] Event tracking failed (best-effort):', eventName, errorMessage);
     }
     // NEVER rethrow - tracking must never affect app flow
   }
@@ -72,7 +72,7 @@ export const isAnalyticsReady = (): boolean => {
 };
 
 // Identify user
-export const identifyUser = (userId: string, properties?: Record<string, any>) => {
+export const identifyUser = (userId: string, properties?: Record<string, unknown>) => {
   if (!isInitialized) {
     return;
   }
@@ -102,14 +102,14 @@ export const trackPageView = (path: string) => {
     // CRITICAL: Catch ALL errors (network, CORS, adblock, etc.) and silently fail
     if (import.meta.env.MODE === 'development') {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.debug('[Tracking] Page view tracking failed (best-effort):', errorMessage);
+      console.warn('[Tracking] Page view tracking failed (best-effort):', errorMessage);
     }
     // NEVER rethrow - tracking must never affect app flow
   }
 };
 
 // Track business actions
-export const trackBusinessAction = (action: string, businessId: number, properties?: Record<string, any>) => {
+export const trackBusinessAction = (action: string, businessId: number, properties?: Record<string, unknown>) => {
   trackEvent('business_action', {
     action,
     business_id: businessId,
@@ -119,7 +119,7 @@ export const trackBusinessAction = (action: string, businessId: number, properti
 
 // Track conversion events
 // CRITICAL: Tracking is best-effort ONLY. Failures must NEVER surface as errors.
-export const trackConversion = (type: string, value?: number, properties?: Record<string, any>) => {
+export const trackConversion = (type: string, value?: number, properties?: Record<string, unknown>) => {
   // trackEvent already has fail-safe error handling
   trackEvent('conversion', {
     conversion_type: type,
@@ -129,7 +129,7 @@ export const trackConversion = (type: string, value?: number, properties?: Recor
 };
 
 // Track booking events
-export const trackBooking = (businessId: number, serviceId?: string, properties?: Record<string, any>) => {
+export const trackBooking = (businessId: number, serviceId?: string, properties?: Record<string, unknown>) => {
   trackEvent('booking', {
     business_id: businessId,
     service_id: serviceId,
@@ -138,7 +138,7 @@ export const trackBooking = (businessId: number, serviceId?: string, properties?
 };
 
 // Track search events
-export const trackSearch = (query: string, filters?: Record<string, any>) => {
+export const trackSearch = (query: string, filters?: Record<string, unknown>) => {
   trackEvent('search', {
     query,
     ...filters,

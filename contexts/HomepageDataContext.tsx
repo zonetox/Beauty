@@ -42,8 +42,8 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
             sections: finalSections,
           };
         }
-      } catch (error) {
-        console.error(`Failed to parse homepage data from localStorage:`, error);
+      } catch {
+        console.error(`Failed to parse homepage data from localStorage`);
       }
     } else {
       // Check cache first
@@ -68,7 +68,7 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
             sections: finalSections,
           };
         }
-      } catch (error) {
+      } catch {
         // Ignore cache parse errors, use default
       }
     }
@@ -87,7 +87,7 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
     // --- CACHE-FIRST: Check for cached homepage data (7-10 min cache) ---
     const cachedData = homepageCacheManager.get();
     if (cachedData !== null) {
-      console.log('✓ Using cached homepage data');
+      if (import.meta.env.MODE === 'development') console.warn('✓ Using cached homepage data');
       setHomepageData(cachedData as HomepageData);
       setLoading(false);
       return;
@@ -117,8 +117,8 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
           };
           setHomepageData(mergedData);
         }
-      } catch (error) {
-        console.error(`Failed to parse homepage data from localStorage:`, error);
+      } catch {
+        console.error(`Failed to parse homepage data from localStorage`);
         setHomepageData(DEFAULT_HOMEPAGE_DATA);
       }
       setLoading(false);
@@ -142,10 +142,10 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
 
         // Performance logging
         const startTime = performance.now();
-        const result = await Promise.race([queryPromise, timeoutPromise]) as any;
+        const result = await Promise.race([queryPromise, timeoutPromise]) as { data: { content_data: unknown } | null; error: { code?: string; message?: string } | null };
         const duration = performance.now() - startTime;
         if (result.error?.code !== 'TIMEOUT') {
-          console.log(`[PERF] Homepage Content: ${duration.toFixed(2)}ms`);
+          if (import.meta.env.MODE === 'development') console.warn(`[PERF] Homepage Content: ${duration.toFixed(2)}ms`);
         }
         data = result.data;
         error = result.error;
@@ -196,11 +196,11 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
             const defaultSections = DEFAULT_HOMEPAGE_DATA.sections;
             let finalSections = savedData.sections || [];
             defaultSections.forEach(defaultSection => {
-              if (!finalSections.find((s: any) => s.type === defaultSection.type)) {
+              if (!finalSections.find((s: HomepageSection) => s.type === defaultSection.type)) {
                 finalSections.push(defaultSection);
               }
             });
-            finalSections = finalSections.map((section: any) => {
+            finalSections = finalSections.map((section: HomepageSection) => {
               const defaultMatch = defaultSections.find(s => s.type === section.type);
               return { ...defaultMatch, ...section };
             });
@@ -210,8 +210,8 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
               sections: finalSections,
             };
             setHomepageData(mergedData);
-          } catch (e) {
-            console.error('Failed to parse cached data:', e);
+          } catch {
+            console.error('Failed to parse cached data');
             setHomepageData(DEFAULT_HOMEPAGE_DATA);
           }
         } else {
@@ -223,11 +223,11 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
         const defaultSections = DEFAULT_HOMEPAGE_DATA.sections;
         let finalSections = dbData.sections || [];
         defaultSections.forEach(defaultSection => {
-          if (!finalSections.find((s: any) => s.type === defaultSection.type)) {
+          if (!finalSections.find((s: HomepageSection) => s.type === defaultSection.type)) {
             finalSections.push(defaultSection);
           }
         });
-        finalSections = finalSections.map((section: any) => {
+        finalSections = finalSections.map((section: HomepageSection) => {
           const defaultMatch = defaultSections.find(s => s.type === section.type);
           return { ...defaultMatch, ...section };
         });
@@ -242,8 +242,8 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
         // Cache in localStorage for offline/fallback
         try {
           localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mergedData));
-        } catch (e) {
-          console.warn('Failed to cache homepage data:', e);
+        } catch {
+          console.warn('Failed to cache homepage data');
         }
       } else {
         setHomepageData(DEFAULT_HOMEPAGE_DATA);
@@ -273,8 +273,7 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
     }, 1000);
 
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only run once on mount
+  }, [fetchHomepageData]); // Only run once on mount (fetchHomepageData is stable)
 
   const updateHomepageData = async (newData: HomepageData) => {
     setHomepageData(newData);
@@ -283,8 +282,8 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
       // Fallback to localStorage if Supabase not configured
       try {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
-      } catch (error) {
-        console.error(`Failed to save homepage data to localStorage:`, error);
+      } catch {
+        console.error(`Failed to save homepage data to localStorage`);
       }
       return;
     }
@@ -295,6 +294,7 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
         .from('page_content')
         .upsert({
           page_name: 'homepage',
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           content_data: newData as any,
         }, {
           onConflict: 'page_name',
@@ -305,8 +305,8 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
         // Fallback to localStorage
         try {
           localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
-        } catch (e) {
-          console.error('Failed to save to localStorage:', e);
+        } catch {
+          console.error('Failed to save to localStorage');
         }
       } else {
         // Cache in localStorage for offline/fallback
@@ -321,8 +321,8 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
       // Fallback to localStorage
       try {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
-      } catch (e) {
-        console.error('Failed to save to localStorage:', e);
+      } catch {
+        console.error('Failed to save to localStorage');
       }
     }
   };

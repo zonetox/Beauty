@@ -129,7 +129,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           .eq('id', 1)
           .maybeSingle();
 
-        const settings = data?.settings_data as any;
+        const settings = data?.settings_data as { theme?: ThemeSettings } | null;
         if (!error && settings?.theme) {
           // Merge with default to ensure new properties are not missing
           setTheme({ ...DEFAULT_THEME, ...settings.theme });
@@ -183,7 +183,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           .maybeSingle();
 
         const updatedSettings = {
-          ...(currentSettings?.settings_data as Record<string, any> || {}),
+          ...(currentSettings?.settings_data as Record<string, unknown> || {}),
           theme: newTheme,
         };
 
@@ -191,7 +191,8 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         const { error } = await supabase
           .from('app_settings')
           .upsert(
-            { id: 1, settings_data: updatedSettings } as any,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            { id: 1, settings_data: updatedSettings as any },
             { onConflict: 'id' }
           );
 

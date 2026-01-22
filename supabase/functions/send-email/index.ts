@@ -3,7 +3,12 @@
 // An explicit declaration is sometimes necessary to resolve TypeScript errors.
 
 // Fix: Declare Deno to make it available in the TS context.
-declare const Deno: any;
+declare const Deno: {
+  env: {
+    get(key: string): string | undefined;
+  };
+  serve(handler: (req: Request) => Promise<Response>): void;
+};
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 
@@ -16,11 +21,11 @@ function getCorsHeaders(origin: string | null) {
     'http://localhost:5173',
     'http://localhost:3000',
   ];
-  
-  const allowedOrigin = origin && allowedOrigins.includes(origin) 
-    ? origin 
+
+  const allowedOrigin = origin && allowedOrigins.includes(origin)
+    ? origin
     : allowedOrigins[0]; // Default to first allowed origin (production)
-  
+
   return {
     'Access-Control-Allow-Origin': allowedOrigin,
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -53,9 +58,9 @@ Deno.serve(async (req: Request) => {
   // This is essential for browser security and must return 200 OK
   if (req.method === "OPTIONS") {
     const corsHeaders = getCorsHeaders(req.headers.get('origin'));
-    return new Response(null, { 
+    return new Response(null, {
       status: 200,
-      headers: corsHeaders 
+      headers: corsHeaders
     });
   }
 
@@ -67,7 +72,7 @@ Deno.serve(async (req: Request) => {
 
     // Validate that all required fields are present.
     if (!to || !subject || !html) {
-        throw new Error("Missing required fields: to, subject, html");
+      throw new Error("Missing required fields: to, subject, html");
     }
 
     // Call the Resend API to send the email.
@@ -91,8 +96,8 @@ Deno.serve(async (req: Request) => {
 
     // Check if the Resend API call was successful.
     if (!res.ok) {
-        console.error("Resend API Error:", data);
-        throw new Error(data.message || "Failed to send email");
+      console.error("Resend API Error:", data);
+      throw new Error(data.message || "Failed to send email");
     }
 
     // Return the successful response, including CORS headers.
@@ -103,8 +108,8 @@ Deno.serve(async (req: Request) => {
       }
     });
 
-  } catch (error: any) { // Fix: Add explicit type for the catch clause variable to align with modern TypeScript standards.
+  } catch (error: unknown) { // Fix: Add explicit type for the catch clause variable to align with modern TypeScript standards.
     // Handle any errors that occur during the process and return a helpful message.
-    return createErrorResponse(error.message || 'An unexpected error occurred', 400, req.headers.get('origin'), 'BAD_REQUEST');
+    return createErrorResponse(error instanceof Error ? error.message : 'An unexpected error occurred', 400, req.headers.get('origin'), 'BAD_REQUEST');
   }
 });

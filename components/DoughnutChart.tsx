@@ -15,17 +15,18 @@ const DoughnutChart: React.FC<{ data: ChartDataPoint[], title: string }> = ({ da
             </div>
         );
     }
-    
-    const totalValue = data.reduce((sum, item) => sum + (item.value || 0), 0);
-    let cumulativePercent = 0;
 
+    const totalValue = data.reduce((sum, item) => sum + (item.value || 0), 0);
     const segments = data.map((item, index) => {
         const value = item.value || 0;
         const percent = totalValue > 0 ? (value / totalValue) : 0;
         const dashArray = 2 * Math.PI * 40; // Circumference of the circle
         const dashOffset = Math.max(dashArray * (1 - percent), 0);
-        const rotation = Math.max(cumulativePercent * 360, 0);
-        cumulativePercent += percent;
+
+        // Calculate cumulative percent using slice and reduce to avoid reassigning a variable during render
+        const previousSegments = data.slice(0, index);
+        const previousTotal = previousSegments.reduce((sum, prevItem) => sum + (prevItem.value || 0), 0);
+        const rotation = totalValue > 0 ? (previousTotal / totalValue) * 360 : 0;
 
         // Ensure all values are finite
         const safePercent = isFinite(percent) ? percent : 0;
@@ -62,11 +63,11 @@ const DoughnutChart: React.FC<{ data: ChartDataPoint[], title: string }> = ({ da
                                 strokeDashoffset={segment.dashOffset}
                                 transform={`rotate(${segment.rotation} 50 50)`}
                             >
-                              <title>{`${segment.label}: ${segment.value} (${(segment.percent * 100).toFixed(1)}%)`}</title>
+                                <title>{`${segment.label}: ${segment.value} (${(segment.percent * 100).toFixed(1)}%)`}</title>
                             </circle>
                         ))}
                     </svg>
-                     <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="absolute inset-0 flex items-center justify-center">
                         <div className="text-center">
                             <p className="text-2xl font-bold text-neutral-dark">{totalValue}</p>
                             <p className="text-xs text-gray-500">Total</p>
@@ -79,7 +80,7 @@ const DoughnutChart: React.FC<{ data: ChartDataPoint[], title: string }> = ({ da
                             <li key={index} className="flex items-center text-sm">
                                 <span className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: segment.color }}></span>
                                 <span className="font-semibold text-neutral-dark">{segment.label}:</span>
-                                <span className="ml-auto text-gray-600">{segment.value} ({ (segment.percent * 100).toFixed(1) }%)</span>
+                                <span className="ml-auto text-gray-600">{segment.value} ({(segment.percent * 100).toFixed(1)}%)</span>
                             </li>
                         ))}
                     </ul>

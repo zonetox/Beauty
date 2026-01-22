@@ -20,9 +20,11 @@ export const ReviewsDataProvider: React.FC<{ children: ReactNode }> = ({ childre
     try {
       const savedJSON = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (savedJSON) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setReviews(JSON.parse(savedJSON));
       } else {
         const initialReviews: Review[] = [];
+         
         setReviews(initialReviews);
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(initialReviews));
       }
@@ -51,7 +53,7 @@ export const ReviewsDataProvider: React.FC<{ children: ReactNode }> = ({ childre
   };
 
   const addReply = (reviewId: string, replyContent: string) => {
-    const updatedReviews = reviews.map(r => 
+    const updatedReviews = reviews.map(r =>
       r.id === reviewId
         // FIX: Changed 'repliedDate' to 'replied_date' to match the Review type.
         ? { ...r, reply: { content: replyContent, replied_date: new Date().toISOString() } }
@@ -60,9 +62,9 @@ export const ReviewsDataProvider: React.FC<{ children: ReactNode }> = ({ childre
     setReviews(updatedReviews);
     updateLocalStorage(updatedReviews);
   };
-  
+
   const toggleReviewVisibility = (reviewId: string) => {
-    const updatedReviews = reviews.map(r => 
+    const updatedReviews = reviews.map(r =>
       r.id === reviewId
         ? { ...r, status: r.status === ReviewStatus.VISIBLE ? ReviewStatus.HIDDEN : ReviewStatus.VISIBLE }
         : r

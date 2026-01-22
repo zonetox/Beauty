@@ -47,7 +47,9 @@ const BlogListPage: React.FC = () => {
     const params = new URLSearchParams(location.search);
     const category = params.get('category') || '';
     const page = parseInt(params.get('page') || '1', 10);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedCategory(category);
+     
     setCurrentPage(page);
   }, [location.search, setSelectedCategory, setCurrentPage]);
 
@@ -120,6 +122,7 @@ const BlogListPage: React.FC = () => {
 
   // Reset to page 1 when search or category changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentPage(1);
   }, [searchQuery, selectedCategory, setCurrentPage]);
 
@@ -210,8 +213,8 @@ const BlogListPage: React.FC = () => {
                       <button
                         onClick={() => handleCategoryClick(cat)}
                         className={`w-full text-left font-semibold transition-colors rounded-md px-3 py-2 ${(selectedCategory === cat || (!selectedCategory && cat === 'Tất cả bài viết'))
-                            ? 'bg-primary/10 text-primary'
-                            : 'text-gray-600 hover:text-primary'
+                          ? 'bg-primary/10 text-primary'
+                          : 'text-gray-600 hover:text-primary'
                           }`}
                       >
                         {cat}

@@ -19,18 +19,18 @@ export interface SessionState {
 export async function checkSessionOnce(): Promise<SessionState> {
   try {
     const { data, error } = await supabase.auth.getSession();
-    
+
     if (error) {
       // Handle invalid refresh token
-      if (error.message.includes('Invalid Refresh Token') || 
-          error.message.includes('Refresh Token Not Found')) {
+      if (error.message.includes('Invalid Refresh Token') ||
+        error.message.includes('Refresh Token Not Found')) {
         // Clear invalid session
         await supabase.auth.signOut().catch(() => {
           // Ignore signOut errors
         });
         return { session: null, user: null, loading: false };
       }
-      
+
       // Other errors
       return { session: null, user: null, loading: false };
     }
@@ -40,7 +40,7 @@ export async function checkSessionOnce(): Promise<SessionState> {
       user: data.session?.user ?? null,
       loading: false
     };
-  } catch (error) {
+  } catch {
     // Network or other errors
     return { session: null, user: null, loading: false };
   }
@@ -62,7 +62,7 @@ export async function getUserProfile(userId: string) {
       // Attempt to create (trigger may have failed)
       const { data: newProfile, error: insertError } = await supabase
         .from('profiles')
-        .insert({ 
+        .insert({
           id: userId,
           email: null, // Will be updated from auth.users
           full_name: null

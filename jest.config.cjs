@@ -1,6 +1,7 @@
 // G1.1 - Jest Configuration
 // Tuân thủ Master Plan v1.1
 
+/* eslint-disable @typescript-eslint/no-require-imports */
 const path = require('path');
 
 // Get absolute path to Beauty-main directory
@@ -104,5 +105,4 @@ module.exports = {
   ],
   extensionsToTreatAsEsm: [],
   // Add globals for import.meta support
-  ]
 };

@@ -6,8 +6,8 @@ interface UserAuthContextType {
   session: Session | null;
   currentUser: User | null;
   loading: boolean;
-  login: (email: string, pass: string) => Promise<any>;
-  logout: () => Promise<any>;
+  login: (email: string, pass: string) => Promise<void>;
+  logout: () => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (newPass: string) => Promise<void>;
 }
@@ -45,7 +45,9 @@ export const UserAuthProvider: React.FC<{ children: ReactNode }> = ({ children }
         // The user is now in a temporary session to update their password.
         // The routing from the email link (`/#/reset-password`) will direct them to the correct page.
         if (_event === 'PASSWORD_RECOVERY') {
-          console.log("User is in password recovery mode.");
+          if (import.meta.env.MODE === 'development') {
+            console.warn("User is in password recovery mode.");
+          }
         }
       }
     );

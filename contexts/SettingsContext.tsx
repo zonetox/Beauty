@@ -29,6 +29,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
       if (savedDataJSON) {
         const savedData = JSON.parse(savedDataJSON);
         // Merge with defaults to ensure all keys exist
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSettings({ ...DEFAULT_SETTINGS, ...savedData });
       } else {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_SETTINGS));

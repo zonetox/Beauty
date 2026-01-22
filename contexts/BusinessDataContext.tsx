@@ -205,8 +205,8 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
           console.error('Error fetching business details:', fetchError.message);
           toast.error('Failed to load businesses');
         } else if (orderedFullData && orderedFullData.length > 0) {
-          const mapped = snakeToCamel(orderedFullData).map((b: any) => ({
-            ...b,
+          const mapped = (snakeToCamel(orderedFullData) as any[]).map((b) => ({
+            ...(b as Business),
             services: [],
             gallery: [],
             team: [],
@@ -230,7 +230,8 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
 
           const { count, error: countError } = await countQuery;
           const countDuration = performance.now() - countStartTime;
-          console.log(`[PERF] Businesses Count: ${countDuration.toFixed(2)}ms`);
+          // eslint-disable-next-line no-console
+          if (import.meta.env.MODE === 'development') console.warn(`[PERF] Businesses Count: ${countDuration.toFixed(2)}ms`);
           if (!countError && count !== null) {
             setTotalBusinesses(count);
           } else {
@@ -268,12 +269,13 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
         .range(from, to);
 
       if (error) {
-        console.error('Error fetching businesses:', error.message);
-        // Don't show toast during initial load - silent fail with cache fallback
+        // eslint-disable-next-line no-console
+        if (import.meta.env.MODE === 'development') console.warn('Error fetching search results (best-effort):', error.message);
+        // Fallback to cache or empty if search fails
         // toast.error('Failed to load businesses');
       } else if (data) {
-        const mapped = snakeToCamel(data).map((b: any) => ({
-          ...b,
+        const mapped = (snakeToCamel(data) as any[]).map((b) => ({
+          ...(b as Business),
           services: [],
           gallery: [],
           team: [],
@@ -326,8 +328,8 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
         setBusinesses([]);
         setTotalBusinesses(0);
       } else if (businessesResult.data) {
-        const mapped = snakeToCamel(businessesResult.data).map((b: any) => ({
-          ...b,
+        const mapped = (snakeToCamel(businessesResult.data) as any[]).map((b) => ({
+          ...(b as Business),
           services: [],
           gallery: [],
           team: [],
@@ -432,7 +434,8 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
         try {
           const result = await Promise.race([queryPromise, createTimeoutPromise(timeoutMs, `${name} timeout`)]);
           const duration = performance.now() - startTime;
-          console.log(`[PERF] ${name}: ${duration.toFixed(2)}ms`);
+          // eslint-disable-next-line no-console
+          console.warn(`[PERF] ${name}: ${duration.toFixed(2)}ms`);
           return result as T;
         } catch (error: unknown) {
           // Silent timeout - has fallback to cache/empty data
@@ -456,9 +459,9 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       ]);
 
       // Helper to check if error is a timeout
-      const isTimeoutError = (error: any): boolean => {
+      const isTimeoutError = (error: unknown): boolean => {
         if (!error) return false;
-        const msg = error.message || error.toString() || '';
+        const msg = (error as { message?: string }).message || error.toString() || '';
         return msg.toLowerCase().includes('timeout') || msg.includes('TIMEOUT');
       };
 
@@ -477,7 +480,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       if (markersResult.status === 'fulfilled') {
         const markerData = markersResult.value as any;
         if (markerData?.data) {
-          const markers = snakeToCamel(markerData.data);
+          const markers = snakeToCamel(markerData.data) as any[];
           setBusinessMarkers(markers);
           // Cache markers: 1 hour
           cacheManager.set(CACHE_KEYS.MARKERS, markers, CACHE_TTL.MARKERS);
@@ -519,7 +522,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       }
 
       // Process categories
-      let catRes: any = { error: null, data: null };
+      let catRes: { error: { message: string } | null; data: unknown } = { error: null, data: null };
       if (catResult.status === 'fulfilled') {
         const result = catResult.value as any;
         catRes = result;
@@ -541,7 +544,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       }
 
       // Process packages
-      let pkgRes: any = { error: null, data: null };
+      let pkgRes: { error: { message: string } | null; data: unknown } = { error: null, data: null };
       if (pkgResult.status === 'fulfilled') {
         const result = pkgResult.value as any;
         pkgRes = result;
@@ -607,8 +610,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     if (hasFetchedRef.current) return;
     hasFetchedRef.current = true;
     fetchCriticalData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only fetch critical data on mount
+  }, [fetchCriticalData]); // Only fetch critical data on mount
 
   // NON-CRITICAL DATA: Lazy-load after app initialization (blog posts, categories, markers, packages)
   useEffect(() => {
@@ -619,8 +621,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     }, 2000); // 2 seconds delay to let app initialize first
 
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Lazy-load non-critical data after app initialization
+  }, [fetchNonCriticalData]); // Lazy-load non-critical data after app initialization
 
   // --- BUSINESS LOGIC ---
   /**
@@ -630,7 +631,8 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
    */
   const addBusiness = async (newBusiness: Business): Promise<Business | null> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add business."); return null; }
-    const { id, services, gallery, team, deals, reviews, ...businessData } = newBusiness;
+    const { id: _id, services: _services, gallery: _gallery, team: _team, deals: _deals, reviews: _reviews, ...businessData } = newBusiness;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await supabase.from('businesses').insert(toSnakeCase(businessData) as any).select().single();
     if (error) { console.error('Error adding business:', error.message); return null; }
     if (data) {
@@ -645,7 +647,8 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
 
   const updateBusiness = async (updatedBusiness: Business) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update business."); return; }
-    const { id, services, gallery, team, deals, reviews, ...businessToUpdate } = updatedBusiness;
+    const { id, services: _services, gallery: _gallery, team: _team, deals: _deals, reviews: _reviews, ...businessToUpdate } = updatedBusiness;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await supabase.from('businesses').update(toSnakeCase(businessToUpdate) as any).eq('id', id);
     if (error) {
       console.error('Error updating business:', error.message);
@@ -688,17 +691,17 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
    * @returns Promise resolving to Business object or null if not found
    */
   const fetchBusinessBySlug = useCallback(async (slug: string): Promise<Business | null> => {
-    console.log('[fetchBusinessBySlug] Starting fetch for slug:', slug);
+    if (import.meta.env.MODE === 'development') console.warn('[fetchBusinessBySlug] Starting fetch for slug:', slug);
 
     if (!isSupabaseConfigured) {
-      console.log('[fetchBusinessBySlug] Supabase not configured, using cached data');
+      if (import.meta.env.MODE === 'development') console.warn('[fetchBusinessBySlug] Supabase not configured, using cached data');
       // Fallback to businesses list if available
       const cached = businessesRef.current.find(b => b.slug === slug);
       return cached || null;
     }
 
     // 1. Fetch the main business record with selective fields
-    console.log('[fetchBusinessBySlug] Fetching business data from database...');
+    if (import.meta.env.MODE === 'development') console.warn('[fetchBusinessBySlug] Fetching business data from database...');
     const { data: businessData, error: businessError } = await supabase
       .from('businesses')
       .select('id, slug, name, logo_url, image_url, slogan, categories, address, city, district, ward, latitude, longitude, tags, phone, email, website, youtube_url, rating, review_count, view_count, membership_tier, membership_expiry_date, is_verified, is_active, is_featured, joined_date, description, working_hours, socials, seo, notification_settings, hero_slides, hero_image_url, staff, owner_id')
@@ -709,15 +712,15 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       console.error("[fetchBusinessBySlug] Error fetching business details:", businessError?.message, businessError);
       // Fallback to cached businesses list
       const cached = businessesRef.current.find(b => b.slug === slug);
-      console.log('[fetchBusinessBySlug] Using cached data:', cached ? cached.name : 'Not found');
+      if (import.meta.env.MODE === 'development') console.warn('[fetchBusinessBySlug] Using cached data:', cached ? cached.name : 'Not found');
       return cached || null;
     }
 
-    console.log('[fetchBusinessBySlug] Business found:', businessData.name, 'ID:', businessData.id);
+    if (import.meta.env.MODE === 'development') console.warn('[fetchBusinessBySlug] Business found:', businessData.name, 'ID:', businessData.id);
 
     // 2. Parallel fetch for relations with selective fields
     const businessId = businessData.id;
-    console.log('[fetchBusinessBySlug] Fetching related data for business ID:', businessId);
+    if (import.meta.env.MODE === 'development') console.warn('[fetchBusinessBySlug] Fetching related data for business ID:', businessId);
     const [servicesRes, mediaRes, teamRes, dealsRes, reviewsRes] = await Promise.all([
       supabase.from('services')
         .select('id, business_id, name, price, description, image_url, duration_minutes, position')
@@ -746,7 +749,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     if (dealsRes.error) console.error('[fetchBusinessBySlug] Deals error:', dealsRes.error.message);
     if (reviewsRes.error) console.error('[fetchBusinessBySlug] Reviews error:', reviewsRes.error.message);
 
-    console.log('[fetchBusinessBySlug] Related data counts:', {
+    if (import.meta.env.MODE === 'development') console.warn('[fetchBusinessBySlug] Related data counts:', {
       services: servicesRes.data?.length || 0,
       media: mediaRes.data?.length || 0,
       team: teamRes.data?.length || 0,
@@ -756,15 +759,15 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
 
     // 3. Assemble full object
     const fullBusiness: Business = {
-      ...snakeToCamel(businessData) as Business,
-      services: (servicesRes.data || []).map((s: any) => snakeToCamel(s) as Service),
-      gallery: (mediaRes.data || []).map((m: any) => snakeToCamel(m) as MediaItem), // Map to 'gallery'
-      team: (teamRes.data || []).map((t: any) => snakeToCamel(t) as TeamMember),
-      deals: (dealsRes.data || []).map((d: any) => snakeToCamel(d) as Deal),
-      reviews: (reviewsRes.data || []).map((r: any) => snakeToCamel(r) as Review)
+      ...snakeToCamel(businessData) as unknown as Business,
+      services: (servicesRes.data || []).map((s: Record<string, unknown>) => snakeToCamel(s) as unknown as Service),
+      gallery: (mediaRes.data || []).map((m: Record<string, unknown>) => snakeToCamel(m) as unknown as MediaItem), // Map to 'gallery'
+      team: (teamRes.data || []).map((t: Record<string, unknown>) => snakeToCamel(t) as unknown as TeamMember),
+      deals: (dealsRes.data || []).map((d: Record<string, unknown>) => snakeToCamel(d) as unknown as Deal),
+      reviews: (reviewsRes.data || []).map((r: Record<string, unknown>) => snakeToCamel(r) as unknown as Review)
     };
 
-    console.log('[fetchBusinessBySlug] Full business object assembled:', fullBusiness.name, {
+    if (import.meta.env.MODE === 'development') console.warn('[fetchBusinessBySlug] Full business object assembled:', fullBusiness.name, {
       servicesCount: fullBusiness.services?.length || 0,
       galleryCount: fullBusiness.gallery?.length || 0,
       dealsCount: fullBusiness.deals?.length || 0,
@@ -782,7 +785,8 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       if (error) {
         // CRITICAL: Tracking failures are silent - only debug log in development
         if (import.meta.env.MODE === 'development') {
-          console.debug('[Tracking] Business view count increment failed (best-effort):', error.message);
+          // eslint-disable-next-line no-console
+          console.warn('[Tracking] Business view count increment failed (best-effort):', error.message);
         }
       } else {
         // Optimistically update UI
@@ -792,7 +796,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       // CRITICAL: Catch ALL errors (network, CORS, adblock, etc.) and silently fail
       if (import.meta.env.MODE === 'development') {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        console.debug('[Tracking] Business view count increment failed (best-effort):', errorMessage);
+        console.warn('[Tracking] Business view count increment failed (best-effort):', errorMessage);
       }
       // NEVER rethrow - tracking must never affect app flow
     }
@@ -1240,7 +1244,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       if (error) {
         // CRITICAL: Tracking failures are silent - only debug log in development
         if (import.meta.env.MODE === 'development') {
-          console.debug('[Tracking] Blog view count increment failed (best-effort):', error.message);
+          console.warn('[Tracking] Blog view count increment failed (best-effort):', error.message);
         }
       } else {
         // Optimistically update UI
@@ -1250,7 +1254,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       // CRITICAL: Catch ALL errors (network, CORS, adblock, etc.) and silently fail
       if (import.meta.env.MODE === 'development') {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        console.debug('[Tracking] Blog view count increment failed (best-effort):', errorMessage);
+        console.warn('[Tracking] Blog view count increment failed (best-effort):', errorMessage);
       }
       // NEVER rethrow - tracking must never affect app flow
     }
@@ -1456,7 +1460,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
    */
   const updatePackage = async (packageId: string, updates: Partial<MembershipPackage>): Promise<void> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update package."); return; }
-    const mappedUpdates: any = {};
+    const mappedUpdates: Record<string, unknown> = {};
     if (updates.name !== undefined) mappedUpdates.name = updates.name;
     if (updates.tier !== undefined) mappedUpdates.tier = updates.tier;
     if (updates.price !== undefined) mappedUpdates.price = updates.price;

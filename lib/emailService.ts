@@ -89,11 +89,11 @@ export async function sendTemplatedEmail(
       success: true,
       messageId,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Email service error:', error);
     return {
       success: false,
-      error: error.message || 'Unknown error sending email',
+      error: error instanceof Error ? error.message : 'Unknown error sending email',
     };
   }
 }
@@ -149,11 +149,11 @@ export async function sendSimpleEmail(
       success: true,
       messageId,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Email service error:', error);
     return {
       success: false,
-      error: error.message || 'Unknown error sending email',
+      error: error instanceof Error ? error.message : 'Unknown error sending email',
     };
   }
 }

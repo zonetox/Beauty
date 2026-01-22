@@ -113,7 +113,7 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
 
     // Promise for Business Owner Check (only if linked)
     // Explicitly cast to PromiseLike to satisfy Promise.all type requirements with Supabase v2
-    let ownerCheck: PromiseLike<{ data: { id: number; owner_id: string } | null; error: any }> = Promise.resolve({ data: null, error: null });
+    let ownerCheck: PromiseLike<{ data: { id: number; owner_id: string } | null; error: unknown }> = Promise.resolve({ data: null, error: null });
 
     if (profile.business_id) {
       ownerCheck = supabase

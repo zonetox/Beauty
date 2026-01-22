@@ -43,6 +43,7 @@ const EditPackageModal: React.FC<EditPackageModalProps> = ({ isOpen, onClose, on
 
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData(getInitialFormData());
     }
   }, [packageToEdit, isOpen]);

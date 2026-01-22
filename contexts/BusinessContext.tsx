@@ -51,14 +51,14 @@ interface BusinessContextType {
 
 const BusinessContext = createContext<BusinessContextType | undefined>(undefined);
 
-const toSnakeCase = (obj: any): any => {
+const toSnakeCase = <T,>(obj: T): T => {
   if (typeof obj !== 'object' || obj === null) return obj;
-  if (Array.isArray(obj)) return obj.map(toSnakeCase);
-  return Object.keys(obj).reduce((acc: any, key: string) => {
+  if (Array.isArray(obj)) return obj.map(toSnakeCase) as unknown as T;
+  return Object.keys(obj as object).reduce((acc: Record<string, unknown>, key: string) => {
     const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-    acc[snakeKey] = toSnakeCase(obj[key]);
+    acc[snakeKey] = toSnakeCase((obj as any)[key]);
     return acc;
-  }, {});
+  }, {}) as unknown as T;
 };
 
 export function BusinessProvider({ children }: { children: ReactNode }) {
@@ -185,20 +185,20 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
 
     // Calculate analytics from database data (C3.10: Migrated from mock data, Phase 2.2: Added conversions)
     if (businessesRes.data && reviewsRes.data && appointmentsRes.data && ordersRes.data) {
-      const analytics: BusinessAnalytics[] = businessesRes.data.map((business: any) => {
+      const analytics: BusinessAnalytics[] = businessesRes.data.map((business: { id: number }) => {
         const businessId = business.id;
-        const businessReviews = reviewsRes.data.filter((r: any) => r.business_id === businessId);
-        const businessAppointments = appointmentsRes.data.filter((a: any) => a.business_id === businessId);
-        const businessOrders = ordersRes.data.filter((o: any) => o.business_id === businessId);
+        const businessReviews = reviewsRes.data.filter((r: { business_id: number | null }) => r.business_id === businessId);
+        const businessAppointments = appointmentsRes.data.filter((a: { business_id: number | null }) => a.business_id === businessId);
+        const businessOrders = ordersRes.data.filter((o: { business_id: number | null }) => o.business_id === businessId);
 
         // Get page views for this business (from page_views table where page_id = businessId or page_type = 'business')
-        const businessPageViews = pageViewsRes.data?.filter((pv: any) =>
+        const businessPageViews = (pageViewsRes.data as any[])?.filter((pv: any) =>
           (pv.page_type === 'business' && pv.page_id === String(businessId)) ||
           (pv.business_id === businessId)
         ) || [];
 
         // Get conversions for this business
-        const businessConversions = conversionsRes.data?.filter((c: any) => c.business_id === businessId) || [];
+        const businessConversions = (conversionsRes.data as any[])?.filter((c: any) => c.business_id === businessId) || [];
 
         // Calculate time series for last 30 days
         const timeSeries: AnalyticsDataPoint[] = [];
@@ -291,8 +291,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       setAppointmentsLoading(false);
       setAnalyticsLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.businessId, profileLoading]); // Depend on profileLoading to wait for auth check
+  }, [profile?.businessId, profileLoading, fetchAllData]); // Depend on profileLoading to wait for auth check
 
   // --- LOGIC (copied from old BusinessBlogDataContext) ---
   const addPost = async (newPostData: Omit<BusinessBlogPost, 'id' | 'slug' | 'createdDate' | 'viewCount'>) => {
@@ -306,7 +305,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       slug: slug,
       view_count: 0,
     };
-    const { error } = await supabase.from('business_blog_posts').insert(postToAdd);
+    const { error } = await supabase.from('business_blog_posts').insert(postToAdd as any);
     if (error) {
       console.error("Error adding business post:", error.message);
       toast.error(`Failed to add post: ${error.message}`);
@@ -335,7 +334,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     }
 
     const { id, ...postToUpdate } = updatedPost;
-    const { error } = await supabase.from('business_blog_posts').update(toSnakeCase(postToUpdate)).eq('id', id);
+    const { error } = await supabase.from('business_blog_posts').update(toSnakeCase(postToUpdate) as any).eq('id', id);
     if (error) {
       console.error("Error updating business post:", error.message);
       toast.error(`Failed to update post: ${error.message}`);
@@ -443,7 +442,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
   const addAppointment = async (newAppointmentData: Omit<Appointment, 'id' | 'createdAt'>) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add appointment."); throw new Error("Preview Mode"); }
     const appointmentToAdd = toSnakeCase(newAppointmentData);
-    const { error } = await supabase.from('appointments').insert(appointmentToAdd);
+    const { error } = await supabase.from('appointments').insert(appointmentToAdd as any);
     if (error) {
       console.error("Error adding appointment:", error.message);
       throw error;

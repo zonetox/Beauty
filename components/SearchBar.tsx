@@ -28,7 +28,7 @@ function useDebounce<T,>(value: T, delay: number): T {
       clearTimeout(handler);
     };
   }, [value, delay]); // Re-run effect if value or delay changes. Using `value` directly is safe
-                      // as long as the state updates create a new object/value, which they do.
+  // as long as the state updates create a new object/value, which they do.
 
   return debouncedValue;
 }
@@ -37,7 +37,7 @@ function useDebounce<T,>(value: T, delay: number): T {
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch, categories, locations, locationsHierarchy, showTitle = false, isLoading = false }) => {
   const locationUrl = useLocation();
   const navigate = useNavigate();
-  
+
   const getFiltersFromUrl = () => {
     const params = new URLSearchParams(locationUrl.search);
     return {
@@ -51,25 +51,28 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, categories, locations, 
   const [filters, setFilters] = useState(getFiltersFromUrl());
   const [districts, setDistricts] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  
+
   // Debounce the entire filters object. This will trigger a search 500ms after the user stops changing any filter.
   const debouncedFilters = useDebounce(filters, 500);
-  
+
   // Effect to update available districts when city (location) changes
   useEffect(() => {
-      if (filters.location && locationsHierarchy) {
-          setDistricts(locationsHierarchy[filters.location] || []);
-      } else {
-          setDistricts([]);
-      }
-      // If city is cleared, also clear district
-      if (!filters.location) {
-          setFilters(prev => ({ ...prev, district: '' }));
-      }
+    if (filters.location && locationsHierarchy) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setDistricts(locationsHierarchy[filters.location] || []);
+    } else {
+      setDistricts([]);
+    }
+    // If city is cleared, also clear district
+    if (!filters.location) {
+       
+      setFilters(prev => ({ ...prev, district: '' }));
+    }
   }, [filters.location, locationsHierarchy]);
 
   // Effect to sync component state with URL when it changes (e.g., back/forward buttons)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFilters(getFiltersFromUrl());
   }, [locationUrl.search]);
 
@@ -77,14 +80,14 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, categories, locations, 
   useEffect(() => {
     // Only apply debounce search on the directory page where onSearch is handled.
     if (locationUrl.pathname.startsWith('/directory')) {
-        const currentUrlFilters = getFiltersFromUrl();
-        // Check if the debounced filters have actually changed compared to the current URL.
-        // This prevents firing a search on initial load or after a search has already been performed and the URL is updated.
-        const hasChanged = JSON.stringify(debouncedFilters) !== JSON.stringify(currentUrlFilters);
+      const currentUrlFilters = getFiltersFromUrl();
+      // Check if the debounced filters have actually changed compared to the current URL.
+      // This prevents firing a search on initial load or after a search has already been performed and the URL is updated.
+      const hasChanged = JSON.stringify(debouncedFilters) !== JSON.stringify(currentUrlFilters);
 
-        if (hasChanged) {
-            onSearch(debouncedFilters);
-        }
+      if (hasChanged) {
+        onSearch(debouncedFilters);
+      }
     }
   }, [debouncedFilters, onSearch, locationUrl.pathname]);
 
@@ -93,19 +96,19 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, categories, locations, 
 
     // Hide suggestions if user starts typing
     if (name === 'keyword' && value) {
-        setShowSuggestions(false);
+      setShowSuggestions(false);
     }
-    
+
     // When city changes, reset district
     if (name === 'location') {
-        setFilters(prev => ({ ...prev, location: value, district: '' }));
+      setFilters(prev => ({ ...prev, location: value, district: '' }));
     } else {
-        setFilters(prev => ({ ...prev, [name]: value }));
+      setFilters(prev => ({ ...prev, [name]: value }));
     }
   };
 
   const handleSuggestionClick = (suggestion: string) => {
-    setFilters(prev => ({...prev, keyword: suggestion}));
+    setFilters(prev => ({ ...prev, keyword: suggestion }));
     setShowSuggestions(false);
   };
 
@@ -114,15 +117,15 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, categories, locations, 
     setShowSuggestions(false); // Hide suggestions on submit
     // For homepage, search is triggered by button click immediately by navigating to the directory page
     if (!locationUrl.pathname.startsWith('/directory')) {
-        const params = new URLSearchParams();
-        if (filters.keyword) params.set('keyword', filters.keyword);
-        if (filters.category) params.set('category', filters.category);
-        if (filters.location) params.set('location', filters.location);
-        if (filters.district) params.set('district', filters.district);
-        navigate(`/directory?${params.toString()}`);
+      const params = new URLSearchParams();
+      if (filters.keyword) params.set('keyword', filters.keyword);
+      if (filters.category) params.set('category', filters.category);
+      if (filters.location) params.set('location', filters.location);
+      if (filters.district) params.set('district', filters.district);
+      navigate(`/directory?${params.toString()}`);
     } else {
-        // On directory page, button click also triggers an immediate search, bypassing the debounce
-        onSearch(filters);
+      // On directory page, button click also triggers an immediate search, bypassing the debounce
+      onSearch(filters);
     }
   };
 
@@ -143,22 +146,22 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, categories, locations, 
             autoComplete="off"
           />
           {showSuggestions && filters.keyword === '' && (
-              <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-200 rounded-md shadow-lg z-10">
-                  <p className="text-xs font-semibold text-gray-500 p-2 border-b">Gợi ý tìm kiếm</p>
-                  <ul>
-                      {POPULAR_SEARCH_SUGGESTIONS.map(suggestion => (
-                          <li key={suggestion}>
-                              <button
-                                  type="button"
-                                  className="w-full text-left px-4 py-2 text-sm text-neutral-dark hover:bg-gray-100"
-                                  onMouseDown={() => handleSuggestionClick(suggestion)} // Use onMouseDown to fire before onBlur
-                              >
-                                  {suggestion}
-                              </button>
-                          </li>
-                      ))}
-                  </ul>
-              </div>
+            <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-200 rounded-md shadow-lg z-10">
+              <p className="text-xs font-semibold text-gray-500 p-2 border-b">Gợi ý tìm kiếm</p>
+              <ul>
+                {POPULAR_SEARCH_SUGGESTIONS.map(suggestion => (
+                  <li key={suggestion}>
+                    <button
+                      type="button"
+                      className="w-full text-left px-4 py-2 text-sm text-neutral-dark hover:bg-gray-100"
+                      onMouseDown={() => handleSuggestionClick(suggestion)} // Use onMouseDown to fire before onBlur
+                    >
+                      {suggestion}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
         <div>
@@ -186,7 +189,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, categories, locations, 
               <option key={loc} value={loc}>{loc}</option>
             ))}
           </select>
-           <select
+          <select
             name="district"
             value={filters.district}
             onChange={handleInputChange}
@@ -199,7 +202,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, categories, locations, 
             ))}
           </select>
         </div>
-         <button
+        <button
           type="submit"
           disabled={isLoading}
           className="w-full md:col-span-2 lg:col-span-4 bg-primary text-white px-8 py-3 rounded-md font-semibold hover:bg-primary-dark transition-colors flex items-center justify-center disabled:bg-primary/50 disabled:cursor-not-allowed"

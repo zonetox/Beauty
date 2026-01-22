@@ -42,16 +42,19 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
       if (fetchError) throw fetchError;
 
-      const staffList = (data || []).map((item: any) => {
-        const staff = snakeToCamel(item) as any;
+      const staffList = (data || []).map((item) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const rawItem = item as any;
+        const staff = snakeToCamel(rawItem) as unknown as BusinessStaff & { user_email?: string; user_name?: string };
+
         // Add email from joined profile if available
-        if (item.profiles) {
-          staff.user_email = Array.isArray(item.profiles) ? item.profiles[0]?.email : item.profiles.email;
-          staff.user_name = Array.isArray(item.profiles) ? item.profiles[0]?.full_name : item.profiles.full_name;
+        if (rawItem.profiles) {
+          staff.user_email = Array.isArray(rawItem.profiles) ? rawItem.profiles[0]?.email : rawItem.profiles.email;
+          staff.user_name = Array.isArray(rawItem.profiles) ? rawItem.profiles[0]?.full_name : rawItem.profiles.full_name;
         }
-        return staff;
-      }) as BusinessStaff[];
-      
+        return staff as BusinessStaff;
+      });
+
       setStaff(prev => {
         const filtered = prev.filter(s => s.business_id !== businessId);
         return [...filtered, ...staffList];

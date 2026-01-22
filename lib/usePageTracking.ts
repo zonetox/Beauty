@@ -51,16 +51,16 @@ const trackPageView = async (
 
   try {
     const sessionId = getSessionId();
-    
+
     // Get referrer from document
     const referrer = typeof document !== 'undefined' ? document.referrer || undefined : undefined;
-    
+
     // Get user agent
     const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent || undefined : undefined;
-    
+
     // Note: IP address should be captured server-side for security
     // We'll leave it null and let Supabase Edge Function or trigger handle it if needed
-    
+
     // Add timeout to prevent hanging requests (5 seconds)
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => reject(new Error('Tracking timeout')), 5000);
@@ -82,7 +82,7 @@ const trackPageView = async (
     // CRITICAL: Tracking failures are silent - never log as error
     // Only debug log in development mode
     if (error && import.meta.env.MODE === 'development') {
-      console.debug('[Tracking] Page view tracking failed (best-effort):', error.message);
+      console.warn('[Tracking] Page view tracking failed (best-effort):', error.message);
     }
   } catch (error) {
     // CRITICAL: Catch ALL errors (network, CORS, adblock, timeout, etc.) and silently fail
@@ -91,7 +91,7 @@ const trackPageView = async (
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       // Only log if it's not a network error (which is expected in some cases)
       if (!errorMessage.includes('Failed to fetch') && !errorMessage.includes('NetworkError')) {
-        console.debug('[Tracking] Page view tracking failed (best-effort):', errorMessage);
+        console.warn('[Tracking] Page view tracking failed (best-effort):', errorMessage);
       }
     }
     // NEVER rethrow - tracking must never affect app flow
@@ -163,7 +163,7 @@ export const trackConversion = async (
   conversionType: Conversion['conversion_type'],
   businessId?: number,
   source?: Conversion['source'],
-  metadata?: Record<string, any>,
+  metadata?: Record<string, unknown>,
   userId?: string
 ): Promise<void> => {
   // Early return if Supabase is not configured
@@ -198,16 +198,18 @@ export const trackConversion = async (
       source: determinedSource || null,
       user_id: userId || null,
       session_id: sessionId,
-      metadata: metadata || null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      metadata: (metadata || null) as any,
       converted_at: new Date().toISOString(),
-    });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
     const { error } = await Promise.race([insertPromise, timeoutPromise]);
 
     // CRITICAL: Tracking failures are silent - never log as error
     // Only debug log in development mode
     if (error && import.meta.env.MODE === 'development') {
-      console.debug('[Tracking] Conversion tracking failed (best-effort):', error.message);
+      console.warn('[Tracking] Conversion tracking failed (best-effort):', error.message);
     }
   } catch (error) {
     // CRITICAL: Catch ALL errors (network, CORS, adblock, timeout, etc.) and silently fail
@@ -216,7 +218,7 @@ export const trackConversion = async (
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       // Only log if it's not a network error (which is expected in some cases)
       if (!errorMessage.includes('Failed to fetch') && !errorMessage.includes('NetworkError')) {
-        console.debug('[Tracking] Conversion tracking failed (best-effort):', errorMessage);
+        console.warn('[Tracking] Conversion tracking failed (best-effort):', errorMessage);
       }
     }
     // NEVER rethrow - tracking must never affect app flow

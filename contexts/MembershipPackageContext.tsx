@@ -29,28 +29,29 @@ export const MembershipPackageProvider: React.FC<{ children: ReactNode }> = ({ c
             mergedPackages.push(defaultPkg);
           }
         });
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setPackages(mergedPackages);
       } else {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_MEMBERSHIP_PACKAGES));
       }
     } catch (error) {
-        console.error("Failed to parse membership packages from localStorage", error);
-        setPackages(DEFAULT_MEMBERSHIP_PACKAGES);
+      console.error("Failed to parse membership packages from localStorage", error);
+      setPackages(DEFAULT_MEMBERSHIP_PACKAGES);
     }
   }, []);
 
   const updateLocalStorage = (updatedPackages: MembershipPackage[]) => {
-      try {
-          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedPackages));
-      } catch (error) {
-          console.error("Failed to save membership packages to localStorage", error);
-      }
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedPackages));
+    } catch (error) {
+      console.error("Failed to save membership packages to localStorage", error);
+    }
   }
 
   const addPackage = (newPackage: Omit<MembershipPackage, 'id'>) => {
     const packageToAdd: MembershipPackage = {
-        ...newPackage,
-        id: `pkg_${crypto.randomUUID()}`,
+      ...newPackage,
+      id: `pkg_${crypto.randomUUID()}`,
     };
     const updatedPackages = [...packages, packageToAdd];
     setPackages(updatedPackages);
@@ -64,7 +65,7 @@ export const MembershipPackageProvider: React.FC<{ children: ReactNode }> = ({ c
     setPackages(updatedPackages);
     updateLocalStorage(updatedPackages);
   };
-  
+
   const deletePackage = (packageId: string) => {
     const updatedPackages = packages.filter(pkg => pkg.id !== packageId);
     setPackages(updatedPackages);

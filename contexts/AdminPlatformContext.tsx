@@ -67,7 +67,7 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
       if (announcementsRes.data) setAnnouncements(snakeToCamel(announcementsRes.data) as Announcement[]);
       if (ticketsRes.data) {
         const mappedTickets = (ticketsRes.data as any[]).map(t => ({
-          ...snakeToCamel(t),
+          ...(snakeToCamel(t) as any),
           businessName: t.businesses?.name || t.business_name || 'Unknown Business'
         }));
         setTickets(mappedTickets as SupportTicket[]);
@@ -112,6 +112,7 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
     }
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchLogs(); }, [fetchLogs]);
 
   const logAdminAction = async (adminUsername: string, action: string, details: string) => {
@@ -134,6 +135,7 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
     }
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
 
   const addNotification = async (recipientEmail: string, subject: string, body: string) => {

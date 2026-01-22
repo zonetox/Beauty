@@ -1,7 +1,12 @@
 // supabase/functions/invite-staff/index.ts
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-declare const Deno: any;
+declare const Deno: {
+  env: {
+    get(key: string): string | undefined;
+  };
+  serve(handler: (req: Request) => Promise<Response>): void;
+};
 
 // CORS headers for security - only allow specific origins
 function getCorsHeaders(origin: string | null) {
@@ -12,11 +17,11 @@ function getCorsHeaders(origin: string | null) {
     'http://localhost:5173',
     'http://localhost:3000',
   ];
-  
-  const allowedOrigin = origin && allowedOrigins.includes(origin) 
-    ? origin 
+
+  const allowedOrigin = origin && allowedOrigins.includes(origin)
+    ? origin
     : allowedOrigins[0]; // Default to first allowed origin (production)
-  
+
   return {
     'Access-Control-Allow-Origin': allowedOrigin,
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -54,7 +59,7 @@ interface InviteStaffRequestBody {
 
 Deno.serve(async (req: Request) => {
   const corsHeaders = getCorsHeaders(req.headers.get('origin'));
-  
+
   // Handle preflight CORS request
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -63,7 +68,7 @@ Deno.serve(async (req: Request) => {
   try {
     // Validate request
     const { email, businessId, role, permissions, businessName }: InviteStaffRequestBody = await req.json();
-    
+
     if (!email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return createErrorResponse('Invalid email address', 400, req.headers.get('origin'), 'VALIDATION_ERROR');
     }
@@ -79,8 +84,8 @@ Deno.serve(async (req: Request) => {
     // Initialize Supabase admin client
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SECRET_KEY') ?? 
-      Deno.env.get('SUPABASE_SECRET') ?? 
+      Deno.env.get('SECRET_KEY') ??
+      Deno.env.get('SUPABASE_SECRET') ??
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
@@ -96,7 +101,8 @@ Deno.serve(async (req: Request) => {
     }
 
     // 2. Check if user already exists
-    const { data: existingProfile, error: profileError } = await supabaseAdmin
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { data: existingProfile, error: _profileError } = await supabaseAdmin
       .from('profiles')
       .select('id, email')
       .eq('email', email)
@@ -164,7 +170,8 @@ Deno.serve(async (req: Request) => {
     }
 
     // 3. Check if user is already a staff member for this business
-    const { data: existingStaff, error: staffCheckError } = await supabaseAdmin
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { data: existingStaff, error: _staffCheckError } = await supabaseAdmin
       .from('business_staff')
       .select('id')
       .eq('business_id', businessId)
@@ -191,9 +198,9 @@ Deno.serve(async (req: Request) => {
       return createErrorResponse(`Failed to add staff member: ${staffError?.message || 'Unknown error'}`, 500, req.headers.get('origin'), 'STAFF_ERROR');
     }
 
-    return new Response(JSON.stringify({ 
-      message: isNewUser 
-        ? 'Staff member invited successfully. Invitation email sent.' 
+    return new Response(JSON.stringify({
+      message: isNewUser
+        ? 'Staff member invited successfully. Invitation email sent.'
         : 'Staff member added successfully.',
       staff: newStaff,
       isNewUser
@@ -202,7 +209,7 @@ Deno.serve(async (req: Request) => {
       status: 200,
     });
 
-  } catch (error: any) {
-    return createErrorResponse(error.message || 'An unexpected error occurred', 500, req.headers.get('origin'), 'INTERNAL_ERROR');
+  } catch (error: unknown) {
+    return createErrorResponse(error instanceof Error ? error.message : 'An unexpected error occurred', 500, req.headers.get('origin'), 'INTERNAL_ERROR');
   }
 });
