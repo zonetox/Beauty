@@ -166,7 +166,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
           p_category: (options.category || null) as any,
           p_city: (options.location || null) as any,
           p_district: (options.district || null) as any,
-          p_tags: null as string[] | null, // Tags filter not used in current frontend, but supported
+          p_tags: undefined as string[] | undefined, // Tags filter not used in current frontend, but supported
           p_limit: PAGE_SIZE,
           p_offset: from
         });

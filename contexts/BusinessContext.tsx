@@ -192,13 +192,13 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
         const businessOrders = ordersRes.data.filter((o: { business_id: number | null }) => o.business_id === businessId);
 
         // Get page views for this business (from page_views table where page_id = businessId or page_type = 'business')
-        const businessPageViews = (pageViewsRes.data as { page_type: string; page_id: string; business_id: number; viewed_at: string }[])?.filter((pv) =>
+        const businessPageViews = (pageViewsRes.data as unknown as { page_type: string; page_id: string; business_id: number; viewed_at: string }[])?.filter((pv) =>
           (pv.page_type === 'business' && pv.page_id === String(businessId)) ||
           (pv.business_id === businessId)
         ) || [];
 
         // Get conversions for this business
-        const businessConversions = (conversionsRes.data as { business_id: number; conversion_type: string; converted_at: string }[])?.filter((c) => c.business_id === businessId) || [];
+        const businessConversions = (conversionsRes.data as unknown as { business_id: number; conversion_type: string; converted_at: string }[])?.filter((c) => c.business_id === businessId) || [];
 
         // Calculate time series for last 30 days
         const timeSeries: AnalyticsDataPoint[] = [];

@@ -335,7 +335,7 @@ const DirectoryPage: React.FC = () => {
                             onPopupClose={() => setSelectedBusinessId(null)}
                             onMarkerMouseEnter={(id) => setHighlightedBusinessId(id)}
                             onMarkerMouseLeave={() => setHighlightedBusinessId(null)}
-                            onBoundsChange={setMapBounds}
+                            onBoundsChange={(bounds: any) => setMapBounds(bounds)}
                             shouldFitBounds={hasSearchQuery}
                         />
                     </div>
