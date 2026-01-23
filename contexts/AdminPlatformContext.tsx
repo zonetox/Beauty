@@ -1,19 +1,24 @@
-import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
-import { AdminLogEntry, Notification, Announcement, SupportTicket, TicketReply, TicketStatus, AppSettings, RegistrationRequest, PageData, PageName } from '../types.ts';
+import React, { createContext, useContext, ReactNode } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  AdminLogEntry, Notification, Announcement, SupportTicket, TicketReply,
+  TicketStatus, AppSettings, RegistrationRequest, PageData, PageName
+} from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { DEFAULT_PAGE_CONTENT } from './PageContentContext.tsx';
 import { snakeToCamel } from '../lib/utils.ts';
 import { useErrorHandler } from '../lib/useErrorHandler.ts';
+import { keys } from '../lib/queryKeys.ts';
 
 interface AdminPlatformContextType {
   // Logs
   logs: AdminLogEntry[];
-  logAdminAction: (adminUsername: string, action: string, details: string) => void;
-  clearLogs: () => void;
+  logAdminAction: (adminUsername: string, action: string, details: string) => Promise<void>;
+  clearLogs: () => Promise<void>;
   // Notifications
   notifications: Notification[];
-  addNotification: (recipientEmail: string, subject: string, body: string) => void;
-  markNotificationAsRead: (notificationId: string) => void;
+  addNotification: (recipientEmail: string, subject: string, body: string) => Promise<void>;
+  markNotificationAsRead: (notificationId: string) => Promise<void>;
   // Announcements
   announcements: Announcement[];
   addAnnouncement: (title: string, content: string, type: 'info' | 'warning' | 'success') => Promise<void>;
@@ -36,6 +41,8 @@ interface AdminPlatformContextType {
   // Page Content
   getPageContent: (page: PageName) => PageData | undefined;
   updatePageContent: (page: PageName, newContent: PageData) => Promise<void>;
+  // Loading State
+  isLoading: boolean;
 }
 
 const AdminPlatformContext = createContext<AdminPlatformContextType | undefined>(undefined);
@@ -43,39 +50,128 @@ const AdminPlatformContext = createContext<AdminPlatformContextType | undefined>
 const ANNOUNCEMENT_READ_KEY = 'read_announcements_by_business';
 
 export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [logs, setLogs] = useState<AdminLogEntry[]>([]);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [tickets, setTickets] = useState<SupportTicket[]>([]);
-  const [registrationRequests, setRegistrationRequests] = useState<RegistrationRequest[]>([]);
-  const [settings, setSettings] = useState<AppSettings | null>(null);
-  const [pageContent, setPageContent] = useState<Record<PageName, PageData>>(DEFAULT_PAGE_CONTENT as Record<PageName, PageData>);
+  const queryClient = useQueryClient();
   const { handleEdgeFunctionError } = useErrorHandler();
 
-  const fetchAllAdminData = useCallback(async () => {
-    if (!isSupabaseConfigured) return;
+  // --- QUERY FETCHERS ---
 
-    try {
-      const [announcementsRes, ticketsRes, requestsRes, settingsRes, pageContentRes] = await Promise.all([
-        supabase.from('announcements').select('id, title, content, type, created_at').order('created_at', { ascending: false }).limit(50),
-        supabase.from('support_tickets').select('id, business_id, subject, message, status, created_at, last_reply_at, replies, businesses!inner(name)').order('last_reply_at', { ascending: false }).limit(100),
-        supabase.from('registration_requests').select('id, business_name, email, phone, address, category, tier, submitted_at, status').order('submitted_at', { ascending: false }).limit(100),
-        supabase.from('app_settings').select('settings_data').eq('id', 1).maybeSingle(),
-        supabase.from('page_content').select('page_name, content_data')
-      ]);
+  // 1. Logs
+  const { data: logs = [] } = useQuery({
+    queryKey: keys.admin.logs,
+    queryFn: async () => {
+      if (!isSupabaseConfigured) return [];
+      const { data, error } = await supabase.from('admin_activity_logs')
+        .select('id, timestamp, admin_username, action, details')
+        .order('timestamp', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return (data || []).map(log => ({
+        id: log.id,
+        timestamp: log.timestamp || new Date().toISOString(),
+        adminUsername: log.admin_username,
+        action: log.action,
+        details: log.details || ''
+      }));
+    },
+    enabled: isSupabaseConfigured,
+    // Poll logs every 3 seconds to keep admin dashboard live (legacy behavior)
+    refetchInterval: 3000
+  });
 
-      if (announcementsRes.data) setAnnouncements(snakeToCamel(announcementsRes.data) as Announcement[]);
-      if (ticketsRes.data) {
-        const mappedTickets = (ticketsRes.data as any[]).map(t => ({
-          ...(snakeToCamel(t) as any),
-          businessName: t.businesses?.name || t.business_name || 'Unknown Business'
-        }));
-        setTickets(mappedTickets as SupportTicket[]);
-      }
-      if (requestsRes.data) setRegistrationRequests(snakeToCamel(requestsRes.data) as RegistrationRequest[]);
-      if (settingsRes.data) setSettings(settingsRes.data.settings_data as unknown as AppSettings);
+  // 2. Notifications
+  const { data: notifications = [] } = useQuery({
+    queryKey: keys.admin.notifications,
+    queryFn: async () => {
+      if (!isSupabaseConfigured) return [];
+      const { data, error } = await supabase.from('email_notifications_log')
+        .select('*')
+        .order('sent_at', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return (data || []).map(notif => ({
+        id: notif.id,
+        recipientEmail: notif.recipient_email,
+        subject: notif.subject,
+        body: notif.body,
+        sentAt: notif.sent_at || new Date().toISOString(),
+        read: notif.read || false
+      }));
+    },
+    enabled: isSupabaseConfigured,
+    refetchInterval: 5000
+  });
 
-      const dbContent = (pageContentRes.data as any[])?.reduce((acc, page) => {
+  // 3. Announcements
+  const { data: announcements = [] } = useQuery({
+    queryKey: keys.admin.announcements,
+    queryFn: async () => {
+      if (!isSupabaseConfigured) return [];
+      const { data, error } = await supabase.from('announcements')
+        .select('id, title, content, type, created_at')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return snakeToCamel(data || []) as Announcement[];
+    },
+    enabled: isSupabaseConfigured
+  });
+
+  // 4. Tickets
+  const { data: tickets = [] } = useQuery({
+    queryKey: keys.admin.tickets,
+    queryFn: async () => {
+      if (!isSupabaseConfigured) return [];
+      const { data, error } = await supabase.from('support_tickets')
+        .select('id, business_id, subject, message, status, created_at, last_reply_at, replies, businesses!inner(name)')
+        .order('last_reply_at', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+
+      const mappedTickets = (data as any[]).map(t => ({
+        ...(snakeToCamel(t) as any),
+        businessName: t.businesses?.name || t.business_name || 'Unknown Business'
+      }));
+      return mappedTickets as SupportTicket[];
+    },
+    enabled: isSupabaseConfigured
+  });
+
+  // 5. Registration Requests
+  const { data: registrationRequests = [] } = useQuery({
+    queryKey: keys.admin.registrationRequests,
+    queryFn: async () => {
+      if (!isSupabaseConfigured) return [];
+      const { data, error } = await supabase.from('registration_requests')
+        .select('id, business_name, email, phone, address, category, tier, submitted_at, status')
+        .order('submitted_at', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return snakeToCamel(data || []) as RegistrationRequest[];
+    },
+    enabled: isSupabaseConfigured
+  });
+
+  // 6. Settings
+  const { data: settings = null } = useQuery({
+    queryKey: keys.admin.settings,
+    queryFn: async () => {
+      if (!isSupabaseConfigured) return null;
+      const { data, error } = await supabase.from('app_settings').select('settings_data').eq('id', 1).maybeSingle();
+      if (error) throw error;
+      return data?.settings_data as unknown as AppSettings || null;
+    },
+    enabled: isSupabaseConfigured
+  });
+
+  // 7. Page Content
+  const { data: pageContent = DEFAULT_PAGE_CONTENT as Record<PageName, PageData> } = useQuery({
+    queryKey: keys.admin.pageContent,
+    queryFn: async () => {
+      if (!isSupabaseConfigured) return DEFAULT_PAGE_CONTENT as Record<PageName, PageData>;
+      const { data, error } = await supabase.from('page_content').select('page_name, content_data');
+      if (error) throw error;
+
+      const dbContent = (data as any[])?.reduce((acc, page) => {
         acc[page.page_name as PageName] = page.content_data as PageData;
         return acc;
       }, {} as Record<PageName, PageData>) || {};
@@ -91,78 +187,58 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
           };
         }
       }
-      setPageContent(finalContent);
-    } catch (error) {
-      console.error('Error fetching admin platform data:', error);
-    }
-  }, []);
+      return finalContent;
+    },
+    enabled: isSupabaseConfigured
+  });
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchAllAdminData().catch(console.error);
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [fetchAllAdminData]);
-
-  const fetchLogs = useCallback(async () => {
-    if (!isSupabaseConfigured) return;
-    const { data, error } = await supabase.from('admin_activity_logs').select('id, timestamp, admin_username, action, details').order('timestamp', { ascending: false }).limit(100);
-    if (!error && data) {
-      setLogs(data.map(log => ({ id: log.id, timestamp: log.timestamp || new Date().toISOString(), adminUsername: log.admin_username, action: log.action, details: log.details || '' })));
-    }
-  }, []);
-
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { fetchLogs(); }, [fetchLogs]);
+  // --- ACTIONS (MUTATIONS) ---
+  // Using direct async functions with invalidation instead of full useMutation 
+  // hooks to keep the context interface cleaner and simpler for this refactor.
 
   const logAdminAction = async (adminUsername: string, action: string, details: string) => {
     if (!isSupabaseConfigured) return;
-    const { error } = await supabase.from('admin_activity_logs').insert({ admin_username: adminUsername, action, details, timestamp: new Date().toISOString() });
-    if (!error) fetchLogs();
+    const { error } = await supabase.from('admin_activity_logs')
+      .insert({ admin_username: adminUsername, action, details, timestamp: new Date().toISOString() });
+    if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.logs });
   };
 
   const clearLogs = async () => {
     if (!isSupabaseConfigured) return;
     const { error } = await supabase.from('admin_activity_logs').delete().neq('id', '');
-    if (!error) setLogs([]);
+    if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.logs });
   };
-
-  const fetchNotifications = useCallback(async () => {
-    if (!isSupabaseConfigured) return;
-    const { data, error } = await supabase.from('email_notifications_log').select('*').order('sent_at', { ascending: false }).limit(100);
-    if (!error && data) {
-      setNotifications(data.map(notif => ({ id: notif.id, recipientEmail: notif.recipient_email, subject: notif.subject, body: notif.body, sentAt: notif.sent_at || new Date().toISOString(), read: notif.read || false })));
-    }
-  }, []);
-
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
 
   const addNotification = async (recipientEmail: string, subject: string, body: string) => {
     if (isSupabaseConfigured) {
       const { error } = await supabase.functions.invoke('send-email', { body: { to: recipientEmail, subject, html: body.replace(/\n/g, '<br>') } });
       if (error) handleEdgeFunctionError(error, 'addNotification');
-      const { error: dbError } = await supabase.from('email_notifications_log').insert({ recipient_email: recipientEmail, subject, body, sent_at: new Date().toISOString(), read: false });
-      if (!dbError) fetchNotifications();
+      const { error: dbError } = await supabase.from('email_notifications_log')
+        .insert({ recipient_email: recipientEmail, subject, body, sent_at: new Date().toISOString(), read: false });
+      if (!dbError) queryClient.invalidateQueries({ queryKey: keys.admin.notifications });
     }
   };
 
   const markNotificationAsRead = async (notificationId: string) => {
     if (!isSupabaseConfigured) return;
-    const { error } = await supabase.from('email_notifications_log').update({ read: true, read_at: new Date().toISOString() }).eq('id', notificationId);
-    if (!error) fetchNotifications();
+    const { error } = await supabase.from('email_notifications_log')
+      .update({ read: true, read_at: new Date().toISOString() })
+      .eq('id', notificationId);
+    if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.notifications });
   };
 
   const addAnnouncement = async (title: string, content: string, type: 'info' | 'warning' | 'success') => {
     if (!isSupabaseConfigured) return;
-    const { data: _data, error } = await supabase.from('announcements').insert({ title, content, type }).select().single();
-    if (!error && _data) setAnnouncements(prev => [snakeToCamel(_data) as Announcement, ...prev]);
+    const { error } = await supabase.from('announcements')
+      .insert({ title, content, type })
+      .select().single();
+    if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.announcements });
   };
 
   const deleteAnnouncement = async (id: string) => {
     if (!isSupabaseConfigured) return;
     const { error } = await supabase.from('announcements').delete().eq('id', id);
-    if (!error) setAnnouncements(prev => prev.filter(a => a.id !== id));
+    if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.announcements });
   };
 
   const getUnreadAnnouncements = (businessId: number) => {
@@ -181,8 +257,17 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
 
   const addTicket = async (ticketData: Omit<SupportTicket, 'id' | 'createdAt' | 'lastReplyAt' | 'status' | 'replies'>) => {
     if (!isSupabaseConfigured) return;
-    const { data: _data, error } = await supabase.from('support_tickets').insert({ business_id: ticketData.businessId, business_name: ticketData.businessName, subject: ticketData.subject, message: ticketData.message, status: TicketStatus.OPEN, replies: [] }).select().single();
-    if (!error && _data) setTickets(prev => [snakeToCamel(_data) as SupportTicket, ...prev]);
+    const { error } = await supabase.from('support_tickets')
+      .insert({
+        business_id: ticketData.businessId,
+        business_name: ticketData.businessName,
+        subject: ticketData.subject,
+        message: ticketData.message,
+        status: TicketStatus.OPEN,
+        replies: []
+      })
+      .select().single();
+    if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.tickets });
   };
 
   const addReply = async (ticketId: string, replyData: Omit<TicketReply, 'id' | 'createdAt'>) => {
@@ -190,39 +275,51 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
     const ticket = tickets.find(t => t.id === ticketId);
     if (!ticket) return;
     const updatedReplies = [...(ticket.replies || []), { ...replyData, id: crypto.randomUUID(), createdAt: new Date().toISOString() }];
-    const { data: _data, error } = await supabase.from('support_tickets').update({ replies: updatedReplies as any, last_reply_at: new Date().toISOString() }).eq('id', ticketId).select().single();
-    if (!error && _data) setTickets(prev => prev.map(t => t.id === ticketId ? (snakeToCamel(_data) as SupportTicket) : t));
+    const { error } = await supabase.from('support_tickets')
+      .update({ replies: updatedReplies as any, last_reply_at: new Date().toISOString() })
+      .eq('id', ticketId)
+      .select().single();
+    if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.tickets });
   };
 
   const updateTicketStatus = async (ticketId: string, status: TicketStatus) => {
     if (!isSupabaseConfigured) return;
-    const { data: _data, error } = await supabase.from('support_tickets').update({ status }).eq('id', ticketId).select().single();
-    if (!error && _data) setTickets(prev => prev.map(t => t.id === ticketId ? (snakeToCamel(_data) as SupportTicket) : t));
+    const { error } = await supabase.from('support_tickets')
+      .update({ status })
+      .eq('id', ticketId)
+      .select().single();
+    if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.tickets });
   };
 
   const approveRegistrationRequest = async (requestId: string) => {
     const { data, error } = await supabase.functions.invoke('approve-registration', { body: { requestId } });
     if (error) { handleEdgeFunctionError(error, 'approveRegistrationRequest'); throw error; }
+    // Invalidate both requests (to remove approved) and businesses (to show new business)
+    // Actually just requests and logs here
+    queryClient.invalidateQueries({ queryKey: keys.admin.registrationRequests });
+    queryClient.invalidateQueries({ queryKey: keys.admin.logs });
     return data;
   };
 
   const rejectRegistrationRequest = async (requestId: string): Promise<void> => {
     const { error } = await supabase.from('registration_requests').update({ status: 'Rejected' }).eq('id', requestId);
     if (error) throw error;
+    queryClient.invalidateQueries({ queryKey: keys.admin.registrationRequests });
   };
 
   const updateSettings = async (newSettings: AppSettings) => {
     if (!isSupabaseConfigured) return;
     const { error } = await supabase.from('app_settings').update({ settings_data: newSettings as any }).eq('id', 1);
-    if (!error) setSettings(newSettings);
+    if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.settings });
   };
 
   const getPageContent = (page: PageName) => pageContent[page];
 
   const updatePageContent = async (page: PageName, newContent: PageData) => {
     if (!isSupabaseConfigured) return;
-    const { error } = await supabase.from('page_content').upsert({ page_name: page, content_data: newContent as any } as any, { onConflict: 'page_name' });
-    if (!error) setPageContent(prev => ({ ...prev, [page]: newContent }));
+    const { error } = await supabase.from('page_content')
+      .upsert({ page_name: page, content_data: newContent as any } as any, { onConflict: 'page_name' });
+    if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.pageContent });
   };
 
   const value = {
@@ -232,7 +329,8 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
     tickets, getTicketsForBusiness, addTicket, addReply, updateTicketStatus,
     registrationRequests, approveRegistrationRequest, rejectRegistrationRequest,
     settings, updateSettings,
-    getPageContent, updatePageContent
+    getPageContent, updatePageContent,
+    isLoading: false // Always 'ready' (data might be stale or updating in background)
   };
 
   return <AdminPlatformContext.Provider value={value}>{children}</AdminPlatformContext.Provider>;

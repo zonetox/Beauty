@@ -10,7 +10,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
-import { z } from 'zod';
+
 
 import path from 'path';
 

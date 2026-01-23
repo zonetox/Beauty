@@ -51,7 +51,7 @@ const RegisterBusinessPage: React.FC = () => {
         if (!validationResult.success) {
             const fieldErrors: any = {};
             // Using explicit type or casting to avoid TS errors with ZodError structure if strict mode is aggressive
-            validationResult.error.errors.forEach((err: any) => {
+            validationResult.error.issues.forEach((err: any) => {
                 if (err.path[0]) {
                     fieldErrors[err.path[0]] = err.message;
                 }

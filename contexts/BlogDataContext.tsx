@@ -22,9 +22,27 @@ interface BlogDataContextType {
   deleteBlogCategory: (id: string) => Promise<void>;
 }
 
+// Database Row Interface
+interface BlogPostDbRow {
+  id: number;
+  slug: string;
+  title: string;
+  image_url: string;
+  excerpt: string;
+  author: string;
+  date: string;
+  category: string;
+  content: string;
+  view_count: number;
+  status: string;
+  is_featured: boolean;
+  seo: any;
+  updated_at: string;
+}
+
 const BlogDataContext = createContext<BlogDataContextType | undefined>(undefined);
 
-const CATEGORIES_LOCAL_STORAGE_KEY = 'blog_categories';
+
 
 
 export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -179,7 +197,7 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
       view_count: 0
     };
 
-    const { data, error } = await supabase.from('blog_posts').insert(postToAdd).select().single() as { data: any, error: any };
+    const { data, error } = await supabase.from('blog_posts').insert(postToAdd).select().single() as unknown as { data: BlogPostDbRow | null, error: any };
 
     if (!error && data) {
       setBlogPosts(prev => [({
@@ -220,7 +238,7 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
       updated_at: new Date().toISOString()
     };
 
-    const { data, error } = await supabase.from('blog_posts').update(mappedUpdates).eq('id', id).select().single() as { data: any, error: any };
+    const { data, error } = await supabase.from('blog_posts').update(mappedUpdates).eq('id', id).select().single() as unknown as { data: BlogPostDbRow | null, error: any };
 
     if (!error && data) {
       const updatedData = {
@@ -268,7 +286,7 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
       };
     });
 
-    const { data, error } = await supabase.from('blog_posts').insert(postsToAdd).select() as { data: any[] | null, error: any };
+    const { data, error } = await supabase.from('blog_posts').insert(postsToAdd).select() as unknown as { data: BlogPostDbRow[] | null, error: any };
 
     if (error) {
       console.error("Error bulk adding posts:", error);

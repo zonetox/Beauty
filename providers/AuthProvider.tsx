@@ -1,18 +1,21 @@
 /**
- * ROBUST Auth Provider (Unified Layer)
+ * ROBUST Auth Provider (Unified Layer) - React Query Hardened
  * 
  * Duty: Manages BOTH Supabase Identity AND User Profile/Role.
- * Consolidates Layer 1 (Session) and Layer 2 (Data) to prevent race conditions.
+ * Uses React Query for state management to prevent race conditions and ensure consistency.
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { Session, User, AuthChangeEvent } from '@supabase/supabase-js';
+import React, { createContext, useContext, useCallback, ReactNode, useMemo } from 'react';
+import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient.ts';
 import { Profile } from '../types.ts';
 import toast from 'react-hot-toast';
-import { getUserProfile } from '../lib/session.ts';
-import { resolveUserRole, UserRole } from '../lib/roleResolution.ts';
-import { snakeToCamel } from '../lib/utils.ts';
+import { UserRole } from '../lib/roleResolution.ts';
+import { useAuthSession } from '../hooks/useAuthSession.ts';
+import { useAuthProfile } from '../hooks/useAuthProfile.ts';
+import { useAuthRole } from '../hooks/useAuthRole.ts';
+import { useQueryClient } from '@tanstack/react-query';
+import { keys } from '../lib/queryKeys.ts';
 
 export type AuthState = 'loading' | 'authenticated' | 'unauthenticated';
 
@@ -52,123 +55,57 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [state, setState] = useState<AuthState>('loading');
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [role, setRole] = useState<UserRole>('anonymous');
-  const [businessId, setBusinessId] = useState<number | null>(null);
-  const [isDataLoaded, setIsDataLoaded] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  /**
-   * Internal logic to fetch profile and resolve role
-   */
-  const resolveUserData = useCallback(async (currentUser: User) => {
-    try {
-      setIsDataLoaded(false);
-      setError(null);
+  // 1. Session Management (Source of Truth)
+  const {
+    session,
+    user,
+    isLoading: isSessionLoading
+  } = useAuthSession();
 
-      // 1. Fetch Profile
-      const { data: profileData, error: profileError } = await getUserProfile(currentUser.id);
+  // 2. Profile Management
+  const {
+    data: profile,
+    isLoading: isProfileLoading
+  } = useAuthProfile(user?.id);
 
-      if (profileData) {
-        setProfile(snakeToCamel(profileData) as Profile);
-      } else if (profileError) {
-        console.warn('[Auth] Profile fetching issue:', profileError);
-        // We don't throw here to allow the UI to handle missing profile gracefully via role
-      }
+  // 3. Role Management
+  const {
+    data: roleData,
+    isLoading: isRoleLoading
+  } = useAuthRole(user || null);
 
-      // 2. Resolve Role
-      const roleResult = await resolveUserRole(currentUser);
-      setRole(roleResult.role);
-      setBusinessId(roleResult.businessId);
+  // Computed State
+  const role = roleData?.role || 'anonymous';
+  const businessId = roleData?.businessId || null;
+  const authError = roleData?.error || null;
 
-      if (roleResult.error) {
-        setError(roleResult.error);
-      }
+  // Overall Loading State
+  // We are loading if session is loading, OR if we have a user but profile/role are still loading
+  const isLoading = isSessionLoading || (!!user && (isProfileLoading || isRoleLoading));
 
-      setIsDataLoaded(true);
-    } catch (err: any) {
-      console.error('[Auth] Critical error resolving user data:', err);
-      setError(err.message || 'Failed to load user data');
-      setIsDataLoaded(true);
-    }
-  }, []);
+  const state: AuthState = useMemo(() => {
+    if (isLoading) return 'loading';
+    if (user) return 'authenticated';
+    return 'unauthenticated';
+  }, [isLoading, user]);
 
-  /**
-   * Handle Auth Changes (State Machine)
-   */
-  const handleAuthChange = useCallback(async (_event: AuthChangeEvent, newSession: Session | null) => {
-    console.log(`[Auth] Unified Event: ${_event}`);
-
-    setSession(newSession);
-    const newUser = newSession?.user ?? null;
-    setUser(newUser);
-
-    if (newUser) {
-      setState('authenticated');
-      await resolveUserData(newUser);
-    } else {
-      setProfile(null);
-      setRole('anonymous');
-      setBusinessId(null);
-      setIsDataLoaded(true);
-      setState('unauthenticated');
-    }
-  }, [resolveUserData]);
-
-  /**
-   * Initialize Identity
-   */
-  useEffect(() => {
-    let mounted = true;
-
-    const initialize = async () => {
-      // 1. Get initial session
-      const { data: { session: initialSession } } = await supabase.auth.getSession();
-
-      if (!mounted) return;
-
-      if (initialSession) {
-        setSession(initialSession);
-        setUser(initialSession.user);
-        setState('authenticated');
-      } else {
-        setState('unauthenticated');
-      }
-
-      // 2. Subscribe to changes
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        if (mounted) handleAuthChange(event, session);
-      });
-
-      return subscription;
-    };
-
-    const subPromise = initialize();
-
-    return () => {
-      mounted = false;
-      subPromise.then(sub => sub?.unsubscribe());
-    };
-  }, [handleAuthChange]);
-
-  // Login
+  // Actions
   const login = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
   }, []);
 
-  // Logout
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
-    setState('unauthenticated');
-    setSession(null);
-    setUser(null);
-  }, []);
+    // React Query subscription in useAuthSession will handle the state update automatically
+    // But we can manually clear to he immediate
+    queryClient.setQueryData(keys.auth.session, null);
+    queryClient.removeQueries({ queryKey: keys.auth.profile(user?.id || null) });
+    queryClient.removeQueries({ queryKey: keys.auth.role(user?.id || null) });
+  }, [queryClient, user?.id]);
 
-  // Register
   const register = useCallback(async (email: string, password: string, metadata?: Record<string, unknown>) => {
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -179,7 +116,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (!data.user) throw new Error('Registration failed');
   }, []);
 
-  // Password Management
   const requestPasswordReset = useCallback(async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`
@@ -197,24 +133,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return profile?.favorites?.includes(businessId) || false;
   }, [profile]);
 
-  const toggleFavorite = useCallback(async (businessId: number) => {
+  const toggleFavorite = useCallback(async (toToggleBusinessId: number) => {
     if (!profile || !user) {
       toast.error('Vui lòng đăng nhập để lưu vào danh sách yêu thích');
       return;
     }
 
     const currentFavorites = profile.favorites || [];
-    const isCurrentlyFavorite = currentFavorites.includes(businessId);
+    const isCurrentlyFavorite = currentFavorites.includes(toToggleBusinessId);
 
     let newFavorites;
     if (isCurrentlyFavorite) {
-      newFavorites = currentFavorites.filter(id => id !== businessId);
+      newFavorites = currentFavorites.filter(id => id !== toToggleBusinessId);
     } else {
-      newFavorites = [...currentFavorites, businessId];
+      newFavorites = [...currentFavorites, toToggleBusinessId];
     }
 
-    // Optimistic update
-    setProfile(prev => prev ? { ...prev, favorites: newFavorites } : null);
+    // Optimistic update via React Query
+    queryClient.setQueryData(keys.auth.profile(user.id), (old: Profile | null) => {
+      if (!old) return null;
+      return { ...old, favorites: newFavorites };
+    });
 
     const { error: updateError } = await supabase
       .from('profiles')
@@ -223,31 +162,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     if (updateError) {
       // Revert on error
-      setProfile(prev => prev ? { ...prev, favorites: currentFavorites } : null);
+      queryClient.setQueryData(keys.auth.profile(user.id), (old: Profile | null) => {
+        if (!old) return null;
+        return { ...old, favorites: currentFavorites };
+      });
       toast.error('Không thể cập nhật danh sách yêu thích');
       console.error('Error toggling favorite:', updateError);
     } else {
       toast.success(isCurrentlyFavorite ? 'Đã xóa khỏi danh sách yêu thích' : 'Đã thêm vào danh sách yêu thích');
     }
-  }, [profile, user]);
+  }, [profile, user, queryClient]);
 
   const value: AuthContextType = {
     state,
-    session,
+    session: session || null,
     user,
-    profile,
+    profile: profile || null,
     role,
     businessId,
-    isDataLoaded,
-    error,
+    isDataLoaded: !isLoading,
+    error: authError,
     login,
     logout,
     register,
     refreshAuth: async () => {
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      if (currentSession?.user) {
-        await resolveUserData(currentSession.user);
-      }
+      await queryClient.invalidateQueries({ queryKey: keys.auth.session });
+      await queryClient.invalidateQueries({ queryKey: keys.auth.profile(user?.id || null) });
+      await queryClient.invalidateQueries({ queryKey: keys.auth.role(user?.id || null) });
     },
     requestPasswordReset,
     resetPassword,
