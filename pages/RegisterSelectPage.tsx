@@ -1,11 +1,22 @@
 // Account Type Selection Page
 // User chooses between "User" or "Business" account type
 
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../providers/AuthProvider.tsx';
 import SEOHead from '../components/SEOHead.tsx';
 
 const RegisterSelectPage: React.FC = () => {
+    const navigate = useNavigate();
+    const { state, profile } = useAuth();
+
+    // Redirect authenticated users to account page
+    useEffect(() => {
+        if (state === 'authenticated' && profile) {
+            navigate('/account', { replace: true });
+        }
+    }, [state, profile, navigate]);
+
     const seoTitle = 'Đăng ký tài khoản | 1Beauty.asia';
     const seoDescription = 'Chọn loại tài khoản phù hợp với bạn: Người dùng để tìm kiếm và đặt lịch dịch vụ làm đẹp, hoặc Doanh nghiệp để quảng bá và quản lý dịch vụ của bạn.';
     const seoUrl = typeof window !== 'undefined' ? `${window.location.origin}/register` : '';

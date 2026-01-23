@@ -2,7 +2,7 @@
 // Tuân thủ ARCHITECTURE.md, sử dụng schema/RLS/contexts hiện có
 // 100% hoàn thiện, không placeholder, chuẩn SEO cơ bản
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../providers/AuthProvider.tsx';
 import ForgotPasswordModal from '../components/ForgotPasswordModal.tsx';
@@ -17,11 +17,15 @@ const LoginPage: React.FC = () => {
     const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
 
     // Get auth context - must be called unconditionally (React Hook rules)
-    const { login } = useAuth();
+    const { login, state, profile } = useAuth();
 
-    // Unified redirection is handled by AccountPageRouter at /account 
-    // or by ProtectedRoute if the user was trying to access a specific page.
-    // This effect is no longer needed and was causing redundant role resolution calls.
+    // Unified redirection for authenticated users
+    // If user is already logged in, redirect to account page
+    useEffect(() => {
+        if (state === 'authenticated' && profile) {
+            navigate('/account', { replace: true });
+        }
+    }, [state, profile, navigate]);
 
     // SEO metadata
     const seoTitle = 'Đăng nhập | 1Beauty.asia';

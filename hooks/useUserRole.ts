@@ -10,9 +10,9 @@
  * - error: Any error during role resolution
  */
 
-import { useState, useEffect } from 'react';
 import { useAuth } from '../providers/AuthProvider.tsx';
-import { resolveUserRole, UserRole } from '../lib/roleResolution.ts';
+import { useProfile } from '../providers/ProfileProvider.tsx';
+import { UserRole } from '../lib/roleResolution.ts';
 
 export interface UseUserRoleResult {
   role: UserRole;
@@ -24,71 +24,23 @@ export interface UseUserRoleResult {
   businessId: number | null;
 }
 
+/**
+ * useUserRole Hook (Deterministic)
+ * 
+ * Lightweight wrapper around useProfile to maintain compatibility.
+ * Returns pre-resolved role data from global ProfileContext.
+ */
 export function useUserRole(): UseUserRoleResult {
-  const { user, state } = useAuth();
-  const [roleResult, setRoleResult] = useState<{
-    role: UserRole;
-    error: string | null;
-    isAdmin: boolean;
-    isBusinessOwner: boolean;
-    isBusinessStaff: boolean;
-    businessId: number | null;
-  }>({
-    role: 'anonymous',
-    error: null,
-    isAdmin: false,
-    isBusinessOwner: false,
-    isBusinessStaff: false,
-    businessId: null
-  });
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const resolveRole = async () => {
-      if (state === 'loading') {
-        setIsLoading(true);
-        return;
-      }
-
-      if (!user) {
-        setRoleResult({
-          role: 'anonymous',
-          error: null,
-          isAdmin: false,
-          isBusinessOwner: false,
-          isBusinessStaff: false,
-          businessId: null
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      setIsLoading(true);
-      const result = await resolveUserRole(user);
-
-      setRoleResult({
-        role: result.role,
-        error: result.error || null,
-        isAdmin: result.isAdmin,
-        isBusinessOwner: result.isBusinessOwner,
-        isBusinessStaff: result.isBusinessStaff,
-        businessId: result.businessId
-      });
-      setIsLoading(false);
-    };
-
-    resolveRole();
-    // BREAKING THE LOOP: Only re-run if user ID changes or auth state changes.
-    // Do NOT depend on the 'user' object itself as it changes reference frequently.
-  }, [user?.id, state, user]);
+  const { state: authState } = useAuth();
+  const { role, isLoaded, businessId, error } = useProfile();
 
   return {
-    role: roleResult.role,
-    isLoading,
-    error: roleResult.error,
-    isAdmin: roleResult.isAdmin,
-    isBusinessOwner: roleResult.isBusinessOwner,
-    isBusinessStaff: roleResult.isBusinessStaff,
-    businessId: roleResult.businessId
+    role,
+    isLoading: authState === 'loading' || !isLoaded,
+    error: error,
+    isAdmin: role === 'admin',
+    isBusinessOwner: role === 'business_owner',
+    isBusinessStaff: role === 'business_staff',
+    businessId: businessId
   };
 }

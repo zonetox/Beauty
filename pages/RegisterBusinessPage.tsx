@@ -1,17 +1,32 @@
 // Business Registration Page
 // Simplified registration for business owners (business creation happens later)
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../providers/AuthProvider.tsx';
+import { useProfile } from '../providers/ProfileProvider.tsx';
 import { isSupabaseConfigured, supabase } from '../lib/supabaseClient.ts';
-import { initializeUserProfile } from '../lib/postSignupInitialization';
+import { initializeUserProfile } from '../lib/postSignupInitialization.ts';
 import SEOHead from '../components/SEOHead.tsx';
 
 const RegisterBusinessPage: React.FC = () => {
     const navigate = useNavigate();
-    const { register } = useAuth();
+    const { register, state: authState } = useAuth();
+    const { profile, isLoaded: profileLoaded } = useProfile();
+
+    // Redirect authenticated users
+    useEffect(() => {
+        if (authState === 'authenticated' && profileLoaded && profile) {
+            // If they already have a business, go to account
+            if (profile.businessId) {
+                navigate('/account', { replace: true });
+            } else {
+                // If they don't have a business, ensure they go to setup
+                navigate('/account/business/setup', { replace: true });
+            }
+        }
+    }, [authState, profileLoaded, profile, navigate]);
 
     const [formData, setFormData] = useState({
         business_name: '',
@@ -84,11 +99,11 @@ const RegisterBusinessPage: React.FC = () => {
                 throw new Error(profileResult.error || 'Khởi tạo hồ sơ thất bại. Vui lòng liên hệ hỗ trợ.');
             }
 
-            // Success! Redirect to business setup page
+            // Success! Wait for profile to be active in context
             toast.success('Tài khoản đã được tạo! Tiếp tục thiết lập doanh nghiệp của bạn.');
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            navigate('/account/business/setup', { replace: true });
+            setIsSubmitting(false);
 
+            // The useEffect above will handle redirection once profile is loaded into context
         } catch (err: unknown) {
             const error = err as Record<string, unknown>;
             let errorMessage = (error.message as string) || 'Đã xảy ra lỗi không mong muốn trong quá trình đăng ký.';

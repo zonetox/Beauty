@@ -1,17 +1,26 @@
 // User Registration Page
 // Simplified registration for regular users (no business creation)
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../providers/AuthProvider.tsx';
+import { useProfile } from '../providers/ProfileProvider.tsx';
 import { isSupabaseConfigured, supabase } from '../lib/supabaseClient.ts';
-import { initializeUserProfile } from '../lib/postSignupInitialization';
+import { initializeUserProfile } from '../lib/postSignupInitialization.ts';
 import SEOHead from '../components/SEOHead.tsx';
 
 const RegisterUserPage: React.FC = () => {
     const navigate = useNavigate();
-    const { register } = useAuth();
+    const { register, state: authState } = useAuth();
+    const { profile, isLoaded: profileLoaded } = useProfile();
+
+    // Redirect authenticated users to account page
+    useEffect(() => {
+        if (authState === 'authenticated' && profileLoaded && profile) {
+            navigate('/account', { replace: true });
+        }
+    }, [authState, profileLoaded, profile, navigate]);
 
     const [formData, setFormData] = useState({
         full_name: '',
@@ -84,10 +93,11 @@ const RegisterUserPage: React.FC = () => {
                 throw new Error(profileResult.error || 'Khởi tạo hồ sơ thất bại. Vui lòng liên hệ hỗ trợ.');
             }
 
-            // Success!
+            // Success! Wait for profile to be active in context
             toast.success('Đăng ký thành công! Chào mừng bạn đến với 1Beauty.asia.');
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            navigate('/account', { replace: true });
+            setIsSubmitting(false);
+
+            // The useEffect above will handle redirection once profile is loaded into context
 
         } catch (err: unknown) {
             const error = err as Record<string, unknown>;

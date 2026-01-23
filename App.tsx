@@ -1,6 +1,6 @@
 
 
-import React, { lazy, Suspense, useState, useEffect } from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Outlet } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -14,7 +14,8 @@ import AuthRedirectHandler from './components/AuthRedirectHandler.tsx';
 import ErrorBoundary from './components/ErrorBoundary.tsx';
 
 // Import new consolidated providers
-import { AuthProvider, useAuth } from './providers/AuthProvider.tsx';
+import { AuthProvider } from './providers/AuthProvider.tsx';
+import { ProfileProvider, useProfile } from './providers/ProfileProvider.tsx';
 import { AdminProvider } from './contexts/AdminContext.tsx';
 import { PublicDataProvider } from './contexts/BusinessDataContext.tsx';
 import { HomepageDataProvider } from './contexts/HomepageDataContext.tsx';
@@ -31,7 +32,6 @@ import { queryClient } from './lib/queryClient.ts';
 import { BusinessProvider } from './contexts/BusinessContext.tsx';
 import { useWebVitals } from './hooks/usePerformanceMonitoring.ts';
 import { usePageTracking } from './lib/usePageTracking.ts';
-import { useUserRole } from './hooks/useUserRole.ts';
 
 // Lazy load all page components for performance
 const HomePage = lazy(() => import('./pages/HomePage.tsx'));
@@ -100,180 +100,18 @@ const AppLayout: React.FC = () => {
     );
 };
 
-// This component intelligently routes the user to their business dashboard or personal account page.
-// MANDATORY: Requires profile and resolves role from database
-// Uses useUserRole hook for consistent role resolution
-const AccountPageRouter: React.FC = () => {
-    const { profile, user, state } = useAuth();
-    const { role, isLoading: roleLoading, error: roleError } = useUserRole();
-    const [loadTimeout, setLoadTimeout] = useState(false);
+/**
+ * Account Dashboard Dispatcher (Standardized)
+ * Routes to different dashboards using pre-resolved Profile Layer
+ */
+const AccountDashboard: React.FC = () => {
+    const { role, profile } = useProfile();
 
-    // Safety timeout: If loading takes more than 15 seconds, show error
-    useEffect(() => {
-        if (state === 'loading' || roleLoading) {
-            const timeoutId = setTimeout(() => {
-                setLoadTimeout(true);
-            }, 15000);
-
-            return () => clearTimeout(timeoutId);
-        }
-        return undefined;
-    }, [state, roleLoading]);
-
-    // Reset timeout when loading completes
-    useEffect(() => {
-        if (state !== 'loading' && !roleLoading && loadTimeout) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setLoadTimeout(false);
-        }
-    }, [state, roleLoading, loadTimeout]);
-
-    // Loading state with Grace Period (prevent flash)
-    // Only show spinner if loading takes more than 400ms
-    const [showLoading, setShowLoading] = useState(false);
-
-    useEffect(() => {
-        let timer: NodeJS.Timeout;
-        if (state === 'loading' || roleLoading) {
-            if (!showLoading) {
-                timer = setTimeout(() => {
-                    setShowLoading(true);
-                }, 400); // 400ms grace period
-            }
-        } else {
-            if (showLoading) {
-                // eslint-disable-next-line react-hooks/set-state-in-effect
-                setShowLoading(false);
-            }
-        }
-        return () => {
-            if (timer) clearTimeout(timer);
-        };
-    }, [state, roleLoading, showLoading]);
-
-    if ((state === 'loading' || roleLoading) && !loadTimeout) {
-        if (!showLoading) return null; // Invisible during grace period
-
-        return (
-            <div className="flex items-center justify-center h-[50vh]">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                </div>
-            </div>
-        );
-    }
-
-    // Timeout state
-    if (loadTimeout) {
-        return (
-            <div className="flex items-center justify-center h-[50vh]">
-                <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg text-center">
-                    <div className="text-red-500 text-5xl mb-4">⏱️</div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Tải thông tin quá lâu</h2>
-                    <p className="text-gray-600 mb-6">Tải thông tin tài khoản mất quá nhiều thời gian. Vui lòng thử lại sau hoặc làm mới trang.</p>
-                    <button
-                        onClick={() => window.location.reload()}
-                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
-                    >
-                        Làm mới trang
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
-    // Error state - Only block if critical (no user or profile), otherwise allow access with fallback role
-    if (!user) {
-        return (
-            <div className="flex items-center justify-center h-[50vh]">
-                <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg text-center">
-                    <div className="text-red-500 text-5xl mb-4">⚠️</div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Authentication Required</h2>
-                    <p className="text-gray-600 mb-6">Please log in to access your account.</p>
-                    <button
-                        onClick={() => window.location.href = '/login'}
-                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
-                    >
-                        Đăng nhập
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
-    // If profile is missing but user exists, try to show account page anyway (profile may load later)
-    if (!profile && roleError) {
-        // Show error but allow retry
-        return (
-            <div className="flex items-center justify-center h-[50vh]">
-                <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg text-center">
-                    <div className="text-yellow-500 text-5xl mb-4">⏱️</div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Đang tải thông tin</h2>
-                    <p className="text-gray-600 mb-6">{roleError}</p>
-                    <div className="flex gap-2 justify-center">
-                        <button
-                            onClick={() => window.location.reload()}
-                            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
-                        >
-                            Làm mới trang
-                        </button>
-                        <button
-                            onClick={() => window.location.href = '/'}
-                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                        >
-                            Về trang chủ
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    // If we have user and profile but role resolution failed, try to show account page with fallback
-    if (profile && user && roleError && !roleLoading) {
-        // Fallback: Show account page for regular users if role resolution fails
-        console.warn('Role resolution failed, using fallback user role:', roleError);
-        return <UserAccountPage />;
-    }
-
-    // Role resolution is complete, but verify we have profile data before routing
-    if (!profile && !roleLoading && state === 'authenticated') {
-        return (
-            <div className="flex items-center justify-center h-[50vh]">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                </div>
-            </div>
-        );
-    }
-
-    // Route based on resolved role - NO DEFAULT REDIRECT
-    // Only route to pages that actually exist and are implemented
     if (profile && (role === 'business_owner' || role === 'business_staff') && profile.businessId) {
-        // Business owner/staff → business dashboard (fully implemented)
         return <UserBusinessDashboardPage />;
     }
 
-    if (role === 'admin') {
-        // Admin → account page (can also access /admin via header link)
-        return <UserAccountPage />;
-    }
-
-    // Regular user → account page (only implemented features shown)
-    if (role === 'user') {
-        return <UserAccountPage />;
-    }
-
-    // Should not reach here
-    return (
-        <div className="flex items-center justify-center h-[50vh]">
-            <div className="text-center">
-                <div className="text-red-500 text-5xl mb-4">⚠️</div>
-                <p className="text-lg font-semibold">Unable to determine account type</p>
-                <p className="text-gray-500">Please contact support.</p>
-            </div>
-        </div>
-    );
+    return <UserAccountPage />;
 };
 
 
@@ -319,7 +157,7 @@ const AppContent: React.FC = () => {
                                             <Route path="account" element={
                                                 <ProtectedRoute>
                                                     <BusinessDashboardProvider>
-                                                        <AccountPageRouter />
+                                                        <AccountDashboard />
                                                     </BusinessDashboardProvider>
                                                 </ProtectedRoute>
                                             } />
@@ -411,9 +249,9 @@ const App: React.FC = () => {
                             gutter={8}
                         />
                         <AuthProvider>
-                            <AuthGate>
+                            <ProfileProvider>
                                 <AppContent />
-                            </AuthGate>
+                            </ProfileProvider>
                         </AuthProvider>
                     </AppInitializationProvider>
                 </Router>
@@ -422,104 +260,10 @@ const App: React.FC = () => {
     );
 };
 
-// Auth Gate: Shows unified loading screen while auth is being checked
-// Prevents multiple loading screens from appearing
-const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { state, logout } = useAuth();
-    const { isInitializing, setInitializing } = useAppInitialization();
-    const [showBypassMenu, setShowBypassMenu] = useState(false);
-    const [showInitialLoading, setShowInitialLoading] = useState(false);
-
-    // Track initialization state - mark as complete when auth resolves
-    useEffect(() => {
-        if (state !== 'loading' && isInitializing) {
-            // Add small delay to prevent flash of loading screen
-            const timer = setTimeout(() => {
-                setInitializing(false);
-            }, 300);
-            return () => clearTimeout(timer);
-        }
-        return undefined;
-    }, [state, isInitializing, setInitializing]);
-
-    // Safety timeout for the initialization screen UI
-    useEffect(() => {
-        if (isInitializing || state === 'loading') {
-            // Only show the "Initializing" screen after 400ms
-            // This makes the app feel instant for most guests
-            const loadingTimer = setTimeout(() => {
-                if (!showInitialLoading) setShowInitialLoading(true);
-            }, 400);
-
-            const bypassTimer = setTimeout(() => {
-                if (!showBypassMenu) setShowBypassMenu(true);
-            }, 7000); // 7 seconds
-
-            return () => {
-                clearTimeout(loadingTimer);
-                clearTimeout(bypassTimer);
-            };
-        } else {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            if (showInitialLoading) setShowInitialLoading(false);
-
-            if (showBypassMenu) setShowBypassMenu(false);
-        }
-        return undefined;
-    }, [isInitializing, state, showInitialLoading, showBypassMenu]);
-
-    const handleBypass = () => {
-        setInitializing(false);
-    };
-
-    const handleResetAuth = async () => {
-        await logout();
-        window.location.reload();
-    };
-
-    // Show unified loading screen during initialization or auth loading
-    if (state === 'loading' || isInitializing) {
-        if (showBypassMenu) {
-            return (
-                <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4 text-center">
-                    <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
-                        <svg className="w-10 h-10 text-primary animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                    <h2 className="text-2xl font-bold text-neutral-dark mb-2">Quá trình khởi tạo đang mất nhiều thời gian</h2>
-                    <p className="text-gray-500 max-w-md mb-8">Hệ thống đang cố gắng kết nối với dịch vụ xác thực. Bạn có muốn tiếp tục chờ hoặc truy cập trang web ngay?</p>
-
-                    <div className="flex flex-col sm:flex-row gap-4 w-full max-w-xs">
-                        <button
-                            onClick={handleBypass}
-                            className="bg-primary text-white px-6 py-3 rounded-xl font-bold shadow-premium hover:bg-primary-dark transition-all"
-                        >
-                            Tiếp tục truy cập
-                        </button>
-                        <button
-                            onClick={handleResetAuth}
-                            className="bg-white text-neutral-dark border border-gray-200 px-6 py-3 rounded-xl font-bold hover:bg-gray-50 transition-all"
-                        >
-                            Thử lại / Đăng xuất
-                        </button>
-                    </div>
-
-                    <p className="mt-8 text-xs text-gray-400">Gợi ý: Nếu vấn đề tiếp tục, hãy thử xóa cache trình duyệt.</p>
-                </div>
-            );
-        }
-
-        // Only show message if it's taking more than 400ms
-        if (showInitialLoading) {
-            return <AppInitializationScreen message="Đang khởi tạo ứng dụng..." />;
-        }
-
-        // Return empty div (effectively invisible) for fast loads
-        return <div className="bg-white fixed inset-0 z-[9999]" />;
-    }
-
-    // Auth state is resolved (authenticated or unauthenticated)
-    // Let protected routes handle redirects
-    return <>{children}</>;
-};
+/**
+ * Legacy AuthGate removed.
+ * Login and initialization are now handled deterministically by 
+ * AuthProvider (Layer 1) and ProfileProvider (Layer 2)
+ */
 
 export default App;
