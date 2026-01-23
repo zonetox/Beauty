@@ -14,8 +14,7 @@ import AuthRedirectHandler from './components/AuthRedirectHandler.tsx';
 import ErrorBoundary from './components/ErrorBoundary.tsx';
 
 // Import new consolidated providers
-import { AuthProvider } from './providers/AuthProvider.tsx';
-import { ProfileProvider, useProfile } from './providers/ProfileProvider.tsx';
+import { AuthProvider, useAuth } from './providers/AuthProvider.tsx';
 import { AdminProvider } from './contexts/AdminContext.tsx';
 import { PublicDataProvider } from './contexts/BusinessDataContext.tsx';
 import { HomepageDataProvider } from './contexts/HomepageDataContext.tsx';
@@ -105,7 +104,7 @@ const AppLayout: React.FC = () => {
  * Routes to different dashboards using pre-resolved Profile Layer
  */
 const AccountDashboard: React.FC = () => {
-    const { role, profile } = useProfile();
+    const { role, profile } = useAuth();
 
     if (profile && (role === 'business_owner' || role === 'business_staff') && profile.businessId) {
         return <UserBusinessDashboardPage />;
@@ -249,9 +248,7 @@ const App: React.FC = () => {
                             gutter={8}
                         />
                         <AuthProvider>
-                            <ProfileProvider>
-                                <AppContent />
-                            </ProfileProvider>
+                            <AppContent />
                         </AuthProvider>
                     </AppInitializationProvider>
                 </Router>

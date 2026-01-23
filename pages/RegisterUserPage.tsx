@@ -5,22 +5,18 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../providers/AuthProvider.tsx';
-import { useProfile } from '../providers/ProfileProvider.tsx';
-import { isSupabaseConfigured, supabase } from '../lib/supabaseClient.ts';
-import { initializeUserProfile } from '../lib/postSignupInitialization.ts';
 import SEOHead from '../components/SEOHead.tsx';
 
 const RegisterUserPage: React.FC = () => {
     const navigate = useNavigate();
-    const { register, state: authState } = useAuth();
-    const { profile, isLoaded: profileLoaded } = useProfile();
+    const { register, state: authState, profile, isDataLoaded } = useAuth();
 
     // Redirect authenticated users to account page
     useEffect(() => {
-        if (authState === 'authenticated' && profileLoaded && profile) {
+        if (authState === 'authenticated' && isDataLoaded && profile) {
             navigate('/account', { replace: true });
         }
-    }, [authState, profileLoaded, profile, navigate]);
+    }, [authState, isDataLoaded, profile, navigate]);
 
     const [formData, setFormData] = useState({
         full_name: '',
@@ -63,38 +59,16 @@ const RegisterUserPage: React.FC = () => {
 
         setIsSubmitting(true);
 
-        if (!isSupabaseConfigured) {
-            toast.error("Preview Mode: Registration is disabled.");
-            setIsSubmitting(false);
-            return;
-        }
-
         try {
             // Step 1: Create Supabase Auth user
+            // The AuthProvider will automatically detect the new session,
+            // fetch the (server-created) profile, and redirect via the useEffect above.
             await register(formData.email, formData.password, {
                 full_name: formData.full_name.trim(),
                 phone: formData.phone.trim(),
             });
 
-            // Wait for session to be established
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            // Get user from current session
-            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-            if (sessionError || !session?.user) {
-                throw new Error('Không thể xác thực tài khoản. Vui lòng thử lại.');
-            }
-            const newUser = session.user;
-
-            // Step 2: Initialize and verify profile
-            const profileResult = await initializeUserProfile(newUser, 3000);
-
-            if (!profileResult.success || !profileResult.profileId) {
-                throw new Error(profileResult.error || 'Khởi tạo hồ sơ thất bại. Vui lòng liên hệ hỗ trợ.');
-            }
-
-            // Success! Wait for profile to be active in context
-            toast.success('Đăng ký thành công! Chào mừng bạn đến với 1Beauty.asia.');
+            toast.success('Đăng ký thành công! Đang chuẩn bị tài khoản...');
             setIsSubmitting(false);
 
             // The useEffect above will handle redirection once profile is loaded into context

@@ -5,19 +5,15 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../providers/AuthProvider.tsx';
-import { useProfile } from '../providers/ProfileProvider.tsx';
-import { isSupabaseConfigured, supabase } from '../lib/supabaseClient.ts';
-import { initializeUserProfile } from '../lib/postSignupInitialization.ts';
 import SEOHead from '../components/SEOHead.tsx';
 
 const RegisterBusinessPage: React.FC = () => {
     const navigate = useNavigate();
-    const { register, state: authState } = useAuth();
-    const { profile, isLoaded: profileLoaded } = useProfile();
+    const { register, state: authState, profile, isDataLoaded } = useAuth();
 
     // Redirect authenticated users
     useEffect(() => {
-        if (authState === 'authenticated' && profileLoaded && profile) {
+        if (authState === 'authenticated' && isDataLoaded && profile) {
             // If they already have a business, go to account
             if (profile.businessId) {
                 navigate('/account', { replace: true });
@@ -26,7 +22,7 @@ const RegisterBusinessPage: React.FC = () => {
                 navigate('/account/business/setup', { replace: true });
             }
         }
-    }, [authState, profileLoaded, profile, navigate]);
+    }, [authState, isDataLoaded, profile, navigate]);
 
     const [formData, setFormData] = useState({
         business_name: '',
@@ -68,39 +64,15 @@ const RegisterBusinessPage: React.FC = () => {
 
         setIsSubmitting(true);
 
-        if (!isSupabaseConfigured) {
-            toast.error("Preview Mode: Registration is disabled.");
-            setIsSubmitting(false);
-            return;
-        }
-
         try {
             // Step 1: Create Supabase Auth user
-            // Use business_name as full_name for now
+            // AuthProvider will detect session and fetch profile automatically.
             await register(formData.email, formData.password, {
                 full_name: formData.business_name.trim(),
-                user_type: 'business', // Metadata to track intent
+                user_type: 'business',
             });
 
-            // Wait for session to be established
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            // Get user from current session
-            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-            if (sessionError || !session?.user) {
-                throw new Error('Không thể xác thực tài khoản. Vui lòng thử lại.');
-            }
-            const newUser = session.user;
-
-            // Step 2: Initialize and verify profile
-            const profileResult = await initializeUserProfile(newUser, 3000);
-
-            if (!profileResult.success || !profileResult.profileId) {
-                throw new Error(profileResult.error || 'Khởi tạo hồ sơ thất bại. Vui lòng liên hệ hỗ trợ.');
-            }
-
-            // Success! Wait for profile to be active in context
-            toast.success('Tài khoản đã được tạo! Tiếp tục thiết lập doanh nghiệp của bạn.');
+            toast.success('Đăng ký thành công! Đang chuẩn bị tài khoản...');
             setIsSubmitting(false);
 
             // The useEffect above will handle redirection once profile is loaded into context

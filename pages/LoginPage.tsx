@@ -16,16 +16,15 @@ const LoginPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
 
-    // Get auth context - must be called unconditionally (React Hook rules)
-    const { login, state, profile } = useAuth();
+    // Get auth context
+    const { login, state, profile, isDataLoaded } = useAuth();
 
     // Unified redirection for authenticated users
-    // If user is already logged in, redirect to account page
     useEffect(() => {
-        if (state === 'authenticated' && profile) {
+        if (state === 'authenticated' && isDataLoaded && profile) {
             navigate('/account', { replace: true });
         }
-    }, [state, profile, navigate]);
+    }, [state, isDataLoaded, profile, navigate]);
 
     // SEO metadata
     const seoTitle = 'Đăng nhập | 1Beauty.asia';
