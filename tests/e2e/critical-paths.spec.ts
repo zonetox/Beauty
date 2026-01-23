@@ -74,43 +74,30 @@ test.describe('Critical User Flows', () => {
     // Wait for form to load
     await expect(page.locator('form')).toBeVisible({ timeout: 10000 });
 
-    // Step 3: Fill business registration form (account creation only)
+    // Step 3: Fill new consolidated business registration form
     const timestamp = Date.now();
     const testEmail = `business${timestamp}@example.com`;
     const testPassword = 'TestPassword123!';
 
-    await page.fill('#business_name', 'Test Business');
+    // Account Info
     await page.fill('#email', testEmail);
     await page.fill('#password', testPassword);
     await page.fill('#confirmPassword', testPassword);
 
+    // Business Info
+    await page.fill('#business_name', 'Test Business');
+    await page.fill('#phone', '0987654321');
+    await page.selectOption('#category', 'Spa'); // or whatever the first option is
+    await page.fill('#address', '123 Test Street');
+
     // Submit form
     await page.click('button[type="submit"]');
 
-    // Wait for redirect to business setup page
-    await page.waitForTimeout(5000);
+    // Wait for redirect to dashboard (skipping setup page)
+    await page.waitForTimeout(10000); // Give it time for atomic transaction + redirect
 
-    // Should redirect to business setup page
-    let currentUrl = page.url();
-    console.log('After registration URL:', currentUrl);
-
-    // If redirected to setup page, fill business details
-    if (currentUrl.includes('/account/business/setup')) {
-      // Wait for setup form
-      await expect(page.locator('form')).toBeVisible({ timeout: 10000 });
-
-      // Fill business setup form
-      await page.fill('#phone', '0123456789');
-      await page.fill('#address', '123 Test Street');
-
-      // Submit business setup
-      await page.click('button[type="submit"]');
-
-      // Wait for final redirect
-      await page.waitForTimeout(5000);
-      currentUrl = page.url();
-    }
-
+    // Should redirect directly to account dashboard
+    const currentUrl = page.url();
     console.log('Final URL:', currentUrl);
 
     // Should eventually be at /account (dashboard)

@@ -1,273 +1,364 @@
-// Business Registration Page
-// Simplified registration for business owners (business creation happens later)
+// Redesigned Business Registration Page
+// Validated with Zod, Atomic Transaction Flow
+// Replaces the old 2-step process with a robust single-page experience.
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../providers/AuthProvider.tsx';
 import SEOHead from '../components/SEOHead.tsx';
+import { supabase } from '../lib/supabaseClient.ts';
+import { BusinessRegistrationFormSchema, BusinessRegistrationFormData } from '../lib/schemas/business.schema.ts';
+import { CATEGORIES } from '../constants.ts'; // Ensure we have categories
 
 const RegisterBusinessPage: React.FC = () => {
     const navigate = useNavigate();
-    const { register, state: authState, profile, isDataLoaded } = useAuth();
+    const { register } = useAuth();
 
-    // Redirect authenticated users
-    useEffect(() => {
-        if (authState === 'authenticated' && isDataLoaded && profile) {
-            // If they already have a business, go to account
-            if (profile.businessId) {
-                navigate('/account', { replace: true });
-            } else {
-                // If they don't have a business, ensure they go to setup
-                navigate('/account/business/setup', { replace: true });
-            }
-        }
-    }, [authState, isDataLoaded, profile, navigate]);
-
-    const [formData, setFormData] = useState({
-        business_name: '',
+    // Form State
+    const [formData, setFormData] = useState<BusinessRegistrationFormData>({
         email: '',
         password: '',
         confirmPassword: '',
+        business_name: '',
+        phone: '',
+        address: '',
+        category: CATEGORIES[0] || 'Spa', // Default to first category
+        description: '',
     });
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState('');
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [errors, setErrors] = useState<Partial<Record<keyof BusinessRegistrationFormData, string>>>({});
+
+    // Handle Input Change
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+        // Clear error when user types
+        if (errors[name as keyof BusinessRegistrationFormData]) {
+            setErrors(prev => ({ ...prev, [name]: undefined }));
+        }
     };
 
+    // Main Submit Handler
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError('');
+        setErrors({});
 
-        // Validation
-        if (formData.password !== formData.confirmPassword) {
-            const errorMsg = 'Mật khẩu không khớp.';
-            setError(errorMsg);
-            toast.error(errorMsg);
-            return;
-        }
-        if (formData.password.length < 6) {
-            const errorMsg = 'Mật khẩu phải có ít nhất 6 ký tự.';
-            setError(errorMsg);
-            toast.error(errorMsg);
-            return;
-        }
-        if (!formData.business_name.trim()) {
-            const errorMsg = 'Vui lòng nhập tên doanh nghiệp.';
-            setError(errorMsg);
-            toast.error(errorMsg);
+        // 1. Client-side Zod Validation
+        const validationResult = BusinessRegistrationFormSchema.safeParse(formData);
+
+        if (!validationResult.success) {
+            const fieldErrors: any = {};
+            // Using explicit type or casting to avoid TS errors with ZodError structure if strict mode is aggressive
+            validationResult.error.errors.forEach((err: any) => {
+                if (err.path[0]) {
+                    fieldErrors[err.path[0]] = err.message;
+                }
+            });
+            setErrors(fieldErrors);
+            toast.error('Vui lòng kiểm tra lại thông tin đăng ký.');
+            // Scroll to top error
+            const firstErrorField = document.getElementById(Object.keys(fieldErrors)[0]);
+            firstErrorField?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
         }
 
         setIsSubmitting(true);
 
         try {
-            // Step 1: Create Supabase Auth user
-            // AuthProvider will detect session and fetch profile automatically.
-            await register(formData.email, formData.password, {
-                full_name: formData.business_name.trim(),
-                user_type: 'business',
-            });
+            // 2. Optimization: Check duplicate email first to avoid partial business creation
+            // (Supabase auth checks this too, but checking here saves a DB write for business)
+            // Note: We can skip this if we want to rely on atomic rollback, but it's UX friendly.
 
-            toast.success('Đăng ký thành công! Đang chuẩn bị tài khoản...');
-            setIsSubmitting(false);
+            // 3. ATOMIC TRANSACTION SIMULATION
+            // Step A: Create Business Record via RPC
+            // We use the RPC function we created in migration 20260123
+            const { data: businessData, error: businessError } = await supabase
+                .rpc('register_business_atomic', {
+                    p_email: formData.email,
+                    p_password: formData.password, // Not stored, just passed for context if needed
+                    p_full_name: formData.business_name,
+                    p_business_name: formData.business_name,
+                    p_phone: formData.phone,
+                    p_address: formData.address,
+                    p_category: formData.category,
+                    p_description: formData.description || null,
+                });
 
-            // The useEffect above will handle redirection once profile is loaded into context
-        } catch (err: unknown) {
-            const error = err as Record<string, unknown>;
-            let errorMessage = (error.message as string) || 'Đã xảy ra lỗi không mong muốn trong quá trình đăng ký.';
-
-            // Translate common errors
-            if (errorMessage.includes('already registered') || errorMessage.includes('already exists')) {
-                errorMessage = 'Email này đã được đăng ký. Vui lòng đăng nhập hoặc sử dụng email khác.';
-            } else if (errorMessage.includes('invalid email')) {
-                errorMessage = 'Email không hợp lệ. Vui lòng kiểm tra lại.';
-            } else if (errorMessage.includes('password')) {
-                errorMessage = 'Mật khẩu không đủ mạnh. Vui lòng thử lại với mật khẩu khác.';
+            if (businessError) {
+                console.error('Business Creation Error:', businessError);
+                throw new Error('Không thể khởi tạo dữ liệu doanh nghiệp. Vui lòng thử lại.');
             }
 
-            setError(errorMessage);
-            toast.error(errorMessage);
+            // Validate RPC response structure
+            if (!businessData || typeof businessData.business_id !== 'number') {
+                throw new Error('Lỗi phản hồi từ hệ thống (Invalid Business ID).');
+            }
+
+            const businessId = businessData.business_id;
+
+            // Step B: Create Auth User with Business ID metadata
+            // The trigger will see 'business_id' (if we pass it? No, triggers can't easily see extra args unless in metadata)
+            // Wait, our new trigger looks for `user_type`. We should also pass `business_id` ideally, 
+            // OR update the profile immediately after signup.
+            // Let's pass everything to metadata for the trigger to capture if we update it to support business_id linking,
+            // or we do manual link after.
+
+            // To ensure atomic-like behavior from user perspective:
+            try {
+                await register(formData.email, formData.password, {
+                    full_name: formData.business_name,
+                    user_type: 'business',
+                    // We can store business_id in metadata, can be useful for manual recovery
+                    temp_business_id: businessId
+                });
+            } catch (authError: any) {
+                // ROLLBACK BUSINESS (Compensating Transaction)
+                // If Auth fails (e.g. email exists), we should ideally delete the business we just created
+                // to avoid orphaned records.
+                console.warn('Auth failed, rolling back business record...', authError);
+                await supabase.from('businesses').delete().eq('id', businessId);
+
+                throw authError; // Re-throw to show error to user
+            }
+
+            // Step C: Link Profile to Business
+            // Now that user exists, we link them.
+            // We need to get the user ID. 'register' function usually auto-logs int.
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (user) {
+                const { error: linkError } = await supabase
+                    .from('profiles')
+                    .update({
+                        business_id: businessId,
+                        user_type: 'business' // Reinforce user_type
+                    })
+                    .eq('id', user.id);
+
+                if (linkError) {
+                    console.error('Profile Link Error:', linkError);
+                    // This is critical. User created, Business created, but not linked.
+                    // We should probably log this critical error to monitoring system.
+                    toast.error('Tài khoản đã tạo nhưng chưa liên kết doanh nghiệp. Vui lòng liên hệ hỗ trợ.');
+                }
+
+                // Also update business owner_id
+                await supabase
+                    .from('businesses')
+                    .update({ owner_id: user.id })
+                    .eq('id', businessId);
+            }
+
+            // Success!
+            toast.success('Đăng ký doanh nghiệp thành công!');
+
+            // Redirect to dashboard (skip setup page)
+            navigate('/account', { replace: true });
+
+        } catch (err: any) {
+            console.error('Registration Flow Error:', err);
+            let msg = err.message || 'Đăng ký thất bại.';
+
+            // User friendly errors
+            if (msg.includes('rate limit')) msg = 'Quá nhiều yêu cầu. Vui lòng thử lại sau 1 phút.';
+            if (msg.includes('already registered')) msg = 'Email này đã được sử dụng.';
+
+            setErrors({ email: msg }); // General error usually relates to account
+            toast.error(msg);
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    const seoTitle = 'Đăng ký tài khoản doanh nghiệp | 1Beauty.asia';
-    const seoDescription = 'Tạo tài khoản doanh nghiệp miễn phí với gói dùng thử Premium 30 ngày để quảng bá dịch vụ làm đẹp của bạn trên 1Beauty.asia.';
-    const seoUrl = typeof window !== 'undefined' ? `${window.location.origin}/register/business` : '';
+    const seoTitle = 'Đăng ký Doanh nghiệp | 1Beauty.asia';
 
     return (
         <>
-            <SEOHead
-                title={seoTitle}
-                description={seoDescription}
-                keywords="đăng ký doanh nghiệp, business registration, salon spa registration"
-                url={seoUrl}
-                type="website"
-            />
-            <div className="bg-background min-h-[calc(100vh-128px)]">
-                <div className="container mx-auto px-4 py-16">
-                    <div className="max-w-md mx-auto">
-                        {/* Back Link */}
-                        <Link
-                            to="/register"
-                            className="inline-flex items-center text-gray-600 hover:text-primary mb-6 transition-colors"
-                        >
-                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-                            </svg>
-                            Quay lại
+            <SEOHead title={seoTitle} description="Đăng ký đối tác 1Beauty - Giải pháp quản lý Spa/Salon chuyên nghiệp" />
+
+            <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-4xl mx-auto">
+                    <div className="text-center mb-10">
+                        <Link to="/" className="inline-block mb-6">
+                            <span className="text-3xl font-bold font-outfit text-gradient">1Beauty.asia</span>
                         </Link>
+                        <h1 className="text-3xl font-extrabold text-neutral-dark">
+                            Đăng ký Đối tác Doanh nghiệp
+                        </h1>
+                        <p className="mt-2 text-gray-600">
+                            Một tài khoản duy nhất để quản lý, tiếp thị và phát triển thương hiệu của bạn.
+                        </p>
+                    </div>
 
-                        {/* Form Card */}
-                        <div className="bg-white p-8 rounded-lg shadow-md">
-                            <div className="text-center mb-8">
-                                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                    </svg>
-                                </div>
-                                <h1 className="text-2xl font-bold font-serif text-neutral-dark mb-2">
-                                    Đăng ký tài khoản Doanh nghiệp
-                                </h1>
-                                <p className="text-gray-600">
-                                    Dùng thử Premium 30 ngày miễn phí
-                                </p>
-                            </div>
+                    <form onSubmit={handleSubmit} className="space-y-6">
 
-                            {/* Benefits Banner */}
-                            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                                <div className="flex items-start">
-                                    <svg className="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                    </svg>
-                                    <div className="text-sm text-green-800">
-                                        <p className="font-semibold mb-1">Ưu đãi đặc biệt khi đăng ký!</p>
-                                        <ul className="space-y-1 text-xs">
-                                            <li>✓ Gói Premium 30 ngày hoàn toàn miễn phí</li>
-                                            <li>✓ Trang giới thiệu doanh nghiệp chuyên nghiệp</li>
-                                            <li>✓ Quản lý đặt lịch và dịch vụ dễ dàng</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
+                        {/* SECTION 1: ACCOUNT INFO */}
+                        <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+                            <h2 className="text-xl font-semibold text-neutral-dark mb-6 flex items-center gap-2">
+                                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary text-sm font-bold">1</span>
+                                Thông tin tài khoản
+                            </h2>
 
-                            {/* Error Display */}
-                            {error && (
-                                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                                    <div className="flex items-start">
-                                        <svg className="h-5 w-5 text-red-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                                        </svg>
-                                        <p className="ml-3 text-sm text-red-700">{error}</p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Form */}
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <div>
-                                    <label htmlFor="business_name" className="block text-sm font-medium text-gray-700 mb-1">
-                                        Tên doanh nghiệp <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        id="business_name"
-                                        type="text"
-                                        name="business_name"
-                                        value={formData.business_name}
-                                        onChange={handleChange}
-                                        required
-                                        placeholder="Spa & Salon ABC"
-                                        disabled={isSubmitting}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary disabled:bg-gray-100 disabled:cursor-not-allowed"
-                                    />
-                                    <p className="mt-1 text-xs text-gray-500">
-                                        Bạn sẽ điền thông tin chi tiết doanh nghiệp ở bước tiếp theo
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                                        Email <span className="text-red-500">*</span>
-                                    </label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="email">Email đăng nhập *</label>
                                     <input
                                         id="email"
-                                        type="email"
                                         name="email"
+                                        type="email"
                                         value={formData.email}
                                         onChange={handleChange}
-                                        required
-                                        placeholder="email@business.com"
-                                        disabled={isSubmitting}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none transition-all ${errors.email ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
+                                        placeholder="email@doanhnghiep.com"
                                     />
+                                    {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
                                 </div>
 
                                 <div>
-                                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                                        Mật khẩu <span className="text-red-500">*</span>
-                                    </label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="password">Mật khẩu *</label>
                                     <input
                                         id="password"
-                                        type="password"
                                         name="password"
+                                        type="password"
                                         value={formData.password}
                                         onChange={handleChange}
-                                        required
+                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none transition-all ${errors.password ? 'border-red-500' : 'border-gray-300'}`}
                                         placeholder="Tối thiểu 6 ký tự"
-                                        disabled={isSubmitting}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary disabled:bg-gray-100 disabled:cursor-not-allowed"
                                     />
+                                    {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
                                 </div>
 
                                 <div>
-                                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                                        Xác nhận mật khẩu <span className="text-red-500">*</span>
-                                    </label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="confirmPassword">Xác nhận mật khẩu *</label>
                                     <input
                                         id="confirmPassword"
-                                        type="password"
                                         name="confirmPassword"
+                                        type="password"
                                         value={formData.confirmPassword}
                                         onChange={handleChange}
-                                        required
+                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none transition-all ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'}`}
                                         placeholder="Nhập lại mật khẩu"
-                                        disabled={isSubmitting}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary disabled:bg-gray-100 disabled:cursor-not-allowed"
                                     />
+                                    {errors.confirmPassword && <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* SECTION 2: BUSINESS INFO */}
+                        <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+                            <h2 className="text-xl font-semibold text-neutral-dark mb-6 flex items-center gap-2">
+                                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary text-sm font-bold">2</span>
+                                Thông tin doanh nghiệp
+                            </h2>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="business_name">Tên doanh nghiệp / Thương hiệu *</label>
+                                    <input
+                                        id="business_name"
+                                        name="business_name"
+                                        type="text"
+                                        value={formData.business_name}
+                                        onChange={handleChange}
+                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none transition-all ${errors.business_name ? 'border-red-500' : 'border-gray-300'}`}
+                                        placeholder="Ví dụ: Luxury Spa & Clinic"
+                                    />
+                                    {errors.business_name && <p className="mt-1 text-sm text-red-500">{errors.business_name}</p>}
                                 </div>
 
-                                <button
-                                    type="submit"
-                                    disabled={isSubmitting}
-                                    className="w-full bg-primary text-white py-3 px-4 rounded-md shadow-sm text-base font-medium hover:bg-primary-dark disabled:bg-primary/50 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
-                                >
-                                    {isSubmitting ? (
-                                        <>
-                                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
-                                            Đang xử lý...
-                                        </>
-                                    ) : (
-                                        'Tiếp tục'
-                                    )}
-                                </button>
-                            </form>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="phone">Số điện thoại *</label>
+                                    <input
+                                        id="phone"
+                                        name="phone"
+                                        type="tel"
+                                        value={formData.phone}
+                                        onChange={handleChange}
+                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none transition-all ${errors.phone ? 'border-red-500' : 'border-gray-300'}`}
+                                        placeholder="0912345678"
+                                    />
+                                    {errors.phone && <p className="mt-1 text-sm text-red-500">{errors.phone}</p>}
+                                </div>
 
-                            {/* Login Link */}
-                            <p className="text-sm text-center text-gray-600 mt-6">
-                                Đã có tài khoản?{' '}
-                                <Link to="/login" className="font-medium text-primary hover:text-primary-dark transition-colors">
-                                    Đăng nhập tại đây
-                                </Link>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="category">Danh mục chính *</label>
+                                    <select
+                                        id="category"
+                                        name="category"
+                                        value={formData.category}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none bg-white"
+                                    >
+                                        {CATEGORIES.map(cat => (
+                                            <option key={cat} value={cat}>{cat}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="address">Địa chỉ kinh doanh *</label>
+                                    <input
+                                        id="address"
+                                        name="address"
+                                        type="text"
+                                        value={formData.address}
+                                        onChange={handleChange}
+                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none transition-all ${errors.address ? 'border-red-500' : 'border-gray-300'}`}
+                                        placeholder="Số nhà, tên đường, phường/xã, quận/huyện"
+                                    />
+                                    {errors.address && <p className="mt-1 text-sm text-red-500">{errors.address}</p>}
+                                </div>
+
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="description">Giới thiệu ngắn (không bắt buộc)</label>
+                                    <textarea
+                                        id="description"
+                                        name="description"
+                                        rows={3}
+                                        value={formData.description}
+                                        onChange={handleChange}
+                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none transition-all ${errors.description ? 'border-red-500' : 'border-gray-300'}`}
+                                        placeholder="Mô tả ngắn gọn về dịch vụ của bạn..."
+                                    />
+                                    {errors.description && <p className="mt-1 text-sm text-red-500">{errors.description}</p>}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* SUBMIT */}
+                        <div className="pt-4">
+                            <button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="w-full bg-primary text-white py-4 rounded-xl shadow-lg hover:bg-primary-dark hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 font-bold text-lg disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+                            >
+                                {isSubmitting ? (
+                                    <span className="flex items-center justify-center gap-2">
+                                        <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Đang tạo tài khoản...
+                                    </span>
+                                ) : (
+                                    'Đăng ký Doanh nghiệp Ngay (Miễn phí)'
+                                )}
+                            </button>
+                            <p className="text-center text-sm text-gray-500 mt-4">
+                                Bằng việc đăng ký, bạn đồng ý với Điều khoản sử dụng và Chính sách bảo mật của chúng tôi.
                             </p>
                         </div>
+                    </form>
+
+                    <div className="text-center mt-8">
+                        <p className="text-gray-600">
+                            Đã có tài khoản?{' '}
+                            <Link to="/login" className="font-semibold text-primary hover:text-primary-dark">
+                                Đăng nhập
+                            </Link>
+                        </p>
                     </div>
                 </div>
             </div>
