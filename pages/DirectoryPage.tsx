@@ -133,7 +133,7 @@ const DirectoryPage: React.FC = () => {
     // const [mapVisibleBusinesses, setMapVisibleBusinesses] = useState<Business[]>([]); // Refactored to useMemo below
     const [highlightedBusinessId, setHighlightedBusinessId] = useState<number | null>(null);
     const [selectedBusinessId, setSelectedBusinessId] = useState<number | null>(null);
-    const [mapBounds, setMapBounds] = useState<{ contains?: (point: [number, number]) => boolean } | null>(null);
+    const [mapBounds, setMapBounds] = useState<{ contains: (point: [number, number]) => boolean } | null>(null);
     const [filterByMap, setFilterByMap] = useState(true);
     const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
 
@@ -345,7 +345,7 @@ const DirectoryPage: React.FC = () => {
                             onPopupClose={() => setSelectedBusinessId(null)}
                             onMarkerMouseEnter={(id) => setHighlightedBusinessId(id)}
                             onMarkerMouseLeave={() => setHighlightedBusinessId(null)}
-                            onBoundsChange={(bounds: any) => setMapBounds(bounds)}
+                            onBoundsChange={(bounds) => setMapBounds(bounds)}
                             shouldFitBounds={hasSearchQuery}
                             centerCoords={mapCenterCoords}
                         />

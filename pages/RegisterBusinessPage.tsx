@@ -16,11 +16,6 @@ const RegisterBusinessPage: React.FC = () => {
     const navigate = useNavigate();
     const { user, register } = useAuth();
 
-    // If user is ALREADY logged in, show onboarding instead of signup
-    if (user) {
-        return <BusinessOnboardingWizard />;
-    }
-
     // Form State
     const [formData, setFormData] = useState<BusinessRegistrationFormData>({
         email: '',
@@ -29,12 +24,17 @@ const RegisterBusinessPage: React.FC = () => {
         business_name: '',
         phone: '',
         address: '',
-        category: CATEGORIES[0] || 'Spa', // Default to first category
+        category: CATEGORIES[0] || 'Spa & Massage', // Default
         description: '',
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errors, setErrors] = useState<Partial<Record<keyof BusinessRegistrationFormData, string>>>({});
+
+    // If user is ALREADY logged in, show onboarding instead of signup
+    if (user) {
+        return <BusinessOnboardingWizard />;
+    }
 
     // Handle Input Change
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -55,11 +55,12 @@ const RegisterBusinessPage: React.FC = () => {
         const validationResult = BusinessRegistrationFormSchema.safeParse(formData);
 
         if (!validationResult.success) {
-            const fieldErrors: any = {};
+            const fieldErrors: Partial<Record<keyof BusinessRegistrationFormData, string>> & { [key: string]: string | undefined } = {};
             // Using explicit type or casting to avoid TS errors with ZodError structure if strict mode is aggressive
-            validationResult.error.issues.forEach((err: any) => {
-                if (err.path[0]) {
-                    fieldErrors[err.path[0]] = err.message;
+            validationResult.error.issues.forEach((err) => {
+                const field = err.path[0] as keyof BusinessRegistrationFormData;
+                if (field) {
+                    fieldErrors[field] = err.message;
                 }
             });
             setErrors(fieldErrors);

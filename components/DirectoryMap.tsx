@@ -6,11 +6,17 @@ import 'leaflet/dist/leaflet.css';
 import { Business, BusinessCategory } from '../types.ts';
 import MapBusinessCard from './MapBusinessCard.tsx';
 
+export interface MapBounds {
+    getNorthEast: () => L.LatLng;
+    getSouthWest: () => L.LatLng;
+    contains: (point: [number, number] | L.LatLng) => boolean;
+}
+
 interface DirectoryMapProps {
     businesses: Business[];
     highlightedBusinessId: number | null;
     selectedBusinessId: number | null;
-    onBoundsChange: (bounds: unknown) => void;
+    onBoundsChange: (bounds: MapBounds) => void;
     onMarkerClick: (businessId: number) => void;
     onPopupClose: () => void;
     onMarkerMouseEnter: (businessId: number) => void;

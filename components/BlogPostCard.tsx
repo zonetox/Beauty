@@ -6,15 +6,15 @@ import { BlogPost } from '../types.ts';
 import { getOptimizedSupabaseUrl } from '../lib/image.ts';
 
 const EyeIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 inline-block" viewBox="0 0 20 20" fill="currentColor">
-        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-        <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-    </svg>
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 inline-block" viewBox="0 0 20 20" fill="currentColor">
+    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+  </svg>
 );
 
 
 interface BlogPostCardProps {
-  post: Partial<BlogPost> & { url: string; };
+  post: Partial<Omit<BlogPost, 'id'>> & { url: string; id: string | number; };
 }
 
 const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
@@ -25,7 +25,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
   const safeCategory = category ?? 'Uncategorized';
   const safeExcerpt = excerpt ?? '';
   const safeImageUrl = imageUrl ?? '';
-  
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden transition-shadow hover:shadow-xl">
       <Link to={url}>
@@ -39,10 +39,10 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
             <span className="mx-2">&bull;</span>
             <span>{safeDate}</span>
             {viewCount !== undefined && (
-                <>
-                    <span className="mx-2">&bull;</span>
-                    <span className="flex items-center"><EyeIcon /> {viewCount.toLocaleString()}</span>
-                </>
+              <>
+                <span className="mx-2">&bull;</span>
+                <span className="flex items-center"><EyeIcon /> {viewCount.toLocaleString()}</span>
+              </>
             )}
           </div>
         </div>

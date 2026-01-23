@@ -49,7 +49,7 @@ const BlogListPage: React.FC = () => {
     const page = parseInt(params.get('page') || '1', 10);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedCategory(category);
-     
+
     setCurrentPage(page);
   }, [location.search, setSelectedCategory, setCurrentPage]);
 
@@ -236,7 +236,7 @@ const BlogListPage: React.FC = () => {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {paginatedPosts.map(post => (
-                      <BlogPostCard key={post.id} post={post as any} />
+                      <BlogPostCard key={post.id} post={post} />
                     ))}
                   </div>
                   {totalPages > 1 && (
