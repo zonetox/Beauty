@@ -1,3 +1,4 @@
+/* eslint-disable */
 const pg = require('pg');
 const path = require('path');
 const dotenv = require('dotenv');
