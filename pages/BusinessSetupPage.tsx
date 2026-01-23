@@ -11,7 +11,7 @@ import SEOHead from '../components/SEOHead.tsx';
 
 const BusinessSetupPage: React.FC = () => {
     const navigate = useNavigate();
-    const { user, profile, refreshProfile } = useAuth();
+    const { user, profile, refreshAuth } = useAuth();
 
     const [formData, setFormData] = useState({
         business_name: '',
@@ -101,7 +101,7 @@ const BusinessSetupPage: React.FC = () => {
             }
 
             // Refresh profile to get updated business_id
-            await refreshProfile();
+            await refreshAuth();
 
             // Success!
             toast.success('Thiết lập doanh nghiệp thành công! Gói Premium 30 ngày đã được kích hoạt.');
