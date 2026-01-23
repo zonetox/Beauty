@@ -11,7 +11,6 @@
  */
 
 import { useAuth } from '../providers/AuthProvider.tsx';
-import { useProfile } from '../providers/ProfileProvider.tsx';
 import { UserRole } from '../lib/roleResolution.ts';
 
 export interface UseUserRoleResult {
@@ -24,19 +23,12 @@ export interface UseUserRoleResult {
   businessId: number | null;
 }
 
-/**
- * useUserRole Hook (Deterministic)
- * 
- * Lightweight wrapper around useProfile to maintain compatibility.
- * Returns pre-resolved role data from global ProfileContext.
- */
 export function useUserRole(): UseUserRoleResult {
-  const { state: authState } = useAuth();
-  const { role, isLoaded, businessId, error } = useProfile();
+  const { role, state: authState, isDataLoaded, businessId, error } = useAuth();
 
   return {
     role,
-    isLoading: authState === 'loading' || !isLoaded,
+    isLoading: authState === 'loading' || !isDataLoaded,
     error: error,
     isAdmin: role === 'admin',
     isBusinessOwner: role === 'business_owner',
