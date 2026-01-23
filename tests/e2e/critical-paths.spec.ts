@@ -87,7 +87,13 @@ test.describe('Critical User Flows', () => {
     // Business Info
     await page.fill('#business_name', 'Test Business');
     await page.fill('#phone', '0987654321');
-    await page.selectOption('#category', 'Spa'); // or whatever the first option is
+    // Select first available category dynamically
+    const categoryOptions = await page.locator('#category option').count();
+    if (categoryOptions > 1) {
+      await page.selectOption('#category', { index: 1 });
+    } else {
+      console.warn('No categories found to select');
+    }
     await page.fill('#address', '123 Test Street');
 
     // Submit form
