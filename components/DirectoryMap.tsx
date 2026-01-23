@@ -16,9 +16,10 @@ interface DirectoryMapProps {
     onMarkerMouseEnter: (businessId: number) => void;
     onMarkerMouseLeave: () => void;
     shouldFitBounds: boolean;
+    centerCoords?: [number, number] | null;
 }
 
-const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusinessId, selectedBusinessId, onBoundsChange, onMarkerClick, onPopupClose, onMarkerMouseEnter, onMarkerMouseLeave, shouldFitBounds }) => {
+const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusinessId, selectedBusinessId, onBoundsChange, onMarkerClick, onPopupClose, onMarkerMouseEnter, onMarkerMouseLeave, shouldFitBounds, centerCoords }) => {
     const mapContainerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<L.Map | null>(null); // To hold the Leaflet map instance
     const markersRef = useRef<{ [key: number]: L.Marker }>({}); // To hold marker instances
@@ -91,11 +92,14 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusi
             });
 
             // Ensure map fills container correctly (fixes "Gray Area" issue)
-            setTimeout(() => {
+            const forceResize = () => {
                 if (mapRef.current) {
                     mapRef.current.invalidateSize();
                 }
-            }, 100);
+            };
+
+            setTimeout(forceResize, 100);
+            setTimeout(forceResize, 500); // Second pass for slower renders
 
             const handleResize = () => {
                 if (mapRef.current) {
@@ -157,6 +161,16 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusi
         }
 
     }, [businesses, shouldFitBounds, onMarkerClick, onPopupClose, onMarkerMouseEnter, onMarkerMouseLeave, getIcon]);
+
+    // --- Handle Center Coords (Search Sync) ---
+    useEffect(() => {
+        if (mapRef.current && centerCoords) {
+            mapRef.current.flyTo(centerCoords, 13, {
+                animate: true,
+                duration: 1.5
+            });
+        }
+    }, [centerCoords]);
 
     // --- Handle Selection (Click) ---
     useEffect(() => {

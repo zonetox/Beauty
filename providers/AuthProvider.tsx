@@ -12,7 +12,6 @@ import { Profile } from '../types.ts';
 import toast from 'react-hot-toast';
 import { UserRole } from '../lib/roleResolution.ts';
 import { useAuthSession } from '../hooks/useAuthSession.ts';
-import { useAuthProfile } from '../hooks/useAuthProfile.ts';
 import { useAuthRole } from '../hooks/useAuthRole.ts';
 import { useQueryClient } from '@tanstack/react-query';
 import { keys } from '../lib/queryKeys.ts';
@@ -64,26 +63,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoading: isSessionLoading
   } = useAuthSession();
 
-  // 2. Profile Management
+  // 2. Unified Context Management (Industrial Standard)
+  // This single hook now calls the get_user_context RPC which returns Role + Profile + BusinessId
   const {
-    data: profile,
-    isLoading: isProfileLoading
-  } = useAuthProfile(user?.id);
-
-  // 3. Role Management
-  const {
-    data: roleData,
-    isLoading: isRoleLoading
+    data: authData,
+    isLoading: isAuthDataLoading
   } = useAuthRole(user || null);
 
   // Computed State
-  const role = roleData?.role || 'anonymous';
-  const businessId = roleData?.businessId || null;
-  const authError = roleData?.error || null;
+  const role = authData?.role || 'anonymous';
+  const businessId = authData?.businessId || null;
+  const profile = authData?.profile || null;
+  const authError = authData?.error || null;
 
   // Overall Loading State
-  // We are loading if session is loading, OR if we have a user but profile/role are still loading
-  const isLoading = isSessionLoading || (!!user && (isProfileLoading || isRoleLoading));
+  // We only load if the session is loading, OR if we have a user but their context isn't ready
+  const isLoading = isSessionLoading || (!!user && isAuthDataLoading);
 
   const state: AuthState = useMemo(() => {
     if (isLoading) return 'loading';

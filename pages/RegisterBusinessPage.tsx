@@ -7,7 +7,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../providers/AuthProvider.tsx';
 import SEOHead from '../components/SEOHead.tsx';
-import { supabase } from '../lib/supabaseClient.ts';
 import { BusinessRegistrationFormSchema, BusinessRegistrationFormData } from '../lib/schemas/business.schema.ts';
 import { CATEGORIES } from '../constants.ts'; // Ensure we have categories
 
@@ -74,105 +73,32 @@ const RegisterBusinessPage: React.FC = () => {
         setIsSubmitting(true);
 
         try {
-            // 2. Optimization: Check duplicate email first to avoid partial business creation
-            // (Supabase auth checks this too, but checking here saves a DB write for business)
-            // Note: We can skip this if we want to rely on atomic rollback, but it's UX friendly.
+            // SINGLE ATOMIC REQUEST
+            // The handle_new_user trigger on the server will capture this metadata
+            // and create the Profile + Business record in a single transaction.
+            await register(formData.email, formData.password, {
+                full_name: formData.business_name,
+                user_type: 'business',
+                business_name: formData.business_name,
+                phone: formData.phone,
+                address: formData.address,
+                category: formData.category,
+                description: formData.description || ''
+            });
 
-            // 3. ATOMIC TRANSACTION SIMULATION
-            // Step A: Create Business Record via RPC
-            // We use the RPC function we created in migration 20260123
-            const { data: businessData, error: businessError } = await supabase
-                .rpc('register_business_atomic', {
-                    p_email: formData.email,
-                    p_password: formData.password, // Not stored, just passed for context if needed
-                    p_full_name: formData.business_name,
-                    p_business_name: formData.business_name,
-                    p_phone: formData.phone,
-                    p_address: formData.address,
-                    p_category: formData.category,
-                    p_description: formData.description || null,
-                });
-
-            if (businessError) {
-                console.error('Business Creation Error:', businessError);
-                throw new Error('Không thể khởi tạo dữ liệu doanh nghiệp. Vui lòng thử lại.');
-            }
-
-            // Validate RPC response structure
-            if (!businessData || typeof businessData.business_id !== 'number') {
-                throw new Error('Lỗi phản hồi từ hệ thống (Invalid Business ID).');
-            }
-
-            const businessId = businessData.business_id;
-
-            // Step B: Create Auth User with Business ID metadata
-            // The trigger will see 'business_id' (if we pass it? No, triggers can't easily see extra args unless in metadata)
-            // Wait, our new trigger looks for `user_type`. We should also pass `business_id` ideally, 
-            // OR update the profile immediately after signup.
-            // Let's pass everything to metadata for the trigger to capture if we update it to support business_id linking,
-            // or we do manual link after.
-
-            // To ensure atomic-like behavior from user perspective:
-            try {
-                await register(formData.email, formData.password, {
-                    full_name: formData.business_name,
-                    user_type: 'business',
-                    // We can store business_id in metadata, can be useful for manual recovery
-                    temp_business_id: businessId
-                });
-            } catch (authError: any) {
-                // ROLLBACK BUSINESS (Compensating Transaction)
-                // If Auth fails (e.g. email exists), we should ideally delete the business we just created
-                // to avoid orphaned records.
-                console.warn('Auth failed, rolling back business record...', authError);
-                await supabase.from('businesses').delete().eq('id', businessId);
-
-                throw authError; // Re-throw to show error to user
-            }
-
-            // Step C: Link Profile to Business
-            // Now that user exists, we link them.
-            // We need to get the user ID. 'register' function usually auto-logs int.
-            const { data: { user } } = await supabase.auth.getUser();
-
-            if (user) {
-                const { error: linkError } = await supabase
-                    .from('profiles')
-                    .update({
-                        business_id: businessId,
-                        user_type: 'business' // Reinforce user_type
-                    })
-                    .eq('id', user.id);
-
-                if (linkError) {
-                    console.error('Profile Link Error:', linkError);
-                    // This is critical. User created, Business created, but not linked.
-                    // We should probably log this critical error to monitoring system.
-                    toast.error('Tài khoản đã tạo nhưng chưa liên kết doanh nghiệp. Vui lòng liên hệ hỗ trợ.');
-                }
-
-                // Also update business owner_id
-                await supabase
-                    .from('businesses')
-                    .update({ owner_id: user.id })
-                    .eq('id', businessId);
-            }
-
-            // Success!
+            // Redirect immediately - The AuthProvider state update will handle the rest
             toast.success('Đăng ký doanh nghiệp thành công!');
-
-            // Redirect to dashboard (skip setup page)
             navigate('/account', { replace: true });
 
         } catch (err: any) {
             console.error('Registration Flow Error:', err);
             let msg = err.message || 'Đăng ký thất bại.';
 
-            // User friendly errors
             if (msg.includes('rate limit')) msg = 'Quá nhiều yêu cầu. Vui lòng thử lại sau 1 phút.';
             if (msg.includes('already registered')) msg = 'Email này đã được sử dụng.';
+            if (msg.includes('User already registered')) msg = 'Email này đã được sử dụng.';
 
-            setErrors({ email: msg }); // General error usually relates to account
+            setErrors({ email: msg });
             toast.error(msg);
         } finally {
             setIsSubmitting(false);

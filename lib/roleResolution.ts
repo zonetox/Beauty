@@ -20,6 +20,7 @@
 
 import { supabase } from './supabaseClient.ts';
 import { User } from '@supabase/supabase-js';
+import { Profile } from '../types.ts';
 
 export type UserRole = 'anonymous' | 'user' | 'business_owner' | 'business_staff' | 'admin';
 
@@ -30,6 +31,7 @@ export interface RoleResolutionResult {
   isAdmin: boolean;
   isBusinessOwner: boolean;
   isBusinessStaff: boolean;
+  profile?: Profile | null; // Add dynamic profile data
   error?: string;
 }
 
@@ -58,25 +60,20 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
   }
 
   try {
-    // Add timeout for profile query (10 seconds - increased for slower connections)
-    const profileTimeout = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Profile query timeout')), 10000);
+    // INDUSTRIAL STANDARD: Use the unified context RPC
+    // This single call replaces all fragmented table checks (profiles, admin, business, staff)
+    const { data, error } = await (supabase.rpc as any)('get_user_context', {
+      p_user_id: user.id
     });
 
-    // MANDATORY: Verify profile exists first (required for all authenticated users)
-    const profileQuery = supabase
-      .from('profiles')
-      .select('id, business_id')
-      .eq('id', user.id)
-      .single();
+    if (error) {
+      console.error('Unified Context Error:', error);
+      throw error;
+    }
 
-    const { data: profile, error: profileError } = await Promise.race([
-      profileQuery,
-      profileTimeout
-    ]);
+    const context = data as any;
 
-    if (profileError && profileError.code === 'PGRST116') {
-      // Profile doesn't exist - CRITICAL ERROR - BLOCK ACCESS
+    if (!context) {
       return {
         role: 'anonymous',
         profileId: null,
@@ -84,123 +81,24 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
         isAdmin: false,
         isBusinessOwner: false,
         isBusinessStaff: false,
-        error: `Profile not found for user ${user.id}. User account is incomplete. Profile record is required for all authenticated users.`
+        error: `Context not found for user ${user.id}`
       };
     }
 
-    if (profileError || !profile) {
-      return {
-        role: 'anonymous',
-        profileId: null,
-        businessId: null,
-        isAdmin: false,
-        isBusinessOwner: false,
-        isBusinessStaff: false,
-        error: `Profile record missing for user ${user.id}. Account initialization failed.`
-      };
-    }
-
-    // 2. PARALLEL EXECUTION: Check Admin, Owner, and Staff status simultaneously
-    // This reduces the waterfall effect and speeds up role resolution significantly
-
-    // Promise for Admin Check
-    const adminCheck = supabase
-      .from('admin_users')
-      .select('id, is_locked')
-      .eq('email', user.email)
-      .eq('is_locked', false)
-      .maybeSingle();
-
-    // Promise for Business Owner Check (only if linked)
-    // Explicitly cast to PromiseLike to satisfy Promise.all type requirements with Supabase v2
-    let ownerCheck: PromiseLike<{ data: { id: number; owner_id: string } | null; error: unknown }> = Promise.resolve({ data: null, error: null });
-
-    if (profile.business_id) {
-      ownerCheck = supabase
-        .from('businesses')
-        .select('id, owner_id')
-        .eq('id', profile.business_id)
-        .eq('owner_id', user.id)
-        .single();
-    }
-
-    // Promise for Business Staff Check
-    const staffCheck = supabase
-      .from('business_staff')
-      .select('business_id')
-      .eq('user_id', user.id)
-      .limit(1)
-      .maybeSingle();
-
-    // Execute all checks in parallel with timeout
-    const permissionTimeout = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Permission checks timeout')), 10000);
-    });
-
-    const [
-      { data: adminUser, error: adminError },
-      { data: businessOwner },
-      { data: staffRecord }
-    ] = await Promise.race([
-      Promise.all([adminCheck, ownerCheck, staffCheck]),
-      permissionTimeout
-    ]) as [
-        { data: { id: string; is_locked: boolean } | null; error: unknown },
-        { data: { id: number; owner_id: string } | null },
-        { data: { business_id: number } | null }
-      ];
-
-    // EVALUATE RESULTS (Order of Precedence)
-
-    // A. Admin (Highest Priority)
-    if (!adminError && adminUser) {
-      return {
-        role: 'admin',
-        profileId: profile.id, // Verified profiles.id exists
-        businessId: profile.business_id || null,
-        isAdmin: true,
-        // Optional checks can be done here if needed, but role is strictly admin
-        isBusinessOwner: !!businessOwner,
-        isBusinessStaff: false
-      };
-    }
-
-    // B. Business Owner
-    if (businessOwner) {
-      return {
-        role: 'business_owner',
-        profileId: profile.id,
-        businessId: profile.business_id, // Trust the profile link if validated
-        isAdmin: false,
-        isBusinessOwner: true,
-        isBusinessStaff: false
-      };
-    }
-
-    // C. Business Staff
-    if (staffRecord) {
-      return {
-        role: 'business_staff',
-        profileId: profile.id,
-        businessId: staffRecord.business_id,
-        isAdmin: false,
-        isBusinessOwner: false,
-        isBusinessStaff: true
-      };
-    }
-
-    // D. Regular User (Default)
+    // Map RPC response to RoleResolutionResult
     return {
-      role: 'user',
-      profileId: profile.id,
-      businessId: null,
-      isAdmin: false,
-      isBusinessOwner: false,
-      isBusinessStaff: false
+      role: context.role as any,
+      profileId: context.profile.id,
+      businessId: context.businessId,
+      isAdmin: context.role === 'admin',
+      isBusinessOwner: context.role === 'business_owner',
+      isBusinessStaff: context.role === 'business_staff',
+      profile: context.profile
     };
 
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    console.error('Role Resolution Failed:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return {
       role: 'anonymous',
       profileId: null,
@@ -268,9 +166,9 @@ export async function verifyProfileExists(userId: string): Promise<{ exists: boo
  */
 export async function verifyBusinessLinked(userId: string): Promise<{ exists: boolean; businessId: number | null; error?: string }> {
   try {
-    // Add timeout for verification (10 seconds)
+    // Add timeout for verification (15 seconds)
     const verificationTimeout = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Business verification timeout')), 10000);
+      setTimeout(() => reject(new Error('Business verification timeout')), 15000);
     });
 
     // Check profile has business_id with timeout

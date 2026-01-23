@@ -6,6 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../providers/AuthProvider.tsx';
 import SEOHead from '../components/SEOHead.tsx';
+import { supabase } from '../lib/supabaseClient.ts';
 
 const RegisterUserPage: React.FC = () => {
     const navigate = useNavigate();
@@ -68,7 +69,16 @@ const RegisterUserPage: React.FC = () => {
                 phone: formData.phone.trim(),
             });
 
-            toast.success('Đăng ký thành công! Đang chuẩn bị tài khoản...');
+            // Check if we have a session. If not, email confirmation is likely required.
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (session) {
+                toast.success('Đăng ký thành công! Đang chuẩn bị tài khoản...');
+                // useEffect will handle redirection
+            } else {
+                toast.success('Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản trước khi đăng nhập.', { duration: 6000 });
+                navigate('/login', { replace: true });
+            }
             setIsSubmitting(false);
 
             // The useEffect above will handle redirection once profile is loaded into context

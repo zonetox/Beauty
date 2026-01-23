@@ -51,6 +51,19 @@ export const LOCATIONS_HIERARCHY = {
     'Cần Thơ': ['Ninh Kiều', 'Bình Thủy', 'Cái Răng', 'Ô Môn', 'Thốt Nốt'],
 };
 
+export const LOCATION_COORDINATES: Record<string, [number, number]> = {
+    'TP. Hồ Chí Minh': [10.7769, 106.7009],
+    'Hà Nội': [21.0285, 105.8542],
+    'Đà Nẵng': [16.0544, 108.2022],
+    'Hải Phòng': [20.8449, 106.6881],
+    'Cần Thơ': [10.0371, 105.7882],
+    // Districts of HCM (Approximate)
+    'Quận 1': [10.7757, 106.7004],
+    'Quận 3': [10.7844, 106.6844],
+    'Quận 7': [10.7324, 106.7214],
+    'TP. Thủ Đức': [10.8231, 106.7129],
+};
+
 // NOTE: All mock data for businesses, reviews, blog posts etc. has been removed.
 // The application will now fetch all dynamic content directly from the Supabase database.
 

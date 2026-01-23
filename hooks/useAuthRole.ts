@@ -31,6 +31,7 @@ export function useAuthRole(user: User | null) {
             return {
                 role: result.role,
                 businessId: result.businessId,
+                profile: result.profile || null,
                 error: result.error || null
             };
         },

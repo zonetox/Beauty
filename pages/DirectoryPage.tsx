@@ -9,7 +9,7 @@ import BusinessCard from '../components/BusinessCard.tsx';
 import DirectoryMap from '../components/DirectoryMap.tsx';
 import SEOHead from '../components/SEOHead.tsx';
 import EmptyState from '../components/EmptyState.tsx';
-import { CATEGORIES, CITIES, LOCATIONS_HIERARCHY } from '../constants.ts';
+import { CATEGORIES, CITIES, LOCATIONS_HIERARCHY, LOCATION_COORDINATES } from '../constants.ts';
 import { Business, WorkingHours } from '../types.ts';
 import { useBusinessData } from '../contexts/BusinessDataContext.tsx';
 import FilterTag from '../components/FilterTag.tsx';
@@ -317,6 +317,16 @@ const DirectoryPage: React.FC = () => {
         ? `Tìm thấy ${totalBusinesses} doanh nghiệp phù hợp với tiêu chí của bạn.`
         : `Khám phá hàng ngàn spa, salon, và clinic uy tín tại ${activeFilters.location || 'Việt Nam'}. Tìm kiếm theo danh mục, địa điểm và nhiều tiêu chí khác.`;
 
+    const mapCenterCoords = useMemo(() => {
+        if (activeFilters.district && LOCATION_COORDINATES[activeFilters.district]) {
+            return LOCATION_COORDINATES[activeFilters.district];
+        }
+        if (activeFilters.location && LOCATION_COORDINATES[activeFilters.location]) {
+            return LOCATION_COORDINATES[activeFilters.location];
+        }
+        return null;
+    }, [activeFilters.location, activeFilters.district]);
+
     return (
         <>
             <SEOHead
@@ -326,7 +336,7 @@ const DirectoryPage: React.FC = () => {
             <div>
                 {/* Map View */}
                 {viewMode === 'map' && (
-                    <div className="w-full h-[70vh]">
+                    <div className="w-full h-[70vh] relative min-h-[400px]">
                         <DirectoryMap
                             businesses={filteredMarkers as Business[]}
                             highlightedBusinessId={highlightedBusinessId}
@@ -337,6 +347,7 @@ const DirectoryPage: React.FC = () => {
                             onMarkerMouseLeave={() => setHighlightedBusinessId(null)}
                             onBoundsChange={(bounds: any) => setMapBounds(bounds)}
                             shouldFitBounds={hasSearchQuery}
+                            centerCoords={mapCenterCoords}
                         />
                     </div>
                 )}
