@@ -25,7 +25,6 @@ import { PublicPageContentProvider } from './contexts/PublicPageContentContext.t
 import { ErrorLoggerProvider } from './contexts/ErrorLoggerContext.tsx';
 import { StaffProvider } from './contexts/StaffContext.tsx';
 import AppInitializationScreen from './components/AppInitializationScreen.tsx';
-import { AppInitializationProvider, useAppInitialization } from './contexts/AppInitializationContext.tsx';
 import { queryClient } from './lib/queryClient.ts';
 
 import { BusinessProvider } from './contexts/BusinessContext.tsx';
@@ -128,12 +127,14 @@ const PublicDataLayout: React.FC = () => {
     );
 };
 
+
+
 // App content (rendered after auth is resolved)
 const AppContent: React.FC = () => {
-    const { isInitializing } = useAppInitialization();
+    const { state } = useAuth();
 
     // Show unified loading screen during initialization
-    if (isInitializing) {
+    if (state === 'loading') {
         return <AppInitializationScreen message="Đang khởi tạo ứng dụng..." />;
     }
 
@@ -233,24 +234,22 @@ const App: React.FC = () => {
         <ErrorBoundary>
             <QueryClientProvider client={queryClient}>
                 <Router>
-                    <AppInitializationProvider>
-                        <WebVitalsTracker />
-                        <PageTracking />
-                        <Toaster
-                            position="top-center"
-                            reverseOrder={false}
-                            toastOptions={{
-                                duration: 3000,
-                                style: {
-                                    maxWidth: '500px',
-                                },
-                            }}
-                            gutter={8}
-                        />
-                        <AuthProvider>
-                            <AppContent />
-                        </AuthProvider>
-                    </AppInitializationProvider>
+                    <WebVitalsTracker />
+                    <PageTracking />
+                    <Toaster
+                        position="top-center"
+                        reverseOrder={false}
+                        toastOptions={{
+                            duration: 3000,
+                            style: {
+                                maxWidth: '500px',
+                            },
+                        }}
+                        gutter={8}
+                    />
+                    <AuthProvider>
+                        <AppContent />
+                    </AuthProvider>
                 </Router>
             </QueryClientProvider>
         </ErrorBoundary>

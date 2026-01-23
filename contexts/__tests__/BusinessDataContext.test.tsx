@@ -27,7 +27,7 @@ const createMockQueryBuilderForTest = (defaultData: any[] = [], defaultCount: nu
   // Include all chainable methods used in BusinessDataContext
   const chainableMethods = [
     'eq', 'neq', 'gt', 'gte', 'lt', 'lte',
-    'like', 'ilike', 'is', 'in', 'contains',
+    'like', 'ilike', 'is', 'in', 'contains', 'or',
     'order', 'limit', 'range', 'upsert'
   ];
   chainableMethods.forEach(method => {

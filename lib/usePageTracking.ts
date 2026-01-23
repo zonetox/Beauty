@@ -4,7 +4,7 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { supabase, isSupabaseConfigured } from './supabaseClient.ts';
-import { useUserSession } from '../contexts/UserSessionContext.tsx';
+import { useAuth } from '../providers/AuthProvider.tsx';
 import { PageView, Conversion } from '../types.ts';
 
 // Generate or retrieve session ID
@@ -111,7 +111,7 @@ const trackPageView = async (
  */
 export const usePageTracking = (): void => {
   const location = useLocation();
-  const { currentUser } = useUserSession();
+  const { user: currentUser } = useAuth();
   const previousPathname = useRef<string>(location.pathname);
 
   useEffect(() => {

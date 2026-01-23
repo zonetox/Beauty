@@ -2,23 +2,16 @@
 // Tuân thủ Master Plan v1.1
 // 100% hoàn thiện - không placeholder
 
-
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import ProtectedRoute from '../ProtectedRoute';
 import { User } from '@supabase/supabase-js';
 
-
-// Mock useAuth và useAppInitialization hooks
+// Mock useAuth hook
 const mockUseAuth = jest.fn();
-const mockUseAppInitialization = jest.fn();
 
 jest.mock('../../providers/AuthProvider.tsx', () => ({
   useAuth: () => mockUseAuth(),
-}));
-
-jest.mock('../../contexts/AppInitializationContext.tsx', () => ({
-  useAppInitialization: () => mockUseAppInitialization(),
 }));
 
 // Mock role resolution
@@ -41,7 +34,7 @@ describe('ProtectedRoute', () => {
     jest.clearAllMocks();
   });
 
-  it('should render children when user is authenticated', async () => {
+  it('should render children when user is authenticated and data is loaded', async () => {
     const mockUser = {
       id: '123',
       email: 'test@example.com',
@@ -51,8 +44,9 @@ describe('ProtectedRoute', () => {
       user: mockUser,
       profile: { id: '123' },
       state: 'authenticated',
+      isDataLoaded: true,
+      error: null,
     });
-    mockUseAppInitialization.mockReturnValue({ isInitializing: false });
 
     render(
       <MemoryRouter>
@@ -67,12 +61,31 @@ describe('ProtectedRoute', () => {
     });
   });
 
-  it('should show loading state when loading', () => {
+  it('should render nothing when auth identity is loading', () => {
     mockUseAuth.mockReturnValue({
       user: null,
       state: 'loading',
+      isDataLoaded: false,
     });
-    mockUseAppInitialization.mockReturnValue({ isInitializing: false });
+
+    const { container } = render(
+      <MemoryRouter>
+        <ProtectedRoute>
+          <div>Protected Content</div>
+        </ProtectedRoute>
+      </MemoryRouter>
+    );
+
+    expect(container.firstChild).toBeNull();
+    expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
+  });
+
+  it('should show loading state when data is not yet loaded', () => {
+    mockUseAuth.mockReturnValue({
+      user: { id: '123' } as User,
+      state: 'authenticated',
+      isDataLoaded: false,
+    });
 
     render(
       <MemoryRouter>
@@ -82,7 +95,7 @@ describe('ProtectedRoute', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('Đang kiểm tra quyền truy cập...')).toBeInTheDocument();
+    expect(screen.getByText(/Đang tải dữ liệu/)).toBeInTheDocument();
     expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
   });
 
@@ -90,8 +103,8 @@ describe('ProtectedRoute', () => {
     mockUseAuth.mockReturnValue({
       user: null,
       state: 'unauthenticated',
+      isDataLoaded: true,
     });
-    mockUseAppInitialization.mockReturnValue({ isInitializing: false });
 
     render(
       <MemoryRouter initialEntries={['/dashboard']}>
@@ -113,8 +126,8 @@ describe('ProtectedRoute', () => {
     mockUseAuth.mockReturnValue({
       user: null,
       state: 'unauthenticated',
+      isDataLoaded: true,
     });
-    mockUseAppInitialization.mockReturnValue({ isInitializing: false });
 
     render(
       <MemoryRouter initialEntries={['/dashboard']}>
@@ -130,5 +143,25 @@ describe('ProtectedRoute', () => {
       expect(state.from).toBeDefined();
     });
   });
-});
 
+  it('should show completion error state when profile is missing', () => {
+    mockUseAuth.mockReturnValue({
+      user: { id: '123' } as User,
+      profile: null,
+      state: 'authenticated',
+      isDataLoaded: true,
+      error: null,
+    });
+
+    render(
+      <MemoryRouter>
+        <ProtectedRoute>
+          <div>Protected Content</div>
+        </ProtectedRoute>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText(/Tài khoản chưa hoàn tất/)).toBeInTheDocument();
+    expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
+  });
+});
