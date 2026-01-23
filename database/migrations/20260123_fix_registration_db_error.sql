@@ -1,75 +1,14 @@
 -- ============================================
--- FINAL INDUSTRIAL AUTH SETUP
+-- FIX: Registration Database Error
 -- ============================================
--- 1. UNIFIED USER CONTEXT FUNCTION
--- This is the "Industry Standard" way to get all user data in ONE request.
--- Replaces multiple fragmented queries in frontend.
-CREATE OR REPLACE FUNCTION public.get_user_context(p_user_id UUID) RETURNS JSONB SECURITY DEFINER
-SET search_path = public AS $$
-DECLARE v_profile RECORD;
-v_business_owner RECORD;
-v_business_staff RECORD;
-v_admin RECORD;
-v_role TEXT := 'user';
-v_business_id BIGINT := NULL;
-v_permissions JSONB := '[]'::jsonb;
-BEGIN -- A. Get Base Profile
-SELECT * INTO v_profile
-FROM public.profiles
-WHERE id = p_user_id;
-IF NOT FOUND THEN RETURN NULL;
--- Mandatory Profile missing
-END IF;
--- B. Check Admin (Highest Priority)
-SELECT role INTO v_admin
-FROM public.admin_users
-WHERE id = p_user_id;
-IF FOUND THEN v_role := 'admin';
-v_permissions := '["all"]'::jsonb;
--- Simple admin permission
-ELSE -- C. Check Business Owner
--- Use the business_id stored in profile as primary link, but verify ownership
-SELECT id INTO v_business_owner
-FROM public.businesses
-WHERE owner_id = p_user_id
-LIMIT 1;
-IF FOUND THEN v_role := 'business_owner';
-v_business_id := v_business_owner.id;
-ELSE -- D. Check Business Staff
-SELECT business_id,
-    role INTO v_business_staff
-FROM public.business_staff
-WHERE user_id = p_user_id
-LIMIT 1;
-IF FOUND THEN v_role := 'business_staff';
-v_business_id := v_business_staff.business_id;
-END IF;
-END IF;
-END IF;
--- Update profile user_type if it doesn't match resolved role for consistency
-IF v_role = 'business_owner'
-AND v_profile.user_type != 'business' THEN
-UPDATE public.profiles
-SET user_type = 'business'
-WHERE id = p_user_id;
-END IF;
--- E. Compile Final Context
-RETURN jsonb_build_object(
-    'profile',
-    to_jsonb(v_profile),
-    'role',
-    v_role,
-    'businessId',
-    v_business_id,
-    'permissions',
-    v_permissions,
-    'isDataLoaded',
-    TRUE
-);
-END;
-$$ LANGUAGE plpgsql;
--- 2. ROBUST ATOMIC TRIGGER (Standard Transactional Integrity)
--- Ensures that when an Auth user is created, Profile and Business (if applicable) exist instantly.
+-- Root Cause: image_url is NOT NULL in public.businesses but was missing from triggers.
+-- 1. Make image_url nullable or set a default
+ALTER TABLE public.businesses
+ALTER COLUMN image_url DROP NOT NULL;
+ALTER TABLE public.businesses
+ALTER COLUMN image_url
+SET DEFAULT 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&auto=format&fit=crop&q=60';
+-- 2. Update the INDUSTRIAL trigger to be safer
 CREATE OR REPLACE FUNCTION public.handle_new_user() RETURNS TRIGGER SECURITY DEFINER
 SET search_path = public AS $$
 DECLARE v_user_type TEXT;
@@ -139,7 +78,7 @@ INSERT INTO public.businesses (
         district,
         ward,
         working_hours,
-        image_url
+        image_url -- ADDED FIX
     )
 VALUES (
         new.raw_user_meta_data->>'business_name',
@@ -158,7 +97,7 @@ VALUES (
         COALESCE(
             new.raw_user_meta_data->>'image_url',
             'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&auto=format&fit=crop&q=60'
-        )
+        ) -- ADDED FIX
     )
 RETURNING id INTO v_business_id;
 -- Link back to profile
