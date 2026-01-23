@@ -7,18 +7,19 @@ import { BLOG_CATEGORIES as initialBlogCategories } from '../constants.ts';
 interface BlogDataContextType {
   blogPosts: BlogPost[];
   loading: boolean;
-  addBlogPost: (newPost: Omit<BlogPost, 'id' | 'slug' | 'date' | 'viewCount'>) => Promise<void>;
+  addBlogPost: (newPost: Omit<BlogPost, 'id' | 'slug' | 'date' | 'viewCount' | 'updatedAt'>) => Promise<void>;
   updateBlogPost: (updatedPost: BlogPost) => Promise<void>;
   deleteBlogPost: (postId: number) => Promise<void>;
+  bulkAddBlogPosts: (posts: Omit<BlogPost, 'id' | 'slug' | 'date' | 'viewCount' | 'updatedAt'>[]) => Promise<{ success: number; failed: number }>;
   getPostBySlug: (slug: string) => BlogPost | undefined;
   incrementViewCount: (postId: number) => Promise<void>;
   comments: BlogComment[];
   getCommentsByPostId: (postId: number) => BlogComment[];
   addComment: (postId: number, authorName: string, content: string) => void;
   blogCategories: BlogCategory[];
-  addBlogCategory: (name: string) => void;
-  updateBlogCategory: (id: string, name: string) => void;
-  deleteBlogCategory: (id: string) => void;
+  addBlogCategory: (name: string) => Promise<void>;
+  updateBlogCategory: (id: string, name: string) => Promise<void>;
+  deleteBlogCategory: (id: string) => Promise<void>;
 }
 
 const BlogDataContext = createContext<BlogDataContextType | undefined>(undefined);
@@ -38,14 +39,13 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     const fetchBlogPosts = async () => {
       setLoading(true);
-      // OPTIMIZE: Blog list doesn't need full content, only excerpt
       const { data, error } = await supabase.from('blog_posts')
-        .select('id, slug, title, image_url, excerpt, author, date, category, view_count, content')
+        .select('*')
         .order('date', { ascending: false });
+
       if (error) {
         console.error("Error fetching blog posts:", error);
       } else if (data && !cancelled) {
-        // Map snake_case to camelCase
         setBlogPosts((data as any[]).map((post) => ({
           id: post.id,
           slug: post.slug,
@@ -57,6 +57,10 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
           category: post.category,
           content: post.content,
           viewCount: post.view_count || 0,
+          status: post.status || 'Published',
+          isFeatured: post.is_featured,
+          seo: post.seo,
+          updatedAt: post.updated_at
         })));
       }
       if (!cancelled) {
@@ -126,43 +130,57 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
     fetchComments();
   }, [fetchComments]);
 
-  // Load blog categories from localStorage on mount
-  useEffect(() => {
+  // Fetch blog categories from Supabase
+  const fetchBlogCategories = useCallback(async () => {
     try {
-      const savedCategoriesJSON = localStorage.getItem(CATEGORIES_LOCAL_STORAGE_KEY);
-      const categories = savedCategoriesJSON ? JSON.parse(savedCategoriesJSON) : initialBlogCategories;
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setBlogCategories(categories);
-    } catch (error) {
-      console.error(`Failed to parse blog categories from localStorage:`, error);
+      const { data, error } = await supabase
+        .from('blog_categories')
+        .select('*')
+        .order('name', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching blog categories:', error);
+        setBlogCategories(initialBlogCategories);
+      } else if (data && data.length > 0) {
+        setBlogCategories(data as BlogCategory[]);
+      } else {
+        // Fallback to initial constants if DB is empty
+        setBlogCategories(initialBlogCategories);
+      }
+    } catch (err) {
+      console.error('Failed to fetch categories:', err);
       setBlogCategories(initialBlogCategories);
     }
-
   }, []);
 
-  const updateCategoriesLocalStorage = (categoriesToSave: BlogCategory[]) => {
-    localStorage.setItem(CATEGORIES_LOCAL_STORAGE_KEY, JSON.stringify(categoriesToSave));
-  };
+  useEffect(() => {
+    fetchBlogCategories();
+  }, [fetchBlogCategories]);
 
-  const addBlogPost = async (newPostData: Omit<BlogPost, 'id' | 'slug' | 'date' | 'viewCount'>) => {
+  // Remove unused function
+  // const updateCategoriesLocalStorage = (categoriesToSave: BlogCategory[]) => { ... };
+
+  const addBlogPost = async (newPostData: Omit<BlogPost, 'id' | 'slug' | 'date' | 'viewCount' | 'updatedAt'>) => {
     const slug = newPostData.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-') + `-${Date.now()}`;
+    const now = new Date().toISOString();
+
     const postToAdd = {
-      ...newPostData,
+      title: newPostData.title,
+      content: newPostData.content,
+      author: newPostData.author,
+      category: newPostData.category,
+      excerpt: newPostData.excerpt,
+      image_url: newPostData.imageUrl,
       slug,
-      date: new Date().toLocaleDateString('en-GB').replace(/\//g, '/'),
-      viewCount: 0,
+      date: now,
+      status: newPostData.status || 'Published',
+      is_featured: newPostData.isFeatured || false,
+      seo: newPostData.seo || { title: '', description: '', keywords: '' },
+      view_count: 0
     };
-    const { data, error } = await supabase.from('blog_posts').insert({
-      title: postToAdd.title,
-      content: postToAdd.content,
-      author: postToAdd.author,
-      category: postToAdd.category,
-      excerpt: postToAdd.excerpt,
-      image_url: postToAdd.imageUrl,
-      slug: postToAdd.slug,
-      date: postToAdd.date,
-      view_count: postToAdd.viewCount
-    }).select().single();
+
+    const { data, error } = await supabase.from('blog_posts').insert(postToAdd).select().single() as { data: any, error: any };
+
     if (!error && data) {
       setBlogPosts(prev => [({
         id: data.id,
@@ -175,7 +193,14 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
         category: data.category,
         content: data.content,
         viewCount: data.view_count || 0,
+        status: data.status,
+        isFeatured: data.is_featured,
+        seo: data.seo,
+        updatedAt: data.updated_at
       } as BlogPost), ...prev]);
+    } else {
+      console.error("Error adding post:", error);
+      throw error;
     }
   };
 
@@ -189,10 +214,14 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
       excerpt: postToUpdate.excerpt,
       image_url: postToUpdate.imageUrl,
       slug: postToUpdate.slug,
-      date: postToUpdate.date,
-      view_count: postToUpdate.viewCount
+      status: postToUpdate.status,
+      is_featured: postToUpdate.isFeatured,
+      seo: postToUpdate.seo,
+      updated_at: new Date().toISOString()
     };
-    const { data, error } = await supabase.from('blog_posts').update(mappedUpdates).eq('id', id).select().single();
+
+    const { data, error } = await supabase.from('blog_posts').update(mappedUpdates).eq('id', id).select().single() as { data: any, error: any };
+
     if (!error && data) {
       const updatedData = {
         id: data.id,
@@ -205,9 +234,70 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
         category: data.category,
         content: data.content,
         viewCount: data.view_count || 0,
+        status: data.status,
+        isFeatured: data.is_featured,
+        seo: data.seo,
+        updatedAt: data.updated_at
       } as BlogPost;
       setBlogPosts(prev => prev.map(p => (p.id === id ? updatedData : p)));
+    } else {
+      console.error("Error updating post:", error);
+      throw error;
     }
+  };
+
+  const bulkAddBlogPosts = async (posts: Omit<BlogPost, 'id' | 'slug' | 'date' | 'viewCount' | 'updatedAt'>[]) => {
+    const now = new Date().toISOString();
+    const postsToAdd = posts.map(post => {
+      const timestamp = Date.now() + Math.floor(Math.random() * 1000);
+      const slug = post.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-') + `-${timestamp}`;
+
+      return {
+        title: post.title,
+        content: post.content,
+        author: post.author || 'Admin',
+        category: post.category,
+        excerpt: post.excerpt,
+        image_url: post.imageUrl,
+        slug,
+        date: now,
+        status: post.status || 'Published',
+        is_featured: post.isFeatured || false,
+        seo: post.seo || { title: post.title, description: post.excerpt, keywords: post.category },
+        view_count: 0
+      };
+    });
+
+    const { data, error } = await supabase.from('blog_posts').insert(postsToAdd).select() as { data: any[] | null, error: any };
+
+    if (error) {
+      console.error("Error bulk adding posts:", error);
+      throw error;
+    }
+
+    if (data) {
+      const newPosts = data.map((post: any) => ({
+        id: post.id,
+        slug: post.slug,
+        title: post.title,
+        imageUrl: post.image_url,
+        excerpt: post.excerpt,
+        author: post.author,
+        date: post.date,
+        category: post.category,
+        content: post.content,
+        viewCount: post.view_count || 0,
+        status: post.status,
+        isFeatured: post.is_featured,
+        seo: post.seo,
+        updatedAt: post.updated_at
+      } as BlogPost));
+
+      setBlogPosts(prev => [...newPosts, ...prev]);
+      return { success: data.length, failed: posts.length - data.length };
+    }
+
+    return { success: 0, failed: posts.length };
   };
 
   const deleteBlogPost = async (postId: number) => {
@@ -289,31 +379,57 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   };
 
-  const addBlogCategory = (name: string) => {
+  const addBlogCategory = async (name: string) => {
     if (name.trim() === '' || blogCategories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
       toast.error("Category name cannot be empty or duplicate.");
       return;
     }
-    const newCategory: BlogCategory = { id: `cat-${crypto.randomUUID()}`, name };
-    const updatedCategories = [...blogCategories, newCategory];
-    setBlogCategories(updatedCategories);
-    updateCategoriesLocalStorage(updatedCategories);
+
+    const { data, error } = await supabase
+      .from('blog_categories')
+      .insert({ name })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error adding category:', error);
+      toast.error('Failed to add category to database.');
+    } else if (data) {
+      setBlogCategories((prev: BlogCategory[]) => [...prev, data as BlogCategory]);
+      toast.success(`Category "${name}" added.`);
+    }
   };
 
-  const updateBlogCategory = (id: string, name: string) => {
-    const updatedCategories = blogCategories.map(c => c.id === id ? { ...c, name } : c);
-    setBlogCategories(updatedCategories);
-    updateCategoriesLocalStorage(updatedCategories);
+  const updateBlogCategory = async (id: string, name: string) => {
+    const { error } = await supabase
+      .from('blog_categories')
+      .update({ name })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error updating category:', error);
+      toast.error('Failed to update category.');
+    } else {
+      setBlogCategories(prev => prev.map(c => c.id === id ? { ...c, name } : c));
+    }
   };
 
-  const deleteBlogCategory = (id: string) => {
-    const updatedCategories = blogCategories.filter(c => c.id !== id);
-    setBlogCategories(updatedCategories);
-    updateCategoriesLocalStorage(updatedCategories);
+  const deleteBlogCategory = async (id: string) => {
+    const { error } = await supabase
+      .from('blog_categories')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting category:', error);
+      toast.error('Failed to delete category.');
+    } else {
+      setBlogCategories(prev => prev.filter(c => c.id !== id));
+    }
   };
 
 
-  const value = { blogPosts, loading, addBlogPost, updateBlogPost, deleteBlogPost, getPostBySlug, incrementViewCount, comments, getCommentsByPostId, addComment, blogCategories, addBlogCategory, updateBlogCategory, deleteBlogCategory };
+  const value = { blogPosts, loading, addBlogPost, updateBlogPost, deleteBlogPost, bulkAddBlogPosts, getPostBySlug, incrementViewCount, comments, getCommentsByPostId, addComment, blogCategories, addBlogCategory, updateBlogCategory, deleteBlogCategory };
 
   return (
     <BlogDataContext.Provider value={value}>

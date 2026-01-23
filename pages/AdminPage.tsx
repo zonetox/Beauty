@@ -37,6 +37,7 @@ import ThemeEditor from '../components/ThemeEditor.tsx';
 import AdminAbuseReports from '../components/AdminAbuseReports.tsx';
 import SystemSettings from '../components/SystemSettings.tsx';
 import AdminLandingPageModeration from '../components/AdminLandingPageModeration.tsx';
+import BlogBulkUpload from '../components/admin/BlogBulkUpload.tsx';
 
 // AI Blog Idea Generator - Wrapped in error boundary to prevent crashes
 const AIBlogIdeaGenerator: React.FC = () => {
@@ -71,32 +72,32 @@ const AIBlogIdeaGenerator: React.FC = () => {
     try {
       // Dynamic import to avoid build errors
       const geminiModule = await import('../lib/geminiService.ts');
-      
+
       if (!geminiModule.isGeminiAvailable()) {
         setError("Gemini API key chưa được cấu hình. Vui lòng set VITE_GEMINI_API_KEY trong environment variables.");
         return;
       }
-      
+
       const prompt = `Tạo 5 tiêu đề bài viết blog hấp dẫn về chủ đề "${topic}" cho một nền tảng thư mục làm đẹp bằng tiếng Việt. Các tiêu đề nên thân thiện với SEO và thu hút độc giả quan tâm đến spa, salon và mẹo làm đẹp. Format: Danh sách đánh số.`;
 
       const response = await geminiModule.generateWithGemini({ prompt });
-      
+
       if (!response) {
         setError('Không nhận được phản hồi từ AI. Vui lòng thử lại.');
         return;
       }
-      
+
       const generatedIdeas = response
         .split('\n')
         .filter(line => line.match(/^\d+[.)]/))
         .map(line => line.replace(/^\d+[.)]\s*/, '').trim())
         .filter(line => line.length > 0);
-      
+
       if (generatedIdeas.length === 0) {
         setError('Không thể phân tích phản hồi từ AI. Vui lòng thử lại.');
         return;
       }
-      
+
       setIdeas(generatedIdeas);
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : 'Không thể tạo ý tưởng. Vui lòng kiểm tra API key và thử lại.';
@@ -148,13 +149,13 @@ const AccessDenied: React.FC<{ requiredRole: string }> = ({ requiredRole }) => (
   </div>
 );
 
-type ConfirmDialogType = 
-  | 'deleteCategory' 
-  | 'deletePost' 
-  | 'duplicateBusiness' 
-  | 'rejectRequest' 
-  | 'deleteUser' 
-  | 'deletePackage' 
+type ConfirmDialogType =
+  | 'deleteCategory'
+  | 'deletePost'
+  | 'duplicateBusiness'
+  | 'rejectRequest'
+  | 'deleteUser'
+  | 'deletePackage'
   | null;
 
 interface ConfirmDialogData {
@@ -184,23 +185,23 @@ const BlogCategoryManager: React.FC<BlogCategoryManagerProps> = ({ setConfirmDia
 
   const handleAdd = async () => {
     const trimmedName = newCategoryName.trim();
-    
+
     // Client-side validation
     if (!trimmedName) {
       toast.error('Vui lòng nhập tên danh mục');
       return;
     }
-    
+
     // Check for duplicate (case-insensitive)
     const isDuplicate = blogCategories.some(
       cat => cat.name.toLowerCase().trim() === trimmedName.toLowerCase()
     );
-    
+
     if (isDuplicate) {
       toast.error(`Danh mục "${trimmedName}" đã tồn tại`);
       return;
     }
-    
+
     setIsAdding(true);
     try {
       await addBlogCategory(trimmedName);
@@ -212,7 +213,7 @@ const BlogCategoryManager: React.FC<BlogCategoryManagerProps> = ({ setConfirmDia
     }
   };
   const handleUpdate = async () => { if (editingCategory) { await updateBlogCategory(editingCategory.id, editingCategory.name); setEditingCategory(null); } };
-  const handleDelete = async (id: string) => { 
+  const handleDelete = async (id: string) => {
     setConfirmDialog({ isOpen: true, type: 'deleteCategory', data: { id } });
   };
 
@@ -220,20 +221,20 @@ const BlogCategoryManager: React.FC<BlogCategoryManagerProps> = ({ setConfirmDia
     <div className="mt-6">
       <h3 className="text-md font-semibold mb-3 text-neutral-dark">Manage Blog Categories</h3>
       <div className="flex gap-2 mb-4">
-        <input 
-          type="text" 
-          value={newCategoryName} 
+        <input
+          type="text"
+          value={newCategoryName}
           onChange={(e) => setNewCategoryName(e.target.value)}
           onKeyPress={(e) => {
             if (e.key === 'Enter' && !isAdding && newCategoryName.trim()) {
               handleAdd();
             }
           }}
-          placeholder="Tên danh mục mới" 
-          className="flex-grow w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" 
+          placeholder="Tên danh mục mới"
+          className="flex-grow w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
         />
-        <button 
-          onClick={handleAdd} 
+        <button
+          onClick={handleAdd}
           disabled={isAdding || !newCategoryName.trim()}
           className="bg-secondary text-white px-4 py-2 rounded-md font-semibold text-sm hover:bg-opacity-90 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
         >
@@ -289,17 +290,17 @@ const AdminPage: React.FC = () => {
   const filteredOrders = useMemo(() => { if (orderStatusFilter === 'all') return orders; return orders.filter(o => o.status === orderStatusFilter); }, [orders, orderStatusFilter]);
 
   const handleSaveBusiness = async (businessToSave: Business) => { if (businessToSave.id === 0) { const slug = businessToSave.name.toLowerCase().replace(/\s+/g, '-') + `-${Date.now()}`; await addBusiness({ ...businessToSave, slug }); } else { await updateBusiness(businessToSave); } setEditingBusiness(null); };
-  const handleSavePost = async (postToSave: BlogPost) => { 
-    if (postToSave.id === 0) { 
+  const handleSavePost = async (postToSave: BlogPost) => {
+    if (postToSave.id === 0) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { id, slug, date, viewCount, ...newPostData } = postToSave; 
-      await addBlogPost(newPostData); 
-    } else { 
-      await updateBlogPost(postToSave); 
-    } 
-    setEditingPost(null); 
+      const { id, slug, date, viewCount, ...newPostData } = postToSave;
+      await addBlogPost(newPostData);
+    } else {
+      await updateBlogPost(postToSave);
+    }
+    setEditingPost(null);
   };
-  const handleDeletePost = async (postId: number) => { 
+  const handleDeletePost = async (postId: number) => {
     setConfirmDialog({ isOpen: true, type: 'deletePost', data: { id: postId } });
   };
 
@@ -342,7 +343,7 @@ const AdminPage: React.FC = () => {
       setConfirmDialog({ isOpen: false, type: null });
       return;
     }
-    
+
     const businessName = confirmDialog.data.name;
     const businessToDuplicate = businesses.find(b => b.name === businessName);
     if (!businessToDuplicate) {
@@ -425,22 +426,22 @@ const AdminPage: React.FC = () => {
   const handleRejectOrder = (orderId: string) => { updateOrderStatus(orderId, OrderStatus.REJECTED, 'Payment rejected by admin.'); };
   const handleOpenUserModal = (user: AdminUser | null) => { setEditingUser(user); setIsUserModalOpen(true); };
   const handleCloseUserModal = () => { setEditingUser(null); setIsUserModalOpen(false); };
-  const handleSaveUser = (user: AdminUser) => { 
-    if (user.id) { 
+  const handleSaveUser = (user: AdminUser) => {
+    if (user.id) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password, ...updates } = user; 
-      updateAdminUser(user.id, updates); 
-    } else { 
+      const { password, ...updates } = user;
+      updateAdminUser(user.id, updates);
+    } else {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      addAdminUser(user as any); 
-    } 
-    handleCloseUserModal(); 
+      addAdminUser(user as any);
+    }
+    handleCloseUserModal();
   };
-  const handleDeleteUser = (userId: number) => { 
-    if (userId === currentUser?.id) { 
-      toast.error("Cannot delete self."); 
-      return; 
-    } 
+  const handleDeleteUser = (userId: number) => {
+    if (userId === currentUser?.id) {
+      toast.error("Cannot delete self.");
+      return;
+    }
     setConfirmDialog({ isOpen: true, type: 'deleteUser', data: { userId } });
   };
 
@@ -453,7 +454,7 @@ const AdminPage: React.FC = () => {
   const handleOpenPackageModal = (pkg: MembershipPackage | null) => { setEditingPackage(pkg); setIsPackageModalOpen(true); };
   const handleClosePackageModal = () => { setEditingPackage(null); setIsPackageModalOpen(false); };
   const handleSavePackage = async (pkg: MembershipPackage) => { if (pkg.id) { await updatePackage(pkg.id, pkg); } else { await addPackage(pkg); } handleClosePackageModal(); };
-  const handleDeletePackage = async (packageId: string) => { 
+  const handleDeletePackage = async (packageId: string) => {
     setConfirmDialog({ isOpen: true, type: 'deletePackage', data: { packageId } });
   };
 
@@ -464,7 +465,7 @@ const AdminPage: React.FC = () => {
     setConfirmDialog({ isOpen: false, type: null });
   };
   const handleOpenAddNewBusiness = () => { setEditingBusiness(NEW_BUSINESS_TEMPLATE); };
-  const handleOpenAddNewPost = () => { setEditingPost({ id: 0, title: 'New Blog Post', slug: '', date: '', author: currentUser?.username || 'Editor', category: 'General', excerpt: '', imageUrl: `https://picsum.photos/seed/new-post-${Date.now()}/400/300`, content: '', viewCount: 0 }); };
+  const handleOpenAddNewPost = () => { setEditingPost({ id: 0, title: 'New Blog Post', slug: '', date: '', author: currentUser?.username || 'Editor', category: 'General', excerpt: '', imageUrl: `https://picsum.photos/seed/new-post-${Date.now()}/400/300`, content: '', viewCount: 0, status: 'Published' }); };
   const handleOpenAddNewPackage = () => { handleOpenPackageModal({ id: '', tier: MembershipTier.PREMIUM, name: '', price: 0, durationMonths: 12, description: '', features: [''], permissions: { photoLimit: 10, videoLimit: 2, featuredLevel: 1, customLandingPage: true, privateBlog: false, seoSupport: false, monthlyPostLimit: 5, featuredPostLimit: 0, }, isPopular: false, isActive: true }); };
 
 
@@ -629,6 +630,7 @@ const AdminPage: React.FC = () => {
             </div>
             {blogLoading ? <p>Loading posts...</p> : <BlogManagementTable posts={blogPosts} onEdit={setEditingPost} onDelete={handleDeletePost} onUpdate={updateBlogPost} />}
             <AIBlogIdeaGenerator />
+            <BlogBulkUpload />
             <BlogCategoryManager setConfirmDialog={setConfirmDialog} />
           </div>
         </PermissionGuard>

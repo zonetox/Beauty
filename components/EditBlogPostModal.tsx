@@ -7,9 +7,9 @@ import { generateBlogPost, isGeminiAvailable } from '../lib/geminiService.ts';
 import toast from 'react-hot-toast';
 
 interface EditBlogPostModalProps {
-  post: Partial<BlogPost> | null;
-  onClose: () => void;
-  onSave: (post: BlogPost) => void;
+    post: Partial<BlogPost> | null;
+    onClose: () => void;
+    onSave: (post: BlogPost) => void;
 }
 
 const EditBlogPostModal: React.FC<EditBlogPostModalProps> = ({ post, onClose, onSave }) => {
@@ -21,7 +21,7 @@ const EditBlogPostModal: React.FC<EditBlogPostModalProps> = ({ post, onClose, on
     useEffect(() => {
         setFormData(post || { content: '' });
     }, [post]);
-    
+
     if (!post) return null;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -125,8 +125,8 @@ const EditBlogPostModal: React.FC<EditBlogPostModalProps> = ({ post, onClose, on
                             <label className="block text-sm font-medium text-gray-700">Excerpt</label>
                             <textarea name="excerpt" value={formData.excerpt || ''} onChange={handleChange} rows={3} required className="mt-1 w-full border border-gray-300 rounded-md p-2" />
                         </div>
-                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                             <div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
                                 <label className="block text-sm font-medium text-gray-700">Author</label>
                                 <input type="text" name="author" value={formData.author || ''} onChange={handleChange} required className="mt-1 w-full border border-gray-300 rounded-md p-2" />
                             </div>
@@ -138,6 +138,67 @@ const EditBlogPostModal: React.FC<EditBlogPostModalProps> = ({ post, onClose, on
                                 </select>
                             </div>
                         </div>
+
+                        <div className="flex gap-6 items-center bg-gray-50 p-3 rounded-md">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Status</label>
+                                <select
+                                    name="status"
+                                    value={formData.status || 'Published'}
+                                    onChange={handleChange}
+                                    className="mt-1 border border-gray-300 rounded-md p-2 bg-white text-sm"
+                                >
+                                    <option value="Published">Published</option>
+                                    <option value="Draft">Draft</option>
+                                </select>
+                            </div>
+                            <div className="flex items-center gap-2 pt-5">
+                                <input
+                                    type="checkbox"
+                                    id="isFeatured"
+                                    checked={formData.isFeatured || false}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, isFeatured: e.target.checked }))}
+                                    className="w-4 h-4 text-primary"
+                                />
+                                <label htmlFor="isFeatured" className="text-sm font-medium text-gray-700 cursor-pointer">Featured Post</label>
+                            </div>
+                        </div>
+
+                        {/* SEO Section */}
+                        <div className="border rounded-md p-4 space-y-3">
+                            <h3 className="text-sm font-bold text-gray-700 border-b pb-2">SEO Settings</h3>
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 uppercase">SEO Title</label>
+                                <input
+                                    type="text"
+                                    value={formData.seo?.title || ''}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, seo: { ...(prev.seo || { title: '', description: '', keywords: '' }), title: e.target.value } }))}
+                                    className="mt-1 w-full border border-gray-300 rounded-md p-2 text-sm"
+                                    placeholder="Meta title for search engines"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 uppercase">SEO Description</label>
+                                <textarea
+                                    value={formData.seo?.description || ''}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, seo: { ...(prev.seo || { title: '', description: '', keywords: '' }), description: e.target.value } }))}
+                                    rows={2}
+                                    className="mt-1 w-full border border-gray-300 rounded-md p-2 text-sm"
+                                    placeholder="Meta description for search engines"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 uppercase">SEO Keywords</label>
+                                <input
+                                    type="text"
+                                    value={formData.seo?.keywords || ''}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, seo: { ...(prev.seo || { title: '', description: '', keywords: '' }), keywords: e.target.value } }))}
+                                    className="mt-1 w-full border border-gray-300 rounded-md p-2 text-sm"
+                                    placeholder="Keywords separated by commas"
+                                />
+                            </div>
+                        </div>
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Content</label>
                             <RichTextEditor

@@ -293,6 +293,7 @@ export interface Business {
 export interface BlogCategory {
   id: string;
   name: string;
+  created_at?: string;
 }
 
 export interface BlogPost {
@@ -302,10 +303,14 @@ export interface BlogPost {
   imageUrl: string;
   excerpt: string;
   author: string;
-  date: string; // e.g., "dd/mm/yyyy"
+  date: string; // ISO or dd/mm/yyyy
   category: string;
   content: string;
   viewCount: number;
+  status: 'Draft' | 'Published';
+  isFeatured?: boolean;
+  seo?: SEO;
+  updatedAt?: string;
 }
 
 export interface BlogComment {
