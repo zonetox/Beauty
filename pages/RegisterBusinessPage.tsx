@@ -14,7 +14,7 @@ import BusinessOnboardingWizard from '../components/BusinessOnboardingWizard.tsx
 
 const RegisterBusinessPage: React.FC = () => {
     const navigate = useNavigate();
-    const { user, register } = useAuth();
+    const { user, register, refreshAuth } = useAuth();
 
     // Form State
     const [formData, setFormData] = useState<BusinessRegistrationFormData>({
@@ -87,20 +87,36 @@ const RegisterBusinessPage: React.FC = () => {
                 description: formData.description || ''
             });
 
+            // Ensure profile/role state is hydrated
+            await refreshAuth();
+
             // Redirect immediately - The AuthProvider state update will handle the rest
             toast.success('Đăng ký doanh nghiệp thành công!');
             navigate('/account', { replace: true });
 
         } catch (err: any) {
-            console.error('Registration Flow Error:', err);
+            // DEEP INDUSTRIAL LOGGING
+            console.group('Registration Critical Error Diagnostics');
+            console.error('Core Error:', err);
+            console.error('Error Message:', err.message);
+            console.error('Error Code:', err.code);
+            console.error('Metadata used:', { email: formData.email, business: formData.business_name });
+            console.groupEnd();
+
             let msg = err.message || 'Đăng ký thất bại.';
 
             if (msg.includes('rate limit')) msg = 'Quá nhiều yêu cầu. Vui lòng thử lại sau 1 phút.';
-            if (msg.includes('already registered')) msg = 'Email này đã được sử dụng.';
-            if (msg.includes('User already registered')) msg = 'Email này đã được sử dụng.';
+            if (msg.includes('already registered') || msg.includes('User already registered')) {
+                msg = 'Email này đã được sử dụng.';
+            }
+
+            // If it's a database trigger error, provide a fundamental explanation
+            if (msg.includes('DATABASE_TRIGGER_ERROR') || msg.includes('Database error')) {
+                msg = 'Lỗi khởi tạo dữ liệu. Tuy nhiên, tài khoản của bạn có thể đã được tạo. Vui lòng thử Đăng nhập.';
+            }
 
             setErrors({ email: msg });
-            toast.error(msg);
+            toast.error(msg, { duration: 6000 });
         } finally {
             setIsSubmitting(false);
         }

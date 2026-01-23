@@ -181,9 +181,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     register,
     refreshAuth: async () => {
+      const currentUser = (await supabase.auth.getUser()).data.user;
       await queryClient.invalidateQueries({ queryKey: keys.auth.session });
-      await queryClient.invalidateQueries({ queryKey: keys.auth.profile(user?.id || null) });
-      await queryClient.invalidateQueries({ queryKey: keys.auth.role(user?.id || null) });
+      if (currentUser) {
+        await queryClient.invalidateQueries({ queryKey: keys.auth.profile(currentUser.id) });
+        await queryClient.invalidateQueries({ queryKey: keys.auth.role(currentUser.id) });
+      }
     },
     requestPasswordReset,
     resetPassword,
