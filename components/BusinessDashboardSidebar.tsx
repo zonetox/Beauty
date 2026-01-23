@@ -1,6 +1,6 @@
 import React from 'react';
 import { useBusinessAuth } from '../contexts/BusinessContext.tsx';
-import { useUserSession } from '../contexts/UserSessionContext.tsx';
+import { useAuth } from '../providers/AuthProvider.tsx';
 import { StaffMemberRole } from '../types.ts';
 
 type ActiveTab = 'dashboard' | 'profile' | 'services' | 'billing' | 'blog' | 'gallery' | 'reviews' | 'stats' | 'settings' | 'bookings' | 'support' | 'deals' | 'staff';
@@ -22,7 +22,7 @@ const NavLink: React.FC<{ active: boolean; onClick: () => void; children: React.
 
 const BusinessDashboardSidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
   const { currentBusiness } = useBusinessAuth();
-  const { currentUser } = useUserSession();
+  const { user: currentUser } = useAuth();
 
   // Only show staff management to business owners (not staff members)
   const isBusinessOwner = currentBusiness && currentUser &&

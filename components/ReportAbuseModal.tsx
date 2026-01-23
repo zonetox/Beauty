@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabaseClient.ts';
 import toast from 'react-hot-toast';
-import { useUserSession } from '../contexts/UserSessionContext.tsx';
+import { useAuth } from '../providers/AuthProvider.tsx';
 
 interface ReportAbuseModalProps {
   isOpen: boolean;
@@ -27,7 +27,7 @@ const ReportAbuseModal: React.FC<ReportAbuseModalProps> = ({
   reviewId,
   reviewComment,
 }) => {
-  const { currentUser } = useUserSession();
+  const { user: currentUser } = useAuth();
   const [selectedReason, setSelectedReason] = useState<string>('');
   const [customReason, setCustomReason] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);

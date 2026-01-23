@@ -8,7 +8,6 @@ import SEOHead from '../components/SEOHead.tsx';
 import { Link, useNavigate } from 'react-router-dom';
 import BusinessCard from '../components/BusinessCard.tsx';
 import EmptyState from '../components/EmptyState.tsx';
-import { useAppInitialization } from '../contexts/AppInitializationContext.tsx';
 
 // AccountTab: Only include tabs for features that are ACTUALLY implemented
 // Do NOT include incomplete features (appointments, reviews are not implemented for regular users)
@@ -20,7 +19,6 @@ const UserAccountPage: React.FC = () => {
     const isFavorite = (businessId: number) => profile?.favorites?.includes(businessId) ?? false;
     const { businesses } = useBusinessData();
     const navigate = useNavigate();
-    const { isInitializing } = useAppInitialization();
     const [activeTab, setActiveTab] = useState<AccountTab>('profile');
     const [loadTimeout, setLoadTimeout] = useState(false);
 
@@ -54,10 +52,6 @@ const UserAccountPage: React.FC = () => {
     // Get favorite businesses
     const favoriteBusinesses = businesses.filter(b => isFavorite(b.id));
 
-    // Don't show loading if app is still initializing
-    if (isInitializing) {
-        return null; // AppInitializationScreen will be shown
-    }
 
     // Loading state - show spinner (only if not initializing)
     if (loading && !loadTimeout) {

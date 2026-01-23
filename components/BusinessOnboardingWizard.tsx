@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabaseClient.ts';
-import { useUserSession } from '../contexts/UserSessionContext.tsx';
+import { useAuth } from '../providers/AuthProvider.tsx';
 import { BusinessCategory, MembershipTier } from '../types.ts';
 
 // D3.1 FIX: Fix onboarding wizard edge cases - validation, error handling, user feedback
 const BusinessOnboardingWizard: React.FC = () => {
-    const { currentUser, refreshProfile } = useUserSession();
+    const { user: currentUser, refreshAuth } = useAuth();
     // const navigate = useNavigate(); // Unused
     // const [step, setStep] = useState(1); // Unused
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -141,7 +141,7 @@ const BusinessOnboardingWizard: React.FC = () => {
             }
 
             // 3. Refresh Session/Context
-            await refreshProfile();
+            await refreshAuth();
 
             toast.success("Business profile created successfully!");
             // Small delay before reload to show success message

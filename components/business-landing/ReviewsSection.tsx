@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import { Business, ReviewStatus } from '../../types.ts';
 import StarRating from '../StarRating.tsx';
 import { useReviewsData } from '../../contexts/BusinessContext.tsx';
-import { useUserSession } from '../../contexts/UserSessionContext.tsx';
+import { useAuth } from '../../providers/AuthProvider.tsx';
 import ReviewForm from '../ReviewForm.tsx';
 import ReportAbuseModal from '../ReportAbuseModal.tsx';
 
@@ -15,21 +15,21 @@ interface ReviewsSectionProps {
 
 const ReviewsSection: React.FC<ReviewsSectionProps> = ({ business }) => {
     const { getReviewsByBusinessId, addReview } = useReviewsData();
-    const { currentUser, profile } = useUserSession();
-    
+    const { user: currentUser, profile } = useAuth();
+
     const [showForm, setShowForm] = useState(false);
     const [reportingReviewId, setReportingReviewId] = useState<string | null>(null);
     const [reportingReviewComment, setReportingReviewComment] = useState<string>('');
 
     const allReviewsForBusiness = getReviewsByBusinessId(business.id);
     const visibleReviews = allReviewsForBusiness.filter(r => r.status === ReviewStatus.VISIBLE);
-    
+
     const handleReviewSubmit = async (data: { rating: number; comment: string }) => {
         if (!profile) {
             toast.error("You must be logged in to submit a review.");
             return;
         }
-        
+
         const submissionPromise = addReview({
             business_id: business.id,
             rating: data.rating,
@@ -55,7 +55,7 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ business }) => {
                     Khách hàng nói gì về chúng tôi
                 </h2>
             </div>
-            
+
             <div className="mt-12 max-w-4xl mx-auto">
                 <div className="text-center mb-8">
                     {!currentUser ? (
@@ -83,7 +83,7 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ business }) => {
                     </div>
                 )}
             </div>
-            
+
             {visibleReviews.length > 0 ? (
                 <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {visibleReviews.slice(0, 3).map(review => (

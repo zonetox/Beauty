@@ -5,10 +5,10 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import { trackConversion } from '../../lib/usePageTracking.ts';
-import { useUserSession } from '../../contexts/UserSessionContext.tsx';
+import { useAuth } from '../../providers/AuthProvider.tsx';
 
 const ContactForm: React.FC = () => {
-  const { currentUser } = useUserSession();
+  const { user: currentUser } = useAuth();
   const [isMessageSent, setIsMessageSent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useUserSession } from '../contexts/UserSessionContext.tsx';
+import { useAuth } from '../providers/AuthProvider.tsx';
 
 interface ForgotPasswordModalProps {
   isOpen: boolean;
@@ -12,7 +12,7 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ isOpen, onClo
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { requestPasswordReset } = useUserSession();
+  const { requestPasswordReset } = useAuth();
 
   if (!isOpen) {
     return null;

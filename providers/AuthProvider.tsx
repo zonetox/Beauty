@@ -9,6 +9,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 import { Session, User, AuthChangeEvent } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient.ts';
 import { Profile } from '../types.ts';
+import toast from 'react-hot-toast';
 import { getUserProfile } from '../lib/session.ts';
 import { resolveUserRole, UserRole } from '../lib/roleResolution.ts';
 import { snakeToCamel } from '../lib/utils.ts';
@@ -32,6 +33,8 @@ export interface AuthContextType {
   refreshAuth: () => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (newPassword: string) => Promise<void>;
+  isFavorite: (businessId: number) => boolean;
+  toggleFavorite: (businessId: number) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -189,6 +192,45 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (error) throw error;
   }, []);
 
+  // Favorites
+  const isFavorite = useCallback((businessId: number) => {
+    return profile?.favorites?.includes(businessId) || false;
+  }, [profile]);
+
+  const toggleFavorite = useCallback(async (businessId: number) => {
+    if (!profile || !user) {
+      toast.error('Vui lòng đăng nhập để lưu vào danh sách yêu thích');
+      return;
+    }
+
+    const currentFavorites = profile.favorites || [];
+    const isCurrentlyFavorite = currentFavorites.includes(businessId);
+
+    let newFavorites;
+    if (isCurrentlyFavorite) {
+      newFavorites = currentFavorites.filter(id => id !== businessId);
+    } else {
+      newFavorites = [...currentFavorites, businessId];
+    }
+
+    // Optimistic update
+    setProfile(prev => prev ? { ...prev, favorites: newFavorites } : null);
+
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ favorites: newFavorites })
+      .eq('id', user.id);
+
+    if (updateError) {
+      // Revert on error
+      setProfile(prev => prev ? { ...prev, favorites: currentFavorites } : null);
+      toast.error('Không thể cập nhật danh sách yêu thích');
+      console.error('Error toggling favorite:', updateError);
+    } else {
+      toast.success(isCurrentlyFavorite ? 'Đã xóa khỏi danh sách yêu thích' : 'Đã thêm vào danh sách yêu thích');
+    }
+  }, [profile, user]);
+
   const value: AuthContextType = {
     state,
     session,
@@ -208,7 +250,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     },
     requestPasswordReset,
-    resetPassword
+    resetPassword,
+    isFavorite,
+    toggleFavorite
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

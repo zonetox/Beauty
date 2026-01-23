@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { Business, AppointmentStatus } from '../../types.ts';
 import { useBookingData } from '../../contexts/BusinessContext.tsx';
-import { useUserSession } from '../../contexts/UserSessionContext.tsx';
+import { useAuth } from '../../providers/AuthProvider.tsx';
 import { trackConversion } from '../../lib/usePageTracking.ts';
 import { ensureString, ensureNumber, ensureArray } from '../../lib/typeHelpers.ts';
 
@@ -29,14 +29,14 @@ const StepIndicator: React.FC<{ current: number; total: number }> = ({ current, 
 
 const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }) => {
     const { appointments, addAppointment } = useBookingData();
-    const { currentUser } = useUserSession();
+    const { user: currentUser } = useAuth();
 
     const [step, setStep] = useState(1);
     const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [selectedTime, setSelectedTime] = useState<string | null>(null);
     const [customerInfo, setCustomerInfo] = useState({
-        name: currentUser?.user_metadata.full_name || '',
+        name: currentUser?.user_metadata?.full_name || '',
         email: currentUser?.email || '',
         phone: '',
         notes: ''

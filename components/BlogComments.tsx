@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useBlogData } from '../contexts/BusinessDataContext.tsx';
-import { useUserSession } from '../contexts/UserSessionContext.tsx';
+import { useAuth } from '../providers/AuthProvider.tsx';
 
 interface BlogCommentsProps {
     postId: number;
@@ -11,11 +11,11 @@ interface BlogCommentsProps {
 
 const BlogComments: React.FC<BlogCommentsProps> = ({ postId }) => {
     const { getCommentsByPostId, addComment } = useBlogData();
-    const { currentUser } = useUserSession();
+    const { user: currentUser } = useAuth();
 
     const [commentContent, setCommentContent] = useState('');
-    const [authorName, setAuthorName] = useState(currentUser?.user_metadata.full_name || '');
-    
+    const [authorName, setAuthorName] = useState(currentUser?.user_metadata?.full_name || '');
+
     const comments = getCommentsByPostId(postId);
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -34,7 +34,7 @@ const BlogComments: React.FC<BlogCommentsProps> = ({ postId }) => {
     return (
         <div className="mt-16 pt-12 border-t">
             <h2 className="text-3xl font-bold font-serif text-neutral-dark mb-8">{comments.length} Comment{comments.length !== 1 ? 's' : ''}</h2>
-            
+
             {/* Comments List */}
             <div className="space-y-8 mb-12">
                 {comments.map(comment => (
@@ -54,7 +54,7 @@ const BlogComments: React.FC<BlogCommentsProps> = ({ postId }) => {
                 <h3 className="text-2xl font-bold font-serif text-neutral-dark mb-4">Leave a Comment</h3>
                 <form onSubmit={handleSubmit} className="space-y-4 p-6 bg-gray-50 rounded-lg border">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                         <div>
+                        <div>
                             <label htmlFor="authorName" className="block text-sm font-medium text-gray-700">Name</label>
                             <input
                                 id="authorName"
@@ -65,7 +65,7 @@ const BlogComments: React.FC<BlogCommentsProps> = ({ postId }) => {
                                 required
                                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary disabled:bg-gray-100"
                             />
-                         </div>
+                        </div>
                     </div>
                     <div>
                         <label htmlFor="commentContent" className="block text-sm font-medium text-gray-700">Your Comment</label>
