@@ -234,20 +234,20 @@ const App: React.FC = () => {
         <ErrorBoundary>
             <QueryClientProvider client={queryClient}>
                 <Router>
-                    <WebVitalsTracker />
-                    <PageTracking />
-                    <Toaster
-                        position="top-center"
-                        reverseOrder={false}
-                        toastOptions={{
-                            duration: 3000,
-                            style: {
-                                maxWidth: '500px',
-                            },
-                        }}
-                        gutter={8}
-                    />
                     <AuthProvider>
+                        <WebVitalsTracker />
+                        <PageTracking />
+                        <Toaster
+                            position="top-center"
+                            reverseOrder={false}
+                            toastOptions={{
+                                duration: 3000,
+                                style: {
+                                    maxWidth: '500px',
+                                },
+                            }}
+                            gutter={8}
+                        />
                         <AppContent />
                     </AuthProvider>
                 </Router>
