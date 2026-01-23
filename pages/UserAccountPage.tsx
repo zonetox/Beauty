@@ -140,7 +140,7 @@ const UserAccountPage: React.FC = () => {
                                 <div className="pt-4 border-t">
                                     <p className="text-sm text-gray-500">
                                         Bạn đang sử dụng tài khoản người dùng. Để trở thành đối tác doanh nghiệp, vui lòng{' '}
-                                        <Link to="/for-business" className="text-primary hover:underline font-medium">
+                                        <Link to="/register/business" className="text-primary hover:underline font-medium">
                                             đăng ký doanh nghiệp
                                         </Link>.
                                     </p>

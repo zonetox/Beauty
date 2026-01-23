@@ -236,7 +236,7 @@ const Header: React.FC = () => {
                         )}
                         {role === 'user' && !hasBusinessAccess && (
                           <Link
-                            to="/for-business"
+                            to="/register/business"
                             className="block px-4 py-2 text-sm text-neutral-dark hover:bg-primary/10 transition-colors"
                             onClick={() => {
                               setIsMenuOpen(false);
@@ -277,7 +277,7 @@ const Header: React.FC = () => {
                     to="/for-business"
                     className="ml-4 px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark transition-transform transform hover:scale-105"
                   >
-                    For Business
+                    Dành cho doanh nghiệp
                   </Link>
                 )}
               </>
@@ -357,7 +357,7 @@ const Header: React.FC = () => {
                 )}
                 {role === 'user' && !hasBusinessAccess && (
                   <Link
-                    to="/for-business"
+                    to="/register/business"
                     className="block px-3 py-2 rounded-md text-base font-medium text-neutral-dark hover:bg-primary/10"
                     onClick={() => setIsMenuOpen(false)}
                   >
@@ -387,7 +387,7 @@ const Header: React.FC = () => {
                     onClick={() => setIsMenuOpen(false)}
                     className="block w-full text-center px-4 py-3 border border-transparent rounded-md shadow-sm font-medium text-white bg-primary hover:bg-primary-dark mt-2"
                   >
-                    For Business
+                    Dành cho doanh nghiệp
                   </Link>
                 )}
               </div>

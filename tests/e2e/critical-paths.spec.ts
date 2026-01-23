@@ -9,6 +9,9 @@ test.describe('Critical User Flows', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to homepage before each test
     await page.goto('/');
+    // Clear storage to ensure clean state
+    await page.evaluate(() => localStorage.clear());
+    await page.evaluate(() => sessionStorage.clear());
   });
 
   test('Homepage loads correctly', async ({ page }) => {
@@ -108,6 +111,45 @@ test.describe('Critical User Flows', () => {
 
     // Should eventually be at /account (dashboard)
     expect(currentUrl).toMatch(/.*\/account/);
+  });
+
+  test('Business Upgrade Flow (Authenticated User)', async ({ page }) => {
+    test.setTimeout(60000);
+
+    // 1. First, register/login as a normal user
+    await page.goto('/register/user');
+    const timestamp = Date.now();
+    const email = `upgrader${timestamp}@example.com`;
+    await page.fill('#full_name', 'Upgrader User');
+    await page.fill('#email', email);
+    await page.fill('#phone', '0123456789');
+    await page.fill('#password', 'TestPass123!');
+    await page.fill('#confirmPassword', 'TestPass123!');
+    await page.click('button[type="submit"]');
+
+    // Wait for redirect to account
+    await page.waitForTimeout(5000);
+
+    // 2. Click "đăng ký doanh nghiệp" link in account page
+    await page.click('a[href="/register/business"]');
+    await page.waitForTimeout(3000);
+
+    // 3. Should see onboarding wizard (check for Business Name field, NOT password)
+    // The onboarding wizard uses input[name="name"]
+    await expect(page.locator('input[name="name"]')).toBeVisible({ timeout: 10000 });
+
+    // 4. Fill onboarding info
+    await page.fill('input[name="name"]', 'My Upgrade Spa');
+    await page.fill('input[name="phone"]', '0999888777');
+    await page.fill('input[name="city"]', 'Ho Chi Minh');
+    await page.fill('textarea[name="description"]', 'Upgraded from user account');
+
+    // 5. Submit
+    await page.click('button[type="submit"]');
+
+    // 6. Should return to account dashboard
+    await page.waitForTimeout(6000);
+    expect(page.url()).toMatch(/.*\/account/);
   });
 
   test('Login Flow', async ({ page }) => {

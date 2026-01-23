@@ -8,14 +8,14 @@ import SEOHead from '../components/SEOHead.tsx';
 
 const RegisterSelectPage: React.FC = () => {
     const navigate = useNavigate();
-    const { state, profile } = useAuth();
+    const { state, role } = useAuth();
 
-    // Redirect authenticated users to account page
+    // Redirect ONLY if user already has a role that doesn't need to register
     useEffect(() => {
-        if (state === 'authenticated' && profile) {
+        if (state === 'authenticated' && (role === 'admin' || role === 'business_owner' || role === 'business_staff')) {
             navigate('/account', { replace: true });
         }
-    }, [state, profile, navigate]);
+    }, [state, role, navigate]);
 
     const seoTitle = 'Đăng ký tài khoản | 1Beauty.asia';
     const seoDescription = 'Chọn loại tài khoản phù hợp với bạn: Người dùng để tìm kiếm và đặt lịch dịch vụ làm đẹp, hoặc Doanh nghiệp để quảng bá và quản lý dịch vụ của bạn.';

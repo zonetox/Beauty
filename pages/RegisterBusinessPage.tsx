@@ -11,9 +11,16 @@ import { supabase } from '../lib/supabaseClient.ts';
 import { BusinessRegistrationFormSchema, BusinessRegistrationFormData } from '../lib/schemas/business.schema.ts';
 import { CATEGORIES } from '../constants.ts'; // Ensure we have categories
 
+import BusinessOnboardingWizard from '../components/BusinessOnboardingWizard.tsx';
+
 const RegisterBusinessPage: React.FC = () => {
     const navigate = useNavigate();
-    const { register } = useAuth();
+    const { user, register } = useAuth();
+
+    // If user is ALREADY logged in, show onboarding instead of signup
+    if (user) {
+        return <BusinessOnboardingWizard />;
+    }
 
     // Form State
     const [formData, setFormData] = useState<BusinessRegistrationFormData>({
