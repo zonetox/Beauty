@@ -74,8 +74,8 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
       }));
     },
     enabled: isSupabaseConfigured,
-    // Poll logs every 3 seconds to keep admin dashboard live (legacy behavior)
-    refetchInterval: 3000
+    // Polling disabled to prevent request spamming. Logs should be fetched on mount or manual refresh.
+    refetchInterval: false
   });
 
   // 2. Notifications
@@ -98,7 +98,7 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
       }));
     },
     enabled: isSupabaseConfigured,
-    refetchInterval: 5000
+    refetchInterval: false
   });
 
   // 3. Announcements

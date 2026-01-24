@@ -13,39 +13,40 @@ interface PermissionGuardProps {
     showForbiddenState?: boolean;
 }
 
-const PermissionGuard: React.FC<PermissionGuardProps> = ({ 
-    permission, 
-    children, 
+const PermissionGuard: React.FC<PermissionGuardProps> = ({
+    permission,
+    children,
     fallback = null,
     showForbiddenState = true
 }) => {
     const { currentUser, loading } = useAdminAuth();
-    
+
     // Show nothing while loading (parent component should handle loading state)
     if (loading) {
         return <>{fallback}</>;
     }
-    
+
     // If no current user, show forbidden
     if (!currentUser) {
         return showForbiddenState ? (
-            <ForbiddenState 
-                title="Access Denied" 
+            <ForbiddenState
+                title="Access Denied"
                 message="You must be logged in as an admin to access this resource."
             />
         ) : <>{fallback}</>;
     }
-    
+
     // Check permission
     if (!currentUser.permissions?.[permission]) {
         return showForbiddenState ? (
-            <ForbiddenState 
-                title="Access Denied" 
-                message={`You don't have permission to ${permission.replace(/can([A-Z])/g, '$1').toLowerCase()}.`}
-            />
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
+                <p className="text-sm text-yellow-700">
+                    Bạn không có quyền truy cập chức năng này. ({permission})
+                </p>
+            </div>
         ) : <>{fallback}</>;
     }
-    
+
     return <>{children}</>;
 };
 

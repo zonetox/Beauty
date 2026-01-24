@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MembershipTier, Business, AdminUser, BlogPost, MembershipPackage, BusinessCategory, OrderStatus, BlogCategory, AdminPageTab } from '../types.ts';
 import { useBusinessData, useBlogData, useMembershipPackageData } from '../contexts/BusinessDataContext.tsx';
 import { useAdminAuth } from '../contexts/AdminContext.tsx';
@@ -270,7 +270,12 @@ const AdminPage: React.FC = () => {
   const { orders, loading: ordersLoading, updateOrderStatus } = useOrderData();
   const { addNotification, registrationRequests, approveRegistrationRequest, rejectRegistrationRequest } = useAdminPlatform();
 
-  const [activeTab, setActiveTab] = useState<AdminPageTab>('dashboard');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<AdminPageTab>((searchParams.get('tab') as AdminPageTab) || 'dashboard');
+
+  React.useEffect(() => {
+    setSearchParams({ tab: activeTab });
+  }, [activeTab, setSearchParams]);
   const [editingBusiness, setEditingBusiness] = useState<Business | null>(null);
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
@@ -578,7 +583,18 @@ const AdminPage: React.FC = () => {
       </svg>
     )
   };
-  const NavLink = ({ tabId, label, icon, permission }: { tabId: AdminPageTab, label: string, icon: React.ReactNode, permission: boolean }) => { if (!permission) return null; return (<button onClick={() => setActiveTab(tabId)} className={`flex items-center gap-3 w-full px-3 py-3 text-left rounded-lg transition-colors ${activeTab === tabId ? 'bg-primary/90 text-white' : 'hover:bg-neutral-700 text-gray-300'}`}>{icon}<span>{label}</span></button>); };
+  const NavLink = ({ tabId, label, icon, permission }: { tabId: AdminPageTab, label: string, icon: React.ReactNode, permission: boolean }) => {
+    if (!permission) return null;
+    return (
+      <button
+        type="button"
+        onClick={() => setActiveTab(tabId)}
+        className={`flex items-center gap-3 w-full px-3 py-3 text-left rounded-lg transition-colors ${activeTab === tabId ? 'bg-primary/90 text-white' : 'hover:bg-neutral-700 text-gray-300'}`}
+      >
+        {icon}<span>{label}</span>
+      </button>
+    );
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -690,14 +706,14 @@ const AdminPage: React.FC = () => {
   const pageTitle = activeTab.charAt(0).toUpperCase() + activeTab.slice(1).replace('-', ' ');
 
   return (
-    <div className="flex min-h-screen bg-gray-100 font-sans">
+    <div className="flex h-screen bg-gray-100 font-sans overflow-hidden">
       {editingBusiness && <EditBusinessModal business={editingBusiness} onClose={() => setEditingBusiness(null)} onSave={handleSaveBusiness} />}
       {editingPost && <EditBlogPostModal post={editingPost} onClose={() => setEditingPost(null)} onSave={handleSavePost} />}
       {isUserModalOpen && <EditAdminUserModal isOpen={isUserModalOpen} onClose={handleCloseUserModal} onSave={handleSaveUser} userToEdit={editingUser} />}
       {isPackageModalOpen && <EditPackageModal isOpen={isPackageModalOpen} onClose={handleClosePackageModal} onSave={handleSavePackage} packageToEdit={editingPackage} />}
       <ForgotPasswordModal isOpen={isForgotPasswordOpen} onClose={() => setIsForgotPasswordOpen(false)} />
 
-      <aside className="w-64 bg-neutral-dark text-white flex-col p-4 space-y-1 fixed h-full overflow-y-auto">
+      <aside className="w-64 bg-neutral-dark text-white flex-col p-4 space-y-1 h-full overflow-y-auto flex-shrink-0">
         <div className="text-2xl font-bold font-serif text-primary mb-6 px-3 pt-2">BeautyDir Admin</div>
         <nav>
           <NavLink tabId="dashboard" label="Dashboard" icon={ICONS.dashboard} permission={true} />
@@ -729,7 +745,7 @@ const AdminPage: React.FC = () => {
         </nav>
       </aside>
 
-      <main className="flex-1 ml-64 p-8">
+      <main className="flex-1 h-full overflow-y-auto p-8">
         <header className="mb-8 flex items-center justify-between gap-4">
           <h1 className="text-3xl font-bold font-serif text-neutral-dark capitalize">{pageTitle}</h1>
           <div className="flex items-center gap-4">
