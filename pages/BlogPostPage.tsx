@@ -15,25 +15,29 @@ const BlogPostPage: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <LoadingState message="Loading blog post..." />
+        <LoadingState message="Đang tải bài viết..." />
       </div>
     );
   }
 
-  if (!slug) {
+  // MINIMALIST STABILITY FIX: Absolute defensive check
+  if (!slug || !Array.isArray(blogPosts)) {
     return <Navigate to="/blog" replace />;
   }
 
   const post = blogPosts.find(p => p.slug === slug);
 
+  // REDIRECTION: Must be a root return (no nested JSX wrapper)
   if (!post) {
     return <Navigate to="/blog" replace />;
   }
 
-  // Extract fortified SEO data
-  const seoTitle = post.seo?.title || post.title;
-  const seoDescription = post.seo?.description || post.excerpt || '';
-  const seoKeywords = post.seo?.keywords || post.category || '';
+  // ULTRA-DEFENSIVE SEO PARSING: Support object or string-fallback
+  const seo = (typeof post.seo === 'object' && post.seo !== null ? post.seo : {}) as any;
+
+  const seoTitle = seo.title || post.title || 'Bài viết | 1Beauty.asia';
+  const seoDescription = seo.description || post.excerpt || '';
+  const seoKeywords = seo.keywords || post.category || '';
   const seoUrl = typeof window !== 'undefined' ? `${window.location.origin}/blog/${post.slug}` : '';
 
   return (
