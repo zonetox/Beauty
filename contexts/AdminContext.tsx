@@ -226,15 +226,21 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }, []);
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+        // Initial data load
         fetchAllAdminData();
+
+        // TEMPORARY FIX: Realtime subscription disabled to prevent infinite re-fetch loop
+        // TODO: Re-enable with proper debouncing after performance optimization
+        /*
         if (isSupabaseConfigured) {
             const channel = supabase.channel('public:registration_requests')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'registration_requests' }, () => fetchAllAdminData())
                 .subscribe();
             return () => { supabase.removeChannel(channel); }
         }
-        return () => { }; // Explicit destructor for all paths
+        */
+
+        return () => { }; // Explicit destructor
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // Run only once on mount
 
