@@ -1,12 +1,10 @@
-// C2.6 - Login Page (Public Site) (IMPLEMENTATION MODE)
-// Tuân thủ ARCHITECTURE.md, sử dụng schema/RLS/contexts hiện có
-// 100% hoàn thiện, không placeholder, chuẩn SEO cơ bản
-
+// LoginPage.tsx - Support for role-based separation
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../providers/AuthProvider.tsx';
 import ForgotPasswordModal from '../components/ForgotPasswordModal.tsx';
 import SEOHead from '../components/SEOHead.tsx';
+import { supabase } from '../lib/supabaseClient.ts';
 
 const LoginPage: React.FC = () => {
     const navigate = useNavigate();
@@ -16,20 +14,17 @@ const LoginPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
 
-    // Get auth context
     const { login, state, profile, isDataLoaded } = useAuth();
 
-    // Unified redirection for authenticated users
+    // Redirection useEffect
     useEffect(() => {
         if (state === 'authenticated' && isDataLoaded && profile) {
-            navigate('/account', { replace: true });
+            const target = (profile.userType === 'business' || profile.businessId)
+                ? '/business-profile'
+                : '/account';
+            navigate(target, { replace: true });
         }
     }, [state, isDataLoaded, profile, navigate]);
-
-    // SEO metadata
-    const seoTitle = 'Đăng nhập | 1Beauty.asia';
-    const seoDescription = 'Đăng nhập vào tài khoản doanh nghiệp của bạn trên 1Beauty.asia để quản lý thông tin và dịch vụ.';
-    const seoUrl = typeof window !== 'undefined' ? `${window.location.origin}/login` : '';
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -38,94 +33,37 @@ const LoginPage: React.FC = () => {
 
         try {
             await login(email, password);
-            // Explicitly navigate to account page after success
-            navigate('/account', { replace: true });
-        } catch (err) {
-            if (err instanceof Error) {
-                // Translate common error messages to Vietnamese
-                let errorMessage = err.message;
-                if (errorMessage.includes('Invalid login credentials')) {
-                    errorMessage = 'Email hoặc mật khẩu không đúng.';
-                } else if (errorMessage.includes('Email not confirmed')) {
-                    errorMessage = 'Email chưa được xác nhận. Vui lòng kiểm tra hộp thư.';
-                } else if (errorMessage.includes('Too many requests')) {
-                    errorMessage = 'Quá nhiều lần thử. Vui lòng đợi một lát rồi thử lại.';
-                }
-                setError(errorMessage);
-            } else {
-                setError('Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.');
-            }
+            // Handle redirection after fresh login
+            const { data } = await supabase.rpc('get_user_context', { p_user_id: (await supabase.auth.getUser()).data.user?.id });
+            const target = (data?.role === 'business_owner' || data?.role === 'business_staff')
+                ? '/business-profile'
+                : '/account';
+            navigate(target, { replace: true });
+        } catch (err: any) {
+            setError(err.message || 'Đăng nhập thất bại.');
             setIsLoading(false);
         }
     };
 
     return (
         <>
-            <SEOHead
-                title={seoTitle}
-                description={seoDescription}
-                keywords="đăng nhập, login, tài khoản doanh nghiệp, business account"
-                url={seoUrl}
-                type="website"
-            />
-            <ForgotPasswordModal
-                isOpen={isForgotPasswordOpen}
-                onClose={() => setIsForgotPasswordOpen(false)}
-            />
+            <SEOHead title="Đăng nhập" description="Đăng nhập vào hệ thống" />
+            <ForgotPasswordModal isOpen={isForgotPasswordOpen} onClose={() => setIsForgotPasswordOpen(false)} />
             <div className="flex items-center justify-center min-h-[calc(100vh-128px)] bg-background">
-                <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-                    <h1 className="text-2xl font-bold text-center text-neutral-dark font-serif">Đăng nhập tài khoản Doanh nghiệp</h1>
-                    {error && <p className="text-red-500 text-center bg-red-100 p-3 rounded-md">{error}</p>}
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                autoComplete="email"
-                                required
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                disabled={isLoading}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary disabled:bg-gray-100 disabled:cursor-not-allowed"
-                            />
-                        </div>
-                        <div>
-                            <div className="flex items-center justify-between">
-                                <label htmlFor="password" className="block text-sm font-medium text-gray-700">Mật khẩu</label>
-                                <button type="button" onClick={() => setIsForgotPasswordOpen(true)} className="text-sm font-medium text-primary hover:text-primary-dark focus:outline-none disabled:opacity-50" disabled={isLoading}>
-                                    Quên mật khẩu?
-                                </button>
-                            </div>
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                autoComplete="current-password"
-                                required
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                disabled={isLoading}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary disabled:bg-gray-100 disabled:cursor-not-allowed"
-                            />
-                        </div>
-                        <div>
-                            <button
-                                type="submit"
-                                disabled={isLoading}
-                                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-dark disabled:bg-primary/50 disabled:cursor-not-allowed"
-                            >
-                                {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
-                            </button>
-                        </div>
+                <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
+                    <h1 className="text-2xl font-bold text-center mb-6">Đăng nhập tài khoản</h1>
+                    {error && <p className="text-red-500 text-center bg-red-100 p-3 mb-4 rounded">{error}</p>}
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full border p-2 rounded" />
+                        <input type="password" placeholder="Mật khẩu" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full border p-2 rounded" />
+                        <button type="submit" disabled={isLoading} className="w-full bg-primary text-white py-2 rounded font-bold font-outfit disabled:bg-gray-400">
+                            {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+                        </button>
                     </form>
-                    <p className="text-sm text-center text-gray-600">
-                        Chưa có tài khoản doanh nghiệp?{' '}
-                        <Link to="/register" className="font-medium text-primary hover:text-primary-dark">
-                            Đăng ký tại đây
-                        </Link>
-                    </p>
+                    <div className="text-center mt-4 space-y-2">
+                        <button type="button" onClick={() => setIsForgotPasswordOpen(true)} className="text-sm text-primary">Quên mật khẩu?</button>
+                        <p className="text-sm">Chưa có tài khoản? <Link to="/register" className="text-primary font-bold">Đăng ký ngay</Link></p>
+                    </div>
                 </div>
             </div>
         </>

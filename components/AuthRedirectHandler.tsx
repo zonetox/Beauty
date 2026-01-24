@@ -28,7 +28,7 @@ const AuthRedirectHandler: React.FC = () => {
             (isBusinessOwner || isBusinessStaff) &&
             location.pathname === '/'
         ) {
-            navigate('/account', { replace: true });
+            navigate('/business-profile', { replace: true });
         }
     }, [user, state, role, isBusinessOwner, isBusinessStaff, isLoading, location.pathname, navigate]);
 

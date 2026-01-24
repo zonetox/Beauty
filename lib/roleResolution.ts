@@ -181,7 +181,7 @@ export async function verifyBusinessLinked(userId: string): Promise<{ exists: bo
     const { data: profile, error: profileError } = await Promise.race([
       profileQuery,
       verificationTimeout
-    ]) as { data: { business_id: number | null } | null; error: any };
+    ]) as { data: { businessId: number | null } | null; error: any };
 
     if (profileError || !profile) {
       return {
@@ -191,7 +191,7 @@ export async function verifyBusinessLinked(userId: string): Promise<{ exists: bo
       };
     }
 
-    if (!profile.business_id) {
+    if (!profile.businessId) {
       return {
         exists: false,
         businessId: null,
@@ -203,7 +203,7 @@ export async function verifyBusinessLinked(userId: string): Promise<{ exists: bo
     const businessQuery = supabase
       .from('businesses')
       .select('id, owner_id')
-      .eq('id', profile.business_id)
+      .eq('id', profile.businessId)
       .eq('owner_id', userId)
       .single();
 
@@ -215,7 +215,7 @@ export async function verifyBusinessLinked(userId: string): Promise<{ exists: bo
     if (businessError || !business) {
       return {
         exists: false,
-        businessId: profile.business_id,
+        businessId: profile.businessId,
         error: 'Business record not found or user is not owner. Business ownership verification failed.'
       };
     }

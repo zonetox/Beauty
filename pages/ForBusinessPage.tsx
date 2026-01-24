@@ -22,7 +22,7 @@ const ForBusinessPage: React.FC = () => {
     useEffect(() => {
         if (state !== 'loading' && !isLoading && user) {
             if (isBusinessOwner || isBusinessStaff) {
-                navigate('/account', { replace: true });
+                navigate('/business-profile', { replace: true });
             }
         }
     }, [user, state, isLoading, isBusinessOwner, isBusinessStaff, navigate]);

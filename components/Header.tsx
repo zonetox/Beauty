@@ -207,7 +207,7 @@ const Header: React.FC = () => {
                         </div>
                         {hasBusinessAccess ? (
                           <Link
-                            to="/account"
+                            to="/business-profile"
                             className="block px-4 py-2 text-sm text-neutral-dark hover:bg-primary/10 transition-colors"
                             onClick={() => {
                               setIsMenuOpen(false);
@@ -219,21 +219,20 @@ const Header: React.FC = () => {
                               <span>Dashboard doanh nghiệp</span>
                             </div>
                           </Link>
-                        ) : (
-                          <Link
-                            to="/account"
-                            className="block px-4 py-2 text-sm text-neutral-dark hover:bg-primary/10 transition-colors"
-                            onClick={() => {
-                              setIsMenuOpen(false);
-                              setIsDropdownOpen(false);
-                            }}
-                          >
-                            <div className="flex items-center gap-2">
-                              <UserIcon className="w-4 h-4" />
-                              <span>Tài khoản của tôi</span>
-                            </div>
-                          </Link>
-                        )}
+                        ) : null}
+                        <Link
+                          to="/account"
+                          className="block px-4 py-2 text-sm text-neutral-dark hover:bg-primary/10 transition-colors"
+                          onClick={() => {
+                            setIsMenuOpen(false);
+                            setIsDropdownOpen(false);
+                          }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <UserIcon className="w-4 h-4" />
+                            <span>Tài khoản của tôi</span>
+                          </div>
+                        </Link>
                         {role === 'user' && !hasBusinessAccess && (
                           <Link
                             to="/register/business"
@@ -336,25 +335,24 @@ const Header: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                {hasBusinessAccess ? (
+                {hasBusinessAccess && (
                   <NavLink
-                    to="/account"
+                    to="/business-profile"
                     className={({ isActive }) => `${mobileNavLinkClass({ isActive })} flex items-center gap-3`}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <UserIcon className="w-6 h-6" />
                     <span>Dashboard doanh nghiệp</span>
                   </NavLink>
-                ) : (
-                  <NavLink
-                    to="/account"
-                    className={({ isActive }) => `${mobileNavLinkClass({ isActive })} flex items-center gap-3`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <UserIcon className="w-6 h-6" />
-                    <span>Tài khoản của tôi</span>
-                  </NavLink>
                 )}
+                <NavLink
+                  to="/account"
+                  className={({ isActive }) => `${mobileNavLinkClass({ isActive })} flex items-center gap-3`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <UserIcon className="w-6 h-6" />
+                  <span>Tài khoản của tôi</span>
+                </NavLink>
                 {role === 'user' && !hasBusinessAccess && (
                   <Link
                     to="/register/business"

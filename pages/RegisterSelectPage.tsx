@@ -13,6 +13,9 @@ const RegisterSelectPage: React.FC = () => {
     // Redirect ONLY if user already has a role that doesn't need to register
     useEffect(() => {
         if (state === 'authenticated' && (role === 'admin' || role === 'business_owner' || role === 'business_staff')) {
+            const target = (role === 'admin') ? '/admin' : '/business-profile';
+            navigate(target, { replace: true });
+        } else if (state === 'authenticated' && role === 'user') {
             navigate('/account', { replace: true });
         }
     }, [state, role, navigate]);

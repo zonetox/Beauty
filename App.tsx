@@ -98,19 +98,7 @@ const AppLayout: React.FC = () => {
     );
 };
 
-/**
- * Account Dashboard Dispatcher (Standardized)
- * Routes to different dashboards using pre-resolved Profile Layer
- */
-const AccountDashboard: React.FC = () => {
-    const { role, profile, businessId } = useAuth();
 
-    if (profile && (role === 'business_owner' || role === 'business_staff') && businessId) {
-        return <UserBusinessDashboardPage />;
-    }
-
-    return <UserAccountPage />;
-};
 
 
 // Layout wrapper for routes that need public data (businesses, blog, packages, markers)
@@ -156,8 +144,13 @@ const AppContent: React.FC = () => {
                                             <Route path="blog/:slug" element={<BlogPostPage />} />
                                             <Route path="account" element={
                                                 <ProtectedRoute>
+                                                    <UserAccountPage />
+                                                </ProtectedRoute>
+                                            } />
+                                            <Route path="business-profile" element={
+                                                <ProtectedRoute>
                                                     <BusinessDashboardProvider>
-                                                        <AccountDashboard />
+                                                        <UserBusinessDashboardPage />
                                                     </BusinessDashboardProvider>
                                                 </ProtectedRoute>
                                             } />

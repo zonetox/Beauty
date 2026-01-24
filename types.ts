@@ -394,6 +394,7 @@ export interface Profile {
   fullName?: string;
   avatarUrl?: string;
   email?: string;
+  userType?: string; // Standardized: 'user', 'business', 'admin'
   businessId?: number; // Link to the business this user owns/manages
   favorites?: number[]; // Array of business IDs
 }

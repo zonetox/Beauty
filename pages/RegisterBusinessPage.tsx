@@ -92,7 +92,7 @@ const RegisterBusinessPage: React.FC = () => {
 
             // Redirect immediately - The AuthProvider state update will handle the rest
             toast.success('Đăng ký doanh nghiệp thành công!');
-            navigate('/account', { replace: true });
+            navigate('/business-profile', { replace: true });
 
         } catch (err: any) {
             // DEEP INDUSTRIAL LOGGING

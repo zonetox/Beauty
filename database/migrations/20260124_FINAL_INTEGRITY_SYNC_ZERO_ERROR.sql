@@ -61,9 +61,27 @@ SELECT * INTO v_profile
 FROM public.profiles
 WHERE id = p_user_id;
 END IF;
+-- F. Return Combined Context
 RETURN jsonb_build_object(
     'profile',
-    to_jsonb(v_profile),
+    jsonb_build_object(
+        'id',
+        v_profile.id,
+        'fullName',
+        v_profile.full_name,
+        'avatarUrl',
+        v_profile.avatar_url,
+        'email',
+        v_profile.email,
+        'userType',
+        v_profile.user_type,
+        'businessId',
+        v_profile.business_id,
+        'favorites',
+        v_profile.favorites,
+        'updatedAt',
+        v_profile.updated_at
+    ),
     'role',
     v_role,
     'businessId',
