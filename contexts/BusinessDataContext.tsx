@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import { Business, BlogPost, BlogComment, BlogCategory, MembershipPackage, Service, MediaItem, TeamMember, Deal, MediaType, Review } from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { uploadFile } from '../lib/storage.ts';
-import { snakeToCamel } from '../lib/utils.ts';
+import { snakeToCamel, toSnakeCase } from '../lib/utils.ts';
 import { cacheManager, CACHE_KEYS, CACHE_TTL } from '../lib/cache.ts';
 
 // Optional admin logging - injected via props or context to avoid circular dependency
@@ -76,22 +76,6 @@ export const PublicDataContext = createContext<PublicDataContextType | undefined
 
 const COMMENTS_LOCAL_STORAGE_KEY = 'blog_comments';
 
-/**
- * Helper to convert JS object keys from camelCase to snake_case for Supabase write operations.
- * @template T - The type of the input object
- * @param obj - The object to convert
- * @returns The object with snake_case keys
- */
-const toSnakeCase = <T,>(obj: T): T => {
-  if (typeof obj !== 'object' || obj === null) return obj;
-  if (Array.isArray(obj)) return obj.map(toSnakeCase) as T;
-  return Object.keys(obj as Record<string, unknown>).reduce((acc, key: string) => {
-    const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-    const value = (obj as Record<string, unknown>)[key];
-    (acc as Record<string, unknown>)[snakeKey] = toSnakeCase(value);
-    return acc;
-  }, {} as T);
-};
 
 export function PublicDataProvider({ children }: { children: ReactNode }) {
   // Initialize with cached data immediately if available
@@ -816,7 +800,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       toast.error("Preview Mode: Cannot add service.");
       throw new Error("Preview Mode: Cannot add service.");
     }
-    const currentServices = businesses.find(b => b.id === newServiceData.business_id)?.services || [];
+    const currentServices = businesses.find(b => b.id === newServiceData.businessId)?.services || [];
     const newPosition = currentServices.length > 0 ? Math.max(...currentServices.map(s => s.position)) + 1 : 1;
     const { error } = await supabase.from('services').insert({ ...toSnakeCase(newServiceData), position: newPosition });
     if (error) {
@@ -867,10 +851,10 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     }
 
     // Delete image from Storage if exists
-    if (serviceToDelete?.image_url && serviceToDelete.image_url.startsWith('http')) {
+    if (serviceToDelete?.imageUrl && serviceToDelete.imageUrl.startsWith('http')) {
       try {
         const { deleteFileByUrl } = await import('../lib/storage.ts');
-        await deleteFileByUrl('business-gallery', serviceToDelete.image_url);
+        await deleteFileByUrl('business-gallery', serviceToDelete.imageUrl);
       } catch (deleteError) {
         // Log but don't fail the delete operation
         console.warn('Failed to delete service image from storage:', deleteError);
@@ -922,7 +906,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     const currentMedia = businesses.find(b => b.id === businessId)?.gallery || [];
     const newPosition = currentMedia.length > 0 ? Math.max(...currentMedia.map(m => m.position)) + 1 : 1;
     const newItem = {
-      business_id: businessId,
+      businessId: businessId,
       url: publicUrl,
       type: isImage ? MediaType.IMAGE : MediaType.VIDEO,
       title: file.name,
@@ -1105,10 +1089,10 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     }
 
     // Delete image from Storage if exists
-    if (dealToDelete?.image_url && dealToDelete.image_url.startsWith('http')) {
+    if (dealToDelete?.imageUrl && dealToDelete.imageUrl.startsWith('http')) {
       try {
         const { deleteFileByUrl } = await import('../lib/storage.ts');
-        await deleteFileByUrl('business-gallery', dealToDelete.image_url);
+        await deleteFileByUrl('business-gallery', dealToDelete.imageUrl);
       } catch (deleteError) {
         // Log but don't fail the delete operation
         console.warn('Failed to delete deal image from storage:', deleteError);
@@ -1191,33 +1175,19 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
   const addBlogPost = async (newPostData: Omit<BlogPost, 'id' | 'slug' | 'date' | 'viewCount'>): Promise<void> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add blog post."); return; }
     const slug = newPostData.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-') + `-${Date.now()}`;
-    const { error } = await supabase.from('blog_posts').insert({
-      title: newPostData.title,
-      image_url: newPostData.imageUrl,
-      excerpt: newPostData.excerpt,
-      author: newPostData.author,
-      category: newPostData.category,
-      content: newPostData.content,
+    const postToAdd = {
+      ...newPostData,
       slug: slug,
-      view_count: 0,
+      viewCount: 0,
       date: new Date().toISOString()
-    });
+    };
+    const { error } = await supabase.from('blog_posts').insert(toSnakeCase(postToAdd));
     if (!error) await refetchAllPublicData();
   };
 
   const updateBlogPost = async (updatedPost: BlogPost) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update blog post."); return; }
-    const { error } = await supabase.from('blog_posts').update({
-      title: updatedPost.title,
-      image_url: updatedPost.imageUrl,
-      excerpt: updatedPost.excerpt,
-      author: updatedPost.author,
-      category: updatedPost.category,
-      content: updatedPost.content,
-      slug: updatedPost.slug,
-      date: updatedPost.date,
-      view_count: updatedPost.viewCount
-    }).eq('id', updatedPost.id);
+    const { error } = await supabase.from('blog_posts').update(toSnakeCase(updatedPost)).eq('id', updatedPost.id);
     if (!error) await refetchAllPublicData();
   };
   /**
@@ -1439,18 +1409,10 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
   const addPackage = async (newPackage: Omit<MembershipPackage, 'id'>): Promise<void> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add package."); return; }
     const packageToAdd = {
-      name: newPackage.name,
-      tier: newPackage.tier,
-      price: newPackage.price,
-      duration_months: newPackage.durationMonths,
-      description: newPackage.description,
-      features: newPackage.features,
-      permissions: newPackage.permissions as any, // Json type in DB
-      is_popular: newPackage.isPopular,
-      is_active: newPackage.isActive,
+      ...newPackage,
       id: `pkg_${crypto.randomUUID()}`
     };
-    const { error } = await supabase.from('membership_packages').insert(packageToAdd);
+    const { error } = await supabase.from('membership_packages').insert(toSnakeCase(packageToAdd));
     if (!error) { await refetchAllPublicData(); toast.success("Package added."); }
     else { toast.error(`Failed to add package: ${error.message}`); }
   };
@@ -1462,18 +1424,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
    */
   const updatePackage = async (packageId: string, updates: Partial<MembershipPackage>): Promise<void> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update package."); return; }
-    const mappedUpdates: Record<string, unknown> = {};
-    if (updates.name !== undefined) mappedUpdates.name = updates.name;
-    if (updates.tier !== undefined) mappedUpdates.tier = updates.tier;
-    if (updates.price !== undefined) mappedUpdates.price = updates.price;
-    if (updates.durationMonths !== undefined) mappedUpdates.duration_months = updates.durationMonths;
-    if (updates.description !== undefined) mappedUpdates.description = updates.description;
-    if (updates.features !== undefined) mappedUpdates.features = updates.features;
-    if (updates.permissions !== undefined) mappedUpdates.permissions = updates.permissions;
-    if (updates.isPopular !== undefined) mappedUpdates.is_popular = updates.isPopular;
-    if (updates.isActive !== undefined) mappedUpdates.is_active = updates.isActive;
-
-    const { error } = await supabase.from('membership_packages').update(mappedUpdates).eq('id', packageId);
+    const { error } = await supabase.from('membership_packages').update(toSnakeCase(updates)).eq('id', packageId);
     if (!error) { await refetchAllPublicData(); toast.success("Package updated."); }
     else { toast.error(`Failed to update package: ${error.message}`); }
   };

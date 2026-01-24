@@ -83,40 +83,40 @@ export interface Socials {
 
 export interface Service {
   id: string; // Now a UUID from its own table
-  business_id: number;
+  businessId: number;
   name: string;
   price: string;
   description: string;
-  image_url: string; // Match database column
-  duration_minutes?: number;
+  imageUrl: string;
+  durationMinutes?: number;
   position: number; // For drag-and-drop ordering
 }
 
 export interface Deal {
   id: string; // Now a UUID from its own table
-  business_id: number;
+  businessId: number;
   title: string;
   description: string;
-  image_url?: string;
-  start_date?: string; // ISO
-  end_date?: string; // ISO
-  discount_percentage?: number;
-  original_price?: number;
-  deal_price?: number;
+  imageUrl?: string;
+  startDate?: string; // ISO
+  endDate?: string; // ISO
+  discountPercentage?: number;
+  originalPrice?: number;
+  dealPrice?: number;
   status: DealStatus;
 }
 
 export interface TeamMember {
   id: string; // Now a UUID from its own table
-  business_id: number;
+  businessId: number;
   name: string;
   role: string;
-  image_url: string; // Match database column
+  imageUrl: string;
 }
 
 export interface MediaItem {
   id: string; // Now a UUID from its own table
-  business_id: number;
+  businessId: number;
   url: string;
   type: MediaType;
   category: MediaCategory;
@@ -127,17 +127,17 @@ export interface MediaItem {
 
 export interface Review {
   id: string;
-  user_id?: string;
-  business_id: number;
-  user_name: string;
-  user_avatar_url: string;
+  userId?: string;
+  businessId: number;
+  userName: string;
+  userAvatarUrl: string;
   rating: number; // 1 to 5
   comment: string;
-  submitted_date: string; // ISO
+  submittedDate: string; // ISO
   status: ReviewStatus;
   reply?: {
     content: string;
-    replied_date: string; // ISO
+    repliedDate: string; // ISO
   };
 }
 
@@ -176,8 +176,8 @@ export interface StaffMember {
 // Business Staff (Sub-user system)
 export interface BusinessStaff {
   id: string;
-  business_id: number;
-  user_id: string;
+  businessId: number;
+  userId: string;
   role: StaffMemberRole;
   permissions: {
     canEditLandingPage?: boolean;
@@ -185,11 +185,11 @@ export interface BusinessStaff {
     canManageMedia?: boolean;
     canManageServices?: boolean;
   };
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
   // Optional fields from joined profiles
-  user_email?: string;
-  user_name?: string;
+  userEmail?: string;
+  userName?: string;
 }
 
 // Abuse Report
@@ -278,7 +278,7 @@ export interface Business {
   landingPageConfig?: LandingPageConfig;
   trustIndicators?: TrustIndicator[];
   landingPageStatus?: 'Pending' | 'Approved' | 'Rejected' | 'Needs Review';
-  owner_id?: string; // UUID of the business owner (from auth.users)
+  ownerId?: string; // UUID of the business owner (from auth.users)
 
   // --- RELATIONAL DATA ---
   // These will be populated by Supabase joins

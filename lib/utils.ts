@@ -54,10 +54,10 @@ export function snakeToCamelAs<T>(obj: unknown): T {
 export function mapPostgrestResponse<T>(
     response: PostgrestResponse<unknown>
 ): { data: T[] | null; error: unknown } {
-        return {
-                data: response.data ? ((snakeToCamel(response.data) as unknown) as T[]) : null,
-                error: response.error
-        };
+    return {
+        data: response.data ? ((snakeToCamel(response.data) as unknown) as T[]) : null,
+        error: response.error
+    };
 }
 
 /**
@@ -69,8 +69,41 @@ export function mapPostgrestResponse<T>(
 export function mapSingleResponse<T>(
     response: { data: unknown; error: unknown }
 ): { data: T | null; error: unknown } {
-        return {
-                data: response.data ? ((snakeToCamel(response.data) as unknown) as T) : null,
-                error: response.error
-        };
+    return {
+        data: response.data ? ((snakeToCamel(response.data) as unknown) as T) : null,
+        error: response.error
+    };
+}
+
+/**
+ * Recursively converts camelCase keys of an object to snake_case.
+ * @template T - The type of the input object
+ * @param obj - The object to convert
+ * @returns The object with snake_case keys
+ */
+export function toSnakeCase<T>(obj: T): T {
+    if (obj === null || typeof obj !== 'object') {
+        return obj;
+    }
+
+    if (obj instanceof Date) {
+        return obj as unknown as T;
+    }
+
+    if (Array.isArray(obj)) {
+        return obj.map(toSnakeCase) as unknown as T;
+    }
+
+    return Object.keys(obj as object).reduce((result, key) => {
+        const snakeKey = key.replace(/[A-Z]/g, $1 => `_${$1.toLowerCase()}`);
+
+        // Prevent prototype pollution
+        if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+            return result;
+        }
+
+        const value = (obj as Record<string, unknown>)[key];
+        (result as Record<string, unknown>)[snakeKey] = toSnakeCase(value);
+        return result;
+    }, {} as any);
 }

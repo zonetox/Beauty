@@ -98,7 +98,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
     const generateTimeSlots = (date: Date): string[] => {
         if (!selectedService) return [];
 
-        const serviceDuration = ensureNumber(selectedService?.duration_minutes, 60);
+        const serviceDuration = ensureNumber(selectedService?.durationMinutes, 60);
         const slots: string[] = [];
         const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' });
 
@@ -150,7 +150,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
             const isBooked = existingAppointmentsOnDate.some(appt => {
                 const apptTime = new Date(`${appt?.date ?? dateStr}T${appt?.timeSlot ?? '00:00'}`);
                 const apptService = ensureArray(business?.services).find(s => s?.id === appt?.serviceId);
-                const apptDuration = ensureNumber(apptService?.duration_minutes, 60);
+                const apptDuration = ensureNumber(apptService?.durationMinutes, 60);
                 const apptEnd = new Date(apptTime.getTime() + apptDuration * 60000);
 
                 return (slotTime < apptEnd && slotEnd > apptTime);
@@ -201,7 +201,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
                                         onClick={() => { setSelectedServiceId(service.id); setStep(2); }}
                                         className="w-full text-left p-4 border rounded-lg hover:border-primary hover:bg-primary/5 transition-colors flex items-center gap-4"
                                     >
-                                        <img src={service.image_url} alt={service.name} className="w-16 h-16 object-cover rounded-md flex-shrink-0" />
+                                        <img src={service.imageUrl} alt={service.name} className="w-16 h-16 object-cover rounded-md flex-shrink-0" />
                                         <div className="flex-grow">
                                             <p className="font-semibold text-neutral-dark">{service.name}</p>
                                             <p className="text-sm text-gray-500">{service.description}</p>
@@ -209,7 +209,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
                                         <div className="text-right">
                                             <p className="font-bold text-primary">{service.price}</p>
                                             {/* FIX: Changed 'durationMinutes' to 'duration_minutes' to match the Service type. */}
-                                            {service.duration_minutes && <p className="text-xs text-gray-400">{service.duration_minutes} phút</p>}
+                                            {service.durationMinutes && <p className="text-xs text-gray-400">{service.durationMinutes} phút</p>}
                                         </div>
                                     </button>
                                 ))}

@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabaseClient.ts';
 import { useAuth } from '../providers/AuthProvider.tsx';
 import { BusinessCategory, MembershipTier } from '../types.ts';
+import { toSnakeCase } from '../lib/utils.ts';
 
 // D3.1 FIX: Fix onboarding wizard edge cases - validation, error handling, user feedback
 const BusinessOnboardingWizard: React.FC = () => {
@@ -89,7 +90,7 @@ const BusinessOnboardingWizard: React.FC = () => {
             const newBusiness = {
                 name: formData.name.trim(),
                 slug: slug,
-                owner_id: currentUser.id,
+                ownerId: currentUser.id,
                 categories: [formData.category],
                 phone: formData.phone.trim(),
                 address: formData.address.trim(),
@@ -97,15 +98,15 @@ const BusinessOnboardingWizard: React.FC = () => {
                 district: 'District 1',
                 ward: 'Ben Nghe',
                 description: formData.description.trim() || `Welcome to ${formData.name.trim()}`,
-                image_url: 'https://placehold.co/600x400/E6A4B4/FFFFFF?text=Storefront',
-                membership_tier: MembershipTier.FREE,
-                is_active: false,
-                working_hours: { "Monday - Friday": "09:00 - 20:00" },
+                imageUrl: 'https://placehold.co/600x400/E6A4B4/FFFFFF?text=Storefront',
+                membershipTier: MembershipTier.FREE,
+                isActive: false,
+                workingHours: { "Monday - Friday": "09:00 - 20:00" },
             };
 
             const { data: businessData, error: businessError } = await supabase
                 .from('businesses')
-                .insert(newBusiness)
+                .insert(toSnakeCase(newBusiness))
                 .select()
                 .single();
 
@@ -129,7 +130,7 @@ const BusinessOnboardingWizard: React.FC = () => {
             // 2. Update Profile to link to this business
             const { error: profileError } = await supabase
                 .from('profiles')
-                .update({ business_id: businessData.id })
+                .update(toSnakeCase({ businessId: businessData.id }))
                 .eq('id', currentUser.id);
 
             if (profileError) {

@@ -220,14 +220,14 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
 
         businessReviews
             .filter(r => r.status === 'Visible')
-            .sort((a, b) => new Date(b.submitted_date).getTime() - new Date(a.submitted_date).getTime())
+            .sort((a, b) => new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime())
             .slice(0, 5)
             .forEach(review => {
                 activities.push({
                     type: 'review',
-                    date: new Date(review.submitted_date),
-                    title: `Đánh giá mới từ ${review.user_name}`,
-                    description: `${review.rating} sao - ${review.comment.substring(0, 40)}...`,
+                    date: new Date(review.submittedDate),
+                    title: `Đánh giá mới từ ${review.userName}`,
+                    description: `${review.rating} sao - ${review.comment?.substring(0, 40) || ''}...`,
                     id: review.id,
                 });
             });

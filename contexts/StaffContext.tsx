@@ -45,18 +45,18 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       const staffList = (data || []).map((item) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const rawItem = item as any;
-        const staff = snakeToCamel(rawItem) as unknown as BusinessStaff & { user_email?: string; user_name?: string };
+        const staff = snakeToCamel(rawItem) as unknown as BusinessStaff & { userEmail?: string; userName?: string };
 
         // Add email from joined profile if available
         if (rawItem.profiles) {
-          staff.user_email = Array.isArray(rawItem.profiles) ? rawItem.profiles[0]?.email : rawItem.profiles.email;
-          staff.user_name = Array.isArray(rawItem.profiles) ? rawItem.profiles[0]?.full_name : rawItem.profiles.full_name;
+          staff.userEmail = Array.isArray(rawItem.profiles) ? rawItem.profiles[0]?.email : rawItem.profiles.email;
+          staff.userName = Array.isArray(rawItem.profiles) ? rawItem.profiles[0]?.full_name : rawItem.profiles.full_name;
         }
         return staff as BusinessStaff;
       });
 
       setStaff(prev => {
-        const filtered = prev.filter(s => s.business_id !== businessId);
+        const filtered = prev.filter(s => s.businessId !== businessId);
         return [...filtered, ...staffList];
       });
       return staffList;

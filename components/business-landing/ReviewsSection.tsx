@@ -31,7 +31,7 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ business }) => {
         }
 
         const submissionPromise = addReview({
-            business_id: business.id,
+            businessId: business.id,
             rating: data.rating,
             comment: data.comment,
             userProfile: profile
@@ -105,10 +105,10 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ business }) => {
                             </div>
                             <p className="text-gray-600 mt-4 italic flex-grow">&quot;{review.comment}&quot;</p>
                             <div className="mt-6 flex items-center">
-                                <img src={review.user_avatar_url} alt={review.user_name} className="w-12 h-12 rounded-full object-cover" />
+                                <img src={review.userAvatarUrl} alt={review.userName} className="w-12 h-12 rounded-full object-cover" />
                                 <div className="ml-4">
-                                    <p className="font-semibold text-neutral-dark">{review.user_name}</p>
-                                    <p className="text-sm text-gray-400">{new Date(review.submitted_date).toLocaleDateString()}</p>
+                                    <p className="font-semibold text-neutral-dark">{review.userName}</p>
+                                    <p className="text-sm text-gray-400">{new Date(review.submittedDate).toLocaleDateString()}</p>
                                 </div>
                             </div>
                         </div>

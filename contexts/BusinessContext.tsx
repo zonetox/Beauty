@@ -8,7 +8,7 @@ import { PublicDataContext } from './BusinessDataContext.tsx';
 // Removed useAdmin import to avoid circular dependency - admin notifications handled at higher level
 import { activateBusinessFromOrder } from '../lib/businessUtils.ts';
 import toast from 'react-hot-toast';
-import { snakeToCamel } from '../lib/utils.ts';
+import { snakeToCamel, toSnakeCase } from '../lib/utils.ts';
 
 // --- TYPE DEFINITION ---
 interface BusinessContextType {
@@ -30,7 +30,7 @@ interface BusinessContextType {
   reviews: Review[];
   reviewsLoading: boolean;
   getReviewsByBusinessId: (businessId: number) => Review[];
-  addReview: (reviewData: { business_id: number; rating: number; comment: string; userProfile: Profile }) => Promise<void>;
+  addReview: (reviewData: { businessId: number; rating: number; comment: string; userProfile: Profile }) => Promise<void>;
   addReply: (reviewId: string, replyContent: string) => Promise<void>;
   toggleReviewVisibility: (reviewId: string) => Promise<void>;
   // Analytics
@@ -51,15 +51,7 @@ interface BusinessContextType {
 
 const BusinessContext = createContext<BusinessContextType | undefined>(undefined);
 
-const toSnakeCase = <T,>(obj: T): T => {
-  if (typeof obj !== 'object' || obj === null) return obj;
-  if (Array.isArray(obj)) return obj.map(toSnakeCase) as unknown as T;
-  return Object.keys(obj as object).reduce((acc: Record<string, unknown>, key: string) => {
-    const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-    acc[snakeKey] = toSnakeCase((obj as Record<string, unknown>)[key]);
-    return acc;
-  }, {}) as unknown as T;
-};
+
 
 export function BusinessProvider({ children }: { children: ReactNode }) {
   // --- PARENT CONTEXTS ---
@@ -379,7 +371,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     if (!isSupabaseConfigured) return;
     await supabase.rpc('increment_business_blog_view_count', { p_post_id: postId });
   };
-  const addReview = async (reviewData: { business_id: number; rating: number; comment: string; userProfile: Profile }) => {
+  const addReview = async (reviewData: { businessId: number; rating: number; comment: string; userProfile: Profile }) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add review."); throw new Error("Preview Mode"); }
     const { userProfile, ...rest } = reviewData;
     if (!userProfile?.id) {
@@ -387,12 +379,12 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     }
     const newReview = {
       ...rest,
-      user_id: userProfile.id,
-      user_name: userProfile.fullName || 'Anonymous',
-      user_avatar_url: userProfile.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.fullName || 'A')}&background=random`,
+      userId: userProfile.id,
+      userName: userProfile.fullName || 'Anonymous',
+      userAvatarUrl: userProfile.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.fullName || 'A')}&background=random`,
       status: 'Visible' as ReviewStatus,
     };
-    const { error } = await supabase.from('reviews').insert(newReview);
+    const { error } = await supabase.from('reviews').insert(toSnakeCase(newReview));
     if (error) {
       console.error("Error adding review:", error.message);
       throw error;
@@ -406,8 +398,8 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       toast.error("Preview Mode: Cannot add reply.");
       throw new Error("Preview Mode: Cannot add reply.");
     }
-    const reply = { content: replyContent, replied_date: new Date().toISOString() };
-    const { error } = await supabase.from('reviews').update({ reply }).eq('id', reviewId);
+    const reply = { content: replyContent, repliedDate: new Date().toISOString() };
+    const { error } = await supabase.from('reviews').update({ reply: toSnakeCase(reply) }).eq('id', reviewId);
     if (error) {
       console.error("Error adding reply:", error.message);
       toast.error(`Failed to save reply: ${error.message}`);
@@ -437,7 +429,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     await fetchAllData();
     toast.success(`Review ${newStatus === ReviewStatus.HIDDEN ? 'hidden' : 'shown'} successfully!`);
   };
-  const getReviewsByBusinessId = (businessId: number) => reviews.filter(r => r.business_id === businessId);
+  const getReviewsByBusinessId = (businessId: number) => reviews.filter(r => r.businessId === businessId);
   const getAnalyticsByBusinessId = (businessId: number) => analyticsData.find(data => data.businessId === businessId);
 
   const addAppointment = async (newAppointmentData: Omit<Appointment, 'id' | 'createdAt'>) => {

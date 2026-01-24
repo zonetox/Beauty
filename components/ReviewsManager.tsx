@@ -344,17 +344,17 @@ const ReviewsManager: React.FC = () => {
                             <div className="flex justify-between items-start">
                                 <div className="flex gap-4 flex-1">
                                     <img
-                                        src={review.user_avatar_url}
-                                        alt={review.user_name}
+                                        src={review.userAvatarUrl}
+                                        alt={review.userName}
                                         className="w-12 h-12 rounded-full flex-shrink-0"
                                         onError={(e) => {
-                                            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(review.user_name)}&background=random`;
+                                            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(review.userName)}&background=random`;
                                         }}
                                     />
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-semibold text-neutral-dark">{review.user_name}</p>
+                                        <p className="font-semibold text-neutral-dark">{review.userName}</p>
                                         <p className="text-xs text-gray-400">
-                                            {new Date(review.submitted_date).toLocaleString()}
+                                            {new Date(review.submittedDate).toLocaleString()}
                                         </p>
                                         <div className="mt-1">
                                             <StarRating rating={review.rating} />
@@ -398,7 +398,7 @@ const ReviewsManager: React.FC = () => {
                                         </div>
                                         <p className="text-gray-600">{review.reply.content}</p>
                                         <p className="text-xs text-gray-400 mt-1">
-                                            {new Date(review.reply.replied_date).toLocaleString()}
+                                            {new Date(review.reply.repliedDate).toLocaleString()}
                                         </p>
                                     </div>
                                 ) : (

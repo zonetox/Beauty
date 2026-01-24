@@ -5,8 +5,8 @@ import { getOptimizedSupabaseUrl } from '../../lib/image.ts';
 // --- Modal Component for viewing all services ---
 const AllServicesModal: React.FC<{ services: Service[]; onClose: () => void }> = ({ services, onClose }) => (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
-        <div 
-            className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col" 
+        <div
+            className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col"
             onClick={e => e.stopPropagation()}
         >
             <header className="p-4 border-b flex justify-between items-center">
@@ -18,7 +18,7 @@ const AllServicesModal: React.FC<{ services: Service[]; onClose: () => void }> =
                     {services.map(service => (
                         <div key={service.id} className="flex items-center gap-4 p-3 border rounded-lg">
                             {/* FIX: Changed 'imageUrl' to 'image_url' to match the Service type. */}
-                            <img src={getOptimizedSupabaseUrl(service.image_url, { width: 160, quality: 75 })} alt={service.name} className="w-20 h-20 object-cover rounded-md flex-shrink-0" />
+                            <img src={getOptimizedSupabaseUrl(service.imageUrl, { width: 160, quality: 75 })} alt={service.name} className="w-20 h-20 object-cover rounded-md flex-shrink-0" />
                             <div className="flex-grow">
                                 <p className="font-semibold text-neutral-dark">{service.name}</p>
                                 <p className="text-sm text-gray-500">{service.description}</p>
@@ -26,7 +26,7 @@ const AllServicesModal: React.FC<{ services: Service[]; onClose: () => void }> =
                             <div className="text-right">
                                 <p className="font-bold text-primary">{service.price}</p>
                                 {/* FIX: Changed 'durationMinutes' to 'duration_minutes' to match the Service type. */}
-                                {service.duration_minutes && <p className="text-xs text-gray-400">{service.duration_minutes} phút</p>}
+                                {service.durationMinutes && <p className="text-xs text-gray-400">{service.durationMinutes} phút</p>}
                             </div>
                         </div>
                     ))}
@@ -69,11 +69,11 @@ const ServicesSection: React.FC<{ business: Business }> = ({ business }) => {
     const handlePrev = () => {
         if (canGoPrev) setCurrentIndex(prev => prev - 1);
     };
-    
+
     return (
         <section id="services" className="py-20 lg:py-28 bg-background rounded-lg -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
             {isModalOpen && <AllServicesModal services={business.services} onClose={() => setIsModalOpen(false)} />}
-            
+
             <div className="flex flex-col sm:flex-row justify-between sm:items-center text-center sm:text-left">
                 <div>
                     <p className="text-sm font-semibold uppercase text-primary tracking-widest">Dịch vụ</p>
@@ -88,20 +88,20 @@ const ServicesSection: React.FC<{ business: Business }> = ({ business }) => {
                     Xem tất cả dịch vụ
                 </button>
             </div>
-            
+
             <div className="mt-16 relative">
-                 {/* Slider Container */}
+                {/* Slider Container */}
                 <div className="overflow-hidden" ref={sliderRef}>
                     <div
                         className="flex transition-transform duration-500 ease-in-out"
                         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
                     >
                         {business.services.map(service => (
-                            <div key={service.id} className="px-3" style={{ flex: `0 0 ${100 / servicesPerPage}%`}}>
+                            <div key={service.id} className="px-3" style={{ flex: `0 0 ${100 / servicesPerPage}%` }}>
                                 <div className="bg-white rounded-lg shadow-lg overflow-hidden group h-full flex flex-col">
                                     <div className="relative h-56">
                                         {/* FIX: Changed 'imageUrl' to 'image_url' to match the Service type. */}
-                                        <img src={getOptimizedSupabaseUrl(service.image_url, { width: 500, quality: 75 })} alt={service.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                        <img src={getOptimizedSupabaseUrl(service.imageUrl, { width: 500, quality: 75 })} alt={service.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                                     </div>
                                     <div className="p-6 text-center flex-grow flex flex-col">
                                         <h4 className="font-bold font-serif text-xl text-neutral-dark">{service.name}</h4>
@@ -116,7 +116,7 @@ const ServicesSection: React.FC<{ business: Business }> = ({ business }) => {
 
                 {/* Navigation Buttons */}
                 {totalPages > 1 && (
-                     <>
+                    <>
                         <button
                             onClick={handlePrev}
                             disabled={!canGoPrev}

@@ -3,10 +3,8 @@
 // 100% hoàn thiện, không placeholder
 
 import React, { useState, useEffect, useMemo } from 'react';
-import toast from 'react-hot-toast';
 import { useBusinessAuth, useDealsData } from '../contexts/BusinessContext.tsx';
 import { Deal, DealStatus } from '../types.ts';
-import LoadingState from './LoadingState.tsx';
 import EmptyState from './EmptyState.tsx';
 import EditDealModal from './EditDealModal.tsx';
 import ConfirmDialog from './ConfirmDialog.tsx';
@@ -14,8 +12,8 @@ import ConfirmDialog from './ConfirmDialog.tsx';
 // Helper function to calculate deal status based on dates
 const calculateDealStatus = (deal: Deal): DealStatus => {
     const now = new Date();
-    const startDate = deal.start_date ? new Date(deal.start_date) : null;
-    const endDate = deal.end_date ? new Date(deal.end_date) : null;
+    const startDate = deal.startDate ? new Date(deal.startDate) : null;
+    const endDate = deal.endDate ? new Date(deal.endDate) : null;
 
     if (startDate && startDate > now) {
         return DealStatus.SCHEDULED;
@@ -42,13 +40,13 @@ const DealsManager: React.FC = () => {
     // Calculate status for each deal and memoize
     const dealsWithStatus = useMemo(() => {
         if (!currentBusiness?.deals) return [];
-        
+
         return currentBusiness.deals.map(deal => {
             const calculatedStatus = calculateDealStatus(deal);
             // Use calculated status if deal doesn't have explicit status or if dates changed
-            const shouldUpdateStatus = !deal.status || 
-                (deal.start_date || deal.end_date) && calculatedStatus !== deal.status;
-            
+            const shouldUpdateStatus = !deal.status ||
+                (deal.startDate || deal.endDate) && calculatedStatus !== deal.status;
+
             return {
                 ...deal,
                 displayStatus: shouldUpdateStatus ? calculatedStatus : deal.status,
@@ -99,7 +97,7 @@ const DealsManager: React.FC = () => {
             const dealToSave = {
                 ...dealData,
                 status: finalStatus,
-                business_id: currentBusiness.id
+                businessId: currentBusiness.id
             };
 
             if (dealData.id) {
@@ -120,7 +118,7 @@ const DealsManager: React.FC = () => {
 
     const confirmDeleteDeal = async () => {
         if (!confirmDelete.dealId) return;
-        
+
         setIsDeleting(confirmDelete.dealId);
         try {
             await deleteDeal(confirmDelete.dealId);
@@ -149,18 +147,18 @@ const DealsManager: React.FC = () => {
     return (
         <div className="p-8">
             {isModalOpen && (
-                <EditDealModal 
-                    deal={editingDeal} 
-                    onSave={handleSaveDeal} 
+                <EditDealModal
+                    deal={editingDeal}
+                    onSave={handleSaveDeal}
                     onClose={() => setIsModalOpen(false)}
                     businessId={currentBusiness.id}
                 />
             )}
-            
+
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
                 <h2 className="text-2xl font-bold font-serif text-neutral-dark">Deals Management</h2>
-                <button 
-                    onClick={() => openModal(null)} 
+                <button
+                    onClick={() => openModal(null)}
                     className="bg-secondary text-white px-4 py-2 rounded-md font-semibold text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={isDeleting !== null}
                 >
@@ -173,8 +171,8 @@ const DealsManager: React.FC = () => {
                     title="No deals yet"
                     message="Get started by creating your first deal to attract more customers."
                     action={
-                        <button 
-                            onClick={() => openModal(null)} 
+                        <button
+                            onClick={() => openModal(null)}
                             className="bg-secondary text-white px-4 py-2 rounded-md font-semibold text-sm hover:opacity-90"
                         >
                             Create Your First Deal
@@ -184,14 +182,14 @@ const DealsManager: React.FC = () => {
             ) : (
                 <div className="space-y-3">
                     {dealsWithStatus.map(deal => (
-                        <div 
-                            key={deal.id} 
+                        <div
+                            key={deal.id}
                             className="flex items-center gap-4 p-3 border rounded-md bg-white shadow-sm hover:shadow-md transition-shadow"
                         >
-                            {deal.image_url && (
-                                <img 
-                                    src={deal.image_url} 
-                                    alt={deal.title} 
+                            {deal.imageUrl && (
+                                <img
+                                    src={deal.imageUrl}
+                                    alt={deal.title}
                                     className="w-16 h-16 object-cover rounded-md flex-shrink-0"
                                     onError={(e) => {
                                         (e.target as HTMLImageElement).style.display = 'none';
@@ -202,18 +200,18 @@ const DealsManager: React.FC = () => {
                                 <p className="font-semibold text-neutral-dark">{deal.title}</p>
                                 <p className="text-sm text-gray-500 truncate">{deal.description || 'No description'}</p>
                                 <div className="flex items-center gap-4 mt-1 text-xs text-gray-400">
-                                    {deal.start_date && (
-                                        <span>Start: {new Date(deal.start_date).toLocaleDateString()}</span>
+                                    {deal.startDate && (
+                                        <span>Start: {new Date(deal.startDate).toLocaleDateString()}</span>
                                     )}
-                                    {deal.end_date && (
-                                        <span>End: {new Date(deal.end_date).toLocaleDateString()}</span>
+                                    {deal.endDate && (
+                                        <span>End: {new Date(deal.endDate).toLocaleDateString()}</span>
                                     )}
-                                    {deal.deal_price && deal.original_price && (
+                                    {deal.dealPrice && deal.originalPrice && (
                                         <span className="text-primary font-semibold">
-                                            {deal.deal_price.toLocaleString('vi-VN')}đ 
-                                            {deal.original_price > deal.deal_price && (
+                                            {deal.dealPrice.toLocaleString('vi-VN')}đ
+                                            {deal.originalPrice > deal.dealPrice && (
                                                 <span className="text-gray-400 line-through ml-1">
-                                                    {deal.original_price.toLocaleString('vi-VN')}đ
+                                                    {deal.originalPrice.toLocaleString('vi-VN')}đ
                                                 </span>
                                             )}
                                         </span>
@@ -224,15 +222,15 @@ const DealsManager: React.FC = () => {
                                 {deal.displayStatus}
                             </span>
                             <div className="flex gap-2 flex-shrink-0">
-                                <button 
-                                    onClick={() => openModal(deal)} 
+                                <button
+                                    onClick={() => openModal(deal)}
                                     className="text-secondary font-semibold text-sm hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                                     disabled={isDeleting !== null}
                                 >
                                     Edit
                                 </button>
-                                <button 
-                                    onClick={() => handleDelete(deal.id)} 
+                                <button
+                                    onClick={() => handleDelete(deal.id)}
                                     className="text-red-500 font-semibold text-sm hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                                     disabled={isDeleting === deal.id || isDeleting !== null}
                                 >

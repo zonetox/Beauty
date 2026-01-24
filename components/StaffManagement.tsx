@@ -80,7 +80,7 @@ const StaffManagement: React.FC = () => {
     );
   }
 
-  const businessStaff = staff.filter(s => s.business_id === currentBusiness.id);
+  const businessStaff = staff.filter(s => s.businessId === currentBusiness.id);
 
   return (
     <div className="p-6">
@@ -127,7 +127,7 @@ const StaffManagement: React.FC = () => {
               {businessStaff.map((staffMember) => (
                 <tr key={staffMember.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {staffMember.user_email || staffMember.user_id.substring(0, 8) + '...'}
+                    {staffMember.userEmail || staffMember.userId.substring(0, 8) + '...'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${staffMember.role === StaffMemberRole.ADMIN

@@ -113,7 +113,10 @@ const BusinessProfileEditor: React.FC = () => {
             setFormData(businessData);
             // Initialize working hours list
             const hours = currentBusiness.workingHours || {};
-            const hoursList = Object.entries(hours).map(([day, time]) => ({ day, time: time as string }));
+            const hoursList = Object.entries(hours).map(([day, time]) => ({
+                day: String(day || ''),
+                time: String(time || '')
+            }));
             setWorkingHoursList(hoursList.length > 0 ? hoursList : [{ day: '', time: '' }]);
 
             // Initialize landing_page_config if not present
@@ -139,8 +142,11 @@ const BusinessProfileEditor: React.FC = () => {
         setFormData((prev) => {
             if (!prev) return null;
             const workingHoursObject = workingHoursList.reduce((acc, curr) => {
-                if (curr.day.trim()) {
-                    acc[curr.day.trim()] = curr.time.trim();
+                const safeDay = String(curr.day || '').trim();
+                const safeTime = String(curr.time || '').trim();
+
+                if (safeDay) {
+                    acc[safeDay] = safeTime;
                 }
                 return acc;
             }, {} as { [key: string]: string });
