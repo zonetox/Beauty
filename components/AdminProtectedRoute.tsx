@@ -3,23 +3,21 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../providers/AuthProvider.tsx';
-import { resolveUserRole } from '../lib/roleResolution';
 
 interface AdminProtectedRouteProps {
     children: React.ReactNode;
 }
 
 const AdminProtectedRoute: React.FC<AdminProtectedRouteProps> = ({ children }) => {
-    const { user, profile, state } = useAuth();
+    const { user, profile, state, role } = useAuth(); // Get role from AuthProvider
     const location = useLocation();
     const [isAdmin, setIsAdmin] = useState<boolean | 'loading'>('loading');
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         let mounted = true;
-        let timeoutId: NodeJS.Timeout | null = null;
 
-        const verifyAdmin = async () => {
+        const verifyAdmin = () => {
             // Wait for auth to finish loading
             if (state === 'loading') {
                 return;
@@ -33,77 +31,22 @@ const AdminProtectedRoute: React.FC<AdminProtectedRouteProps> = ({ children }) =
                 return;
             }
 
-            try {
-                // Add timeout to prevent hanging (20 seconds - increased for slower connections)
-                timeoutId = setTimeout(() => {
-                    if (mounted) {
-                        setError('Admin verification timed out. Please try refreshing the page.');
-                        setIsAdmin(false);
-                    }
-                }, 20000);
+            // Use role from AuthProvider (already resolved via get_user_context)
+            const adminStatus = role === 'admin';
 
-                // Add timeout wrapper for resolveUserRole (15 seconds - increased)
-                const roleResolutionTimeout = new Promise<never>((_, reject) => {
-                    setTimeout(() => reject(new Error('Role resolution timeout')), 15000);
-                });
-
-                const roleResult = await Promise.race([
-                    resolveUserRole(user),
-                    roleResolutionTimeout
-                ]);
-
-                if (timeoutId) {
-                    clearTimeout(timeoutId);
-                    timeoutId = null;
-                }
-
-                if (!mounted) return;
-
-                if (roleResult.error) {
-                    setError(roleResult.error);
-                    setIsAdmin(false);
-                    return;
-                }
-
-                // MANDATORY: Admin access ONLY from admin_users table
-                // NO fallbacks. NO dev shortcuts.
-                // Admin must have: admin_users.email = auth.users.email AND is_locked = FALSE
-                const adminStatus = roleResult.isAdmin && roleResult.role === 'admin';
-
-                if (!adminStatus) {
-                    setError('Admin access denied. Admin privileges are determined from the admin_users table. Your email is not registered as an admin.');
-                }
-
-                setIsAdmin(adminStatus);
-            } catch (err: unknown) {
-                // CRITICAL: Always clear loading state, even on error/timeout
-                if (timeoutId) {
-                    clearTimeout(timeoutId);
-                }
-
-                if (!mounted) return;
-
-                const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-
-                if (errorMessage.includes('timeout')) {
-                    setError('Admin verification timed out. Please check your connection and try again.');
-                } else {
-                    setError(`Admin verification failed: ${errorMessage}`);
-                }
-
-                setIsAdmin(false);
+            if (!adminStatus) {
+                setError('Admin access denied. Admin privileges are determined from the admin_users table. Your email is not registered as an admin.');
             }
+
+            setIsAdmin(adminStatus);
         };
 
         verifyAdmin();
 
         return () => {
             mounted = false;
-            if (timeoutId) {
-                clearTimeout(timeoutId);
-            }
         };
-    }, [user, profile, state]);
+    }, [user, profile, state, role]); // Add role to dependencies
 
 
     // Loading state - only show if not initializing
