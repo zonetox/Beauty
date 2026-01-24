@@ -13,15 +13,19 @@ DELETE FROM public.page_views
 WHERE user_id IS NOT NULL;
 DELETE FROM public.conversions
 WHERE user_id IS NOT NULL;
--- BƯỚC 2: Xóa businesses của USER (giữ lại demo businesses không có owner)
+-- BƯỚC 2: Clear business_id references in profiles (FIX foreign key constraint)
+UPDATE public.profiles
+SET business_id = NULL
+WHERE business_id IS NOT NULL;
+-- BƯỚC 3: Xóa businesses của USER (giữ lại demo businesses không có owner)
 DELETE FROM public.businesses
 WHERE owner_id IS NOT NULL;
--- BƯỚC 3: Xóa Profiles và Admin
+-- BƯỚC 4: Xóa Profiles và Admin
 DELETE FROM public.profiles;
 DELETE FROM public.admin_users;
--- BƯỚC 4: Xóa Auth Users (Bảng ngầm của Supabase)
+-- BƯỚC 5: Xóa Auth Users (Bảng ngầm của Supabase)
 DELETE FROM auth.users;
--- BƯỚC 5: Kiểm tra kết quả
+-- BƯỚC 6: Kiểm tra kết quả
 SELECT 'auth.users' as table_name,
     COUNT(*) as remaining_count
 FROM auth.users
