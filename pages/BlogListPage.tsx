@@ -56,7 +56,7 @@ const BlogListPage: React.FC = () => {
   const allPosts = useMemo((): UnifiedPost[] => {
     // 1. Process platform posts
     const processedPlatformPosts: UnifiedPost[] = platformPosts.map(post => {
-      const [day, month, year] = post.date.split('/');
+      const postDate = new Date(post.date);
       return {
         id: `platform-${post.id}`,
         url: `/blog/${post.slug}`,
@@ -64,10 +64,10 @@ const BlogListPage: React.FC = () => {
         imageUrl: post.imageUrl,
         excerpt: post.excerpt,
         author: post.author,
-        date: post.date,
+        date: postDate.toLocaleDateString('vi-VN'),
         category: post.category,
         viewCount: post.viewCount,
-        rawDate: new Date(`${year}-${month}-${day}`),
+        rawDate: postDate,
       }
     });
 
@@ -236,7 +236,15 @@ const BlogListPage: React.FC = () => {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {paginatedPosts.map(post => (
-                      <BlogPostCard key={post.id} post={post} />
+                      <BlogPostCard
+                        key={post.id}
+                        post={{
+                          ...post,
+                          id: typeof post.id === 'string' && post.id.startsWith('platform-')
+                            ? parseInt(post.id.replace('platform-', ''), 10)
+                            : 0 // Business posts use string IDs anyway, or fallback to 0
+                        } as any}
+                      />
                     ))}
                   </div>
                   {totalPages > 1 && (

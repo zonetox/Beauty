@@ -309,7 +309,11 @@ export interface BlogPost {
   viewCount: number;
   status: 'Draft' | 'Published';
   isFeatured?: boolean;
-  seo?: SEO;
+  seo?: {
+    title: string;
+    description: string;
+    keywords: string;
+  };
   updatedAt?: string;
 }
 

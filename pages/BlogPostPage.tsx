@@ -30,11 +30,10 @@ const BlogPostPage: React.FC = () => {
     return <Navigate to="/blog" replace />;
   }
 
-  // FINAL PHASE FIX: Extract SEO data from database
-  // Note: BlogPost interface does not have SEO field, using available fields
-  const seoTitle = post.title;
-  const seoDescription = post.excerpt || '';
-  const seoKeywords = post.category || '';
+  // Extract fortified SEO data
+  const seoTitle = post.seo?.title || post.title;
+  const seoDescription = post.seo?.description || post.excerpt || '';
+  const seoKeywords = post.seo?.keywords || post.category || '';
   const seoUrl = typeof window !== 'undefined' ? `${window.location.origin}/blog/${post.slug}` : '';
 
   return (

@@ -398,8 +398,10 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
 
       // OPTIMIZE: Homepage doesn't need full content, only excerpt
       const blogPromise = supabase.from('blog_posts')
-        .select('id, slug, title, image_url, excerpt, author, date, category, view_count')
+        .select('id, slug, title, image_url, excerpt, author, date, category, view_count, status, is_featured, seo')
+        .eq('status', 'Published')
         .order('date', { ascending: false })
+        .order('id', { ascending: false })
         .limit(50);
 
       const catPromise = supabase.from('blog_categories')
