@@ -3,8 +3,10 @@
 // 100% hoàn thiện, không placeholder
 
 import React, { useState, useEffect, useMemo } from 'react';
+import toast from 'react-hot-toast';
 import { useBusinessAuth, useDealsData } from '../contexts/BusinessContext.tsx';
 import { Deal, DealStatus } from '../types.ts';
+import LoadingState from './LoadingState.tsx';
 import EmptyState from './EmptyState.tsx';
 import EditDealModal from './EditDealModal.tsx';
 import ConfirmDialog from './ConfirmDialog.tsx';
@@ -40,13 +42,13 @@ const DealsManager: React.FC = () => {
     // Calculate status for each deal and memoize
     const dealsWithStatus = useMemo(() => {
         if (!currentBusiness?.deals) return [];
-
+        
         return currentBusiness.deals.map(deal => {
             const calculatedStatus = calculateDealStatus(deal);
             // Use calculated status if deal doesn't have explicit status or if dates changed
-            const shouldUpdateStatus = !deal.status ||
+            const shouldUpdateStatus = !deal.status || 
                 (deal.start_date || deal.end_date) && calculatedStatus !== deal.status;
-
+            
             return {
                 ...deal,
                 displayStatus: shouldUpdateStatus ? calculatedStatus : deal.status,
@@ -106,7 +108,7 @@ const DealsManager: React.FC = () => {
                 await addDeal(dealToSave as Omit<Deal, 'id'>);
             }
             setIsModalOpen(false);
-        } catch {
+        } catch (error) {
             // Error already handled in context with toast
             // Don't close modal on error
         }
@@ -118,12 +120,12 @@ const DealsManager: React.FC = () => {
 
     const confirmDeleteDeal = async () => {
         if (!confirmDelete.dealId) return;
-
+        
         setIsDeleting(confirmDelete.dealId);
         try {
             await deleteDeal(confirmDelete.dealId);
             // Success toast is handled in context
-        } catch {
+        } catch (error) {
             // Error already handled in context with toast
         } finally {
             setIsDeleting(null);
@@ -147,18 +149,18 @@ const DealsManager: React.FC = () => {
     return (
         <div className="p-8">
             {isModalOpen && (
-                <EditDealModal
-                    deal={editingDeal}
-                    onSave={handleSaveDeal}
+                <EditDealModal 
+                    deal={editingDeal} 
+                    onSave={handleSaveDeal} 
                     onClose={() => setIsModalOpen(false)}
                     businessId={currentBusiness.id}
                 />
             )}
-
+            
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
                 <h2 className="text-2xl font-bold font-serif text-neutral-dark">Deals Management</h2>
-                <button
-                    onClick={() => openModal(null)}
+                <button 
+                    onClick={() => openModal(null)} 
                     className="bg-secondary text-white px-4 py-2 rounded-md font-semibold text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={isDeleting !== null}
                 >
@@ -171,8 +173,8 @@ const DealsManager: React.FC = () => {
                     title="No deals yet"
                     message="Get started by creating your first deal to attract more customers."
                     action={
-                        <button
-                            onClick={() => openModal(null)}
+                        <button 
+                            onClick={() => openModal(null)} 
                             className="bg-secondary text-white px-4 py-2 rounded-md font-semibold text-sm hover:opacity-90"
                         >
                             Create Your First Deal
@@ -182,14 +184,14 @@ const DealsManager: React.FC = () => {
             ) : (
                 <div className="space-y-3">
                     {dealsWithStatus.map(deal => (
-                        <div
-                            key={deal.id}
+                        <div 
+                            key={deal.id} 
                             className="flex items-center gap-4 p-3 border rounded-md bg-white shadow-sm hover:shadow-md transition-shadow"
                         >
                             {deal.image_url && (
-                                <img
-                                    src={deal.image_url}
-                                    alt={deal.title}
+                                <img 
+                                    src={deal.image_url} 
+                                    alt={deal.title} 
                                     className="w-16 h-16 object-cover rounded-md flex-shrink-0"
                                     onError={(e) => {
                                         (e.target as HTMLImageElement).style.display = 'none';
@@ -208,7 +210,7 @@ const DealsManager: React.FC = () => {
                                     )}
                                     {deal.deal_price && deal.original_price && (
                                         <span className="text-primary font-semibold">
-                                            {deal.deal_price.toLocaleString('vi-VN')}đ
+                                            {deal.deal_price.toLocaleString('vi-VN')}đ 
                                             {deal.original_price > deal.deal_price && (
                                                 <span className="text-gray-400 line-through ml-1">
                                                     {deal.original_price.toLocaleString('vi-VN')}đ
@@ -222,15 +224,15 @@ const DealsManager: React.FC = () => {
                                 {deal.displayStatus}
                             </span>
                             <div className="flex gap-2 flex-shrink-0">
-                                <button
-                                    onClick={() => openModal(deal)}
+                                <button 
+                                    onClick={() => openModal(deal)} 
                                     className="text-secondary font-semibold text-sm hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                                     disabled={isDeleting !== null}
                                 >
                                     Edit
                                 </button>
-                                <button
-                                    onClick={() => handleDelete(deal.id)}
+                                <button 
+                                    onClick={() => handleDelete(deal.id)} 
                                     className="text-red-500 font-semibold text-sm hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                                     disabled={isDeleting === deal.id || isDeleting !== null}
                                 >

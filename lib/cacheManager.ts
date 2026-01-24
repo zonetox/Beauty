@@ -64,8 +64,8 @@ export class CacheManager<T> {
             return entry.data;
           }
         }
-      } catch {
-        console.warn(`Failed to load cache ${this.cacheKey} from localStorage`);
+      } catch (e) {
+        console.warn(`Failed to load cache ${this.cacheKey} from localStorage:`, e);
       }
     }
 
@@ -89,8 +89,8 @@ export class CacheManager<T> {
     if (this.useLocalStorage && typeof window !== 'undefined') {
       try {
         localStorage.setItem(this.cacheKey, JSON.stringify(entry));
-      } catch {
-        console.warn(`Failed to save cache ${this.cacheKey} to localStorage`);
+      } catch (e) {
+        console.warn(`Failed to save cache ${this.cacheKey} to localStorage:`, e);
       }
     }
   }
@@ -103,8 +103,8 @@ export class CacheManager<T> {
     if (this.useLocalStorage && typeof window !== 'undefined') {
       try {
         localStorage.removeItem(this.cacheKey);
-      } catch {
-        console.warn(`Failed to clear cache ${this.cacheKey} from localStorage`);
+      } catch (e) {
+        console.warn(`Failed to clear cache ${this.cacheKey} from localStorage:`, e);
       }
     }
   }
@@ -167,7 +167,7 @@ export class CacheManager<T> {
         if (stored) {
           return JSON.parse(stored);
         }
-      } catch {
+      } catch (e) {
         // Silently fail
       }
     }
@@ -230,25 +230,25 @@ export function withCache<T>(
 export const createContextCache = {
   // Homepage cache (5-10 minutes)
   homepage: () => new CacheManager('homepage', 7 * 60 * 1000),
-
+  
   // Business directory cache (5-10 minutes)
   businesses: () => new CacheManager('businessesData', 10 * 60 * 1000),
-
+  
   // Business detail cache (10 minutes per business)
   businessDetail: (slug: string) => new CacheManager(`businessDetail_${slug}`, 10 * 60 * 1000),
-
+  
   // Blog posts cache (15 minutes)
   blogPosts: () => new CacheManager('blogPostsData', 15 * 60 * 1000),
-
+  
   // Blog categories cache (30 minutes - less frequently changes)
   blogCategories: () => new CacheManager('blogCategoriesData', 30 * 60 * 1000),
-
+  
   // Membership packages cache (30 minutes - rarely changes)
   packages: () => new CacheManager('membershipPackagesData', 30 * 60 * 1000),
-
+  
   // Map markers cache (10 minutes)
   markers: () => new CacheManager('businessMarkersData', 10 * 60 * 1000),
-
+  
   // Search results cache (5 minutes - user-specific)
   search: (searchKey: string) => new CacheManager(`search_${searchKey}`, 5 * 60 * 1000),
 };
@@ -262,8 +262,8 @@ export function invalidateRelatedCaches(...cacheKeys: string[]): void {
     try {
       const cacheKey = `cache_${key}`;
       localStorage.removeItem(cacheKey);
-    } catch {
-      console.warn(`Failed to invalidate cache ${key}`);
+    } catch (e) {
+      console.warn(`Failed to invalidate cache ${key}:`, e);
     }
   });
 }
@@ -306,8 +306,8 @@ export const invalidateCacheBatches = {
       keysToDelete.forEach(key => {
         try {
           localStorage.removeItem(key);
-        } catch {
-          console.warn(`Failed to remove cache key ${key}`);
+        } catch (e) {
+          console.warn(`Failed to remove cache key ${key}:`, e);
         }
       });
     }

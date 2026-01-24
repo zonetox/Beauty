@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { prioritySafeFetch } from '../lib/safeFetch.ts';
+import { safeFetch, prioritySafeFetch } from '../lib/safeFetch.ts';
 import { cacheManager, CACHE_KEYS, CACHE_TTL } from '../lib/cache.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { snakeToCamel } from '../lib/utils.ts';
@@ -163,7 +163,7 @@ export function useLazyData() {
 
   const loadMarkers = useCallback(async () => {
     // Check cache first
-    const cached = cacheManager.get<LazyDataState['markers']>(CACHE_KEYS.MARKERS);
+    const cached = cacheManager.get<typeof state.markers>(CACHE_KEYS.MARKERS);
     if (cached) {
       setState(prev => ({
         ...prev,
@@ -200,7 +200,7 @@ export function useLazyData() {
       }
     );
 
-    const markers = result.data ? (snakeToCamel(result.data) as LazyDataState['markers']) : [];
+    const markers = result.data ? (snakeToCamel(result.data) as typeof state.markers) : [];
 
     // Cache the result
     if (markers.length > 0) {

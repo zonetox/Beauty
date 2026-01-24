@@ -10,7 +10,7 @@ import { PostgrestResponse } from '@supabase/supabase-js';
  * @param obj - The object to convert
  * @returns The object with camelCase keys
  */
-export function snakeToCamel(obj: unknown): unknown {
+export function snakeToCamel(obj: unknown): any {
     if (obj === null || typeof obj !== 'object') {
         return obj;
     }
@@ -34,7 +34,7 @@ export function snakeToCamel(obj: unknown): unknown {
         const value = (obj as Record<string, unknown>)[key];
         (result as Record<string, unknown>)[camelKey] = snakeToCamel(value);
         return result;
-    }, {} as Record<string, unknown>);
+    }, {} as any);
 }
 
 /**
@@ -54,10 +54,10 @@ export function snakeToCamelAs<T>(obj: unknown): T {
 export function mapPostgrestResponse<T>(
     response: PostgrestResponse<unknown>
 ): { data: T[] | null; error: unknown } {
-    return {
-        data: response.data ? ((snakeToCamel(response.data) as unknown) as T[]) : null,
-        error: response.error
-    };
+        return {
+                data: response.data ? ((snakeToCamel(response.data) as unknown) as T[]) : null,
+                error: response.error
+        };
 }
 
 /**
@@ -69,8 +69,8 @@ export function mapPostgrestResponse<T>(
 export function mapSingleResponse<T>(
     response: { data: unknown; error: unknown }
 ): { data: T | null; error: unknown } {
-    return {
-        data: response.data ? ((snakeToCamel(response.data) as unknown) as T) : null,
-        error: response.error
-    };
+        return {
+                data: response.data ? ((snakeToCamel(response.data) as unknown) as T) : null,
+                error: response.error
+        };
 }

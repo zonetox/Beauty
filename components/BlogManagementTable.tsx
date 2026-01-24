@@ -19,7 +19,7 @@ const BlogManagementTable: React.FC<BlogManagementTableProps> = ({ posts, onEdit
             return acc;
         }, {} as Record<number, string>);
     }, [posts]);
-
+    
     const [editedInputs, setEditedInputs] = useState<Record<number, string>>({});
 
     // Merge default inputs with edited inputs
@@ -60,7 +60,7 @@ const BlogManagementTable: React.FC<BlogManagementTableProps> = ({ posts, onEdit
                         <th scope="col" className="px-6 py-3">Title</th>
                         <th scope="col" className="px-6 py-3">Category</th>
                         <th scope="col" className="px-6 py-3">Author</th>
-                        <th scope="col" className="px-6 py-3">Status</th>
+                        <th scope="col" className="px-6 py-3">Date</th>
                         <th scope="col" className="px-6 py-3">Views</th>
                         <th scope="col" className="px-6 py-3">Actions</th>
                     </tr>
@@ -68,29 +68,17 @@ const BlogManagementTable: React.FC<BlogManagementTableProps> = ({ posts, onEdit
                 <tbody>
                     {posts.map(post => (
                         <tr key={post.id} className="bg-white border-b hover:bg-gray-50">
-                            <td className="px-6 py-4 font-medium text-neutral-dark whitespace-nowrap">
-                                <div className="flex items-center gap-2">
-                                    {post.title}
-                                    {post.isFeatured && (
-                                        <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-[10px] font-bold rounded-full uppercase">Featured</span>
-                                    )}
-                                </div>
-                            </td>
+                            <td className="px-6 py-4 font-medium text-neutral-dark whitespace-nowrap">{post.title}</td>
                             <td className="px-6 py-4">{post.category}</td>
                             <td className="px-6 py-4">{post.author}</td>
+                            <td className="px-6 py-4">{post.date}</td>
                             <td className="px-6 py-4">
-                                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${post.status === 'Published' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
-                                    }`}>
-                                    {post.status || 'Published'}
-                                </span>
-                            </td>
-                            <td className="px-6 py-4">
-                                <input
+                               <input
                                     type="number"
                                     value={viewInputs[post.id] || ''}
                                     onChange={(e) => handleViewChange(post.id, e.target.value)}
                                     onBlur={() => handleViewUpdate(post)}
-                                    onKeyDown={(e) => { if (e.key === 'Enter') handleViewUpdate(post); }}
+                                    onKeyDown={(e) => { if(e.key === 'Enter') handleViewUpdate(post); }}
                                     className="w-24 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                                     aria-label={`View count for ${post.title}`}
                                 />

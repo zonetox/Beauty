@@ -1,5 +1,5 @@
+// lib/supabaseClient.ts
 import { createClient } from '@supabase/supabase-js';
-import { Database } from '../types/supabase.ts';
 
 // Export for diagnostic purposes on the error page.
 // The new logic prioritizes Vite's `import.meta.env` and falls back to `process.env`.
@@ -30,8 +30,9 @@ export const isSupabaseConfigured =
 const supabaseUrl = isSupabaseConfigured ? String(supabaseUrlFromEnv) : 'https://dummy-url.supabase.co';
 const supabaseAnonKey = isSupabaseConfigured ? String(supabaseAnonKeyFromEnv) : 'dummy-key-for-initialization-to-prevent-crash-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
 
-// The client is created with official types for full intellisense and accuracy
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+// The client is created. The app's entry point (`App.tsx`) uses `isSupabaseConfigured`
+// to prevent any real API calls from being made with the dummy client.
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
         persistSession: true,
         autoRefreshToken: true,
