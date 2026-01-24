@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { useBlogData } from '../contexts/BlogDataContext.tsx';
+import { useBlogData } from '../contexts/BusinessDataContext.tsx';
 import SEOHead from '../components/SEOHead.tsx';
 import LoadingState from '../components/LoadingState.tsx';
 import SafeHtmlRenderer from '../components/SafeHtmlRenderer.tsx';
