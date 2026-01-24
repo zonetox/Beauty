@@ -103,9 +103,9 @@ const AppLayout: React.FC = () => {
  * Routes to different dashboards using pre-resolved Profile Layer
  */
 const AccountDashboard: React.FC = () => {
-    const { role, profile } = useAuth();
+    const { role, profile, businessId } = useAuth();
 
-    if (profile && (role === 'business_owner' || role === 'business_staff') && profile.businessId) {
+    if (profile && (role === 'business_owner' || role === 'business_staff') && businessId) {
         return <UserBusinessDashboardPage />;
     }
 

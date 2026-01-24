@@ -56,6 +56,10 @@ UPDATE public.profiles
 SET user_type = 'business',
     business_id = v_business_id
 WHERE id = p_user_id;
+-- Re-select to get updated data for to_jsonb(v_profile)
+SELECT * INTO v_profile
+FROM public.profiles
+WHERE id = p_user_id;
 END IF;
 RETURN jsonb_build_object(
     'profile',
