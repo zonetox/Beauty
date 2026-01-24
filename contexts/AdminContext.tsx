@@ -235,7 +235,8 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             return () => { supabase.removeChannel(channel); }
         }
         return () => { }; // Explicit destructor for all paths
-    }, [fetchAllAdminData]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Run only once on mount
 
     const logAdminAction = (_adminUsername: string, _action: string, _details: string) => {
         // Placeholder for logging
