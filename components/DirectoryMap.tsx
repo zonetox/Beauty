@@ -129,14 +129,29 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusi
         Object.values(markersRef.current).forEach((marker) => marker.remove());
         markersRef.current = {};
 
-        const validBusinesses = businesses.filter(b => b.latitude && b.longitude);
+        // SAFE PARSING & FILTERING (Fix #1)
+        const validBusinesses = businesses.map(b => ({
+            ...b,
+            latNum: typeof b.latitude === 'number' ? b.latitude : parseFloat(String(b.latitude)),
+            lngNum: typeof b.longitude === 'number' ? b.longitude : parseFloat(String(b.longitude))
+        })).filter(b =>
+            !isNaN(b.latNum) &&
+            !isNaN(b.lngNum) &&
+            b.latNum !== null &&
+            b.lngNum !== null &&
+            // Basic sanity check for Vietnam coords (optional but safer)
+            b.latNum > 0 &&
+            b.lngNum > 0
+        );
+
+        console.log(`DirectoryMap: processing ${businesses.length} raw -> ${validBusinesses.length} valid businesses`);
 
         validBusinesses.forEach(business => {
             const popupContent = ReactDOMServer.renderToString(<MapBusinessCard business={business} />);
             const category = business?.categories?.[0] ?? BusinessCategory.SPA;
             const icon = getIcon(category, false);
 
-            const marker = L.marker([business.latitude!, business.longitude!], { icon })
+            const marker = L.marker([business.latNum, business.lngNum], { icon })
                 .bindPopup(popupContent)
                 .on('click', () => {
                     onMarkerClick(business.id);
@@ -158,11 +173,13 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusi
             markersRef.current[business.id] = marker;
         });
 
-        // Fit map to markers only if a search is active
-        if (shouldFitBounds && validBusinesses.length > 0) {
+        // AUTO-FIT BOUNDS LOGIC (Fix #2)
+        // If external search requested fit (shouldFitBounds) OR this is the first load with data
+        if (validBusinesses.length > 0) {
             const group = L.featureGroup(Object.values(markersRef.current));
             if (mapRef.current) {
-                mapRef.current.fitBounds(group.getBounds().pad(0.2));
+                // Pad 5% to ensure markers aren't on edge
+                mapRef.current.fitBounds(group.getBounds().pad(0.05));
             }
         }
 
