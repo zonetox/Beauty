@@ -26,6 +26,8 @@ import { ErrorLoggerProvider } from './contexts/ErrorLoggerContext.tsx';
 import { StaffProvider } from './contexts/StaffContext.tsx';
 import AppInitializationScreen from './components/AppInitializationScreen.tsx';
 import { queryClient } from './lib/queryClient.ts';
+import AdminProtectedRoute from './components/AdminProtectedRoute.tsx';
+import ProtectedRoute from './components/ProtectedRoute.tsx';
 
 import { BusinessProvider } from './contexts/BusinessContext.tsx';
 import { useWebVitals } from './hooks/usePerformanceMonitoring.ts';
@@ -47,13 +49,11 @@ const RegisterBusinessPage = lazy(() => import('./pages/RegisterBusinessPage.tsx
 const BusinessSetupPage = lazy(() => import('./pages/BusinessSetupPage.tsx'));
 const AdminPage = lazy(() => import('./pages/AdminPage.tsx'));
 const AdminLoginPage = lazy(() => import('./pages/AdminLoginPage.tsx'));
-const AdminProtectedRoute = lazy(() => import('./components/AdminProtectedRoute.tsx'));
 const PartnerRegistrationPage = lazy(() => import('./pages/PartnerRegistrationPage.tsx'));
 const UserBusinessDashboardPage = lazy(() => import('./pages/UserBusinessDashboardPage.tsx'));
 const UserAccountPage = lazy(() => import('./pages/UserAccountPage.tsx'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.tsx'));
 const LoginPage = lazy(() => import('./pages/LoginPage.tsx'));
-const ProtectedRoute = lazy(() => import('./components/ProtectedRoute.tsx'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage.tsx'));
 const ConnectionTestPage = lazy(() => import('./pages/ConnectionTestPage.tsx'));
 

@@ -151,7 +151,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             clearTimeout(safetyTimeout);
             authListener?.subscription.unsubscribe();
         };
-    }, [fetchAdminUsers, loading]);
+    }, [fetchAdminUsers]);
 
     const adminLogin = async (email: string, pass: string) => {
         if (!isSupabaseConfigured) throw new Error("Preview Mode: Real login is disabled.");
