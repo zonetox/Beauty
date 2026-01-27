@@ -20,12 +20,14 @@ import StaffManagement from '../components/StaffManagement.tsx';
 
 export type ActiveTab = 'dashboard' | 'profile' | 'services' | 'billing' | 'blog' | 'gallery' | 'reviews' | 'stats' | 'settings' | 'bookings' | 'support' | 'deals' | 'staff';
 
-import BusinessOnboardingWizard from '../components/BusinessOnboardingWizard.tsx';
+import { useNavigate } from 'react-router-dom';
+// import BusinessOnboardingWizard from '../components/BusinessOnboardingWizard.tsx'; // Removed - Deprecated
 
 // ... imports
 
 const UserBusinessDashboardPage: React.FC = () => {
     const { currentBusiness } = useBusinessAuth();
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
 
     // Trial expiry handling - Check on dashboard access (lazy check)
@@ -40,12 +42,24 @@ const UserBusinessDashboardPage: React.FC = () => {
         }
     }, [currentBusiness?.id]);
 
-    // If logged in but no business => ONBOARDING
-    // This is handled by currentBusiness state from BusinessContext
+    // If logged in but no business => Redirect to Registration
+    useEffect(() => {
+        if (!currentBusiness) {
+            // Give context and then redirect
+            const timer = setTimeout(() => {
+                navigate('/register/business', { replace: true });
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, [currentBusiness, navigate]);
 
-    // If logged in but no business => ONBOARDING
     if (!currentBusiness) {
-        return <BusinessOnboardingWizard />;
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+                <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <p className="mt-4 text-lg font-semibold text-neutral-dark">Đang chuyển tới trang đăng ký...</p>
+            </div>
+        );
     }
 
     const renderContent = () => {

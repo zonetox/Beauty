@@ -176,7 +176,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
         const businessIds = (searchData as SearchResult[]).map((b) => b.id);
         const { data: fullData, error: fetchError } = await supabase
           .from('businesses')
-          .select('id, slug, name, logo_url, image_url, slogan, categories, address, city, district, ward, tags, phone, email, website, rating, review_count, view_count, membership_tier, is_verified, is_active, is_featured, joined_date, description, working_hours, socials, seo, hero_slides, hero_image_url, owner_id', { count: 'exact' })
+          .select('id, slug, name, logo_url, image_url, slogan, categories, address, city, district, ward, tags, phone, email, website, rating, review_count, view_count, membership_tier, is_verified, is_active, is_featured, joined_date, description, working_hours, socials, seo, hero_slides, hero_image_url, owner_id, landing_page_config, trust_indicators, staff, notification_settings', { count: 'exact' })
           .in('id', businessIds);
 
         // Preserve order from search_businesses_advanced (ranked by final_score)
@@ -296,7 +296,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       // OPTIMIZE: Select only fields needed for homepage display
       const [businessesResult, countResult] = await Promise.all([
         supabase.from('businesses')
-          .select('id, slug, name, logo_url, image_url, slogan, categories, address, city, district, ward, tags, phone, email, website, rating, review_count, view_count, membership_tier, is_verified, is_active, is_featured, joined_date, description, working_hours, socials, seo, hero_slides, hero_image_url, owner_id', { count: 'exact' })
+          .select('id, slug, name, logo_url, image_url, slogan, categories, address, city, district, ward, tags, phone, email, website, rating, review_count, view_count, membership_tier, is_verified, is_active, is_featured, joined_date, description, working_hours, socials, seo, hero_slides, hero_image_url, owner_id, landing_page_config, trust_indicators, staff, notification_settings', { count: 'exact' })
           .eq('is_active', true)
           .eq('is_featured', true)
           .order('id', { ascending: true })
@@ -644,6 +644,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       deals: _d,
       reviews: _r,
       businessBlogPosts: _b,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       ...businessToUpdate
     } = updatedBusiness;
 
@@ -651,6 +652,8 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.from('businesses').update(toSnakeCase(businessToUpdate) as any).eq('id', id);
     if (error) {
       console.error('Error updating business:', error.message);
+      toast.error('Lỗi khi lưu thông tin: ' + error.message);
+      throw error;
     } else {
       await refetchAllPublicData();
     }
