@@ -633,7 +633,20 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
 
   const updateBusiness = async (updatedBusiness: Business) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update business."); return; }
-    const { id, services: _services, gallery: _gallery, team: _team, deals: _deals, reviews: _reviews, ...businessToUpdate } = updatedBusiness;
+
+    // Strip relational fields and internal fields that are NOT columns in the businesses table
+    // to prevent "400 Bad Request" errors from Supabase
+    const {
+      id,
+      services: _s,
+      gallery: _g,
+      team: _t,
+      deals: _d,
+      reviews: _r,
+      businessBlogPosts: _b,
+      ...businessToUpdate
+    } = updatedBusiness;
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await supabase.from('businesses').update(toSnakeCase(businessToUpdate) as any).eq('id', id);
     if (error) {

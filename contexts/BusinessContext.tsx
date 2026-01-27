@@ -153,9 +153,9 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       supabase.from('appointments')
         .select('id, business_id, service_id, service_name, staff_member_id, customer_name, customer_email, customer_phone, date, time_slot, status, notes, created_at')
         .order('created_at', { ascending: false }),
-      supabase.from('businesses').select('id, view_count').order('id'),
+      supabase.from('businesses').select('id, slug, view_count').order('id'),
       supabase.from('page_views')
-        .select('id, page_type, page_id, business_id, viewed_at')
+        .select('id, page_type, page_id, viewed_at')
         .order('viewed_at', { ascending: false }),
       supabase.from('conversions')
         .select('id, business_id, conversion_type, source, converted_at')
@@ -183,11 +183,12 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
         const businessReviews = reviewsRes.data.filter((r: { business_id: number | null }) => r.business_id === businessId);
         const businessAppointments = appointmentsRes.data.filter((a: { business_id: number | null }) => a.business_id === businessId);
         const businessOrders = ordersRes.data.filter((o: { business_id: number | null }) => o.business_id === businessId);
+        const businessSlug = (businessesRes.data.find((b: { id: number; slug: string }) => b.id === businessId))?.slug;
 
-        // Get page views for this business (from page_views table where page_id = businessId or page_type = 'business')
-        const businessPageViews = (pageViewsRes.data as unknown as { page_type: string; page_id: string; business_id: number; viewed_at: string }[])?.filter((pv) =>
-          (pv.page_type === 'business' && pv.page_id === String(businessId)) ||
-          (pv.business_id === businessId)
+        // Get page views for this business (from page_views table where page_id = slug or page_type = 'business')
+        const businessPageViews = (pageViewsRes.data as unknown as { page_type: string; page_id: string; viewed_at: string }[])?.filter((pv) =>
+          (pv.page_type === 'business' && pv.page_id === businessSlug) ||
+          (pv.page_type === 'business' && pv.page_id === String(businessId))
         ) || [];
 
         // Get conversions for this business
