@@ -77,7 +77,7 @@ const AdminAnnouncementsManager: React.FC = () => {
                                 <h3 className="font-bold text-neutral-dark">{ann.title}</h3>
                                 <p className="text-sm text-gray-600 mt-1">{ann.content}</p>
                                 <p className="text-xs text-gray-400 mt-2">
-                                    Sent on {new Date(ann.createdAt).toLocaleString()}
+                                    Sent on {new Date(ann.created_at).toLocaleString()}
                                 </p>
                             </div>
                             <button

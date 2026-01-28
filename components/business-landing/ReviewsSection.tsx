@@ -14,14 +14,14 @@ interface ReviewsSectionProps {
 }
 
 const ReviewsSection: React.FC<ReviewsSectionProps> = ({ business }) => {
-    const { getReviewsByBusinessId, addReview } = useReviewsData();
+    const { getReviewsBybusiness_id, addReview } = useReviewsData();
     const { user: currentUser, profile } = useAuth();
 
     const [showForm, setShowForm] = useState(false);
     const [reportingReviewId, setReportingReviewId] = useState<string | null>(null);
     const [reportingReviewComment, setReportingReviewComment] = useState<string>('');
 
-    const allReviewsForBusiness = getReviewsByBusinessId(business.id);
+    const allReviewsForBusiness = getReviewsBybusiness_id(business.id);
     const visibleReviews = allReviewsForBusiness.filter(r => r.status === ReviewStatus.VISIBLE);
 
     const handleReviewSubmit = async (data: { rating: number; comment: string }) => {
@@ -31,7 +31,7 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ business }) => {
         }
 
         const submissionPromise = addReview({
-            businessId: business.id,
+            business_id: business.id,
             rating: data.rating,
             comment: data.comment,
             userProfile: profile
@@ -105,10 +105,10 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ business }) => {
                             </div>
                             <p className="text-gray-600 mt-4 italic flex-grow">&quot;{review.comment}&quot;</p>
                             <div className="mt-6 flex items-center">
-                                <img src={review.userAvatarUrl} alt={review.userName} className="w-12 h-12 rounded-full object-cover" />
+                                <img src={review.user_avatar_url} alt={review.user_name} className="w-12 h-12 rounded-full object-cover" />
                                 <div className="ml-4">
-                                    <p className="font-semibold text-neutral-dark">{review.userName}</p>
-                                    <p className="text-sm text-gray-400">{new Date(review.submittedDate).toLocaleDateString()}</p>
+                                    <p className="font-semibold text-neutral-dark">{review.user_name}</p>
+                                    <p className="text-sm text-gray-400">{new Date(review.created_at).toLocaleDateString()}</p>
                                 </div>
                             </div>
                         </div>

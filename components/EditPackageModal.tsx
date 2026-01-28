@@ -1,7 +1,7 @@
 // components/EditPackageModal.tsx
 
 import React, { useState, useEffect } from 'react';
-import { MembershipPackage, MembershipTier } from '../types.ts';
+import { MembershipPackage, membership_tier } from '../types.ts';
 
 interface EditPackageModalProps {
   isOpen: boolean;
@@ -21,21 +21,21 @@ const EditPackageModal: React.FC<EditPackageModalProps> = ({ isOpen, onClose, on
       tier: MembershipTier.PREMIUM,
       name: '',
       price: 0,
-      durationMonths: 12,
+      duration_months: 12,
       description: '',
       features: [''],
       permissions: {
-        photoLimit: 10,
-        videoLimit: 2,
-        featuredLevel: 1,
-        customLandingPage: true,
-        privateBlog: false,
-        seoSupport: false,
-        monthlyPostLimit: 5,
-        featuredPostLimit: 0,
+        photo_limit: 10,
+        video_limit: 2,
+        featured_level: 1,
+        custom_landing_page: true,
+        private_blog: false,
+        seo_support: false,
+        monthly_post_limit: 5,
+        featured_post_limit: 0,
       },
-      isPopular: false,
-      isActive: true,
+      is_popular: false,
+      is_active: true,
     };
   }, [packageToEdit]);
 
@@ -51,7 +51,7 @@ const EditPackageModal: React.FC<EditPackageModalProps> = ({ isOpen, onClose, on
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const isCheckbox = type === 'checkbox';
-    const isNumeric = ['price', 'durationMonths', 'photoLimit', 'videoLimit', 'featuredLevel', 'monthlyPostLimit', 'featuredPostLimit'].includes(name.split('.').pop() || '');
+    const isNumeric = ['price', 'duration_months', 'photo_limit', 'video_limit', 'featured_level', 'monthly_post_limit', 'featured_post_limit'].includes(name.split('.').pop() || '');
 
     if (name.startsWith('permissions.')) {
       const key = name.split('.')[1];
@@ -61,14 +61,14 @@ const EditPackageModal: React.FC<EditPackageModalProps> = ({ isOpen, onClose, on
           ...prev,
           permissions: {
             ...(prev.permissions || {
-              photoLimit: 0,
-              videoLimit: 0,
-              featuredLevel: 0,
-              customLandingPage: false,
-              privateBlog: false,
-              seoSupport: false,
-              monthlyPostLimit: 0,
-              featuredPostLimit: 0,
+              photo_limit: 0,
+              video_limit: 0,
+              featured_level: 0,
+              custom_landing_page: false,
+              private_blog: false,
+              seo_support: false,
+              monthly_post_limit: 0,
+              featured_post_limit: 0,
             }),
             [key]: isCheckbox ? (e.target as HTMLInputElement).checked : (isNumeric ? Number(value) : value),
           } as MembershipPackage['permissions']
@@ -124,7 +124,7 @@ const EditPackageModal: React.FC<EditPackageModalProps> = ({ isOpen, onClose, on
               <div>
                 <label className="block text-sm font-medium text-gray-700">Tier</label>
                 <select name="tier" value={formData.tier} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
-                  {Object.values(MembershipTier).map(t => <option key={t} value={t}>{t}</option>)}
+                  {Object.values(membership_tier).map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
             </div>
@@ -135,7 +135,7 @@ const EditPackageModal: React.FC<EditPackageModalProps> = ({ isOpen, onClose, on
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Duration (Months)</label>
-                <input type="number" name="durationMonths" value={formData.durationMonths || 12} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" />
+                <input type="number" name="duration_months" value={formData.duration_months || 12} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" />
               </div>
             </div>
             <div>
@@ -163,26 +163,26 @@ const EditPackageModal: React.FC<EditPackageModalProps> = ({ isOpen, onClose, on
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Photo Limit</label>
-                  <input type="number" name="permissions.photoLimit" value={formData.permissions?.photoLimit || 0} onChange={handleChange} className="mt-1 w-full px-3 py-2 border rounded" />
+                  <input type="number" name="permissions.photo_limit" value={formData.permissions?.photo_limit || 0} onChange={handleChange} className="mt-1 w-full px-3 py-2 border rounded" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Video Limit</label>
-                  <input type="number" name="permissions.videoLimit" value={formData.permissions?.videoLimit || 0} onChange={handleChange} className="mt-1 w-full px-3 py-2 border rounded" />
+                  <input type="number" name="permissions.video_limit" value={formData.permissions?.video_limit || 0} onChange={handleChange} className="mt-1 w-full px-3 py-2 border rounded" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Monthly Post Limit</label>
-                  <input type="number" name="permissions.monthlyPostLimit" value={formData.permissions?.monthlyPostLimit || 0} onChange={handleChange} className="mt-1 w-full px-3 py-2 border rounded" />
+                  <input type="number" name="permissions.monthly_post_limit" value={formData.permissions?.monthly_post_limit || 0} onChange={handleChange} className="mt-1 w-full px-3 py-2 border rounded" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Featured Post Limit</label>
-                  <input type="number" name="permissions.featuredPostLimit" value={formData.permissions?.featuredPostLimit || 0} onChange={handleChange} className="mt-1 w-full px-3 py-2 border rounded" />
+                  <input type="number" name="permissions.featured_post_limit" value={formData.permissions?.featured_post_limit || 0} onChange={handleChange} className="mt-1 w-full px-3 py-2 border rounded" />
                 </div>
               </div>
               <div className="grid grid-cols-2 mt-4 gap-4">
-                <label className="flex items-center"><input type="checkbox" name="permissions.customLandingPage" checked={formData.permissions?.customLandingPage || false} onChange={handleChange} className="h-4 w-4 mr-2" /> Custom Landing Page</label>
-                <label className="flex items-center"><input type="checkbox" name="permissions.privateBlog" checked={formData.permissions?.privateBlog || false} onChange={handleChange} className="h-4 w-4 mr-2" /> Private Blog</label>
-                <label className="flex items-center"><input type="checkbox" name="permissions.seoSupport" checked={formData.permissions?.seoSupport || false} onChange={handleChange} className="h-4 w-4 mr-2" /> SEO Support</label>
-                <label className="flex items-center"><input type="checkbox" name="isPopular" checked={formData.isPopular || false} onChange={handleChange} className="h-4 w-4 mr-2" /> Mark as Popular</label>
+                <label className="flex items-center"><input type="checkbox" name="permissions.custom_landing_page" checked={formData.permissions?.custom_landing_page || false} onChange={handleChange} className="h-4 w-4 mr-2" /> Custom Landing Page</label>
+                <label className="flex items-center"><input type="checkbox" name="permissions.private_blog" checked={formData.permissions?.private_blog || false} onChange={handleChange} className="h-4 w-4 mr-2" /> Private Blog</label>
+                <label className="flex items-center"><input type="checkbox" name="permissions.seo_support" checked={formData.permissions?.seo_support || false} onChange={handleChange} className="h-4 w-4 mr-2" /> SEO Support</label>
+                <label className="flex items-center"><input type="checkbox" name="is_popular" checked={formData.is_popular || false} onChange={handleChange} className="h-4 w-4 mr-2" /> Mark as Popular</label>
               </div>
             </div>
 

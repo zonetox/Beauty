@@ -8,7 +8,7 @@ const AdminNotificationLog: React.FC = () => {
 
     const filteredNotifications = useMemo(() => {
         return notifications.filter(n => 
-            searchEmail.trim() === '' || n.recipientEmail.toLowerCase().includes(searchEmail.toLowerCase())
+            searchEmail.trim() === '' || n.recipient_email.toLowerCase().includes(searchEmail.toLowerCase())
         );
     }, [notifications, searchEmail]);
 
@@ -42,11 +42,11 @@ const AdminNotificationLog: React.FC = () => {
                             className={`w-full text-left p-3 flex justify-between items-center ${notification.read ? 'bg-gray-50' : 'bg-blue-50 font-semibold'}`}
                         >
                             <div className="flex-1 truncate pr-4">
-                                <span className="text-primary">{notification.recipientEmail}</span>
+                                <span className="text-primary">{notification.recipient_email}</span>
                                 <span className="text-neutral-dark"> - {notification.subject}</span>
                             </div>
                             <div className="flex items-center gap-2 text-xs text-gray-500 flex-shrink-0">
-                                <span>{new Date(notification.sentAt).toLocaleString()}</span>
+                                <span>{new Date(notification.sent_at).toLocaleString()}</span>
                                 <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform ${expandedId === notification.id ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                             </div>
                         </button>

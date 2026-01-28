@@ -7,15 +7,15 @@ import { BLOG_CATEGORIES as initialBlogCategories } from '../constants.ts';
 interface BlogDataContextType {
   blogPosts: BlogPost[];
   loading: boolean;
-  addBlogPost: (newPost: Omit<BlogPost, 'id' | 'slug' | 'date' | 'viewCount' | 'updatedAt'>) => Promise<void>;
+  addBlogPost: (newPost: Omit<BlogPost, 'id' | 'slug' | 'date' | 'view_count' | 'updated_at'>) => Promise<void>;
   updateBlogPost: (updatedPost: BlogPost) => Promise<void>;
-  deleteBlogPost: (postId: number) => Promise<void>;
-  bulkAddBlogPosts: (posts: Omit<BlogPost, 'id' | 'slug' | 'date' | 'viewCount' | 'updatedAt'>[]) => Promise<{ success: number; failed: number }>;
+  deleteBlogPost: (post_id: number) => Promise<void>;
+  bulkAddBlogPosts: (posts: Omit<BlogPost, 'id' | 'slug' | 'date' | 'view_count' | 'updated_at'>[]) => Promise<{ success: number; failed: number }>;
   getPostBySlug: (slug: string) => BlogPost | undefined;
-  incrementViewCount: (postId: number) => Promise<void>;
+  incrementview_count: (post_id: number) => Promise<void>;
   comments: BlogComment[];
-  getCommentsByPostId: (postId: number) => BlogComment[];
-  addComment: (postId: number, authorName: string, content: string) => void;
+  getCommentsBypost_id: (post_id: number) => BlogComment[];
+  addComment: (post_id: number, author_name: string, content: string) => void;
   blogCategories: BlogCategory[];
   addBlogCategory: (name: string) => Promise<void>;
   updateBlogCategory: (id: string, name: string) => Promise<void>;
@@ -68,17 +68,17 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
           id: post.id,
           slug: post.slug,
           title: post.title,
-          imageUrl: post.image_url,
+          image_url: post.image_url,
           excerpt: post.excerpt,
           author: post.author,
           date: post.date,
           category: post.category,
           content: post.content,
-          viewCount: post.view_count || 0,
+          view_count: post.view_count || 0,
           status: post.status || 'Published',
-          isFeatured: post.is_featured,
+          is_featured: post.is_featured,
           seo: post.seo,
-          updatedAt: post.updated_at
+          updated_at: post.updated_at
         })));
       }
       if (!cancelled) {
@@ -130,9 +130,9 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
       } else if (data) {
         const mappedComments: BlogComment[] = data.map(comment => ({
           id: comment.id,
-          postId: comment.post_id,
-          authorName: comment.author_name,
-          authorAvatarUrl: `https://picsum.photos/seed/${comment.author_name.replace(/\s+/g, '-')}/100/100`,
+          post_id: comment.post_id,
+          author_name: comment.author_name,
+          author_avatar_url: `https://picsum.photos/seed/${comment.author_name.replace(/\s+/g, '-')}/100/100`,
           content: comment.content,
           date: comment.date || comment.created_at || new Date().toISOString(),
         }));
@@ -178,7 +178,7 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
   // Remove unused function
   // const updateCategoriesLocalStorage = (categoriesToSave: BlogCategory[]) => { ... };
 
-  const addBlogPost = async (newPostData: Omit<BlogPost, 'id' | 'slug' | 'date' | 'viewCount' | 'updatedAt'>) => {
+  const addBlogPost = async (newPostData: Omit<BlogPost, 'id' | 'slug' | 'date' | 'view_count' | 'updated_at'>) => {
     const slug = newPostData.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-') + `-${Date.now()}`;
     const now = new Date().toISOString();
 
@@ -188,11 +188,11 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
       author: newPostData.author,
       category: newPostData.category,
       excerpt: newPostData.excerpt,
-      image_url: newPostData.imageUrl,
+      image_url: newPostData.image_url,
       slug,
       date: now,
       status: newPostData.status || 'Published',
-      is_featured: newPostData.isFeatured || false,
+      is_featured: newPostData.is_featured || false,
       seo: newPostData.seo || { title: '', description: '', keywords: '' },
       view_count: 0
     };
@@ -204,17 +204,17 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
         id: data.id,
         slug: data.slug,
         title: data.title,
-        imageUrl: data.image_url,
+        image_url: data.image_url,
         excerpt: data.excerpt,
         author: data.author,
         date: data.date,
         category: data.category,
         content: data.content,
-        viewCount: data.view_count || 0,
+        view_count: data.view_count || 0,
         status: data.status,
-        isFeatured: data.is_featured,
+        is_featured: data.is_featured,
         seo: data.seo,
-        updatedAt: data.updated_at
+        updated_at: data.updated_at
       } as BlogPost), ...prev]);
     } else {
       console.error("Error adding post:", error);
@@ -230,10 +230,10 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
       author: postToUpdate.author,
       category: postToUpdate.category,
       excerpt: postToUpdate.excerpt,
-      image_url: postToUpdate.imageUrl,
+      image_url: postToUpdate.image_url,
       slug: postToUpdate.slug,
       status: postToUpdate.status,
-      is_featured: postToUpdate.isFeatured,
+      is_featured: postToUpdate.is_featured,
       seo: postToUpdate.seo,
       updated_at: new Date().toISOString()
     };
@@ -245,17 +245,17 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
         id: data.id,
         slug: data.slug,
         title: data.title,
-        imageUrl: data.image_url,
+        image_url: data.image_url,
         excerpt: data.excerpt,
         author: data.author,
         date: data.date,
         category: data.category,
         content: data.content,
-        viewCount: data.view_count || 0,
+        view_count: data.view_count || 0,
         status: data.status,
-        isFeatured: data.is_featured,
+        is_featured: data.is_featured,
         seo: data.seo,
-        updatedAt: data.updated_at
+        updated_at: data.updated_at
       } as BlogPost;
       setBlogPosts(prev => prev.map(p => (p.id === id ? updatedData : p)));
     } else {
@@ -264,7 +264,7 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   };
 
-  const bulkAddBlogPosts = async (posts: Omit<BlogPost, 'id' | 'slug' | 'date' | 'viewCount' | 'updatedAt'>[]) => {
+  const bulkAddBlogPosts = async (posts: Omit<BlogPost, 'id' | 'slug' | 'date' | 'view_count' | 'updated_at'>[]) => {
     const now = new Date().toISOString();
     const postsToAdd = posts.map(post => {
       const timestamp = Date.now() + Math.floor(Math.random() * 1000);
@@ -276,11 +276,11 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
         author: post.author || 'Admin',
         category: post.category,
         excerpt: post.excerpt,
-        image_url: post.imageUrl,
+        image_url: post.image_url,
         slug,
         date: now,
         status: post.status || 'Published',
-        is_featured: post.isFeatured || false,
+        is_featured: post.is_featured || false,
         seo: post.seo || { title: post.title, description: post.excerpt, keywords: post.category },
         view_count: 0
       };
@@ -298,17 +298,17 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
         id: post.id,
         slug: post.slug,
         title: post.title,
-        imageUrl: post.image_url,
+        image_url: post.image_url,
         excerpt: post.excerpt,
         author: post.author,
         date: post.date,
         category: post.category,
         content: post.content,
-        viewCount: post.view_count || 0,
+        view_count: post.view_count || 0,
         status: post.status,
-        isFeatured: post.is_featured,
+        is_featured: post.is_featured,
         seo: post.seo,
-        updatedAt: post.updated_at
+        updated_at: post.updated_at
       } as BlogPost));
 
       setBlogPosts(prev => [...newPosts, ...prev]);
@@ -318,10 +318,10 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
     return { success: 0, failed: posts.length };
   };
 
-  const deleteBlogPost = async (postId: number) => {
-    const { error } = await supabase.from('blog_posts').delete().eq('id', postId);
+  const deleteBlogPost = async (post_id: number) => {
+    const { error } = await supabase.from('blog_posts').delete().eq('id', post_id);
     if (!error) {
-      setBlogPosts(prev => prev.filter(p => p.id !== postId));
+      setBlogPosts(prev => prev.filter(p => p.id !== post_id));
     }
   };
 
@@ -329,23 +329,23 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
     return blogPosts.find(p => p.slug === slug);
   };
 
-  const incrementViewCount = async (postId: number) => {
-    const { error } = await supabase.rpc('increment_blog_view_count', { p_post_id: postId });
+  const incrementview_count = async (post_id: number) => {
+    const { error } = await supabase.rpc('increment_blog_view_count', { p_post_id: post_id });
     if (!error) {
-      setBlogPosts(prev => prev.map(p => p.id === postId ? { ...p, viewCount: p.viewCount + 1 } : p));
+      setBlogPosts(prev => prev.map(p => p.id === post_id ? { ...p, view_count: p.view_count + 1 } : p));
     }
   };
 
-  const getCommentsByPostId = (postId: number) => {
-    return comments.filter(c => c.postId === postId).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const getCommentsBypost_id = (post_id: number) => {
+    return comments.filter(c => c.post_id === post_id).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   };
 
-  const addComment = async (postId: number, authorName: string, content: string) => {
+  const addComment = async (post_id: number, author_name: string, content: string) => {
     const newComment: BlogComment = {
       id: crypto.randomUUID(),
-      postId,
-      authorName,
-      authorAvatarUrl: `https://picsum.photos/seed/${authorName.replace(/\s+/g, '-')}/100/100`,
+      post_id,
+      author_name,
+      author_avatar_url: `https://picsum.photos/seed/${author_name.replace(/\s+/g, '-')}/100/100`,
       content,
       date: new Date().toISOString(),
     };
@@ -369,8 +369,8 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
       const { error } = await supabase
         .from('blog_comments')
         .insert({
-          post_id: postId,
-          author_name: authorName,
+          post_id: post_id,
+          author_name: author_name,
           content: content,
           date: newComment.date,
         });
@@ -447,7 +447,7 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
 
-  const value = { blogPosts, loading, addBlogPost, updateBlogPost, deleteBlogPost, bulkAddBlogPosts, getPostBySlug, incrementViewCount, comments, getCommentsByPostId, addComment, blogCategories, addBlogCategory, updateBlogCategory, deleteBlogCategory };
+  const value = { blogPosts, loading, addBlogPost, updateBlogPost, deleteBlogPost, bulkAddBlogPosts, getPostBySlug, incrementview_count, comments, getCommentsBypost_id, addComment, blogCategories, addBlogCategory, updateBlogCategory, deleteBlogCategory };
 
   return (
     <BlogDataContext.Provider value={value}>

@@ -3,7 +3,7 @@ import { Review, ReviewStatus } from '../types.ts';
 
 interface ReviewsDataContextType {
   reviews: Review[];
-  getReviewsByBusinessId: (businessId: number) => Review[];
+  getReviewsBybusiness_id: (business_id: number) => Review[];
   addReview: (newReviewData: Omit<Review, 'id'>) => void;
   addReply: (reviewId: string, replyContent: string) => void;
   toggleReviewVisibility: (reviewId: string) => void;
@@ -24,7 +24,7 @@ export const ReviewsDataProvider: React.FC<{ children: ReactNode }> = ({ childre
         setReviews(JSON.parse(savedJSON));
       } else {
         const initialReviews: Review[] = [];
-         
+
         setReviews(initialReviews);
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(initialReviews));
       }
@@ -55,8 +55,7 @@ export const ReviewsDataProvider: React.FC<{ children: ReactNode }> = ({ childre
   const addReply = (reviewId: string, replyContent: string) => {
     const updatedReviews = reviews.map(r =>
       r.id === reviewId
-        // FIX: Changed 'repliedDate' to 'replied_date' to match the Review type.
-        ? { ...r, reply: { content: replyContent, replied_date: new Date().toISOString() } }
+        ? { ...r, reply_content: replyContent, reply_date: new Date().toISOString() }
         : r
     );
     setReviews(updatedReviews);
@@ -73,15 +72,13 @@ export const ReviewsDataProvider: React.FC<{ children: ReactNode }> = ({ childre
     updateLocalStorage(updatedReviews);
   };
 
-  const getReviewsByBusinessId = (businessId: number) => {
+  const getReviewsBybusiness_id = (business_id: number) => {
     return reviews
-      // FIX: Changed 'businessId' to 'business_id' to match the Review type.
-      .filter(r => r.business_id === businessId)
-      // FIX: Changed 'submittedDate' to 'submitted_date' to match the Review type.
-      .sort((a, b) => new Date(b.submitted_date).getTime() - new Date(a.submitted_date).getTime());
+      .filter(r => r.business_id === business_id)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   };
 
-  const value = { reviews, getReviewsByBusinessId, addReview, addReply, toggleReviewVisibility };
+  const value = { reviews, getReviewsBybusiness_id, addReview, addReply, toggleReviewVisibility };
 
   return (
     <ReviewsDataContext.Provider value={value}>

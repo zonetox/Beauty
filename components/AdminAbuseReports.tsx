@@ -72,19 +72,19 @@ const AdminAbuseReports: React.FC = () => {
   const handleUpdateStatus = async (reportId: string, newStatus: AbuseReport['status'], notes?: string) => {
     setIsUpdating(true);
     try {
-      const updateData: Partial<AbuseReport> = {
+      const updated_ata: Partial<AbuseReport> = {
         status: newStatus,
         reviewed_by: currentUser?.authUser?.id,
         reviewed_at: new Date().toISOString(),
       };
 
       if (notes) {
-        updateData.admin_notes = notes;
+        updated_ata.admin_notes = notes;
       }
 
       const { error } = await supabase
         .from('abuse_reports')
-        .update(updateData)
+        .update(updated_ata)
         .eq('id', reportId);
 
       if (error) throw error;

@@ -24,7 +24,7 @@ export interface AuthContextType {
   user: User | null;
   profile: Profile | null;
   role: UserRole;
-  businessId: number | null;
+  business_id: number | null;
   isDataLoaded: boolean;
   error: string | null;
 
@@ -35,8 +35,8 @@ export interface AuthContextType {
   refreshAuth: () => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (newPassword: string) => Promise<void>;
-  isFavorite: (businessId: number) => boolean;
-  toggleFavorite: (businessId: number) => Promise<void>;
+  isFavorite: (business_id: number) => boolean;
+  toggleFavorite: (business_id: number) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -64,7 +64,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   } = useAuthSession();
 
   // 2. Unified Context Management (Industrial Standard)
-  // This single hook now calls the get_user_context RPC which returns Role + Profile + BusinessId
+  // This single hook now calls the get_user_context RPC which returns Role + Profile + business_id
   const {
     data: authData,
     isLoading: isAuthDataLoading
@@ -72,7 +72,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Computed State
   const role = authData?.role || 'anonymous';
-  const businessId = authData?.businessId || null;
+  const business_id = authData?.business_id || null;
   const profile = authData?.profile || null;
   const authError = authData?.error || null;
 
@@ -124,24 +124,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   // Favorites
-  const isFavorite = useCallback((businessId: number) => {
-    return profile?.favorites?.includes(businessId) || false;
+  const isFavorite = useCallback((business_id: number) => {
+    return profile?.favorites?.includes(business_id) || false;
   }, [profile]);
 
-  const toggleFavorite = useCallback(async (toToggleBusinessId: number) => {
+  const toggleFavorite = useCallback(async (toTogglebusiness_id: number) => {
     if (!profile || !user) {
       toast.error('Vui lòng đăng nhập để lưu vào danh sách yêu thích');
       return;
     }
 
     const currentFavorites = profile.favorites || [];
-    const isCurrentlyFavorite = currentFavorites.includes(toToggleBusinessId);
+    const isCurrentlyFavorite = currentFavorites.includes(toTogglebusiness_id);
 
     let newFavorites;
     if (isCurrentlyFavorite) {
-      newFavorites = currentFavorites.filter(id => id !== toToggleBusinessId);
+      newFavorites = currentFavorites.filter(id => id !== toTogglebusiness_id);
     } else {
-      newFavorites = [...currentFavorites, toToggleBusinessId];
+      newFavorites = [...currentFavorites, toTogglebusiness_id];
     }
 
     // Optimistic update via React Query
@@ -174,7 +174,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     profile: profile || null,
     role,
-    businessId,
+    business_id,
     isDataLoaded: !isLoading,
     error: authError,
     login,

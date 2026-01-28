@@ -4,15 +4,15 @@ import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 
 // Default theme settings that match the initial index.html
 const DEFAULT_THEME: ThemeSettings = {
-  logoUrl: '/logo.svg', // Logo with "1Beauty.Asia" text
-  faviconUrl: '/favicon.svg',
+  logo_url: '/logo.svg', // Logo with "1Beauty.Asia" text
+  favicon_url: '/favicon.svg',
   colors: {
     primary: '#BFA16A',
-    primaryDark: '#A98C5A',
+    primary_dark: '#A98C5A',
     secondary: '#4A4A4A',
     accent: '#EAE0D1',
     background: '#FDFCF9',
-    neutralDark: '#2D2D2D',
+    neutral_dark: '#2D2D2D',
   },
   fonts: {
     sans: 'Inter',
@@ -45,19 +45,19 @@ const LOCAL_STORAGE_KEY = 'app_theme_settings';
 const applyTheme = (theme: ThemeSettings) => {
   // 1. Apply Favicon
   const faviconEl = document.getElementById('favicon') as HTMLLinkElement | null;
-  if (faviconEl && faviconEl.href !== theme.faviconUrl) {
-    faviconEl.href = theme.faviconUrl;
+  if (faviconEl && faviconEl.href !== theme.favicon_url) {
+    faviconEl.href = theme.favicon_url;
   }
 
   // 2. Apply Colors via CSS Variables
   const cssVariables = `
       :root {
         --color-primary: ${theme.colors.primary};
-        --color-primary-dark: ${theme.colors.primaryDark};
+        --color-primary-dark: ${theme.colors.primary_dark};
         --color-secondary: ${theme.colors.secondary};
         --color-accent: ${theme.colors.accent};
         --color-background: ${theme.colors.background};
-        --color-neutral-dark: ${theme.colors.neutralDark};
+        --color-neutral-dark: ${theme.colors.neutral_dark};
       }
     `;
   let styleEl = document.getElementById('dynamic-theme-styles');

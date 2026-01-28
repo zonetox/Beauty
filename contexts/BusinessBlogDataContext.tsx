@@ -1,9 +1,8 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
-import { BusinessBlogPost, Review, ReviewStatus, BusinessAnalytics, Appointment, AppointmentStatus, Order, OrderStatus, Profile, BusinessBlogPostStatus, MembershipTier, MembershipPackage } from '../types.ts';
+import { BusinessBlogPost, Review, ReviewStatus, BusinessAnalytics, Appointment, AppointmentStatus, Order, OrderStatus, Profile, MembershipPackage } from '../types.ts';
 import { supabase } from '../lib/supabaseClient.ts';
 import { activateBusinessFromOrder } from '../lib/businessUtils.ts';
 import toast from 'react-hot-toast';
-import { snakeToCamel } from '../lib/utils.ts';
 
 
 // --- CONTEXT TYPE DEFINITION ---
@@ -12,25 +11,24 @@ interface BusinessDashboardContextType {
   posts: BusinessBlogPost[];
   blogLoading: boolean;
   getPostBySlug: (slug: string) => BusinessBlogPost | undefined;
-  // FIX: Add getPostsByBusinessId to the context type.
-  getPostsByBusinessId: (businessId: number) => BusinessBlogPost[];
-  addPost: (newPostData: Omit<BusinessBlogPost, 'id' | 'slug' | 'createdDate' | 'viewCount'>) => Promise<void>;
+  getPostsBybusiness_id: (business_id: number) => BusinessBlogPost[];
+  addPost: (newPostData: Omit<BusinessBlogPost, 'id' | 'slug' | 'created_date' | 'view_count'>) => Promise<void>;
   updatePost: (updatedPost: BusinessBlogPost) => Promise<void>;
-  deletePost: (postId: string) => Promise<void>;
-  incrementViewCount: (postId: string) => Promise<void>;
+  deletePost: (post_id: string) => Promise<void>;
+  incrementview_count: (post_id: string) => Promise<void>;
   // Reviews
   reviews: Review[];
   reviewsLoading: boolean;
-  getReviewsByBusinessId: (businessId: number) => Review[];
+  getReviewsBybusiness_id: (business_id: number) => Review[];
   addReview: (reviewData: { business_id: number; rating: number; comment: string; userProfile: Profile }) => Promise<void>;
   addReply: (reviewId: string, replyContent: string) => Promise<void>;
   toggleReviewVisibility: (reviewId: string) => Promise<void>;
   // Analytics
-  getAnalyticsByBusinessId: (businessId: number) => BusinessAnalytics | undefined;
+  getAnalyticsBybusiness_id: (business_id: number) => BusinessAnalytics | undefined;
   // Bookings
   appointments: Appointment[];
-  getAppointmentsForBusiness: (businessId: number) => Appointment[];
-  addAppointment: (newAppointmentData: Omit<Appointment, 'id' | 'createdAt'>) => void;
+  getAppointmentsForBusiness: (business_id: number) => Appointment[];
+  addAppointment: (newAppointmentData: Omit<Appointment, 'id' | 'created_at'>) => void;
   updateAppointmentStatus: (appointmentId: string, status: AppointmentStatus) => void;
   // Orders
   orders: Order[];
@@ -42,7 +40,7 @@ interface BusinessDashboardContextType {
 const BusinessDashboardContext = createContext<BusinessDashboardContextType | undefined>(undefined);
 
 // --- LOCAL STORAGE KEYS ---
-const APPOINTMENTS_STORAGE_KEY = 'all_appointments';
+
 
 /**
  * Helper to convert JS object keys from camelCase to snake_case for Supabase write operations.
@@ -68,7 +66,7 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
   const [analyticsData] = useState<BusinessAnalytics[]>([]);
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [appointments, _setAppointments] = useState<Appointment[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
 
@@ -85,20 +83,20 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
         .select('id, business_id, slug, title, excerpt, image_url, content, author, created_date, published_date, status, view_count, is_featured, seo')
         .order('created_date', { ascending: false }),
       supabase.from('reviews')
-        .select('id, user_id, business_id, user_name, user_avatar_url, rating, comment, submitted_date, status, reply')
-        .order('submitted_date', { ascending: false }),
+        .select('id, user_id, business_id, user_name, user_avatar_url, rating, comment, created_at, status, reply_content, reply_date')
+        .order('created_at', { ascending: false }),
       supabase.from('orders')
         .select('id, business_id, business_name, package_id, package_name, amount, status, payment_method, submitted_at, confirmed_at, notes')
         .order('submitted_at', { ascending: false })
     ]);
 
-    if (postsRes.data) setPosts(snakeToCamel(postsRes.data) as BusinessBlogPost[]);
+    if (postsRes.data) setPosts(postsRes.data as BusinessBlogPost[]);
     if (postsRes.error) console.error("Error fetching business blog posts:", postsRes.error);
 
-    if (reviewsRes.data) setReviews(snakeToCamel(reviewsRes.data) as Review[]);
+    if (reviewsRes.data) setReviews(reviewsRes.data as Review[]);
     if (reviewsRes.error) console.error("Error fetching reviews:", reviewsRes.error);
 
-    if (ordersRes.data) setOrders(snakeToCamel(ordersRes.data) as Order[]);
+    if (ordersRes.data) setOrders(ordersRes.data as Order[]);
     if (ordersRes.error) console.error("Error fetching orders:", ordersRes.error);
 
     setBlogLoading(false);
@@ -111,7 +109,7 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
   }, [fetchAllData]);
 
   // --- BUSINESS BLOG LOGIC ---
-  const addPost = async (newPostData: Omit<BusinessBlogPost, 'id' | 'slug' | 'createdDate' | 'viewCount'>) => {
+  const addPost = async (newPostData: Omit<BusinessBlogPost, 'id' | 'slug' | 'created_date' | 'view_count'>) => {
     const slug = newPostData.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-') + `-${Date.now()}`;
     const postToAdd = {
       ...toSnakeCase(newPostData),
@@ -140,9 +138,9 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
       toast.success("Post updated successfully!");
     }
   };
-  const deletePost = async (postId: string) => {
+  const deletePost = async (post_id: string) => {
     // D3.4 FIX: Add error feedback for failed actions
-    const { error } = await supabase.from('business_blog_posts').delete().eq('id', postId);
+    const { error } = await supabase.from('business_blog_posts').delete().eq('id', post_id);
     if (error) {
       console.error("Error deleting business post:", error);
       toast.error(`Failed to delete post: ${error.message}`);
@@ -152,14 +150,13 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
     }
   };
   const getPostBySlug = (slug: string) => posts.find(p => p.slug === slug);
-  // FEAT: Add function to get posts by business ID.
-  const getPostsByBusinessId = (businessId: number) => {
-    return posts.filter(p => p.businessId === businessId);
+  const getPostsBybusiness_id = (business_id: number) => {
+    return posts.filter(p => p.business_id === business_id);
   };
   // D2.2 FIX: Use safe RPC function for view count increment (RPC function created in migration)
-  const incrementViewCount = async (postId: string) => {
+  const incrementview_count = async (post_id: string) => {
     try {
-      const { error } = await supabase.rpc('increment_business_blog_view_count', { p_post_id: postId });
+      const { error } = await supabase.rpc('increment_business_blog_view_count', { p_post_id: post_id });
       if (error) {
         // CRITICAL: Tracking failures are silent - only debug log in development
         if (import.meta.env.MODE === 'development') {
@@ -167,7 +164,7 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
         }
       } else {
         // Optimistically update UI
-        setPosts(prev => prev.map(p => p.id === postId ? { ...p, viewCount: (p.viewCount || 0) + 1 } : p));
+        setPosts(prev => prev.map(p => p.id === post_id ? { ...p, view_count: (p.view_count || 0) + 1 } : p));
       }
     } catch (error) {
       // CRITICAL: Catch ALL errors (network, CORS, adblock, etc.) and silently fail
@@ -188,8 +185,8 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
     const newReview = {
       ...rest,
       user_id: userProfile.id,
-      user_name: userProfile.fullName || 'Anonymous',
-      user_avatar_url: userProfile.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.fullName || 'A')}&background=random`,
+      user_name: userProfile.full_name || 'Anonymous',
+      user_avatar_url: userProfile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.full_name || 'A')}&background=random`,
       status: ReviewStatus.VISIBLE,
     };
     const { error } = await supabase.from('reviews').insert(newReview);
@@ -222,15 +219,15 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
       await fetchAllData();
     }
   };
-  const getReviewsByBusinessId = (businessId: number) => reviews.filter(r => r.business_id === businessId);
+  const getReviewsBybusiness_id = (business_id: number) => reviews.filter(r => r.business_id === business_id);
 
   // --- ANALYTICS LOGIC ---
-  const getAnalyticsByBusinessId = (businessId: number) => analyticsData.find(data => data.businessId === businessId);
+  const getAnalyticsBybusiness_id = (business_id: number) => analyticsData.find(data => data.business_id === business_id);
 
   // --- BOOKINGS LOGIC ---
-  const addAppointment = (newAppointmentData: Omit<Appointment, 'id' | 'createdAt'>) => { /* ... */ };
-  const updateAppointmentStatus = (appointmentId: string, status: AppointmentStatus) => { /* ... */ };
-  const getAppointmentsForBusiness = (businessId: number) => appointments.filter(appt => appt.businessId === businessId);
+  const addAppointment = (_newAppointmentData: Omit<Appointment, 'id' | 'created_at'>) => { /* ... */ };
+  const updateAppointmentStatus = (_appointmentId: string, _status: AppointmentStatus) => { /* ... */ };
+  const getAppointmentsForBusiness = (business_id: number) => appointments.filter(appt => appt.business_id === business_id);
 
   // --- ORDERS LOGIC ---
   const addOrder = async (newOrderData: Omit<Order, 'id'>): Promise<Order> => {
@@ -258,7 +255,7 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
     // 2. Prepare updates
     const updates = {
       status: newStatus,
-      confirmed_at: newStatus === OrderStatus.COMPLETED ? new Date().toISOString() : order.confirmedAt,
+      confirmed_at: newStatus === OrderStatus.COMPLETED ? new Date().toISOString() : order.confirmed_at,
       notes: notes || order.notes,
     };
 
@@ -269,19 +266,17 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
       if (newStatus === OrderStatus.COMPLETED) {
         // Fetch package and business data
         const [packageRes, businessRes] = await Promise.all([
-          supabase.from('membership_packages').select('*').eq('id', order.packageId).single(),
-          supabase.from('businesses').select('id, name, email').eq('id', order.businessId).single()
+          supabase.from('membership_packages').select('*').eq('id', order.package_id).single(),
+          supabase.from('businesses').select('id, name, email').eq('id', order.business_id).single()
         ]);
 
         if (packageRes.data && businessRes.data) {
-          const packagePurchased = snakeToCamel(packageRes.data) as MembershipPackage;
-          
+          const packagePurchased = packageRes.data as unknown as MembershipPackage;
+
           // Use centralized activation function (removes duplicate logic)
           await activateBusinessFromOrder(
-            order.businessId,
-            packagePurchased,
-            businessRes.data.email,
-            businessRes.data.name
+            order.business_id,
+            packagePurchased
           );
         }
       }
@@ -295,9 +290,9 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
 
   // --- COMBINED VALUE & PROVIDER ---
   const value = {
-    posts, blogLoading, getPostBySlug, addPost, updatePost, deletePost, incrementViewCount, getPostsByBusinessId,
-    reviews, reviewsLoading, getReviewsByBusinessId, addReview, addReply, toggleReviewVisibility,
-    getAnalyticsByBusinessId,
+    posts, blogLoading, getPostBySlug, addPost, updatePost, deletePost, incrementview_count, getPostsBybusiness_id,
+    reviews, reviewsLoading, getReviewsBybusiness_id, addReview, addReply, toggleReviewVisibility,
+    getAnalyticsBybusiness_id,
     appointments, getAppointmentsForBusiness, addAppointment, updateAppointmentStatus,
     orders, ordersLoading, addOrder, updateOrderStatus,
   };
@@ -313,16 +308,16 @@ const useBusinessDashboardData = () => {
 };
 
 export const useBusinessBlogData = () => {
-  const { posts, blogLoading, getPostBySlug, addPost, updatePost, deletePost, incrementViewCount, getPostsByBusinessId } = useBusinessDashboardData();
-  return { posts, loading: blogLoading, getPostBySlug, addPost, updatePost, deletePost, incrementViewCount, getPostsByBusinessId };
+  const { posts, blogLoading, getPostBySlug, addPost, updatePost, deletePost, incrementview_count, getPostsBybusiness_id } = useBusinessDashboardData();
+  return { posts, loading: blogLoading, getPostBySlug, addPost, updatePost, deletePost, incrementview_count, getPostsBybusiness_id };
 };
 export const useReviewsData = () => {
-  const { reviews, reviewsLoading, getReviewsByBusinessId, addReview, addReply, toggleReviewVisibility } = useBusinessDashboardData();
-  return { reviews, loading: reviewsLoading, getReviewsByBusinessId, addReview, addReply, toggleReviewVisibility };
+  const { reviews, reviewsLoading, getReviewsBybusiness_id, addReview, addReply, toggleReviewVisibility } = useBusinessDashboardData();
+  return { reviews, loading: reviewsLoading, getReviewsBybusiness_id, addReview, addReply, toggleReviewVisibility };
 };
 export const useAnalyticsData = () => {
-  const { getAnalyticsByBusinessId } = useBusinessDashboardData();
-  return { getAnalyticsByBusinessId };
+  const { getAnalyticsBybusiness_id } = useBusinessDashboardData();
+  return { getAnalyticsBybusiness_id };
 };
 export const useBookingData = () => {
   const { appointments, getAppointmentsForBusiness, addAppointment, updateAppointmentStatus } = useBusinessDashboardData();

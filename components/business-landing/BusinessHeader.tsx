@@ -51,7 +51,7 @@ const BusinessHeader: React.FC<BusinessHeaderProps> = ({ business, onBookNowClic
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-20">
                     <Link to="/" className="flex items-center gap-3">
-                        {business.logoUrl && <img src={business.logoUrl} alt={`${business.name} logo`} className="h-12 w-auto" />}
+                        {business.logo_url && <img src={business.logo_url} alt={`${business.name} logo`} className="h-12 w-auto" />}
                         <span className={`text-xl font-bold font-serif ${isScrolled ? 'text-primary' : 'text-white'}`}>
                             {business.name}
                         </span>

@@ -46,7 +46,7 @@ function createErrorResponse(message: string, statusCode: number, origin: string
 
 interface InviteStaffRequestBody {
   email: string;
-  businessId: number;
+  business_id: number;
   role: 'Editor' | 'Admin';
   permissions: {
     canEditLandingPage?: boolean;
@@ -67,13 +67,13 @@ Deno.serve(async (req: Request) => {
 
   try {
     // Validate request
-    const { email, businessId, role, permissions, businessName }: InviteStaffRequestBody = await req.json();
+    const { email, business_id, role, permissions, businessName }: InviteStaffRequestBody = await req.json();
 
     if (!email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return createErrorResponse('Invalid email address', 400, req.headers.get('origin'), 'VALIDATION_ERROR');
     }
 
-    if (!businessId || typeof businessId !== 'number') {
+    if (!business_id || typeof business_id !== 'number') {
       return createErrorResponse('Invalid business ID', 400, req.headers.get('origin'), 'VALIDATION_ERROR');
     }
 
@@ -93,11 +93,11 @@ Deno.serve(async (req: Request) => {
     const { data: business, error: businessError } = await supabaseAdmin
       .from('businesses')
       .select('id, name')
-      .eq('id', businessId)
+      .eq('id', business_id)
       .single();
 
     if (businessError || !business) {
-      return createErrorResponse(`Business with ID ${businessId} not found`, 404, req.headers.get('origin'), 'BUSINESS_NOT_FOUND');
+      return createErrorResponse(`Business with ID ${business_id} not found`, 404, req.headers.get('origin'), 'BUSINESS_NOT_FOUND');
     }
 
     // 2. Check if user already exists
@@ -174,7 +174,7 @@ Deno.serve(async (req: Request) => {
     const { data: existingStaff, error: _staffCheckError } = await supabaseAdmin
       .from('business_staff')
       .select('id')
-      .eq('business_id', businessId)
+      .eq('business_id', business_id)
       .eq('user_id', userId)
       .maybeSingle();
 
@@ -186,7 +186,7 @@ Deno.serve(async (req: Request) => {
     const { data: newStaff, error: staffError } = await supabaseAdmin
       .from('business_staff')
       .insert({
-        business_id: businessId,
+        business_id: business_id,
         user_id: userId,
         role: role,
         permissions: permissions || {},

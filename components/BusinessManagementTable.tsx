@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Business, MembershipTier } from '../types.ts';
+import { Business, membership_tier } from '../types.ts';
 import ConfirmDialog from './ConfirmDialog.tsx';
 
 // --- SVG Icons for Sorting ---
@@ -32,20 +32,20 @@ interface BusinessManagementTableProps {
     businesses: Business[];
     onEdit: (business: Business) => void;
     onUpdate: (business: Business) => void;
-    onDelete: (businessId: number) => void;
+    onDelete: (business_id: number) => void;
     onDuplicate: (business: Business) => void;
 }
 
-type SortKey = 'name' | 'rating' | 'viewCount';
+type SortKey = 'name' | 'rating' | 'view_count';
 
 const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ businesses, onEdit, onUpdate, onDelete, onDuplicate }) => {
-    const [selectedBusinessIds, setSelectedBusinessIds] = useState<number[]>([]);
+    const [selectedbusiness_ids, setSelectedbusiness_ids] = useState<number[]>([]);
     const [sortConfig, setSortConfig] = useState<{ key: SortKey | null; direction: 'asc' | 'desc' }>({ key: null, direction: 'asc' });
     const [confirmDialog, setConfirmDialog] = useState<{
         isOpen: boolean;
         type: 'verify' | 'toggle' | 'delete' | null;
-        businessId?: number;
-        businessName?: string;
+        business_id?: number;
+        business_name?: string;
         count?: number;
     }>({ isOpen: false, type: null });
 
@@ -63,10 +63,10 @@ const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ busin
                         ? a.rating - b.rating
                         : b.rating - a.rating;
                 }
-                if (sortConfig.key === 'viewCount') {
+                if (sortConfig.key === 'view_count') {
                     return sortConfig.direction === 'asc'
-                        ? (a.viewCount || 0) - (b.viewCount || 0)
-                        : (b.viewCount || 0) - (a.viewCount || 0);
+                        ? (a.view_count || 0) - (b.view_count || 0)
+                        : (b.view_count || 0) - (a.view_count || 0);
                 }
                 return 0;
             });
@@ -84,84 +84,84 @@ const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ busin
         }
     };
 
-    const handleTierChange = (business: Business, newTier: MembershipTier) => {
-        onUpdate({ ...business, membershipTier: newTier });
+    const handleTierChange = (business: Business, newTier: membership_tier) => {
+        onUpdate({ ...business, membership_tier: newTier });
     };
 
     // const handleStatusToggle = (business: Business) => {
-    //    onUpdate({ ...business, isActive: !business.isActive });
+    //    onUpdate({ ...business, is_active: !business.is_active });
     // };
 
     // const handleVerificationToggle = (business: Business) => {
-    //    onUpdate({ ...business, isVerified: !business.isVerified });
+    //    onUpdate({ ...business, is_verified: !business.is_verified });
     // };
 
     const handleFeaturedToggle = (business: Business) => {
-        onUpdate({ ...business, isFeatured: !business.isFeatured });
+        onUpdate({ ...business, is_featured: !business.is_featured });
     };
 
-    const businessIds = useMemo(() => businesses.map(b => b.id), [businesses]);
+    const business_ids = useMemo(() => businesses.map(b => b.id), [businesses]);
 
     const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.checked) {
-            setSelectedBusinessIds(businessIds);
+            setSelectedbusiness_ids(business_ids);
         } else {
-            setSelectedBusinessIds([]);
+            setSelectedbusiness_ids([]);
         }
     };
 
     const handleSelectOne = (e: React.ChangeEvent<HTMLInputElement>, id: number) => {
         if (e.target.checked) {
-            setSelectedBusinessIds(prev => [...prev, id]);
+            setSelectedbusiness_ids(prev => [...prev, id]);
         } else {
-            setSelectedBusinessIds(prev => prev.filter(selectedId => selectedId !== id));
+            setSelectedbusiness_ids(prev => prev.filter(selectedId => selectedId !== id));
         }
     };
 
     const handleVerifySelected = () => {
-        setConfirmDialog({ isOpen: true, type: 'verify', count: selectedBusinessIds.length });
+        setConfirmDialog({ isOpen: true, type: 'verify', count: selectedbusiness_ids.length });
     };
 
     const confirmVerifySelected = () => {
         if (confirmDialog.type === 'verify' && confirmDialog.count) {
-            selectedBusinessIds.forEach(id => {
+            selectedbusiness_ids.forEach(id => {
                 const businessToUpdate = businesses.find(b => b.id === id);
-                if (businessToUpdate && !businessToUpdate.isVerified) {
-                    onUpdate({ ...businessToUpdate, isVerified: true });
+                if (businessToUpdate && !businessToUpdate.is_verified) {
+                    onUpdate({ ...businessToUpdate, is_verified: true });
                 }
             });
-            setSelectedBusinessIds([]);
+            setSelectedbusiness_ids([]);
         }
         setConfirmDialog({ isOpen: false, type: null });
     };
 
     const handleToggleSelectedStatus = () => {
-        setConfirmDialog({ isOpen: true, type: 'toggle', count: selectedBusinessIds.length });
+        setConfirmDialog({ isOpen: true, type: 'toggle', count: selectedbusiness_ids.length });
     };
 
     const confirmToggleSelectedStatus = () => {
         if (confirmDialog.type === 'toggle' && confirmDialog.count) {
-            selectedBusinessIds.forEach(id => {
+            selectedbusiness_ids.forEach(id => {
                 const businessToUpdate = businesses.find(b => b.id === id);
                 if (businessToUpdate) {
-                    onUpdate({ ...businessToUpdate, isActive: !businessToUpdate.isActive });
+                    onUpdate({ ...businessToUpdate, is_active: !businessToUpdate.is_active });
                 }
             });
-            setSelectedBusinessIds([]);
+            setSelectedbusiness_ids([]);
         }
         setConfirmDialog({ isOpen: false, type: null });
     };
 
-    const isAllSelected = businessIds.length > 0 && selectedBusinessIds.length === businessIds.length;
-    const isSomeSelected = selectedBusinessIds.length > 0 && selectedBusinessIds.length < businessIds.length;
+    const isAllSelected = business_ids.length > 0 && selectedbusiness_ids.length === business_ids.length;
+    const isSomeSelected = selectedbusiness_ids.length > 0 && selectedbusiness_ids.length < business_ids.length;
 
     return (
         <>
             {/* Bulk Actions Bar */}
-            {selectedBusinessIds.length > 0 && (
+            {selectedbusiness_ids.length > 0 && (
                 <div className="bg-primary/10 p-3 rounded-lg mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <p className="font-semibold text-neutral-dark text-sm">
-                        {selectedBusinessIds.length} business{selectedBusinessIds.length > 1 ? 'es' : ''} selected.
+                        {selectedbusiness_ids.length} business{selectedbusiness_ids.length > 1 ? 'es' : ''} selected.
                     </p>
                     <div className="flex items-center gap-2 flex-wrap">
                         <button
@@ -211,9 +211,9 @@ const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ busin
                                 </button>
                             </th>
                             <th scope="col" className="px-6 py-3">
-                                <button onClick={() => requestSort('viewCount')} className="flex items-center gap-1.5 group">
+                                <button onClick={() => requestSort('view_count')} className="flex items-center gap-1.5 group">
                                     Views
-                                    {sortConfig.key === 'viewCount' ? (sortConfig.direction === 'asc' ? <SortAscIcon /> : <SortDescIcon />) : <SortIcon className="text-gray-400 opacity-50 group-hover:opacity-100" />}
+                                    {sortConfig.key === 'view_count' ? (sortConfig.direction === 'asc' ? <SortAscIcon /> : <SortDescIcon />) : <SortIcon className="text-gray-400 opacity-50 group-hover:opacity-100" />}
                                 </button>
                             </th>
                             <th scope="col" className="px-6 py-3">Membership Tier</th>
@@ -225,14 +225,14 @@ const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ busin
                     </thead>
                     <tbody>
                         {sortedBusinesses.map(business => (
-                            <tr key={business.id} className={`bg-white border-b hover:bg-gray-50 ${selectedBusinessIds.includes(business.id) ? 'bg-primary/5' : ''}`}>
+                            <tr key={business.id} className={`bg-white border-b hover:bg-gray-50 ${selectedbusiness_ids.includes(business.id) ? 'bg-primary/5' : ''}`}>
                                 <td className="w-4 p-4">
                                     <div className="flex items-center">
                                         <input
                                             id={`checkbox-table-${business.id}`}
                                             type="checkbox"
                                             className="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary focus:ring-2"
-                                            checked={selectedBusinessIds.includes(business.id)}
+                                            checked={selectedbusiness_ids.includes(business.id)}
                                             onChange={(e) => handleSelectOne(e, business.id)}
                                         />
                                         <label htmlFor={`checkbox-table-${business.id}`} className="sr-only">checkbox</label>
@@ -246,27 +246,27 @@ const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ busin
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 font-semibold text-gray-600">
-                                    {(business.viewCount || 0).toLocaleString()}
+                                    {(business.view_count || 0).toLocaleString()}
                                 </td>
                                 <td className="px-6 py-4">
                                     <select
-                                        value={business.membershipTier}
+                                        value={business.membership_tier}
                                         onChange={(e) => handleTierChange(business, e.target.value as MembershipTier)}
                                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2"
                                     >
-                                        {Object.values(MembershipTier).map(tier => (
+                                        {Object.values(membership_tier).map(tier => (
                                             <option key={tier} value={tier}>{tier}</option>
                                         ))}
                                     </select>
                                 </td>
                                 <td className="px-6 py-4">
-                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${business.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                        {business.isActive ? 'Active' : 'Inactive'}
+                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${business.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                        {business.is_active ? 'Active' : 'Inactive'}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4">
-                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${business.isVerified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                                        {business.isVerified ? 'Verified' : 'Not Verified'}
+                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${business.is_verified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                        {business.is_verified ? 'Verified' : 'Not Verified'}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4">
@@ -275,7 +275,7 @@ const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ busin
                                             type="checkbox"
                                             id={`featured-toggle-${business.id}`}
                                             className="sr-only peer"
-                                            checked={business.isFeatured || false}
+                                            checked={business.is_featured || false}
                                             onChange={() => handleFeaturedToggle(business)}
                                         />
                                         <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
@@ -285,7 +285,7 @@ const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ busin
                                     <button onClick={() => onEdit(business)} className="font-medium text-secondary hover:underline">Edit</button>
                                     <button onClick={() => onDuplicate(business)} className="font-medium text-blue-600 hover:underline">Duplicate</button>
                                     <button
-                                        onClick={() => setConfirmDialog({ isOpen: true, type: 'delete', businessId: business.id, businessName: business.name })}
+                                        onClick={() => setConfirmDialog({ isOpen: true, type: 'delete', business_id: business.id, business_name: business.name })}
                                         className="font-medium text-red-600 hover:underline"
                                     >
                                         Delete
@@ -319,13 +319,13 @@ const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ busin
             <ConfirmDialog
                 isOpen={confirmDialog.isOpen && confirmDialog.type === 'delete'}
                 title="Delete Business"
-                message={confirmDialog.businessName ? `Are you sure you want to delete ${confirmDialog.businessName}? This action cannot be undone.` : ''}
+                message={confirmDialog.business_name ? `Are you sure you want to delete ${confirmDialog.business_name}? This action cannot be undone.` : ''}
                 confirmText="Delete"
                 cancelText="Cancel"
                 variant="danger"
                 onConfirm={() => {
-                    if (confirmDialog.businessId) {
-                        onDelete(confirmDialog.businessId);
+                    if (confirmDialog.business_id) {
+                        onDelete(confirmDialog.business_id);
                     }
                     setConfirmDialog({ isOpen: false, type: null });
                 }}

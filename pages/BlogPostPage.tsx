@@ -83,22 +83,22 @@ const BlogPostPage: React.FC = () => {
                   </time>
                 )}
                 <div className="h-4 w-[1px] bg-gray-200 hidden md:block"></div>
-                {post.viewCount !== undefined && (
+                {post.view_count !== undefined && (
                   <span className="flex items-center gap-1">
                     <svg className="w-4 h-4 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.522 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.022 7-9.542 7-4.478 0-8.268-2.943-9.542-7z"></path></svg>
-                    {post.viewCount.toLocaleString()} lượt xem
+                    {post.view_count.toLocaleString()} lượt xem
                   </span>
                 )}
               </div>
             </header>
 
             {/* Featured Image with Glass Frame */}
-            {post.imageUrl && (
+            {post.image_url && (
               <div className="mb-12 relative group animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
                 <div className="absolute inset-0 bg-primary/20 blur-3xl opacity-20 group-hover:opacity-40 transition-opacity rounded-full"></div>
                 <div className="relative glass-card p-2 rounded-[2rem] shadow-premium overflow-hidden transition-all duration-700 hover:scale-[1.01]">
                   <img
-                    src={post.imageUrl}
+                    src={post.image_url}
                     alt={post.title}
                     className="w-full h-auto rounded-[1.5rem] object-cover transition-transform duration-1000 group-hover:scale-105"
                   />

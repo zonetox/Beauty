@@ -6,17 +6,17 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { safeFetch, prioritySafeFetch } from '../lib/safeFetch.ts';
+import { prioritySafeFetch } from '../lib/safeFetch.ts';
 import { cacheManager, CACHE_KEYS, CACHE_TTL } from '../lib/cache.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
-import { snakeToCamel } from '../lib/utils.ts';
+
 import { BlogPost, BlogCategory, MembershipPackage } from '../types.ts';
 
 interface LazyDataState {
-  blogPosts: BlogPost[];
-  blogCategories: BlogCategory[];
-  packages: MembershipPackage[];
-  markers: Array<{ id: number; name: string; latitude: number; longitude: number; categories: string[]; isActive: boolean }>;
+  blog_posts: BlogPost[];
+  blog_categories: BlogCategory[];
+  membership_packages: MembershipPackage[];
+  markers: Array<{ id: number; name: string; latitude: number; longitude: number; categories: string[]; is_active: boolean }>;
   loading: {
     blog: boolean;
     packages: boolean;
@@ -26,9 +26,9 @@ interface LazyDataState {
 
 export function useLazyData() {
   const [state, setState] = useState<LazyDataState>({
-    blogPosts: [],
-    blogCategories: [],
-    packages: [],
+    blog_posts: [],
+    blog_categories: [],
+    membership_packages: [],
     markers: [],
     loading: {
       blog: false,
@@ -43,8 +43,8 @@ export function useLazyData() {
     if (cached) {
       setState(prev => ({
         ...prev,
-        blogPosts: cached.posts,
-        blogCategories: cached.categories,
+        blog_posts: cached.posts,
+        blog_categories: cached.categories,
         loading: { ...prev.loading, blog: false }
       }));
       return;
@@ -94,8 +94,8 @@ export function useLazyData() {
       )
     ]);
 
-    const posts = postsResult.data ? (snakeToCamel(postsResult.data) as BlogPost[]) : [];
-    const categories = categoriesResult.data ? (snakeToCamel(categoriesResult.data) as BlogCategory[]) : [];
+    const posts = postsResult.data ? (postsResult.data as unknown as BlogPost[]) : [];
+    const categories = categoriesResult.data ? (categoriesResult.data as unknown as BlogCategory[]) : [];
 
     // Cache the result
     if (posts.length > 0 || categories.length > 0) {
@@ -104,8 +104,8 @@ export function useLazyData() {
 
     setState(prev => ({
       ...prev,
-      blogPosts: posts,
-      blogCategories: categories,
+      blog_posts: posts,
+      blog_categories: categories,
       loading: { ...prev.loading, blog: false }
     }));
   }, []);
@@ -116,7 +116,7 @@ export function useLazyData() {
     if (cached) {
       setState(prev => ({
         ...prev,
-        packages: cached,
+        membership_packages: cached,
         loading: { ...prev.loading, packages: false }
       }));
       return;
@@ -147,7 +147,7 @@ export function useLazyData() {
       }
     );
 
-    const packages = result.data ? (snakeToCamel(result.data) as MembershipPackage[]) : [];
+    const packages = result.data ? (result.data as unknown as MembershipPackage[]) : [];
 
     // Cache the result
     if (packages.length > 0) {
@@ -156,7 +156,7 @@ export function useLazyData() {
 
     setState(prev => ({
       ...prev,
-      packages,
+      membership_packages: packages,
       loading: { ...prev.loading, packages: false }
     }));
   }, []);
@@ -200,7 +200,7 @@ export function useLazyData() {
       }
     );
 
-    const markers = result.data ? (snakeToCamel(result.data) as typeof state.markers) : [];
+    const markers = result.data ? (result.data as unknown as typeof state.markers) : [];
 
     // Cache the result
     if (markers.length > 0) {

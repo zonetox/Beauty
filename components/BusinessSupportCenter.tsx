@@ -38,8 +38,8 @@ const BusinessSupportCenter: React.FC = () => {
 
     const sortedTickets = useMemo(() => {
         return [...myTickets].sort((a, b) => {
-            const dateA = new Date(a.lastReplyAt || a.createdAt).getTime();
-            const dateB = new Date(b.lastReplyAt || b.createdAt).getTime();
+            const dateA = new Date(a.last_reply_at || a.created_at).getTime();
+            const dateB = new Date(b.last_reply_at || b.created_at).getTime();
             return dateB - dateA;
         });
     }, [myTickets]);
@@ -116,8 +116,8 @@ const BusinessSupportCenter: React.FC = () => {
         setIsSubmitting(true);
         try {
             await addTicket({
-                businessId: currentBusiness.id,
-                businessName: currentBusiness.name,
+                business_id: currentBusiness.id,
+                business_name: currentBusiness.name,
                 subject: newTicketSubject.trim(),
                 message: newTicketMessage.trim(),
             });
@@ -237,7 +237,7 @@ const BusinessSupportCenter: React.FC = () => {
                                             {ticket.replies.length} {ticket.replies.length === 1 ? 'reply' : 'replies'} •
                                         </>
                                     ) : null}
-                                    {' '}Last updated: {formatDate(ticket.lastReplyAt || ticket.createdAt)}
+                                    {' '}Last updated: {formatDate(ticket.last_reply_at || ticket.created_at)}
                                 </p>
                             </div>
                             <span className={`px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${statusStyles[ticket.status]}`}>
@@ -388,8 +388,8 @@ const BusinessSupportCenter: React.FC = () => {
                 <div className="space-y-4 max-h-96 overflow-y-auto pr-4 mb-6">
                     <div className="p-4 bg-green-50 rounded-md border border-green-200">
                         <div className="flex justify-between items-start mb-2">
-                            <p className="text-sm font-semibold text-green-800">{selectedTicket.businessName}</p>
-                            <p className="text-xs text-gray-500">{formatDate(selectedTicket.createdAt)}</p>
+                            <p className="text-sm font-semibold text-green-800">{selectedTicket.business_name}</p>
+                            <p className="text-xs text-gray-500">{formatDate(selectedTicket.created_at)}</p>
                         </div>
                         <p className="text-sm text-gray-800 whitespace-pre-wrap">{selectedTicket.message}</p>
                     </div>
@@ -411,7 +411,7 @@ const BusinessSupportCenter: React.FC = () => {
                                                 <span className="text-green-800">{reply.author}</span>
                                             )}
                                         </p>
-                                        <p className="text-xs text-gray-500">{formatDate(reply.createdAt)}</p>
+                                        <p className="text-xs text-gray-500">{formatDate(reply.created_at)}</p>
                                     </div>
                                     <p className="text-sm text-gray-800 whitespace-pre-wrap">{reply.content}</p>
                                 </div>

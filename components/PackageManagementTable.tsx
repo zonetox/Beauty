@@ -4,14 +4,14 @@ import { MembershipPackage } from '../types.ts';
 interface PackageManagementTableProps {
     packages: MembershipPackage[];
     onEdit: (pkg: MembershipPackage) => void;
-    onDelete: (packageId: string) => void;
-    onUpdate: (packageId: string, updates: Partial<MembershipPackage>) => void;
+    onDelete: (package_id: string) => void;
+    onUpdate: (package_id: string, updates: Partial<MembershipPackage>) => void;
 }
 
 const PackageManagementTable: React.FC<PackageManagementTableProps> = ({ packages, onEdit, onDelete, onUpdate }) => {
     
     const handleStatusToggle = (pkg: MembershipPackage) => {
-        onUpdate(pkg.id, { isActive: !pkg.isActive });
+        onUpdate(pkg.id, { is_active: !pkg.is_active });
     };
 
     const formatPrice = (price: number) => {
@@ -35,21 +35,21 @@ const PackageManagementTable: React.FC<PackageManagementTableProps> = ({ package
                         <tr key={pkg.id} className="bg-white border-b hover:bg-gray-50">
                             <td className="px-6 py-4 font-medium text-neutral-dark whitespace-nowrap">
                                 {pkg.name}
-                                {pkg.isPopular && <span className="ml-2 text-xs font-semibold bg-accent/50 text-neutral-dark px-2 py-0.5 rounded-full">Popular</span>}
+                                {pkg.is_popular && <span className="ml-2 text-xs font-semibold bg-accent/50 text-neutral-dark px-2 py-0.5 rounded-full">Popular</span>}
                             </td>
                             <td className="px-6 py-4">{formatPrice(pkg.price)}</td>
-                            <td className="px-6 py-4">{pkg.durationMonths} months</td>
+                            <td className="px-6 py-4">{pkg.duration_months} months</td>
                             <td className="px-6 py-4">
                                 <label htmlFor={`status-toggle-${pkg.id}`} className="inline-flex relative items-center cursor-pointer">
                                     <input 
                                         type="checkbox" 
                                         id={`status-toggle-${pkg.id}`} 
                                         className="sr-only peer" 
-                                        checked={pkg.isActive} 
+                                        checked={pkg.is_active} 
                                         onChange={() => handleStatusToggle(pkg)}
                                     />
                                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                                    <span className="ml-3 text-sm font-medium text-gray-900">{pkg.isActive ? 'Active' : 'Inactive'}</span>
+                                    <span className="ml-3 text-sm font-medium text-gray-900">{pkg.is_active ? 'Active' : 'Inactive'}</span>
                                 </label>
                             </td>
                             <td className="px-6 py-4 flex items-center gap-4">

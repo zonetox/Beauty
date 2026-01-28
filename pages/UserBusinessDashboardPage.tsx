@@ -51,6 +51,7 @@ const UserBusinessDashboardPage: React.FC = () => {
             }, 100);
             return () => clearTimeout(timer);
         }
+        return undefined;
     }, [currentBusiness, navigate]);
 
     if (!currentBusiness) {
@@ -103,7 +104,7 @@ const UserBusinessDashboardPage: React.FC = () => {
                     <p className="text-gray-500 text-lg">Hân hạnh chào đón sự trở lại của <strong className="text-gradient font-bold">{currentBusiness.name}</strong></p>
                 </div>
 
-                {!currentBusiness.isActive && (
+                {!currentBusiness.is_active && (
                     <div className="p-6 glass-card border-l-4 border-primary shadow-premium mb-12 animate-fade-in-up delay-100">
                         <div className="flex items-start space-x-4">
                             <div className="bg-primary/20 p-2 rounded-full">

@@ -19,12 +19,12 @@ import ReviewsSection from './business-landing/ReviewsSection.tsx';
 
 interface LandingPagePreviewProps {
   business: Business;
-  config: LandingPageConfig;
+  config: landing_page_config;
   onClose: () => void;
 }
 
 // Map section keys to components
-const SECTION_COMPONENTS: Record<keyof LandingPageConfig['sections'], React.ComponentType<any>> = {
+const SECTION_COMPONENTS: Record<keyof landing_page_config['sections'], React.ComponentType<any>> = {
   hero: HeroSection,
   trust: () => null, // Trust indicators section - to be implemented in Phase 3.2
   services: ServicesSection,
@@ -39,15 +39,15 @@ const LandingPagePreview: React.FC<LandingPagePreviewProps> = ({ business, confi
   // Create a business object with the config applied
   const previewBusiness: Business = {
     ...business,
-    landingPageConfig: config,
+    landing_page_config: config,
   };
 
   // Get sections sorted by order and filtered by enabled
   const enabledSections = Object.entries(config.sections)
-    .filter(([_, section]) => section.enabled)
+    .filter(([_, section]) => (section as any).enabled)
     .map(([key, section]) => ({
       key: key as keyof LandingPageConfig['sections'],
-      order: section.order,
+      order: (section as any).order,
     }))
     .sort((a, b) => a.order - b.order);
 
@@ -139,12 +139,12 @@ const LandingPagePreview: React.FC<LandingPagePreviewProps> = ({ business, confi
                 })}
 
               {/* Blog section - always shown if business has blog posts (not in config) */}
-              {business.businessBlogPosts && business.businessBlogPosts.length > 0 && (
+              {business.business_blog_posts && business.business_blog_posts.length > 0 && (
                 <BusinessBlogSection business={previewBusiness} />
               )}
 
               {/* Video section - shown if business has video (not in config) */}
-              {business.youtubeUrl && (
+              {business.youtube_url && (
                 <VideoSection business={previewBusiness} />
               )}
 

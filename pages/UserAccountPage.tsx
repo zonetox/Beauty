@@ -15,7 +15,7 @@ type AccountTab = 'profile' | 'favorites';
 const UserAccountPage: React.FC = () => {
     const { user: currentUser, profile, state } = useAuth();
     const loading = state === 'loading';
-    const isFavorite = (businessId: number) => profile?.favorites?.includes(businessId) ?? false;
+    const isFavorite = (business_id: number) => profile?.favorites?.includes(business_id) ?? false;
     const { businesses } = useBusinessData();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<AccountTab>('profile');
@@ -75,7 +75,7 @@ const UserAccountPage: React.FC = () => {
                         <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Họ và tên</label>
-                                <p className="mt-1 text-lg text-neutral-dark">{profile?.fullName || 'Chưa cập nhật'}</p>
+                                <p className="mt-1 text-lg text-neutral-dark">{profile?.full_name || 'Chưa cập nhật'}</p>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Email</label>

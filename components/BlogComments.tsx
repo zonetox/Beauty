@@ -6,28 +6,28 @@ import { useBlogData } from '../contexts/BusinessDataContext.tsx';
 import { useAuth } from '../providers/AuthProvider.tsx';
 
 interface BlogCommentsProps {
-    postId: number;
+    post_id: number;
 }
 
-const BlogComments: React.FC<BlogCommentsProps> = ({ postId }) => {
-    const { getCommentsByPostId, addComment } = useBlogData();
+const BlogComments: React.FC<BlogCommentsProps> = ({ post_id }) => {
+    const { getCommentsBypost_id, addComment } = useBlogData();
     const { user: currentUser } = useAuth();
 
     const [commentContent, setCommentContent] = useState('');
-    const [authorName, setAuthorName] = useState(currentUser?.user_metadata?.full_name || '');
+    const [author_name, setauthor_name] = useState(currentUser?.user_metadata?.full_name || '');
 
-    const comments = getCommentsByPostId(postId);
+    const comments = getCommentsBypost_id(post_id);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!commentContent.trim() || !authorName.trim()) {
+        if (!commentContent.trim() || !author_name.trim()) {
             toast.error('Vui lòng nhập tên và nội dung bình luận.');
             return;
         }
-        addComment(postId, authorName, commentContent);
+        addComment(post_id, author_name, commentContent);
         setCommentContent('');
         if (!currentUser) {
-            setAuthorName('');
+            setauthor_name('');
         }
     };
 
@@ -39,9 +39,9 @@ const BlogComments: React.FC<BlogCommentsProps> = ({ postId }) => {
             <div className="space-y-8 mb-12">
                 {comments.map(comment => (
                     <div key={comment.id} className="flex gap-4">
-                        <img src={comment.authorAvatarUrl} alt={comment.authorName} className="w-12 h-12 rounded-full flex-shrink-0 mt-1" loading="lazy" />
+                        <img src={comment.authoravatar_url} alt={comment.author_name} className="w-12 h-12 rounded-full flex-shrink-0 mt-1" loading="lazy" />
                         <div>
-                            <p className="font-semibold text-neutral-dark">{comment.authorName}</p>
+                            <p className="font-semibold text-neutral-dark">{comment.author_name}</p>
                             <p className="text-xs text-gray-400 mb-2">{new Date(comment.date).toLocaleString()}</p>
                             <p className="text-gray-600">{comment.content}</p>
                         </div>
@@ -55,12 +55,12 @@ const BlogComments: React.FC<BlogCommentsProps> = ({ postId }) => {
                 <form onSubmit={handleSubmit} className="space-y-4 p-6 bg-gray-50 rounded-lg border">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label htmlFor="authorName" className="block text-sm font-medium text-gray-700">Name</label>
+                            <label htmlFor="author_name" className="block text-sm font-medium text-gray-700">Name</label>
                             <input
-                                id="authorName"
+                                id="author_name"
                                 type="text"
-                                value={authorName}
-                                onChange={(e) => setAuthorName(e.target.value)}
+                                value={author_name}
+                                onChange={(e) => setauthor_name(e.target.value)}
                                 disabled={!!currentUser}
                                 required
                                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary disabled:bg-gray-100"

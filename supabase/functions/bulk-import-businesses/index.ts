@@ -46,8 +46,8 @@ serve(async (req) => {
                 category,
                 description,
                 images_str, // Comma separated images
-                working_hours_start,
-                working_hours_end,
+                WorkingHours_start,
+                WorkingHours_end,
                 website
             } = b
 
@@ -97,7 +97,7 @@ serve(async (req) => {
 
                 // Working hours
                 const workingHours = {
-                    "Thứ 2 - Thứ 6": `${working_hours_start || '09:00'} - ${working_hours_end || '20:00'}`,
+                    "Thứ 2 - Thứ 6": `${WorkingHours_start || '09:00'} - ${WorkingHours_end || '20:00'}`,
                     "Thứ 7 - Chủ Nhật": "09:00 - 21:00"
                 }
 
@@ -118,7 +118,7 @@ serve(async (req) => {
                     categories: categories,
                     image_url: imageUrl,
                     gallery: gallery,
-                    working_hours: workingHours,
+                    working_hours: WorkingHours,
                     website,
                     is_active: true,
                     is_verified: true,

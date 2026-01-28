@@ -32,7 +32,7 @@ import { LandingPageConfig } from '../types.ts';
 
 const BusinessDetailPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
-    const { fetchBusinessBySlug, incrementBusinessViewCount } = useBusinessData();
+    const { fetchBusinessBySlug, incrementBusinessview_count } = useBusinessData();
     const [business, setBusiness] = useState<Business | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -104,7 +104,7 @@ const BusinessDetailPage: React.FC = () => {
             // Increment view count, once per session to avoid loops/spam
             const incrementedKey = `view_incremented_${business.id}`;
             if (!sessionStorage.getItem(incrementedKey)) {
-                incrementBusinessViewCount(business.id);
+                incrementBusinessview_count(business.id);
                 sessionStorage.setItem(incrementedKey, 'true');
             }
 
@@ -121,7 +121,7 @@ const BusinessDetailPage: React.FC = () => {
                 console.error("Failed to update recently viewed businesses:", error);
             }
         }
-    }, [business, incrementBusinessViewCount]); // Only depend on business.id to prevent unnecessary re-runs
+    }, [business, incrementBusinessview_count]); // Only depend on business.id to prevent unnecessary re-runs
 
     // Loading state
     if (loading) {
@@ -148,10 +148,10 @@ const BusinessDetailPage: React.FC = () => {
         `${business.name} - ${business.categories.join(', ')} tại ${business.city || 'Việt Nam'}`;
     const seoKeywords = business.seo?.keywords ||
         `${business.name}, ${business.categories.join(', ')}, ${business.city || ''}`;
-    const seoImage = business.heroSlides && business.heroSlides.length > 0
-        ? getOptimizedSupabaseUrl(business.heroSlides[0].imageUrl, { width: 1200, quality: 85 })
-        : business.heroImageUrl || business.imageUrl
-            ? getOptimizedSupabaseUrl(business.heroImageUrl || business.imageUrl || '', { width: 1200, quality: 85 })
+    const seoImage = business.hero_slides && business.hero_slides.length > 0
+        ? getOptimizedSupabaseUrl(business.hero_slides[0].image_url, { width: 1200, quality: 85 })
+        : business.hero_image_url || business.image_url
+            ? getOptimizedSupabaseUrl(business.hero_image_url || business.image_url || '', { width: 1200, quality: 85 })
             : 'https://picsum.photos/seed/beauty/1200/630';
     const seoUrl = typeof window !== 'undefined'
         ? `${window.location.origin}/business/${business.slug}`
@@ -166,10 +166,10 @@ const BusinessDetailPage: React.FC = () => {
     // Enhanced Schema.org for LocalBusiness
     const businessSchema = {
         name: business.name,
-        image: business.heroSlides && business.heroSlides.length > 0
-            ? business.heroSlides.map(slide => getOptimizedSupabaseUrl(slide.imageUrl, { width: 1200, quality: 85 }))
-            : business.heroImageUrl || business.imageUrl
-                ? [getOptimizedSupabaseUrl(business.heroImageUrl || business.imageUrl || '', { width: 1200, quality: 85 })]
+        image: business.hero_slides && business.hero_slides.length > 0
+            ? business.hero_slides.map(slide => getOptimizedSupabaseUrl(slide.image_url, { width: 1200, quality: 85 }))
+            : business.hero_image_url || business.image_url
+                ? [getOptimizedSupabaseUrl(business.hero_image_url || business.image_url || '', { width: 1200, quality: 85 })]
                 : [seoImage],
         address: {
             streetAddress: business.address,
@@ -184,9 +184,9 @@ const BusinessDetailPage: React.FC = () => {
         telephone: business.phone,
         aggregateRating: visibleReviews.length > 0 ? {
             ratingValue: averageRating,
-            reviewCount: visibleReviews.length,
+            review_count: visibleReviews.length,
         } : undefined,
-        openingHoursSpecification: business.workingHours ? Object.entries(business.workingHours)
+        openingHoursSpecification: business.WorkingHours ? Object.entries(business.WorkingHours)
             .filter(([_, hours]) => {
                 // Handle both old string format and new object format
                 if (typeof hours === 'string') {
@@ -247,7 +247,7 @@ const BusinessDetailPage: React.FC = () => {
     };
 
     // Get landing page configuration or use default
-    const landingPageConfig: LandingPageConfig = business.landingPageConfig || {
+    const landing_page_config: LandingPageConfig = business.LandingPageConfig || {
         sections: {
             hero: { enabled: true, order: 1 },
             trust: { enabled: false, order: 2 },
@@ -299,7 +299,7 @@ const BusinessDetailPage: React.FC = () => {
                     </div>
                 );
             case 'cta':
-                return <BookingCtaSection key="cta" onBookNowClick={() => setIsBookingModalOpen(true)} businessId={business.id} />;
+                return <BookingCtaSection key="cta" onBookNowClick={() => setIsBookingModalOpen(true)} business_id={business.id} />;
             case 'contact':
                 return (
                     <div key="contact" className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -353,13 +353,13 @@ const BusinessDetailPage: React.FC = () => {
                         ))}
 
                     {/* Optional Dynamic Sections */}
-                    {business.youtubeUrl && (
+                    {business.youtube_url && (
                         <section className="animate-fade-in-up">
                             <VideoSection business={business} />
                         </section>
                     )}
 
-                    {business.businessBlogPosts && business.businessBlogPosts.length > 0 && (
+                    {business.business_blog_posts && business.business_blog_posts.length > 0 && (
                         <section className="animate-fade-in-up">
                             <BusinessBlogSection business={business} />
                         </section>

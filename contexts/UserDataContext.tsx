@@ -9,8 +9,8 @@ interface UserDataContextType {
   profile: Profile | null;
   loading: boolean;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
-  isFavorite: (businessId: number) => boolean;
-  toggleFavorite: (businessId: number) => Promise<void>;
+  isFavorite: (business_id: number) => boolean;
+  toggleFavorite: (business_id: number) => Promise<void>;
 }
 
 const UserDataContext = createContext<UserDataContextType | undefined>(undefined);
@@ -82,19 +82,19 @@ export const UserDataProvider: React.FC<{ children: ReactNode }> = ({ children }
     setLoading(false);
   };
   
-  const isFavorite = (businessId: number): boolean => {
-    return profile?.favorites?.includes(businessId) ?? false;
+  const isFavorite = (business_id: number): boolean => {
+    return profile?.favorites?.includes(business_id) ?? false;
   };
 
-  const toggleFavorite = async (businessId: number) => {
+  const toggleFavorite = async (business_id: number) => {
     if (!profile) return;
 
     const currentFavorites = profile.favorites || [];
-    const isCurrentlyFavorite = currentFavorites.includes(businessId);
+    const isCurrentlyFavorite = currentFavorites.includes(business_id);
 
     const newFavorites = isCurrentlyFavorite
-      ? currentFavorites.filter(id => id !== businessId)
-      : [...currentFavorites, businessId];
+      ? currentFavorites.filter(id => id !== business_id)
+      : [...currentFavorites, business_id];
     
     await updateProfile({ favorites: newFavorites });
   };

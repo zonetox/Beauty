@@ -11,20 +11,20 @@ interface EditAdminUserModalProps {
 }
 
 const PERMISSION_DESCRIPTIONS: { [key in keyof AdminPermissions]: string } = {
-  canViewAnalytics: "View Analytics",
-  canManageBusinesses: "Manage Businesses",
-  canManageRegistrations: "Manage Registrations",
-  canManageOrders: "Manage Orders",
-  canManagePlatformBlog: "Manage Platform Blog",
-  canManageUsers: "Manage Users",
-  canManagePackages: "Manage Packages",
-  canManageAnnouncements: "Manage Announcements",
-  canManageSupportTickets: "Manage Support Tickets",
-  canManageSiteContent: "Manage Site Content (Homepage, etc.)",
-  canManageSystemSettings: "Manage System Settings",
-  canUseAdminTools: "Use Admin Tools",
-  canViewActivityLog: "View Activity Log",
-  canViewEmailLog: "View Email Log",
+  can_view_analytics: "View Analytics",
+  can_manage_businesses: "Manage Businesses",
+  can_manage_registrations: "Manage Registrations",
+  can_manage_orders: "Manage Orders",
+  can_manage_platform_blog: "Manage Platform Blog",
+  can_manage_users: "Manage Users",
+  can_manage_packages: "Manage Packages",
+  can_manage_announcements: "Manage Announcements",
+  can_manage_support_tickets: "Manage Support Tickets",
+  can_manage_site_content: "Manage Site Content (Homepage, etc.)",
+  can_manage_system_settings: "Manage System Settings",
+  can_use_admin_tools: "Use Admin Tools",
+  can_view_activity_log: "View Activity Log",
+  can_view_email_log: "View Email Log",
 };
 
 const EditAdminUserModal: React.FC<EditAdminUserModalProps> = ({ isOpen, onClose, onSave, userToEdit }) => {
@@ -35,7 +35,7 @@ const EditAdminUserModal: React.FC<EditAdminUserModalProps> = ({ isOpen, onClose
       return { ...userToEdit, password: '' }; // Don't show password on edit
     }
     return {
-      username: '',
+      user_name: '',
       email: '',
       password: '',
       role: AdminUserRole.EDITOR,
@@ -93,8 +93,8 @@ const EditAdminUserModal: React.FC<EditAdminUserModalProps> = ({ isOpen, onClose
           <div className="p-6 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Username</label>
-                <input type="text" name="username" value={formData.username || ''} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                <label className="block text-sm font-medium text-gray-700">user_name</label>
+                <input type="text" name="user_name" value={formData.user_name || ''} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Email</label>

@@ -82,63 +82,62 @@ export interface Socials {
 }
 
 export interface Service {
-  id: string; // Now a UUID from its own table
-  businessId: number;
+  id: string;
+  business_id: number;
   name: string;
   price: string;
   description: string;
-  imageUrl: string;
-  durationMinutes?: number;
-  position: number; // For drag-and-drop ordering
+  image_url: string;
+  duration_minutes?: number;
+  position: number;
 }
 
 export interface Deal {
-  id: string; // Now a UUID from its own table
-  businessId: number;
+  id: string;
+  business_id: number;
   title: string;
   description: string;
-  imageUrl?: string;
-  startDate?: string; // ISO
-  endDate?: string; // ISO
-  discountPercentage?: number;
-  originalPrice?: number;
-  dealPrice?: number;
-  status: DealStatus;
+  original_price: number;
+  deal_price: number;
+  discount_percentage: number;
+  image_url: string;
+  status: 'Active' | 'Expired' | 'Pending';
+  start_date: string;
+  end_date: string;
+  terms?: string;
 }
 
 export interface TeamMember {
-  id: string; // Now a UUID from its own table
-  businessId: number;
+  id: string;
+  business_id: number;
   name: string;
   role: string;
-  imageUrl: string;
+  image_url: string;
 }
 
 export interface MediaItem {
-  id: string; // Now a UUID from its own table
-  businessId: number;
+  id: string;
+  business_id: number;
   url: string;
   type: MediaType;
   category: MediaCategory;
   title?: string;
   description?: string;
-  position: number; // For drag-and-drop ordering
+  position: number;
 }
 
 export interface Review {
   id: string;
-  userId?: string;
-  businessId: number;
-  userName: string;
-  userAvatarUrl: string;
-  rating: number; // 1 to 5
+  user_id?: string;
+  business_id: number;
+  user_name: string;
+  user_avatar_url: string;
+  rating: number;
   comment: string;
-  submittedDate: string; // ISO
+  created_at: string;
   status: ReviewStatus;
-  reply?: {
-    content: string;
-    repliedDate: string; // ISO
-  };
+  reply_content?: string;
+  reply_date?: string;
 }
 
 // Working hours types
@@ -156,14 +155,14 @@ export type WorkingHours = {
 
 // Staff permissions shared type for hooks/components
 export interface StaffPermissions {
-  canEditLandingPage?: boolean;
-  canEditBlog?: boolean;
-  canManageMedia?: boolean;
-  canManageServices?: boolean;
-  isStaffMember?: boolean;
-  isBusinessOwner?: boolean;
-  isOwner?: boolean; // alias
-  hasAccess?: boolean;
+  can_edit_landing_page?: boolean;
+  can_edit_blog?: boolean;
+  can_manage_media?: boolean;
+  can_manage_services?: boolean;
+  is_staff_member?: boolean;
+  is_business_owner?: boolean;
+  is_owner?: boolean; // alias
+  has_access?: boolean;
 }
 
 export interface StaffMember {
@@ -176,20 +175,20 @@ export interface StaffMember {
 // Business Staff (Sub-user system)
 export interface BusinessStaff {
   id: string;
-  businessId: number;
-  userId: string;
+  business_id: number;
+  user_id: string;
   role: StaffMemberRole;
   permissions: {
-    canEditLandingPage?: boolean;
-    canEditBlog?: boolean;
-    canManageMedia?: boolean;
-    canManageServices?: boolean;
+    can_edit_landing_page?: boolean;
+    can_edit_blog?: boolean;
+    can_manage_media?: boolean;
+    can_manage_services?: boolean;
   };
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
   // Optional fields from joined profiles
-  userEmail?: string;
-  userName?: string;
+  user_email?: string;
+  user_name?: string;
 }
 
 // Abuse Report
@@ -234,17 +233,17 @@ export interface TrustIndicator {
 }
 
 export interface NotificationSettings {
-  reviewAlerts: boolean;
-  bookingRequests: boolean;
-  platformNews: boolean;
+  review_alerts: boolean;
+  booking_requests: boolean;
+  platform_news: boolean;
 }
 
 export interface Business {
   id: number;
   slug: string;
   name: string;
-  logoUrl?: string;
-  imageUrl: string;
+  logo_url?: string;
+  image_url: string;
   slogan?: string;
   categories: BusinessCategory[];
   address: string;
@@ -257,28 +256,28 @@ export interface Business {
   phone: string;
   email?: string;
   website?: string;
-  youtubeUrl?: string;
+  youtube_url?: string;
   rating: number;
-  reviewCount: number;
-  viewCount: number;
-  membershipTier: MembershipTier;
-  membershipExpiryDate?: string; // ISO
-  isVerified: boolean;
-  isActive: boolean;
-  isFeatured?: boolean;
-  joinedDate: string; // ISO string for sorting by newest
+  review_count: number;
+  view_count: number;
+  membership_tier: MembershipTier;
+  membership_expiry_date?: string;
+  is_verified: boolean;
+  is_active: boolean;
+  is_featured?: boolean;
+  joined_date: string;
   description: string;
-  workingHours?: WorkingHours | null;
+  WorkingHours?: WorkingHours | null;
   socials?: Socials;
   seo?: SEO;
-  staff: StaffMember[]; // Kept as JSONB as it's tightly coupled 1-to-1
-  notificationSettings: NotificationSettings; // Kept as JSONB
-  heroSlides?: HeroSlide[];
-  heroImageUrl?: string;
-  landingPageConfig?: LandingPageConfig;
-  trustIndicators?: TrustIndicator[];
-  landingPageStatus?: 'Pending' | 'Approved' | 'Rejected' | 'Needs Review';
-  ownerId?: string; // UUID of the business owner (from auth.users)
+  staff: StaffMember[];
+  notification_settings: NotificationSettings;
+  hero_slides?: HeroSlide[];
+  hero_image_url?: string;
+  LandingPageConfig?: LandingPageConfig;
+  trust_indicators?: TrustIndicator[];
+  landing_page_status?: 'Pending' | 'Approved' | 'Rejected' | 'Needs Review';
+  owner_id?: string;
 
   // --- RELATIONAL DATA ---
   // These will be populated by Supabase joins
@@ -287,7 +286,7 @@ export interface Business {
   gallery?: MediaItem[];
   team?: TeamMember[];
   reviews?: Review[];
-  businessBlogPosts?: BusinessBlogPost[]; // Business blog posts
+  business_blog_posts?: BusinessBlogPost[]; // Business blog posts
 }
 
 export interface BlogCategory {
@@ -300,88 +299,88 @@ export interface BlogPost {
   id: number;
   slug: string;
   title: string;
-  imageUrl: string;
+  image_url: string;
   excerpt: string;
   author: string;
-  date: string; // ISO or dd/mm/yyyy
+  date: string;
   category: string;
   content: string;
-  viewCount: number;
+  view_count: number;
   status: 'Draft' | 'Published';
-  isFeatured?: boolean;
+  is_featured?: boolean;
   seo?: {
     title: string;
     description: string;
     keywords: string;
   };
-  updatedAt?: string;
+  updated_at?: string;
 }
 
 export interface BlogComment {
   id: string;
-  postId: number;
-  authorName: string;
-  authorAvatarUrl: string;
+  post_id: number;
+  author_name: string;
+  author_avatar_url: string;
   content: string;
   date: string; // ISO
 }
 
 export interface BusinessBlogPost {
   id: string;
-  businessId: number;
+  business_id: number;
   slug: string;
   title: string;
   excerpt: string;
-  imageUrl: string;
+  image_url: string;
   content: string;
   author: string;
-  createdDate: string; // ISO
-  publishedDate?: string; // ISO
+  created_date: string;
+  published_date?: string;
   status: BusinessBlogPostStatus;
-  viewCount: number;
-  isFeatured?: boolean;
+  view_count: number;
+  is_featured?: boolean;
   seo?: SEO;
 }
 
 
 export interface RegistrationRequest {
   id: string;
-  businessName: string;
+  business_name: string;
   email: string;
   phone: string;
-  category: BusinessCategory;
   address: string;
+  category: BusinessCategory;
   tier: MembershipTier;
+  submitted_at: string;
   status: 'Pending' | 'Approved' | 'Rejected';
-  submittedAt: string;
 }
 
 export interface AdminPermissions {
-  canViewAnalytics: boolean;
-  canManageBusinesses: boolean;
-  canManageRegistrations: boolean;
-  canManageOrders: boolean;
-  canManagePlatformBlog: boolean;
-  canManageUsers: boolean;
-  canManagePackages: boolean;
-  canManageAnnouncements: boolean;
-  canManageSupportTickets: boolean;
-  canManageSiteContent: boolean;
-  canManageSystemSettings: boolean;
-  canUseAdminTools: boolean;
-  canViewActivityLog: boolean;
-  canViewEmailLog: boolean;
+  can_view_analytics: boolean;
+  can_manage_businesses: boolean;
+  can_manage_registrations: boolean;
+  can_manage_orders: boolean;
+  can_manage_platform_blog: boolean;
+  can_manage_users: boolean;
+  can_manage_packages: boolean;
+  can_manage_announcements: boolean;
+  can_manage_support_tickets: boolean;
+  can_manage_site_content: boolean;
+  can_manage_system_settings: boolean;
+  can_use_admin_tools: boolean;
+  can_view_activity_log: boolean;
+  can_view_email_log: boolean;
 }
 
 export interface AdminUser {
   id: number;
-  username: string;
+  user_name: string;
   email: string;
   password?: string;
   role: AdminUserRole;
   permissions: AdminPermissions;
-  lastLogin?: string;
-  isLocked: boolean;
+  last_login?: string;
+  is_locked: boolean;
 }
 
 // AuthenticatedAdmin extends AdminUser with auth user
@@ -393,14 +392,14 @@ export interface AuthenticatedAdmin extends AdminUser {
 }
 
 export interface Profile {
-  id: string; // Corresponds to auth.users.id
-  updatedAt?: string;
-  fullName?: string;
-  avatarUrl?: string;
+  id: string;
+  updated_at?: string;
+  full_name?: string;
+  avatar_url?: string;
   email?: string;
-  userType?: string; // Standardized: 'user', 'business', 'admin'
-  businessId?: number; // Link to the business this user owns/manages
-  favorites?: number[]; // Array of business IDs
+  user_type?: string;
+  business_id?: number;
+  favorites?: number[]; // business_ids
 }
 
 export interface MembershipPackage {
@@ -408,61 +407,61 @@ export interface MembershipPackage {
   tier: MembershipTier;
   name: string;
   price: number;
-  durationMonths: number;
+  duration_months: number;
   description: string;
   features: string[];
   permissions: {
-    photoLimit: number;
-    videoLimit: number;
-    featuredLevel: number;
-    customLandingPage: boolean;
-    privateBlog: boolean;
-    seoSupport: boolean;
-    monthlyPostLimit: number;
-    featuredPostLimit: number;
+    photo_limit: number;
+    video_limit: number;
+    featured_level: number;
+    custom_landing_page: boolean;
+    private_blog: boolean;
+    seo_support: boolean;
+    monthly_post_limit: number;
+    featured_post_limit: number;
   };
-  isPopular: boolean;
-  isActive: boolean;
+  is_popular: boolean;
+  is_active: boolean;
 }
 
 export interface Order {
   id: string;
-  businessId: number;
-  businessName: string;
-  packageId: string;
-  packageName: string;
+  business_id: number;
+  business_name: string;
+  package_id: string;
+  package_name: string;
   amount: number;
   status: OrderStatus;
-  paymentMethod: 'Bank Transfer' | 'Credit Card' | 'Simulated Gateway';
-  submittedAt: string;
-  confirmedAt?: string;
+  payment_method: 'Bank Transfer' | 'Credit Card' | 'Simulated Gateway';
+  submitted_at: string;
+  confirmed_at?: string;
   notes?: string;
-  paymentProofUrl?: string;
+  payment_proof_url?: string;
 }
 
 export interface Appointment {
   id: string;
-  businessId: number;
-  serviceId: string;
-  serviceName: string;
-  staffMemberId?: string; // Optional for now
-  customerName: string;
-  customerEmail: string;
-  customerPhone: string;
-  date: string; // "YYYY-MM-DD"
-  timeSlot: string; // "HH:MM"
+  business_id: number;
+  service_id: string;
+  service_name: string;
+  staff_member_id?: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  date: string;
+  time_slot: string;
   status: AppointmentStatus;
   notes?: string;
-  createdAt: string; // ISO
+  created_at: string;
 }
 
 
 export interface AnalyticsDataPoint {
   date: string; // "YYYY-MM-DD"
-  pageViews: number;
-  contactClicks: number;
-  callClicks: number;
-  directionClicks: number;
+  page_views: number;
+  contact_clicks: number;
+  call_clicks: number;
+  direction_clicks: number;
 }
 
 export interface TrafficSource {
@@ -471,10 +470,10 @@ export interface TrafficSource {
 }
 
 export interface BusinessAnalytics {
-  businessId: number;
-  timeSeries: AnalyticsDataPoint[];
-  trafficSources: TrafficSource[];
-  averageTimeOnPage: number; // in seconds
+  business_id: number;
+  time_series: AnalyticsDataPoint[];
+  traffic_sources: TrafficSource[];
+  average_time_on_page: number; // in seconds
 }
 
 export interface ChartDataPoint {
@@ -486,17 +485,17 @@ export interface ChartDataPoint {
 export interface AdminLogEntry {
   id: string;
   timestamp: string; // ISO
-  adminUsername: string;
+  admin_user_name: string;
   action: string;
   details: string;
 }
 
 export interface Notification {
   id: string;
-  recipientEmail: string;
+  recipient_email: string;
   subject: string;
   body: string;
-  sentAt: string; // ISO
+  sent_at: string; // ISO
   read: boolean;
 }
 
@@ -506,7 +505,7 @@ export type AdminPageTab = 'dashboard' | 'analytics' | 'businesses' | 'registrat
 export interface HeroSlide {
   title: string;
   subtitle: string;
-  imageUrl: string;
+  image_url: string;
 }
 
 export interface HomepageSection {
@@ -518,43 +517,43 @@ export interface HomepageSection {
 }
 
 export interface HomepageData {
-  heroSlides: HeroSlide[];
+  hero_slides: HeroSlide[];
   sections: HomepageSection[];
 }
 
 // FIX: Add missing type definitions.
-export interface BankDetails {
-  bankName: string;
-  accountName: string;
-  accountNumber: string;
-  transferNote: string;
+export interface bank_details {
+  bank_name: string;
+  account_name: string;
+  account_number: string;
+  transfer_note: string;
 }
 
 export interface AppSettings {
-  siteName?: string;
-  supportEmail?: string;
-  maintenanceMode?: boolean;
-  logoUrl?: string;
-  faviconUrl?: string;
+  site_name?: string;
+  support_email?: string;
+  maintenance_mode?: boolean;
+  logo_url?: string;
+  favicon_url?: string;
   colors?: {
     primary?: string;
-    primaryDark?: string;
+    primary_dark?: string;
     secondary?: string;
     accent?: string;
     background?: string;
-    neutralDark?: string;
+    neutral_dark?: string;
   };
-  seoDefaults?: {
-    defaultTitle?: string;
-    defaultDescription?: string;
-    defaultKeywords?: string;
+  seo_defaults?: {
+    default_title?: string;
+    default_description?: string;
+    default_keywords?: string;
   };
-  emailConfig?: {
-    fromEmail?: string;
-    fromName?: string;
-    replyTo?: string;
+  email_config?: {
+    from_email?: string;
+    from_name?: string;
+    reply_to?: string;
   };
-  bankDetails: BankDetails;
+  bank_details: bank_details;
 }
 
 export interface LayoutItem {
@@ -569,8 +568,7 @@ export interface Announcement {
   title: string;
   content: string;
   type: 'info' | 'warning' | 'success';
-  createdAt: string; // ISO
-  created_at?: string; // from Supabase
+  created_at: string; // ISO / from Supabase
 }
 
 export enum TicketStatus {
@@ -583,31 +581,31 @@ export interface TicketReply {
   id: string;
   author: 'Admin' | string;
   content: string;
-  createdAt: string; // ISO
+  created_at: string; // ISO
 }
 
 export interface SupportTicket {
   id: string;
-  businessId: number;
-  businessName: string;
+  business_id: number;
+  business_name: string;
   subject: string;
   message: string;
   status: TicketStatus;
-  createdAt: string; // ISO
-  lastReplyAt: string; // ISO
+  created_at: string; // ISO
+  last_reply_at: string; // ISO
   replies: TicketReply[];
 }
 
 export interface ThemeSettings {
-  logoUrl: string;
-  faviconUrl: string;
+  logo_url: string;
+  favicon_url: string;
   colors: {
     primary: string;
-    primaryDark: string;
+    primary_dark: string;
     secondary: string;
     accent: string;
     background: string;
-    neutralDark: string;
+    neutral_dark: string;
   };
   fonts: {
     sans: string;

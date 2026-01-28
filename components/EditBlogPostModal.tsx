@@ -118,7 +118,7 @@ const EditBlogPostModal: React.FC<EditBlogPostModalProps> = ({ post, onClose, on
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Image URL</label>
-                                <input type="text" name="imageUrl" value={formData.imageUrl || ''} onChange={handleChange} required className="mt-1 w-full border border-gray-300 rounded-md p-2" />
+                                <input type="text" name="image_url" value={formData.image_url || ''} onChange={handleChange} required className="mt-1 w-full border border-gray-300 rounded-md p-2" />
                             </div>
                         </div>
                         <div>
@@ -155,12 +155,12 @@ const EditBlogPostModal: React.FC<EditBlogPostModalProps> = ({ post, onClose, on
                             <div className="flex items-center gap-2 pt-5">
                                 <input
                                     type="checkbox"
-                                    id="isFeatured"
-                                    checked={formData.isFeatured || false}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, isFeatured: e.target.checked }))}
+                                    id="is_featured"
+                                    checked={formData.is_featured || false}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, is_featured: e.target.checked }))}
                                     className="w-4 h-4 text-primary"
                                 />
-                                <label htmlFor="isFeatured" className="text-sm font-medium text-gray-700 cursor-pointer">Featured Post</label>
+                                <label htmlFor="is_featured" className="text-sm font-medium text-gray-700 cursor-pointer">Featured Post</label>
                             </div>
                         </div>
 

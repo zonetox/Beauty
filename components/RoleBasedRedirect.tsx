@@ -64,7 +64,7 @@ const RoleBasedRedirect: React.FC<RoleBasedRedirectProps> = ({
         }
 
         // Auto-redirect based on role
-        if (roleResult.role === 'business_owner' && roleResult.businessId) {
+        if (roleResult.role === 'business_owner' && roleResult.business_id) {
           navigate('/account', { replace: true });
         } else if (roleResult.role === 'admin') {
           // Admin can access admin panel

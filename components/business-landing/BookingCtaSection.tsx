@@ -3,13 +3,13 @@ import { trackConversion } from '../../lib/usePageTracking.ts';
 
 interface BookingCtaSectionProps {
     onBookNowClick: () => void;
-    businessId?: number;
+    business_id?: number;
 }
 
-const BookingCtaSection: React.FC<BookingCtaSectionProps> = ({ onBookNowClick, businessId }) => {
+const BookingCtaSection: React.FC<BookingCtaSectionProps> = ({ onBookNowClick, business_id }) => {
     const handleClick = () => {
         // Track conversion
-        trackConversion('click', businessId);
+        trackConversion('click', business_id);
         onBookNowClick();
     };
 

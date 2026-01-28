@@ -95,9 +95,9 @@ const EditBusinessModal: React.FC<EditBusinessModalProps> = ({ business, onClose
                   <label className="flex items-center">
                     <input
                       type="checkbox"
-                      name="isFeatured"
-                      checked={formData.isFeatured || false}
-                      onChange={(e) => setFormData(prev => ({ ...prev, isFeatured: e.target.checked }))}
+                      name="is_featured"
+                      checked={formData.is_featured || false}
+                      onChange={(e) => setFormData(prev => ({ ...prev, is_featured: e.target.checked }))}
                       className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
                     />
                     <span className="ml-2 text-sm font-medium text-gray-700">Mark as Featured</span>

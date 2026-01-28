@@ -39,10 +39,10 @@ const ServicesManager: React.FC = () => {
         if (!currentBusiness) return;
 
         try {
-            if (serviceToSave.businessId) {
+            if (serviceToSave.business_id) {
                 await updateService(serviceToSave);
             } else {
-                await addService({ ...serviceToSave, businessId: currentBusiness.id });
+                await addService({ ...serviceToSave, business_id: currentBusiness.id });
             }
             setIsModalOpen(false);
         } catch (error) {
@@ -129,7 +129,7 @@ const ServicesManager: React.FC = () => {
                     service={editingService}
                     onSave={handleSaveService}
                     onClose={() => setIsModalOpen(false)}
-                    businessId={currentBusiness.id}
+                    business_id={currentBusiness.id}
                 />
             )}
 
@@ -179,7 +179,7 @@ const ServicesManager: React.FC = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
                             </svg>
                             <img
-                                src={service.imageUrl || 'https://placehold.co/128x128/E6A4B4/FFFFFF?text=No+Image'}
+                                src={service.image_url || 'https://placehold.co/128x128/E6A4B4/FFFFFF?text=No+Image'}
                                 alt={service.name}
                                 className="w-16 h-16 object-cover rounded-md flex-shrink-0"
                                 onError={(e) => {
@@ -189,8 +189,8 @@ const ServicesManager: React.FC = () => {
                             <div className="flex-grow">
                                 <p className="font-semibold text-neutral-dark">{service.name}</p>
                                 <p className="text-sm text-gray-500 truncate">{service.description || 'No description'}</p>
-                                {service.durationMinutes && (
-                                    <p className="text-xs text-gray-400 mt-1">Duration: {service.durationMinutes} minutes</p>
+                                {service.duration_minutes && (
+                                    <p className="text-xs text-gray-400 mt-1">Duration: {service.duration_minutes} minutes</p>
                                 )}
                             </div>
                             <p className="font-semibold text-primary w-32 text-right flex-shrink-0">{service.price}</p>

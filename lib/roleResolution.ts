@@ -27,9 +27,9 @@ export type UserRole = 'anonymous' | 'user' | 'business_owner' | 'business_staff
 export interface RoleResolutionResult {
   role: UserRole;
   profileId: string | null;
-  businessId: number | null;
+  business_id: number | null;
   isAdmin: boolean;
-  isBusinessOwner: boolean;
+  is_business_owner: boolean;
   isBusinessStaff: boolean;
   profile?: Profile | null; // Add dynamic profile data
   error?: string;
@@ -52,9 +52,9 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
     return {
       role: 'anonymous',
       profileId: null,
-      businessId: null,
+      business_id: null,
       isAdmin: false,
-      isBusinessOwner: false,
+      is_business_owner: false,
       isBusinessStaff: false
     };
   }
@@ -77,9 +77,9 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
       return {
         role: 'anonymous',
         profileId: null,
-        businessId: null,
+        business_id: null,
         isAdmin: false,
-        isBusinessOwner: false,
+        is_business_owner: false,
         isBusinessStaff: false,
         error: `Context not found for user ${user.id}`
       };
@@ -89,9 +89,9 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
     return {
       role: context.role as any,
       profileId: context.profile.id,
-      businessId: context.businessId,
+      business_id: context.business_id,
       isAdmin: context.role === 'admin',
-      isBusinessOwner: context.role === 'business_owner',
+      is_business_owner: context.role === 'business_owner',
       isBusinessStaff: context.role === 'business_staff',
       profile: context.profile
     };
@@ -102,9 +102,9 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
     return {
       role: 'anonymous',
       profileId: null,
-      businessId: null,
+      business_id: null,
       isAdmin: false,
-      isBusinessOwner: false,
+      is_business_owner: false,
       isBusinessStaff: false,
       error: `Role resolution failed: ${errorMessage}`
     };
@@ -164,7 +164,7 @@ export async function verifyProfileExists(userId: string): Promise<{ exists: boo
  * 2. Business exists
  * 3. User is owner (businesses.owner_id = auth.uid())
  */
-export async function verifyBusinessLinked(userId: string): Promise<{ exists: boolean; businessId: number | null; error?: string }> {
+export async function verifyBusinessLinked(userId: string): Promise<{ exists: boolean; business_id: number | null; error?: string }> {
   try {
     // Add timeout for verification (15 seconds)
     const verificationTimeout = new Promise<never>((_, reject) => {
@@ -181,20 +181,20 @@ export async function verifyBusinessLinked(userId: string): Promise<{ exists: bo
     const { data: profile, error: profileError } = await Promise.race([
       profileQuery,
       verificationTimeout
-    ]) as { data: { businessId: number | null } | null; error: any };
+    ]) as { data: { business_id: number | null } | null; error: any };
 
     if (profileError || !profile) {
       return {
         exists: false,
-        businessId: null,
+        business_id: null,
         error: 'Profile not found. Account is incomplete.'
       };
     }
 
-    if (!profile.businessId) {
+    if (!profile.business_id) {
       return {
         exists: false,
-        businessId: null,
+        business_id: null,
         error: 'Business not linked to profile. Business registration incomplete.'
       };
     }
@@ -203,7 +203,7 @@ export async function verifyBusinessLinked(userId: string): Promise<{ exists: bo
     const businessQuery = supabase
       .from('businesses')
       .select('id, owner_id')
-      .eq('id', profile.businessId)
+      .eq('id', profile.business_id)
       .eq('owner_id', userId)
       .single();
 
@@ -215,20 +215,20 @@ export async function verifyBusinessLinked(userId: string): Promise<{ exists: bo
     if (businessError || !business) {
       return {
         exists: false,
-        businessId: profile.businessId,
+        business_id: profile.business_id,
         error: 'Business record not found or user is not owner. Business ownership verification failed.'
       };
     }
 
     return {
       exists: true,
-      businessId: business.id
+      business_id: business.id
     };
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return {
       exists: false,
-      businessId: null,
+      business_id: null,
       error: `Business verification failed: ${errorMessage}`
     };
   }
@@ -240,15 +240,15 @@ export async function verifyBusinessLinked(userId: string): Promise<{ exists: bo
  * 
  * Checks:
  * 1. User is owner (businesses.owner_id = auth.uid())
- * 2. OR user is staff (business_staff.user_id = auth.uid() AND business_staff.business_id = businessId)
+ * 2. OR user is staff (business_staff.user_id = auth.uid() AND business_staff.business_id = business_id)
  */
-export async function verifyBusinessAccess(userId: string, businessId: number): Promise<{ hasAccess: boolean; isOwner: boolean; isStaff: boolean; error?: string }> {
+export async function verifyBusinessAccess(userId: string, business_id: number): Promise<{ hasAccess: boolean; isOwner: boolean; isStaff: boolean; error?: string }> {
   try {
     // Check ownership
     const { data: business } = await supabase
       .from('businesses')
       .select('id, owner_id')
-      .eq('id', businessId)
+      .eq('id', business_id)
       .eq('owner_id', userId)
       .single();
 
@@ -265,7 +265,7 @@ export async function verifyBusinessAccess(userId: string, businessId: number): 
       .from('business_staff')
       .select('id')
       .eq('user_id', userId)
-      .eq('business_id', businessId)
+      .eq('business_id', business_id)
       .single();
 
     if (staffRecord) {

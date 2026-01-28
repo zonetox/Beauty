@@ -38,10 +38,10 @@ export function calculateTrialExpiryDate(): string {
  * Initialize trial membership for a business
  * Sets: membership_tier = 'Premium', membership_expiry_date = now() + 30 days
  * 
- * @param businessId - The business ID to initialize trial for
+ * @param business_id - The business ID to initialize trial for
  * @returns Promise<boolean> - true if successful, false otherwise
  */
-export async function initializeTrial(businessId: number): Promise<boolean> {
+export async function initializeTrial(business_id: number): Promise<boolean> {
   try {
     const expiryDate = calculateTrialExpiryDate();
 
@@ -52,7 +52,7 @@ export async function initializeTrial(businessId: number): Promise<boolean> {
         membership_expiry_date: expiryDate,
         is_active: true,
       })
-      .eq('id', businessId);
+      .eq('id', business_id);
 
     if (error) {
       console.error('Error initializing trial:', error);
@@ -70,33 +70,29 @@ export async function initializeTrial(businessId: number): Promise<boolean> {
  * Check and handle trial expiry
  * If business has Premium tier and expiry date has passed, downgrade to Free
  * 
- * @param businessId - The business ID to check
+ *
+ * @param business_id - The business ID to check
  * @returns Promise<boolean> - true if downgraded, false otherwise
  */
-export async function checkAndHandleTrialExpiry(businessId: number): Promise<boolean> {
+export async function checkAndHandleTrialExpiry(business_id: number): Promise<boolean> {
   try {
     // Fetch current business data
-    const { data: business, error: fetchError } = await supabase
+    const { data, error } = await supabase
       .from('businesses')
       .select('id, membership_tier, membership_expiry_date')
-      .eq('id', businessId)
+      .eq('id', business_id)
       .single();
 
-    if (fetchError || !business) {
-      console.error('Error fetching business for expiry check:', fetchError);
+    if (error || !data) {
+      console.error('Error fetching business for expiry check:', error);
       return false;
     }
 
-    const now = new Date();
-    const expiryDate = business.membership_expiry_date
-      ? new Date(business.membership_expiry_date)
-      : null;
-
-    // Check if trial has expired
+    // Check if trial has expired and is Premium
     if (
-      business.membership_tier === MembershipTier.PREMIUM &&
-      expiryDate &&
-      expiryDate < now
+      data.membership_tier === MembershipTier.PREMIUM &&
+      data.membership_expiry_date &&
+      new Date(data.membership_expiry_date) < new Date()
     ) {
       // Downgrade to Free
       const { error: updateError } = await supabase
@@ -106,7 +102,7 @@ export async function checkAndHandleTrialExpiry(businessId: number): Promise<boo
           membership_expiry_date: null,
           // Do NOT set is_active = false (requirement: do not deactivate)
         })
-        .eq('id', businessId);
+        .eq('id', business_id);
 
       if (updateError) {
         console.error('Error downgrading expired trial:', updateError);
@@ -209,20 +205,20 @@ export async function createBusinessWithTrial(
  * Activate business when order is completed (for paid packages, not trial)
  * This is called when an order status changes to COMPLETED.
  * 
- * @param businessId - The business ID to activate
+ * @param business_id - The business ID to activate
  * @param packagePurchased - The membership package that was purchased
  * @param businessEmail - Business email for notifications
  * @param businessName - Business name for notifications
  * @returns Promise<boolean> - true if successful, false otherwise
  */
 export async function activateBusinessFromOrder(
-  businessId: number,
+  business_id: number,
   packagePurchased: MembershipPackage
 ): Promise<boolean> {
   try {
     // Calculate expiry date based on package duration
     const expiryDate = new Date();
-    expiryDate.setMonth(expiryDate.getMonth() + packagePurchased.durationMonths);
+    expiryDate.setMonth(expiryDate.getMonth() + packagePurchased.duration_months);
 
     const { error } = await supabase
       .from('businesses')
@@ -231,7 +227,7 @@ export async function activateBusinessFromOrder(
         membership_expiry_date: expiryDate.toISOString(),
         is_active: true,
       })
-      .eq('id', businessId);
+      .eq('id', business_id);
 
     if (error) {
       console.error('Error activating business from order:', error);
@@ -239,7 +235,7 @@ export async function activateBusinessFromOrder(
     }
 
     // Clear expiry notification flag
-    localStorage.removeItem(`expiry_notification_sent_${businessId}`);
+    localStorage.removeItem(`expiry_notification_sent_${business_id}`);
 
     // Note: Notification sending should be handled by the caller
     // (e.g., via AdminContext.addNotification or Edge Function)

@@ -3,7 +3,7 @@ import React, { createContext, useState, useEffect, useContext, ReactNode, useCa
 import { HomepageData, HomepageSection } from '../types.ts';
 import { DEFAULT_HOMEPAGE_DATA } from '../constants.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
-import { CacheManager, createContextCache } from '../lib/cacheManager.ts';
+import { createContextCache } from '../lib/cacheManager.ts';
 
 interface HomepageDataContextType {
   homepageData: HomepageData;
@@ -78,7 +78,7 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
   const [homepageData, setHomepageData] = useState<HomepageData>(getInitialData());
   // Start with loading false if we have cached/default data (page can render immediately)
   const [loading, setLoading] = useState(false);
-  
+
   // Prevent double fetch in React.StrictMode (development)
   const hasFetchedRef = useRef(false);
 
@@ -134,12 +134,12 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
           .select('content_data')
           .eq('page_name', 'homepage')
           .single();
-        
+
         // Homepage critical data timeout: 8 seconds
-        const timeoutPromise = new Promise((_, reject) => 
+        const timeoutPromise = new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Query timeout after 8 seconds')), 8000)
         );
-        
+
         // Performance logging
         const startTime = performance.now();
         const result = await Promise.race([queryPromise, timeoutPromise]) as any;
@@ -150,8 +150,8 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
         data = result.data;
         error = result.error;
       } catch (timeoutError: unknown) {
-        const errorMessage = timeoutError instanceof Error 
-          ? timeoutError.message 
+        const errorMessage = timeoutError instanceof Error
+          ? timeoutError.message
           : String(timeoutError);
         if (errorMessage.includes('timeout')) {
           // Silent timeout - has fallback to cache/default data
@@ -270,7 +270,7 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   const updateHomepageData = async (newData: HomepageData) => {
     setHomepageData(newData);
-    
+
     if (!isSupabaseConfigured) {
       // Fallback to localStorage if Supabase not configured
       try {
@@ -287,7 +287,7 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
         .from('page_content')
         .upsert({
           page_name: 'homepage',
-          content_data: newData as Record<string, unknown>,
+          content_data: newData as unknown as Record<string, unknown>,
         }, {
           onConflict: 'page_name',
         });

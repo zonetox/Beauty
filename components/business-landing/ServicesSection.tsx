@@ -17,16 +17,16 @@ const AllServicesModal: React.FC<{ services: Service[]; onClose: () => void }> =
                 <div className="space-y-4">
                     {services.map(service => (
                         <div key={service.id} className="flex items-center gap-4 p-3 border rounded-lg">
-                            {/* FIX: Changed 'imageUrl' to 'image_url' to match the Service type. */}
-                            <img src={getOptimizedSupabaseUrl(service.imageUrl, { width: 160, quality: 75 })} alt={service.name} className="w-20 h-20 object-cover rounded-md flex-shrink-0" />
+                            {/* FIX: Changed 'image_url' to 'image_url' to match the Service type. */}
+                            <img src={getOptimizedSupabaseUrl(service.image_url, { width: 160, quality: 75 })} alt={service.name} className="w-20 h-20 object-cover rounded-md flex-shrink-0" />
                             <div className="flex-grow">
                                 <p className="font-semibold text-neutral-dark">{service.name}</p>
                                 <p className="text-sm text-gray-500">{service.description}</p>
                             </div>
                             <div className="text-right">
                                 <p className="font-bold text-primary">{service.price}</p>
-                                {/* FIX: Changed 'durationMinutes' to 'duration_minutes' to match the Service type. */}
-                                {service.durationMinutes && <p className="text-xs text-gray-400">{service.durationMinutes} phút</p>}
+                                {/* FIX: Changed 'duration_minutes' to 'duration_minutes' to match the Service type. */}
+                                {service.duration_minutes && <p className="text-xs text-gray-400">{service.duration_minutes} phút</p>}
                             </div>
                         </div>
                     ))}
@@ -100,8 +100,8 @@ const ServicesSection: React.FC<{ business: Business }> = ({ business }) => {
                             <div key={service.id} className="px-3" style={{ flex: `0 0 ${100 / servicesPerPage}%` }}>
                                 <div className="bg-white rounded-lg shadow-lg overflow-hidden group h-full flex flex-col">
                                     <div className="relative h-56">
-                                        {/* FIX: Changed 'imageUrl' to 'image_url' to match the Service type. */}
-                                        <img src={getOptimizedSupabaseUrl(service.imageUrl, { width: 500, quality: 75 })} alt={service.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                        {/* FIX: Changed 'image_url' to 'image_url' to match the Service type. */}
+                                        <img src={getOptimizedSupabaseUrl(service.image_url, { width: 500, quality: 75 })} alt={service.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                                     </div>
                                     <div className="p-6 text-center flex-grow flex flex-col">
                                         <h4 className="font-bold font-serif text-xl text-neutral-dark">{service.name}</h4>

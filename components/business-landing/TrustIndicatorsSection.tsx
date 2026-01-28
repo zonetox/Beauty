@@ -4,14 +4,14 @@
 import React from 'react';
 import { Business, TrustIndicator } from '../../types.ts';
 
-interface TrustIndicatorsSectionProps {
+interface trust_indicatorsSectionProps {
     business: Business;
 }
 
-const TrustIndicatorsSection: React.FC<TrustIndicatorsSectionProps> = ({ business }) => {
-    const trustIndicators: TrustIndicator[] = business.trustIndicators || [];
+const trust_indicatorsSection: React.FC<trust_indicatorsSectionProps> = ({ business }) => {
+    const trust_indicators: TrustIndicator[] = business.trust_indicators || [];
 
-    if (trustIndicators.length === 0) {
+    if (trust_indicators.length === 0) {
         return null;
     }
 
@@ -69,7 +69,7 @@ const TrustIndicatorsSection: React.FC<TrustIndicatorsSectionProps> = ({ busines
                     </p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {trustIndicators.map((indicator, index) => (
+                    {trust_indicators.map((indicator, index) => (
                         <div
                             key={index}
                             className={`${getColorForType(indicator.type)} p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow flex flex-col items-center text-center`}
@@ -99,4 +99,4 @@ const TrustIndicatorsSection: React.FC<TrustIndicatorsSectionProps> = ({ busines
     );
 };
 
-export default TrustIndicatorsSection;
+export default trust_indicatorsSection;

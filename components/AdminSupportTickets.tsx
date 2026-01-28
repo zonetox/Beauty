@@ -24,20 +24,20 @@ const TicketDetailModal: React.FC<{ ticket: SupportTicket; onClose: () => void; 
                 <header className="p-4 border-b flex justify-between items-center">
                     <div>
                         <h3 className="text-lg font-bold text-neutral-dark">{ticket.subject}</h3>
-                        <p className="text-sm text-gray-500">From: {ticket.businessName}</p>
+                        <p className="text-sm text-gray-500">From: {ticket.business_name}</p>
                     </div>
                     <button onClick={onClose} className="text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
                 </header>
                 <main className="p-6 overflow-y-auto space-y-4">
                     <div className="p-3 bg-gray-100 rounded-md">
                         <p className="text-sm text-gray-800">{ticket.message}</p>
-                        <p className="text-xs text-gray-400 text-right mt-2">{new Date(ticket.createdAt).toLocaleString()}</p>
+                        <p className="text-xs text-gray-400 text-right mt-2">{new Date(ticket.created_at).toLocaleString()}</p>
                     </div>
                     {ticket.replies.map(reply => (
                         <div key={reply.id} className={`p-3 rounded-md ${reply.author === 'Admin' ? 'bg-blue-50' : 'bg-green-50'}`}>
                              <p className="text-sm font-semibold">{reply.author}</p>
                              <p className="text-sm text-gray-800 mt-1">{reply.content}</p>
-                             <p className="text-xs text-gray-400 text-right mt-2">{new Date(reply.createdAt).toLocaleString()}</p>
+                             <p className="text-xs text-gray-400 text-right mt-2">{new Date(reply.created_at).toLocaleString()}</p>
                         </div>
                     ))}
                 </main>
@@ -73,7 +73,7 @@ const AdminSupportTickets: React.FC = () => {
 
     const handleReply = (ticketId: string, content: string) => {
         addReply(ticketId, { author: 'Admin', content });
-        setSelectedTicket(prev => prev ? { ...prev, replies: [...prev.replies, {id: '', author: 'Admin', content, createdAt: new Date().toISOString()}] } : null);
+        setSelectedTicket(prev => prev ? { ...prev, replies: [...prev.replies, {id: '', author: 'Admin', content, created_at: new Date().toISOString()}] } : null);
     };
 
     return (
@@ -110,7 +110,7 @@ const AdminSupportTickets: React.FC = () => {
                         {filteredTickets.map(ticket => (
                             <tr key={ticket.id} className="bg-white border-b hover:bg-gray-50">
                                 <td className="px-6 py-4 font-medium text-neutral-dark">{ticket.subject}</td>
-                                <td className="px-6 py-4">{ticket.businessName}</td>
+                                <td className="px-6 py-4">{ticket.business_name}</td>
                                 <td className="px-6 py-4">
                                     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${statusStyles[ticket.status]}`}>{ticket.status}</span>
                                 </td>

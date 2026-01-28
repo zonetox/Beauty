@@ -26,7 +26,7 @@ const DealsSection: React.FC<DealsSectionProps> = ({ business }) => {
                     <DealCard 
                         key={deal.id}
                         deal={deal}
-                        businessName={business.name}
+                        business_name={business.name}
                         businessSlug={business.slug}
                     />
                 ))}

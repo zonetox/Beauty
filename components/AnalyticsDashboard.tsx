@@ -97,14 +97,14 @@ type TimeRange = '7d' | '30d' | 'month' | 'all';
 
 const AnalyticsDashboard: React.FC = () => {
     const { currentBusiness } = useBusinessAuth();
-    const { getAnalyticsByBusinessId, loading } = useAnalyticsData();
+    const { getAnalyticsBybusiness_id, loading } = useAnalyticsData();
     const [timeRange, setTimeRange] = useState<TimeRange>('7d');
 
     // Move hooks before early return to follow Rules of Hooks
     const analytics = useMemo(() => {
         if (!currentBusiness) return undefined;
-        return getAnalyticsByBusinessId(currentBusiness.id);
-    }, [currentBusiness, getAnalyticsByBusinessId]);
+        return getAnalyticsBybusiness_id(currentBusiness.id);
+    }, [currentBusiness, getAnalyticsBybusiness_id]);
 
     // Filter data by time range
     const filteredData = useMemo(() => {
@@ -178,8 +178,8 @@ const AnalyticsDashboard: React.FC = () => {
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
-            const businessName = currentBusiness?.name ?? 'analytics';
-            link.setAttribute('download', `analytics-${businessName}-${timeRange}-${new Date().toISOString().split('T')[0]}.csv`);
+            const business_name = currentBusiness?.name ?? 'analytics';
+            link.setAttribute('download', `analytics-${business_name}-${timeRange}-${new Date().toISOString().split('T')[0]}.csv`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();

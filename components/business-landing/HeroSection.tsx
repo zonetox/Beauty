@@ -13,13 +13,13 @@ interface HeroSectionProps {
 const HeroSection: React.FC<HeroSectionProps> = ({ business, onBookNowClick }) => {
 
     const slides: HeroSlide[] = useMemo(() => {
-        if (business.heroSlides && business.heroSlides.length > 0) {
-            return business.heroSlides;
+        if (business.hero_slides && business.hero_slides.length > 0) {
+            return business.hero_slides;
         }
         return [{
             title: business.name,
             subtitle: business.slogan || business.categories.join(', '),
-            imageUrl: business.heroImageUrl || business.imageUrl,
+            image_url: business.hero_image_url || business.image_url,
         }];
     }, [business]);
 
@@ -43,7 +43,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ business, onBookNowClick }) =
                     key={index}
                     className="absolute inset-0 w-full h-full bg-cover bg-center transition-opacity duration-1000"
                     /* Dynamic background image - CSS inline necessary for dynamic URL */
-                    style={{ backgroundImage: `url(${getOptimizedSupabaseUrl(slide?.imageUrl ?? '', { width: 1920, quality: 85 })})`, opacity: index === currentSlide ? 1 : 0 }}
+                    style={{ backgroundImage: `url(${getOptimizedSupabaseUrl(slide?.image_url ?? '', { width: 1920, quality: 85 })})`, opacity: index === currentSlide ? 1 : 0 }}
                 />
             ))}
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent"></div>

@@ -9,7 +9,7 @@ import { useUserRole } from '../hooks/useUserRole.ts';
 
 const AuthRedirectHandler: React.FC = () => {
     const { user, state } = useAuth();
-    const { role, isBusinessOwner, isBusinessStaff, isLoading } = useUserRole();
+    const { role, is_business_owner, isBusinessStaff, isLoading } = useUserRole();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -25,12 +25,12 @@ const AuthRedirectHandler: React.FC = () => {
             state !== 'loading' &&
             !isLoading &&
             user &&
-            (isBusinessOwner || isBusinessStaff) &&
+            (is_business_owner || isBusinessStaff) &&
             location.pathname === '/'
         ) {
             navigate('/business-profile', { replace: true });
         }
-    }, [user, state, role, isBusinessOwner, isBusinessStaff, isLoading, location.pathname, navigate]);
+    }, [user, state, role, is_business_owner, isBusinessStaff, isLoading, location.pathname, navigate]);
 
     // This component doesn't render anything
     return null;

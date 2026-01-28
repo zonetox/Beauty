@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../providers/AuthProvider.tsx';
 import SEOHead from '../components/SEOHead.tsx';
-import { supabase } from '../lib/supabaseClient.ts';
+
 
 const RegisterUserPage: React.FC = () => {
     const navigate = useNavigate();
@@ -13,7 +13,7 @@ const RegisterUserPage: React.FC = () => {
     // Redirection useEffect
     useEffect(() => {
         if (authState === 'authenticated' && isDataLoaded && profile) {
-            const target = (profile.userType === 'business' || profile.businessId)
+            const target = (profile.user_type === 'business' || profile.business_id)
                 ? '/business-profile'
                 : '/account';
             navigate(target, { replace: true });

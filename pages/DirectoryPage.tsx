@@ -28,8 +28,8 @@ const SkeletonCard: React.FC = () => (
 );
 
 // Helper to check if a business is currently open
-const checkIfOpen = (workingHours: WorkingHours | null | undefined): boolean => {
-    if (!workingHours) return false;
+const checkIfOpen = (working_hours: WorkingHours | null | undefined): boolean => {
+    if (!WorkingHours) return false;
     try {
         const now = new Date();
         const currentDay = now.getDay(); // Sunday is 0, Monday is 1...
@@ -45,8 +45,8 @@ const checkIfOpen = (workingHours: WorkingHours | null | undefined): boolean => 
             'Thứ 7': 6, 'T7': 6, 'Saturday': 6, 'saturday': 6,
         };
 
-        for (const dayRange in workingHours) {
-            const timeRange = workingHours[dayRange];
+        for (const dayRange in WorkingHours) {
+            const timeRange = WorkingHours[dayRange];
 
             // Handle new object format: {open, close, isOpen}
             if (typeof timeRange === 'object' && timeRange !== null && 'open' in timeRange && 'close' in timeRange) {
@@ -131,8 +131,8 @@ const DirectoryPage: React.FC = () => {
     } = useBusinessData();
 
     // const [mapVisibleBusinesses, setMapVisibleBusinesses] = useState<Business[]>([]); // Refactored to useMemo below
-    const [highlightedBusinessId, setHighlightedBusinessId] = useState<number | null>(null);
-    const [selectedBusinessId, setSelectedBusinessId] = useState<number | null>(null);
+    const [highlightedbusiness_id, setHighlightedbusiness_id] = useState<number | null>(null);
+    const [selectedbusiness_id, setSelectedbusiness_id] = useState<number | null>(null);
     const [mapBounds, setMapBounds] = useState<{ contains: (point: [number, number]) => boolean } | null>(null);
     const [filterByMap, setFilterByMap] = useState(true);
     const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
@@ -150,7 +150,7 @@ const DirectoryPage: React.FC = () => {
             district: params.get('district') || '',
             sort: params.get('sort') || 'default',
             hasDeals: params.get('deals') === 'true',
-            isVerified: params.get('verified') === 'true',
+            is_verified: params.get('verified') === 'true',
             isOpenNow: params.get('open') === 'true',
             page: parseInt(params.get('page') || '1', 10),
         };
@@ -173,7 +173,7 @@ const DirectoryPage: React.FC = () => {
 
     // Fast marker filtering for Map (uses the lightweight markers state)
     const filteredMarkers = useMemo(() => {
-        return businessMarkers.filter(m => m.isActive);
+        return businessMarkers.filter(m => m.is_active);
     }, [businessMarkers]);
 
     // Apply client-side filters (deals, verified, open now, sort)
@@ -191,13 +191,13 @@ const DirectoryPage: React.FC = () => {
         }
 
         // Filter by verified
-        if (activeFilters.isVerified) {
-            filtered = filtered.filter(b => b.isVerified);
+        if (activeFilters.is_verified) {
+            filtered = filtered.filter(b => b.is_verified);
         }
 
         // Filter by open now
         if (activeFilters.isOpenNow) {
-            filtered = filtered.filter(b => checkIfOpen(b.workingHours));
+            filtered = filtered.filter(b => checkIfOpen(b.WorkingHours));
         }
 
         // Sort - ONLY if no search text (preserve database ranking for search results)
@@ -217,8 +217,8 @@ const DirectoryPage: React.FC = () => {
                     break;
                 case 'newest':
                     filtered.sort((a, b) => {
-                        const dateA = new Date(a.joinedDate || 0).getTime();
-                        const dateB = new Date(b.joinedDate || 0).getTime();
+                        const dateA = new Date(a.joined_date || 0).getTime();
+                        const dateB = new Date(b.joined_date || 0).getTime();
                         return dateB - dateA;
                     });
                     break;
@@ -228,8 +228,8 @@ const DirectoryPage: React.FC = () => {
                 default:
                     // Default: featured first, then by ID
                     filtered.sort((a, b) => {
-                        if (a.isFeatured !== b.isFeatured) {
-                            return a.isFeatured ? -1 : 1;
+                        if (a.is_featured !== b.is_featured) {
+                            return a.is_featured ? -1 : 1;
                         }
                         return a.id - b.id;
                     });
@@ -238,7 +238,7 @@ const DirectoryPage: React.FC = () => {
         // If has search text, preserve database ranking order (no client-side sort)
 
         return filtered;
-    }, [businesses, activeFilters.hasDeals, activeFilters.isVerified, activeFilters.isOpenNow, activeFilters.sort, activeFilters.keyword]);
+    }, [businesses, activeFilters.hasDeals, activeFilters.is_verified, activeFilters.isOpenNow, activeFilters.sort, activeFilters.keyword]);
 
     // List View filtering (depends on Map Bounds if enabled)
     const mapVisibleBusinesses = useMemo(() => {
@@ -252,11 +252,11 @@ const DirectoryPage: React.FC = () => {
 
     // Scroll to selected business in the list when a marker is clicked
     useEffect(() => {
-        if (selectedBusinessId && listContainerRef.current && viewMode === 'list') {
-            const element = listContainerRef.current.querySelector(`#business-card-${selectedBusinessId}`);
+        if (selectedbusiness_id && listContainerRef.current && viewMode === 'list') {
+            const element = listContainerRef.current.querySelector(`#business-card-${selectedbusiness_id}`);
             element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-    }, [selectedBusinessId, viewMode]);
+    }, [selectedbusiness_id, viewMode]);
 
     // FIX: Memoize handleFilterChange to prevent infinite navigation loop
     const handleFilterChange = useCallback((newFilters: Partial<ReturnType<typeof getFiltersFromUrl>>) => {
@@ -269,7 +269,7 @@ const DirectoryPage: React.FC = () => {
         if (updatedFilters.district) params.set('district', updatedFilters.district);
         if (updatedFilters.sort !== 'default') params.set('sort', updatedFilters.sort);
         if (updatedFilters.hasDeals) params.set('deals', 'true');
-        if (updatedFilters.isVerified) params.set('verified', 'true');
+        if (updatedFilters.is_verified) params.set('verified', 'true');
         if (updatedFilters.isOpenNow) params.set('open', 'true');
 
         // Reset to page 1 on filter change, unless specifically setting the page
@@ -287,7 +287,7 @@ const DirectoryPage: React.FC = () => {
 
     const hasTagFilters = useMemo(() => {
         return !!(activeFilters.keyword || activeFilters.category || activeFilters.location ||
-            activeFilters.district || activeFilters.hasDeals || activeFilters.isVerified || activeFilters.isOpenNow);
+            activeFilters.district || activeFilters.hasDeals || activeFilters.is_verified || activeFilters.isOpenNow);
     }, [activeFilters]);
 
     const hasSearchQuery = useMemo(() => {
@@ -339,12 +339,12 @@ const DirectoryPage: React.FC = () => {
                     <div className="w-full h-[70vh] relative min-h-[400px]">
                         <DirectoryMap
                             businesses={filteredMarkers as Business[]}
-                            highlightedBusinessId={highlightedBusinessId}
-                            selectedBusinessId={selectedBusinessId}
-                            onMarkerClick={(id) => setSelectedBusinessId(prev => prev === id ? null : id)}
-                            onPopupClose={() => setSelectedBusinessId(null)}
-                            onMarkerMouseEnter={(id) => setHighlightedBusinessId(id)}
-                            onMarkerMouseLeave={() => setHighlightedBusinessId(null)}
+                            highlightedbusiness_id={highlightedbusiness_id}
+                            selectedbusiness_id={selectedbusiness_id}
+                            onMarkerClick={(id) => setSelectedbusiness_id(prev => prev === id ? null : id)}
+                            onPopupClose={() => setSelectedbusiness_id(null)}
+                            onMarkerMouseEnter={(id) => setHighlightedbusiness_id(id)}
+                            onMarkerMouseLeave={() => setHighlightedbusiness_id(null)}
                             onBoundsChange={(bounds) => setMapBounds(bounds)}
                             shouldFitBounds={hasSearchQuery}
                             centerCoords={mapCenterCoords}
@@ -429,7 +429,7 @@ const DirectoryPage: React.FC = () => {
                                                         onRemove={() => handleRemoveFilter('deals')}
                                                     />
                                                 )}
-                                                {activeFilters.isVerified && (
+                                                {activeFilters.is_verified && (
                                                     <FilterTag
                                                         label="Khác"
                                                         value="Đã xác thực"
@@ -498,8 +498,8 @@ const DirectoryPage: React.FC = () => {
                                         <label className="flex items-center gap-2 cursor-pointer">
                                             <input
                                                 type="checkbox"
-                                                checked={activeFilters.isVerified}
-                                                onChange={(e) => handleFilterChange({ isVerified: e.target.checked })}
+                                                checked={activeFilters.is_verified}
+                                                onChange={(e) => handleFilterChange({ is_verified: e.target.checked })}
                                                 className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
                                             />
                                             <span className="font-medium">Đã xác thực</span>
@@ -542,9 +542,9 @@ const DirectoryPage: React.FC = () => {
                                                 <div key={business.id} id={`business-card-${business.id}`}>
                                                     <BusinessCard
                                                         business={business}
-                                                        highlighted={selectedBusinessId === business.id || highlightedBusinessId === business.id}
-                                                        onMouseEnter={() => setHighlightedBusinessId(business.id)}
-                                                        onMouseLeave={() => setHighlightedBusinessId(null)}
+                                                        highlighted={selectedbusiness_id === business.id || highlightedbusiness_id === business.id}
+                                                        onMouseEnter={() => setHighlightedbusiness_id(business.id)}
+                                                        onMouseLeave={() => setHighlightedbusiness_id(null)}
                                                     />
                                                 </div>
                                             ))}

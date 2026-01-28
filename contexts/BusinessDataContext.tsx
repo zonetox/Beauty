@@ -1,11 +1,10 @@
 
-
 import { createContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import toast from 'react-hot-toast';
 import { Business, BlogPost, BlogComment, BlogCategory, MembershipPackage, Service, MediaItem, TeamMember, Deal, MediaType, Review } from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { uploadFile } from '../lib/storage.ts';
-import { snakeToCamel, toSnakeCase } from '../lib/utils.ts';
+import { toSnakeCase } from '../lib/utils.ts';
 import { cacheManager, CACHE_KEYS, CACHE_TTL } from '../lib/cache.ts';
 
 // Optional admin logging - injected via props or context to avoid circular dependency
@@ -20,24 +19,24 @@ import { cacheManager, CACHE_KEYS, CACHE_TTL } from '../lib/cache.ts';
 export interface PublicDataContextType {
   // Business Data
   businesses: Business[];
-  businessMarkers: { id: number, name: string, latitude: number, longitude: number, categories: string[], isActive: boolean }[];
+  businessMarkers: { id: number, name: string, latitude: number, longitude: number, categories: string[], is_active: boolean }[];
   businessLoading: boolean;
   totalBusinesses: number;
   currentPage: number;
   fetchBusinesses: (page?: number, options?: { search?: string, location?: string, district?: string, category?: string }) => Promise<void>;
   addBusiness: (newBusiness: Business) => Promise<Business | null>;
   updateBusiness: (updatedBusiness: Business) => Promise<void>;
-  deleteBusiness: (businessId: number) => Promise<void>;
+  deleteBusiness: (business_id: number) => Promise<void>;
   getBusinessBySlug: (slug: string) => Business | undefined;
   fetchBusinessBySlug: (slug: string) => Promise<Business | null>;
-  incrementBusinessViewCount: (businessId: number) => Promise<void>;
+  incrementBusinessview_count: (business_id: number) => Promise<void>;
   // Service Data
   addService: (newServiceData: Omit<Service, 'id' | 'position'>) => Promise<void>;
   updateService: (updatedService: Service) => Promise<void>;
   deleteService: (serviceId: string) => Promise<void>;
   updateServicesOrder: (orderedServices: Service[]) => Promise<void>;
   // Media/Gallery Data
-  addMediaItem: (file: File, businessId: number) => Promise<void>;
+  addMediaItem: (file: File, business_id: number) => Promise<void>;
   updateMediaItem: (updatedItem: MediaItem) => Promise<void>;
   deleteMediaItem: (itemToDelete: MediaItem) => Promise<void>;
   updateMediaOrder: (orderedMedia: MediaItem[]) => Promise<void>;
@@ -52,14 +51,14 @@ export interface PublicDataContextType {
   // Blog Data
   blogPosts: BlogPost[];
   blogLoading: boolean;
-  addBlogPost: (newPost: Omit<BlogPost, 'id' | 'slug' | 'date' | 'viewCount'>) => Promise<void>;
+  addBlogPost: (newPost: Omit<BlogPost, 'id' | 'slug' | 'date' | 'view_count'>) => Promise<void>;
   updateBlogPost: (updatedPost: BlogPost) => Promise<void>;
-  deleteBlogPost: (postId: number) => Promise<void>;
+  deleteBlogPost: (post_id: number) => Promise<void>;
   getPostBySlug: (slug: string) => BlogPost | undefined;
-  incrementBlogViewCount: (postId: number) => Promise<void>;
+  incrementBlogview_count: (post_id: number) => Promise<void>;
   comments: BlogComment[];
-  getCommentsByPostId: (postId: number) => BlogComment[];
-  addComment: (postId: number, authorName: string, content: string) => void;
+  getCommentsBypost_id: (post_id: number) => BlogComment[];
+  addComment: (post_id: number, author_name: string, content: string) => void;
   blogCategories: BlogCategory[];
   addBlogCategory: (name: string) => Promise<void>;
   updateBlogCategory: (id: string, name: string) => Promise<void>;
@@ -67,8 +66,8 @@ export interface PublicDataContextType {
   // Membership Packages
   packages: MembershipPackage[];
   addPackage: (newPackage: Omit<MembershipPackage, 'id'>) => Promise<void>;
-  updatePackage: (packageId: string, updates: Partial<MembershipPackage>) => Promise<void>;
-  deletePackage: (packageId: string) => Promise<void>;
+  updatePackage: (package_id: string, updates: Partial<MembershipPackage>) => Promise<void>;
+  deletePackage: (package_id: string) => Promise<void>;
 }
 
 // Export context so hooks file can use it
@@ -99,7 +98,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
 
   // --- STATES ---
   const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [businessMarkers, setBusinessMarkers] = useState<{ id: number, name: string, latitude: number, longitude: number, categories: string[], isActive: boolean }[]>(initialCache.markers);
+  const [businessMarkers, setBusinessMarkers] = useState<{ id: number, name: string, latitude: number, longitude: number, categories: string[], is_active: boolean }[]>(initialCache.markers);
   // Start with loading false if we have cached data (page can render immediately)
   const [businessLoading, setBusinessLoading] = useState(!initialCache.hasCache);
   const [totalBusinesses, setTotalBusinesses] = useState(0);
@@ -173,15 +172,15 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
           id: number;
           [key: string]: unknown;
         }
-        const businessIds = (searchData as SearchResult[]).map((b) => b.id);
+        const business_ids = (searchData as SearchResult[]).map((b) => b.id);
         const { data: fullData, error: fetchError } = await supabase
           .from('businesses')
           .select('id, slug, name, logo_url, image_url, slogan, categories, address, city, district, ward, tags, phone, email, website, rating, review_count, view_count, membership_tier, is_verified, is_active, is_featured, joined_date, description, working_hours, socials, seo, hero_slides, hero_image_url, owner_id, landing_page_config, trust_indicators, staff, notification_settings', { count: 'exact' })
-          .in('id', businessIds);
+          .in('id', business_ids);
 
         // Preserve order from search_businesses_advanced (ranked by final_score)
         // Map results in the same order as searchData
-        const orderedFullData = businessIds
+        const orderedFullData = business_ids
           .map(id => fullData?.find(b => b.id === id))
           .filter((b): b is NonNullable<typeof b> => b !== undefined);
 
@@ -189,7 +188,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
           console.error('Error fetching business details:', fetchError.message);
           toast.error('Failed to load businesses');
         } else if (orderedFullData && orderedFullData.length > 0) {
-          const mapped = (snakeToCamel(orderedFullData) as Business[]).map((b) => ({
+          const mapped = (orderedFullData as unknown as Business[]).map((b) => ({
             ...(b as Business),
             services: [],
             gallery: [],
@@ -258,7 +257,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
         // Fallback to cache or empty if search fails
         // toast.error('Failed to load businesses');
       } else if (data) {
-        const mapped = (snakeToCamel(data) as Business[]).map((b) => ({
+        const mapped = (data as Business[]).map((b) => ({
           ...(b as Business),
           services: [],
           gallery: [],
@@ -312,7 +311,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
         setBusinesses([]);
         setTotalBusinesses(0);
       } else if (businessesResult.data) {
-        const mapped = (snakeToCamel(businessesResult.data) as any[]).map((b) => ({
+        const mapped = (businessesResult.data as any[]).map((b) => ({
           ...(b as Business),
           services: [],
           gallery: [],
@@ -466,7 +465,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       if (markersResult.status === 'fulfilled') {
         const markerData = markersResult.value as any;
         if (markerData?.data) {
-          const markers = snakeToCamel(markerData.data) as any[];
+          const markers = markerData.data as any[];
           setBusinessMarkers(markers);
           // Cache markers: 1 hour
           cacheManager.set(CACHE_KEYS.MARKERS, markers, CACHE_TTL.MARKERS);
@@ -498,7 +497,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
           console.error("Error fetching blog posts:", blogRes.error.message);
         }
       } else if (blogRes.data) {
-        const posts = snakeToCamel(blogRes.data) as BlogPost[];
+        const posts = blogRes.data as BlogPost[];
         setBlogPosts(posts);
         // Cache blog posts: 10 minutes
         cacheManager.set(CACHE_KEYS.BLOG_POSTS, posts, CACHE_TTL.BLOG_POSTS);
@@ -523,7 +522,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
           console.error("Error fetching blog categories:", catRes.error.message);
         }
       } else if (catRes.data) {
-        const categories = snakeToCamel(catRes.data) as BlogCategory[];
+        const categories = catRes.data as BlogCategory[];
         setBlogCategories(categories);
         // Cache categories: 30 minutes
         cacheManager.set(CACHE_KEYS.BLOG_CATEGORIES, categories, CACHE_TTL.BLOG_CATEGORIES);
@@ -545,7 +544,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
           console.error("Error fetching packages:", pkgRes.error.message);
         }
       } else if (pkgRes.data) {
-        const packages = snakeToCamel(pkgRes.data) as MembershipPackage[];
+        const packages = pkgRes.data as MembershipPackage[];
         setPackages(packages);
         // Cache packages: 1 hour
         cacheManager.set(CACHE_KEYS.PACKAGES, packages, CACHE_TTL.PACKAGES);
@@ -622,7 +621,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.from('businesses').insert(toSnakeCase(businessData) as any).select().single();
     if (error) { console.error('Error adding business:', error.message); return null; }
     if (data) {
-      const mappedData = snakeToCamel(data);
+      const mappedData = data;
       await refetchAllPublicData();
       // Admin logging removed to avoid circular dependency
       // Admin actions are logged at a higher level where both contexts are available
@@ -643,7 +642,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       team: _t,
       deals: _d,
       reviews: _r,
-      businessBlogPosts: _b,
+      business_blog_posts: _b,
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       ...businessToUpdate
     } = updatedBusiness;
@@ -661,12 +660,12 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
 
   /**
    * Deletes a business record from the database
-   * @param businessId - The ID of the business to delete
+   * @param business_id - The ID of the business to delete
    * @returns Promise that resolves when delete completes
    */
-  const deleteBusiness = async (businessId: number): Promise<void> => {
+  const deleteBusiness = async (business_id: number): Promise<void> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot delete business."); return; }
-    const { error } = await supabase.from('businesses').delete().eq('id', businessId);
+    const { error } = await supabase.from('businesses').delete().eq('id', business_id);
     if (!error) await refetchAllPublicData();
   };
 
@@ -721,26 +720,26 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     if (import.meta.env.MODE === 'development') console.warn('[fetchBusinessBySlug] Business found:', businessData.name, 'ID:', businessData.id);
 
     // 2. Parallel fetch for relations with selective fields
-    const businessId = businessData.id;
-    if (import.meta.env.MODE === 'development') console.warn('[fetchBusinessBySlug] Fetching related data for business ID:', businessId);
+    const business_id = businessData.id;
+    if (import.meta.env.MODE === 'development') console.warn('[fetchBusinessBySlug] Fetching related data for business ID:', business_id);
     const [servicesRes, mediaRes, teamRes, dealsRes, reviewsRes] = await Promise.all([
       supabase.from('services')
         .select('id, business_id, name, price, description, image_url, duration_minutes, position')
-        .eq('business_id', businessId)
+        .eq('business_id', business_id)
         .order('position', { ascending: true }),
       supabase.from('media_items')
         .select('id, business_id, url, type, category, title, description, position')
-        .eq('business_id', businessId)
+        .eq('business_id', business_id)
         .order('position', { ascending: true }),
       supabase.from('team_members')
         .select('id, business_id, name, role, image_url')
-        .eq('business_id', businessId),
+        .eq('business_id', business_id),
       supabase.from('deals')
         .select('id, business_id, title, description, image_url, start_date, end_date, discount_percentage, original_price, deal_price, status')
-        .eq('business_id', businessId),
+        .eq('business_id', business_id),
       supabase.from('reviews')
         .select('id, user_id, business_id, user_name, user_avatar_url, rating, comment, submitted_date, status, reply')
-        .eq('business_id', businessId)
+        .eq('business_id', business_id)
         .order('submitted_date', { ascending: false })
     ]);
 
@@ -761,12 +760,12 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
 
     // 3. Assemble full object
     const fullBusiness: Business = {
-      ...snakeToCamel(businessData) as unknown as Business,
-      services: (servicesRes.data || []).map((s: Record<string, unknown>) => snakeToCamel(s) as unknown as Service),
-      gallery: (mediaRes.data || []).map((m: Record<string, unknown>) => snakeToCamel(m) as unknown as MediaItem), // Map to 'gallery'
-      team: (teamRes.data || []).map((t: Record<string, unknown>) => snakeToCamel(t) as unknown as TeamMember),
-      deals: (dealsRes.data || []).map((d: Record<string, unknown>) => snakeToCamel(d) as unknown as Deal),
-      reviews: (reviewsRes.data || []).map((r: Record<string, unknown>) => snakeToCamel(r) as unknown as Review)
+      ...(businessData as unknown as Business),
+      services: (servicesRes.data || []) as unknown as Service[],
+      gallery: (mediaRes.data || []) as unknown as MediaItem[], // Map to 'gallery'
+      team: (teamRes.data || []) as unknown as TeamMember[],
+      deals: (dealsRes.data || []) as unknown as Deal[],
+      reviews: (reviewsRes.data || []) as unknown as Review[]
     };
 
     if (import.meta.env.MODE === 'development') console.warn('[fetchBusinessBySlug] Full business object assembled:', fullBusiness.name, {
@@ -780,10 +779,10 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
   }, [isSupabaseConfigured]); // Remove businesses dependency to prevent function recreation
 
   // D2.2 FIX: Use safe RPC function for view count increment
-  const incrementBusinessViewCount = async (businessId: number) => {
+  const incrementBusinessview_count = async (business_id: number) => {
     if (!isSupabaseConfigured) return; // Silent fail in preview
     try {
-      const { error } = await supabase.rpc('increment_business_view_count', { p_business_id: businessId });
+      const { error } = await supabase.rpc('increment_business_view_count', { p_business_id: business_id });
       if (error) {
         // CRITICAL: Tracking failures are silent - only debug log in development
         if (import.meta.env.MODE === 'development') {
@@ -792,7 +791,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
         }
       } else {
         // Optimistically update UI
-        setBusinesses(prev => prev.map((b: any) => b.id === businessId ? { ...b, viewCount: (b.viewCount || 0) + 1 } : b));
+        setBusinesses(prev => prev.map((b: any) => b.id === business_id ? { ...b, view_count: (b.view_count || 0) + 1 } : b));
       }
     } catch (error) {
       // CRITICAL: Catch ALL errors (network, CORS, adblock, etc.) and silently fail
@@ -816,7 +815,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       toast.error("Preview Mode: Cannot add service.");
       throw new Error("Preview Mode: Cannot add service.");
     }
-    const currentServices = businesses.find(b => b.id === newServiceData.businessId)?.services || [];
+    const currentServices = businesses.find(b => b.id === newServiceData.business_id)?.services || [];
     const newPosition = currentServices.length > 0 ? Math.max(...currentServices.map(s => s.position)) + 1 : 1;
     const { error } = await supabase.from('services').insert({ ...toSnakeCase(newServiceData), position: newPosition });
     if (error) {
@@ -867,10 +866,10 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     }
 
     // Delete image from Storage if exists
-    if (serviceToDelete?.imageUrl && serviceToDelete.imageUrl.startsWith('http')) {
+    if (serviceToDelete?.image_url && serviceToDelete.image_url.startsWith('http')) {
       try {
         const { deleteFileByUrl } = await import('../lib/storage.ts');
-        await deleteFileByUrl('business-gallery', serviceToDelete.imageUrl);
+        await deleteFileByUrl('business-gallery', serviceToDelete.image_url);
       } catch (deleteError) {
         // Log but don't fail the delete operation
         console.warn('Failed to delete service image from storage:', deleteError);
@@ -906,23 +905,23 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
   /**
    * Adds a new media item (image/video) to a business gallery
    * @param file - The file to upload
-   * @param businessId - Business ID
+   * @param business_id - Business ID
    * @returns Promise that resolves when media is added
    * @throws Error if Supabase is not configured or operation fails
    */
-  const addMediaItem = async (file: File, businessId: number): Promise<void> => {
+  const addMediaItem = async (file: File, business_id: number): Promise<void> => {
     if (!isSupabaseConfigured) {
       toast.error("Preview Mode: Cannot upload media.");
       throw new Error("Preview Mode: Cannot upload media.");
     }
     // FIX: Use business-gallery bucket instead of business-assets
-    const folder = `business/${businessId}/gallery`;
+    const folder = `business/${business_id}/gallery`;
     const publicUrl = await uploadFile('business-gallery', file, folder);
     const isImage = file.type.startsWith('image/');
-    const currentMedia = businesses.find(b => b.id === businessId)?.gallery || [];
+    const currentMedia = businesses.find(b => b.id === business_id)?.gallery || [];
     const newPosition = currentMedia.length > 0 ? Math.max(...currentMedia.map(m => m.position)) + 1 : 1;
     const newItem = {
-      businessId: businessId,
+      business_id: business_id,
       url: publicUrl,
       type: isImage ? MediaType.IMAGE : MediaType.VIDEO,
       title: file.name,
@@ -1105,10 +1104,10 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     }
 
     // Delete image from Storage if exists
-    if (dealToDelete?.imageUrl && dealToDelete.imageUrl.startsWith('http')) {
+    if (dealToDelete?.image_url && dealToDelete.image_url.startsWith('http')) {
       try {
         const { deleteFileByUrl } = await import('../lib/storage.ts');
-        await deleteFileByUrl('business-gallery', dealToDelete.imageUrl);
+        await deleteFileByUrl('business-gallery', dealToDelete.image_url);
       } catch (deleteError) {
         // Log but don't fail the delete operation
         console.warn('Failed to delete deal image from storage:', deleteError);
@@ -1153,9 +1152,9 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
         // Convert database format to BlogComment format
         const formattedComments: BlogComment[] = (data || []).map((comment) => ({
           id: comment.id,
-          postId: comment.post_id,
-          authorName: comment.author_name,
-          authorAvatarUrl: '', // Not stored in DB, can be added later
+          post_id: comment.post_id,
+          author_name: comment.author_name,
+          author_avatar_url: '', // Not stored in DB, can be added later
           content: comment.content,
           date: comment.date || comment.created_at || new Date().toISOString(),
         }));
@@ -1185,16 +1184,16 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
 
   /**
    * Adds a new blog post
-   * @param newPostData - Blog post data without id, slug, date, viewCount
+   * @param newPostData - Blog post data without id, slug, date, view_count
    * @returns Promise that resolves when post is added
    */
-  const addBlogPost = async (newPostData: Omit<BlogPost, 'id' | 'slug' | 'date' | 'viewCount'>): Promise<void> => {
+  const addBlogPost = async (newPostData: Omit<BlogPost, 'id' | 'slug' | 'date' | 'view_count'>): Promise<void> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add blog post."); return; }
     const slug = newPostData.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-') + `-${Date.now()}`;
     const postToAdd = {
       ...newPostData,
       slug: slug,
-      viewCount: 0,
+      view_count: 0,
       date: new Date().toISOString()
     };
     const { error } = await supabase.from('blog_posts').insert(toSnakeCase(postToAdd));
@@ -1208,12 +1207,12 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
   };
   /**
    * Deletes a blog post
-   * @param postId - Post ID to delete
+   * @param post_id - Post ID to delete
    * @returns Promise that resolves when deletion completes
    */
-  const deleteBlogPost = async (postId: number): Promise<void> => {
+  const deleteBlogPost = async (post_id: number): Promise<void> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot delete blog post."); return; }
-    const { error } = await supabase.from('blog_posts').delete().eq('id', postId);
+    const { error } = await supabase.from('blog_posts').delete().eq('id', post_id);
     if (!error) await refetchAllPublicData();
   };
   /**
@@ -1225,10 +1224,10 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     return blogPosts.find(p => p.slug === slug);
   };
   // D2.2 FIX: Use safe RPC function for view count increment (already using RPC, just ensure consistency)
-  const incrementBlogViewCount = async (postId: number) => {
+  const incrementBlogview_count = async (post_id: number) => {
     if (!isSupabaseConfigured) return;
     try {
-      const { error } = await supabase.rpc('increment_blog_view_count', { p_post_id: postId });
+      const { error } = await supabase.rpc('increment_blog_view_count', { p_post_id: post_id });
       if (error) {
         // CRITICAL: Tracking failures are silent - only debug log in development
         if (import.meta.env.MODE === 'development') {
@@ -1236,7 +1235,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
         }
       } else {
         // Optimistically update UI
-        setBlogPosts(prev => prev.map((b: any) => b.id === postId ? { ...b, viewCount: (b.viewCount || 0) + 1 } : b));
+        setBlogPosts(prev => prev.map((b: any) => b.id === post_id ? { ...b, view_count: (b.view_count || 0) + 1 } : b));
       }
     } catch (error) {
       // CRITICAL: Catch ALL errors (network, CORS, adblock, etc.) and silently fail
@@ -1249,24 +1248,24 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
   };
   /**
    * Gets comments for a specific blog post, sorted by date
-   * @param postId - Blog post ID
+   * @param post_id - Blog post ID
    * @returns Array of comments sorted by date (oldest first)
    */
-  const getCommentsByPostId = (postId: number): BlogComment[] => {
+  const getCommentsBypost_id = (post_id: number): BlogComment[] => {
     return comments
-      .filter(c => c.postId === postId)
+      .filter(c => c.post_id === post_id)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   };
 
   // D2.1 FIX: Save comments to database instead of localStorage
-  const addComment = async (postId: number, authorName: string, content: string) => {
+  const addComment = async (post_id: number, author_name: string, content: string) => {
     if (!isSupabaseConfigured) {
       // Fallback to localStorage if Supabase not configured
       const newComment: BlogComment = {
         id: crypto.randomUUID(),
-        postId,
-        authorName,
-        authorAvatarUrl: '',
+        post_id,
+        author_name,
+        author_avatar_url: '',
         content,
         date: new Date().toISOString(),
       };
@@ -1284,9 +1283,9 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase
         .from('blog_comments')
         .insert({
-          post_id: postId,
-          author_name: authorName,
-          author_avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${authorName}`,
+          post_id: post_id,
+          author_name: author_name,
+          author_avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${author_name}`,
           content: content,
           date: new Date().toISOString()
         })
@@ -1298,9 +1297,9 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
         // Fallback to localStorage
         const newComment: BlogComment = {
           id: crypto.randomUUID(),
-          postId,
-          authorName,
-          authorAvatarUrl: '',
+          post_id,
+          author_name,
+          author_avatar_url: '',
           content,
           date: new Date().toISOString(),
         };
@@ -1315,9 +1314,9 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
         // Convert database format to BlogComment format
         const newComment: BlogComment = {
           id: data.id,
-          postId: data.post_id,
-          authorName: data.author_name,
-          authorAvatarUrl: (data as any).author_avatar_url || '',
+          post_id: data.post_id,
+          author_name: data.author_name,
+          author_avatar_url: (data as any).author_avatar_url || '',
           content: data.content,
           date: data.date || data.created_at || new Date().toISOString(),
         };
@@ -1336,9 +1335,9 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       // Fallback to localStorage
       const newComment: BlogComment = {
         id: crypto.randomUUID(),
-        postId,
-        authorName,
-        authorAvatarUrl: '',
+        post_id,
+        author_name,
+        author_avatar_url: '',
         content,
         date: new Date().toISOString(),
       };
@@ -1434,24 +1433,24 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
   };
   /**
    * Updates a membership package
-   * @param packageId - Package ID to update
+   * @param package_id - Package ID to update
    * @param updates - Partial package data to update
    * @returns Promise that resolves when update completes
    */
-  const updatePackage = async (packageId: string, updates: Partial<MembershipPackage>): Promise<void> => {
+  const updatePackage = async (package_id: string, updates: Partial<MembershipPackage>): Promise<void> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update package."); return; }
-    const { error } = await supabase.from('membership_packages').update(toSnakeCase(updates)).eq('id', packageId);
+    const { error } = await supabase.from('membership_packages').update(toSnakeCase(updates)).eq('id', package_id);
     if (!error) { await refetchAllPublicData(); toast.success("Package updated."); }
     else { toast.error(`Failed to update package: ${error.message}`); }
   };
   /**
    * Deletes a membership package
-   * @param packageId - Package ID to delete
+   * @param package_id - Package ID to delete
    * @returns Promise that resolves when deletion completes
    */
-  const deletePackage = async (packageId: string): Promise<void> => {
+  const deletePackage = async (package_id: string): Promise<void> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot delete package."); return; }
-    const { error } = await supabase.from('membership_packages').delete().eq('id', packageId);
+    const { error } = await supabase.from('membership_packages').delete().eq('id', package_id);
     if (!error) { await refetchAllPublicData(); toast.success("Package deleted."); }
     else { toast.error(`Failed to delete package: ${error.message}`); }
   };
@@ -1459,13 +1458,13 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
   // --- COMBINED VALUE ---
   const value = {
     businesses, businessMarkers, businessLoading, totalBusinesses, currentPage, fetchBusinesses,
-    addBusiness, updateBusiness, deleteBusiness, getBusinessBySlug, fetchBusinessBySlug, incrementBusinessViewCount,
+    addBusiness, updateBusiness, deleteBusiness, getBusinessBySlug, fetchBusinessBySlug, incrementBusinessview_count,
     addService, updateService, deleteService, updateServicesOrder,
     addMediaItem, updateMediaItem, deleteMediaItem, updateMediaOrder,
     addTeamMember, updateTeamMember, deleteTeamMember,
     addDeal, updateDeal, deleteDeal,
-    blogPosts, blogLoading, addBlogPost, updateBlogPost, deleteBlogPost, getPostBySlug, incrementBlogViewCount,
-    comments, getCommentsByPostId, addComment, blogCategories, addBlogCategory, updateBlogCategory, deleteBlogCategory,
+    blogPosts, blogLoading, addBlogPost, updateBlogPost, deleteBlogPost, getPostBySlug, incrementBlogview_count,
+    comments, getCommentsBypost_id, addComment, blogCategories, addBlogCategory, updateBlogCategory, deleteBlogCategory,
     packages, addPackage, updatePackage, deletePackage,
   };
 

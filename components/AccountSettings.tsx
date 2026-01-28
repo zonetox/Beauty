@@ -169,9 +169,9 @@ const AccountSettings: React.FC = () => {
         setFormData(prev => {
             if (!prev) return null;
             const currentSettings = prev.notificationSettings || { 
-                reviewAlerts: false, 
-                bookingRequests: false, 
-                platformNews: false 
+                review_alerts: false, 
+                booking_requests: false, 
+                platform_news: false 
             };
             return {
                 ...prev,
@@ -368,20 +368,20 @@ const AccountSettings: React.FC = () => {
                 <div className="space-y-4">
                     <Toggle 
                         label="Email me about new reviews" 
-                        enabled={formData.notificationSettings?.reviewAlerts || false} 
-                        onChange={() => handleNotificationChange('reviewAlerts')}
+                        enabled={formData.notificationSettings?.review_alerts || false} 
+                        onChange={() => handleNotificationChange('review_alerts')}
                         description="Get notified when customers leave new reviews"
                     />
                     <Toggle 
                         label="Email me about new booking requests" 
-                        enabled={formData.notificationSettings?.bookingRequests || false} 
-                        onChange={() => handleNotificationChange('bookingRequests')}
+                        enabled={formData.notificationSettings?.booking_requests || false} 
+                        onChange={() => handleNotificationChange('booking_requests')}
                         description="Get notified when customers request appointments"
                     />
                     <Toggle 
                         label="Email me about platform news and updates" 
-                        enabled={formData.notificationSettings?.platformNews || false} 
-                        onChange={() => handleNotificationChange('platformNews')}
+                        enabled={formData.notificationSettings?.platform_news || false} 
+                        onChange={() => handleNotificationChange('platform_news')}
                         description="Receive updates about new features and platform announcements"
                     />
                 </div>

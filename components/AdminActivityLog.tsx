@@ -10,7 +10,7 @@ const AdminActivityLog: React.FC = () => {
 
     const filteredLogs = useMemo(() => {
         return logs.filter(log => {
-            const matchesAdmin = selectedAdmin === 'all' || log.adminUsername === selectedAdmin;
+            const matchesAdmin = selectedAdmin === 'all' || log.admin_user_name === selectedAdmin;
             const matchesAction = searchAction.trim() === '' || log.action.toLowerCase().includes(searchAction.toLowerCase());
             return matchesAdmin && matchesAction;
         });
@@ -31,7 +31,7 @@ const AdminActivityLog: React.FC = () => {
                     >
                         <option value="all">All Admins</option>
                         {adminUsers.map(user => (
-                            <option key={user.id} value={user.username}>{user.username}</option>
+                            <option key={user.id} value={user.user_name}>{user.user_name}</option>
                         ))}
                     </select>
                 </div>
@@ -70,7 +70,7 @@ const AdminActivityLog: React.FC = () => {
                         {filteredLogs.map(log => (
                             <tr key={log.id} className="bg-white border-b hover:bg-gray-50">
                                 <td className="px-6 py-4 whitespace-nowrap">{new Date(log.timestamp).toLocaleString()}</td>
-                                <td className="px-6 py-4 font-medium">{log.adminUsername}</td>
+                                <td className="px-6 py-4 font-medium">{log.admin_user_name}</td>
                                 <td className="px-6 py-4">
                                     <span className="px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">{log.action}</span>
                                 </td>

@@ -28,14 +28,14 @@ describe('PermissionGuard', () => {
   it('should render children when user has permission', () => {
     const userWithPermission: AuthenticatedAdmin = {
       id: 1,
-      username: 'admin',
+      user_name: 'admin',
       email: 'admin@test.com',
       role: AdminUserRole.ADMIN,
       permissions: {
-        canManageBusinesses: true,
-        canManageUsers: true,
+        can_manage_businesses: true,
+        can_manage_users: true,
       } as AdminPermissions,
-      isLocked: false,
+      is_locked: false,
       authUser: null as any,
     };
 
@@ -45,7 +45,7 @@ describe('PermissionGuard', () => {
 
     render(
       <MemoryRouter>
-        <PermissionGuard permission="canManageBusinesses">
+        <PermissionGuard permission="can_manage_businesses">
           <div>Protected Content</div>
         </PermissionGuard>
       </MemoryRouter>
@@ -57,14 +57,14 @@ describe('PermissionGuard', () => {
   it('should show ForbiddenState when user does not have permission', () => {
     const userWithoutPermission: AuthenticatedAdmin = {
       id: 1,
-      username: 'admin',
+      user_name: 'admin',
       email: 'admin@test.com',
       role: AdminUserRole.EDITOR,
       permissions: {
-        canManageBusinesses: false,
-        canManageUsers: false,
+        can_manage_businesses: false,
+        can_manage_users: false,
       } as AdminPermissions,
-      isLocked: false,
+      is_locked: false,
       authUser: null as any,
     };
 
@@ -74,7 +74,7 @@ describe('PermissionGuard', () => {
 
     render(
       <MemoryRouter>
-        <PermissionGuard permission="canManageBusinesses">
+        <PermissionGuard permission="can_manage_businesses">
           <div>Protected Content</div>
         </PermissionGuard>
       </MemoryRouter>
@@ -91,7 +91,7 @@ describe('PermissionGuard', () => {
 
     render(
       <MemoryRouter>
-        <PermissionGuard permission="canManageBusinesses">
+        <PermissionGuard permission="can_manage_businesses">
           <div>Protected Content</div>
         </PermissionGuard>
       </MemoryRouter>
@@ -105,13 +105,13 @@ describe('PermissionGuard', () => {
   it('should render fallback when provided and user does not have permission', () => {
     const userWithoutPermission: AuthenticatedAdmin = {
       id: 1,
-      username: 'admin',
+      user_name: 'admin',
       email: 'admin@test.com',
       role: AdminUserRole.EDITOR,
       permissions: {
-        canManageBusinesses: false,
+        can_manage_businesses: false,
       } as AdminPermissions,
-      isLocked: false,
+      is_locked: false,
       authUser: null as any,
     };
 
@@ -122,7 +122,7 @@ describe('PermissionGuard', () => {
     render(
       <MemoryRouter>
         <PermissionGuard
-          permission="canManageBusinesses"
+          permission="can_manage_businesses"
           fallback={<div>Custom Fallback</div>}
           showForbiddenState={false}
         >

@@ -11,18 +11,18 @@ const HomepageEditor: React.FC = () => {
     const [data, setData] = useState<HomepageData>(JSON.parse(JSON.stringify(homepageData)));
 
     const handleSlideChange = (index: number, field: keyof HeroSlide, value: string) => {
-        const newSlides = [...data.heroSlides];
+        const newSlides = [...data.hero_slides];
         newSlides[index] = { ...newSlides[index], [field]: value };
-        setData(prev => ({ ...prev, heroSlides: newSlides }));
+        setData(prev => ({ ...prev, hero_slides: newSlides }));
     };
 
     const handleAddSlide = () => {
-        const newSlide: HeroSlide = { title: 'New Slide Title', subtitle: 'New slide subtitle.', imageUrl: 'https://picsum.photos/seed/new-slide/1920/1080' };
-        setData(prev => ({ ...prev, heroSlides: [...prev.heroSlides, newSlide] }));
+        const newSlide: HeroSlide = { title: 'New Slide Title', subtitle: 'New slide subtitle.', image_url: 'https://picsum.photos/seed/new-slide/1920/1080' };
+        setData(prev => ({ ...prev, hero_slides: [...prev.hero_slides, newSlide] }));
     };
 
     const handleRemoveSlide = (index: number) => {
-        setData(prev => ({ ...prev, heroSlides: prev.heroSlides.filter((_, i) => i !== index) }));
+        setData(prev => ({ ...prev, hero_slides: prev.hero_slides.filter((_, i) => i !== index) }));
     };
 
     const handleSectionVisibilityChange = (id: string) => {
@@ -48,15 +48,15 @@ const HomepageEditor: React.FC = () => {
             <div>
                 <h3 className="text-lg font-semibold mb-4 text-neutral-dark">Hero Slides</h3>
                 <div className="space-y-4">
-                    {data.heroSlides.map((slide, index) => (
+                    {data.hero_slides.map((slide, index) => (
                         <div key={index} className="p-4 border rounded-lg bg-gray-50 grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <input value={slide.title} onChange={e => handleSlideChange(index, 'title', e.target.value)} className="w-full p-2 border rounded" placeholder="Title" />
                                 <textarea value={slide.subtitle} onChange={e => handleSlideChange(index, 'subtitle', e.target.value)} className="w-full p-2 border rounded" placeholder="Subtitle" rows={2} />
-                                <input value={slide.imageUrl} onChange={e => handleSlideChange(index, 'imageUrl', e.target.value)} className="w-full p-2 border rounded" placeholder="Image URL" />
+                                <input value={slide.image_url} onChange={e => handleSlideChange(index, 'image_url', e.target.value)} className="w-full p-2 border rounded" placeholder="Image URL" />
                             </div>
                             <div className="flex flex-col items-center justify-between">
-                                <img src={slide.imageUrl} alt="preview" className="w-full h-24 object-cover rounded mb-2" />
+                                <img src={slide.image_url} alt="preview" className="w-full h-24 object-cover rounded mb-2" />
                                 <button onClick={() => handleRemoveSlide(index)} className="text-red-500 font-semibold text-sm hover:underline">Remove Slide</button>
                             </div>
                         </div>

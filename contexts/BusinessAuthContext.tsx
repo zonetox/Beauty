@@ -15,8 +15,8 @@ export const BusinessAuthProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   // Use useMemo to compute currentBusiness instead of useEffect to avoid setState in effect
   const currentBusiness = useMemo(() => {
-    if (profile && profile.businessId && businesses.length > 0) {
-      return businesses.find(b => b.id === profile.businessId) || null;
+    if (profile && profile.business_id && businesses.length > 0) {
+      return businesses.find(b => b.id === profile.business_id) || null;
     }
     return null;
   }, [profile, businesses]);

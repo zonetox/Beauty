@@ -29,7 +29,7 @@ const RegistrationRequestsTable: React.FC<RegistrationRequestsTableProps> = ({ r
                         <tbody>
                             {pendingRequests.map(request => (
                                 <tr key={request.id} className="bg-white border-b hover:bg-gray-50">
-                                    <td className="px-6 py-4 font-medium text-neutral-dark whitespace-nowrap">{request.businessName}</td>
+                                    <td className="px-6 py-4 font-medium text-neutral-dark whitespace-nowrap">{request.business_name}</td>
                                     <td className="px-6 py-4">
                                         <div>{request.email}</div>
                                         <div>{request.phone}</div>
@@ -40,7 +40,7 @@ const RegistrationRequestsTable: React.FC<RegistrationRequestsTableProps> = ({ r
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">
-                                        {new Date(request.submittedAt).toLocaleDateString()}
+                                        {new Date(request.submitted_at).toLocaleDateString()}
                                     </td>
                                     <td className="px-6 py-4 flex items-center gap-2">
                                         <button

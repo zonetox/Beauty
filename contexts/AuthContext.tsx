@@ -11,9 +11,9 @@ interface AdminAuthContextType {
   adminUsers: AdminUser[];
   adminLogin: (email: string, pass: string) => Promise<any>;
   adminLogout: () => Promise<any>;
-  addAdminUser: (newUser: Omit<AdminUser, 'id' | 'lastLogin' | 'isLocked'>) => Promise<void>;
-  updateAdminUser: (userId: number, updates: Partial<AdminUser>) => Promise<void>;
-  deleteAdminUser: (userId: number) => Promise<void>;
+  addAdminUser: (newUser: Omit<AdminUser, 'id' | 'lastLogin' | 'is_locked'>) => Promise<void>;
+  updateAdminUser: (user_id: number, updates: Partial<AdminUser>) => Promise<void>;
+  deleteAdminUser: (user_id: number) => Promise<void>;
 }
 
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
@@ -101,20 +101,20 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
     if (error) throw error;
   };
 
-  const addAdminUser = async (newUser: Omit<AdminUser, 'id' | 'lastLogin' | 'isLocked'>) => {
+  const addAdminUser = async (newUser: Omit<AdminUser, 'id' | 'lastLogin' | 'is_locked'>) => {
     const { error } = await supabase.functions.invoke('create-admin-user', { body: newUser });
     if (error) throw error;
     const users = await fetchAdminUsers();
     setAdminUsers(users);
   };
-  const updateAdminUser = async (userId: number, updates: Partial<AdminUser>) => {
-    const { error } = await supabase.from('admin_users').update(updates as any).eq('id', userId);
+  const updateAdminUser = async (user_id: number, updates: Partial<AdminUser>) => {
+    const { error } = await supabase.from('admin_users').update(updates as any).eq('id', user_id);
     if (error) throw error;
     const users = await fetchAdminUsers();
     setAdminUsers(users);
   };
-  const deleteAdminUser = async (userId: number) => {
-    const { error } = await supabase.from('admin_users').delete().eq('id', userId);
+  const deleteAdminUser = async (user_id: number) => {
+    const { error } = await supabase.from('admin_users').delete().eq('id', user_id);
     if (error) throw error;
     const users = await fetchAdminUsers();
     setAdminUsers(users);

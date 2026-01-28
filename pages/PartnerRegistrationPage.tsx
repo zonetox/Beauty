@@ -7,7 +7,7 @@ import { BusinessCategory, MembershipTier } from '../types';
 const PartnerRegistrationPage: React.FC = () => {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
-        businessName: '',
+        business_name: '',
         email: '',
         phone: '',
         category: BusinessCategory.SPA, // Default
@@ -27,7 +27,7 @@ const PartnerRegistrationPage: React.FC = () => {
 
         try {
             const { error } = await supabase.from('registration_requests').insert({
-                business_name: formData.businessName,
+                business_name: formData.business_name,
                 email: formData.email,
                 phone: formData.phone,
                 category: formData.category,
@@ -65,14 +65,14 @@ const PartnerRegistrationPage: React.FC = () => {
                     <form className="space-y-6" onSubmit={handleSubmit}>
 
                         <div>
-                            <label htmlFor="businessName" className="block text-sm font-medium text-gray-700">Business Name</label>
+                            <label htmlFor="business_name" className="block text-sm font-medium text-gray-700">Business Name</label>
                             <div className="mt-1">
                                 <input
-                                    id="businessName"
-                                    name="businessName"
+                                    id="business_name"
+                                    name="business_name"
                                     type="text"
                                     required
-                                    value={formData.businessName}
+                                    value={formData.business_name}
                                     onChange={handleChange}
                                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
                                 />

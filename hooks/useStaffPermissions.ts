@@ -11,31 +11,31 @@ import { StaffPermissions } from '../types.ts';
 export const useStaffPermissions = (): StaffPermissions => {
   const { currentBusiness } = useBusinessAuth();
   const { user: currentUser } = useAuth();
-  const { getStaffPermissions, isStaffMember } = useStaff();
+  const { getStaffPermissions, is_staff_member } = useStaff();
 
   const [permissions, setPermissions] = useState<StaffPermissions>({
-    canEditLandingPage: false,
-    canEditBlog: false,
-    canManageMedia: false,
-    canManageServices: false,
-    isStaffMember: false,
-    isBusinessOwner: false,
-    isOwner: false,
-    hasAccess: false,
+    can_edit_landing_page: false,
+    can_edit_blog: false,
+    can_manage_media: false,
+    can_manage_services: false,
+    is_staff_member: false,
+    is_business_owner: false,
+    is_owner: false,
+    has_access: false,
   });
 
   useEffect(() => {
     const checkPermissions = async () => {
       if (!currentUser || !currentBusiness) {
         setPermissions({
-          canEditLandingPage: false,
-          canEditBlog: false,
-          canManageMedia: false,
-          canManageServices: false,
-          isStaffMember: false,
-          isBusinessOwner: false,
-          isOwner: false,
-          hasAccess: false,
+          can_edit_landing_page: false,
+          can_edit_blog: false,
+          can_manage_media: false,
+          can_manage_services: false,
+          is_staff_member: false,
+          is_business_owner: false,
+          is_owner: false,
+          has_access: false,
         });
         return;
       }
@@ -47,31 +47,31 @@ export const useStaffPermissions = (): StaffPermissions => {
       if (isOwner) {
         // Business owners have all permissions
         setPermissions({
-          canEditLandingPage: true,
-          canEditBlog: true,
-          canManageMedia: true,
-          canManageServices: true,
-          isStaffMember: false,
-          isBusinessOwner: true,
-          isOwner: true,
-          hasAccess: true,
+          can_edit_landing_page: true,
+          can_edit_blog: true,
+          can_manage_media: true,
+          can_manage_services: true,
+          is_staff_member: false,
+          is_business_owner: true,
+          is_owner: true,
+          has_access: true,
         });
         return;
       }
 
       // Check if user is staff member
-      const isStaff = await isStaffMember(currentUser.id, currentBusiness.id);
+      const isStaff = await is_staff_member(currentUser.id, currentBusiness.id);
 
       if (!isStaff) {
         setPermissions({
-          canEditLandingPage: false,
-          canEditBlog: false,
-          canManageMedia: false,
-          canManageServices: false,
-          isStaffMember: false,
-          isBusinessOwner: false,
-          isOwner: false,
-          hasAccess: false,
+          can_edit_landing_page: false,
+          can_edit_blog: false,
+          can_manage_media: false,
+          can_manage_services: false,
+          is_staff_member: false,
+          is_business_owner: false,
+          is_owner: false,
+          has_access: false,
         });
         return;
       }
@@ -81,32 +81,32 @@ export const useStaffPermissions = (): StaffPermissions => {
 
       if (!staffPerms) {
         setPermissions({
-          canEditLandingPage: false,
-          canEditBlog: false,
-          canManageMedia: false,
-          canManageServices: false,
-          isStaffMember: true,
-          isBusinessOwner: false,
-          isOwner: false,
-          hasAccess: false,
+          can_edit_landing_page: false,
+          can_edit_blog: false,
+          can_manage_media: false,
+          can_manage_services: false,
+          is_staff_member: true,
+          is_business_owner: false,
+          is_owner: false,
+          has_access: false,
         });
         return;
       }
 
       setPermissions({
-        canEditLandingPage: staffPerms.canEditLandingPage || false,
-        canEditBlog: staffPerms.canEditBlog || false,
-        canManageMedia: staffPerms.canManageMedia || false,
-        canManageServices: staffPerms.canManageServices || false,
-        isStaffMember: true,
-        isBusinessOwner: false,
-        isOwner: false,
-        hasAccess: true,
+        can_edit_landing_page: staffPerms.can_edit_landing_page || false,
+        can_edit_blog: staffPerms.can_edit_blog || false,
+        can_manage_media: staffPerms.can_manage_media || false,
+        can_manage_services: staffPerms.can_manage_services || false,
+        is_staff_member: true,
+        is_business_owner: false,
+        is_owner: false,
+        has_access: true,
       });
     };
 
     checkPermissions();
-  }, [currentUser, currentBusiness, isStaffMember, getStaffPermissions]);
+  }, [currentUser, currentBusiness, is_staff_member, getStaffPermissions]);
 
   return permissions;
 };

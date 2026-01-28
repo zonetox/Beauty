@@ -21,7 +21,7 @@ const AboutSection: React.FC<AboutSectionProps> = ({ business }) => {
                 </div>
                 <div className="order-1 md:order-2">
                     <img 
-                        src={getOptimizedSupabaseUrl(business.imageUrl, { width: 800, quality: 80 })} 
+                        src={getOptimizedSupabaseUrl(business.image_url, { width: 800, quality: 80 })} 
                         alt={`Interior of ${business.name}`} 
                         className="rounded-lg shadow-2xl w-full h-auto object-cover aspect-square"
                     />

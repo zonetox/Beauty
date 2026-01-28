@@ -4,7 +4,7 @@
 
 import React, { useMemo, useEffect, useState } from 'react';
 import { useBusiness, useAnalyticsData } from '../contexts/BusinessContext.tsx';
-import { MembershipTier, AnalyticsDataPoint, Announcement, AppointmentStatus, OrderStatus } from '../types.ts';
+import { membership_tier, AnalyticsDataPoint, Announcement, AppointmentStatus, OrderStatus } from '../types.ts';
 import { ActiveTab } from '../pages/UserBusinessDashboardPage';
 import { useAdmin } from '../contexts/AdminContext.tsx';
 import LoadingState from './LoadingState.tsx';
@@ -80,9 +80,9 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
         ordersLoading,
         reviewsLoading,
         getAppointmentsForBusiness,
-        getReviewsByBusinessId
+        getReviewsBybusiness_id
     } = useBusiness();
-    const { getAnalyticsByBusinessId } = useAnalyticsData();
+    const { getAnalyticsBybusiness_id } = useAnalyticsData();
     const { addNotification, getUnreadAnnouncements, markAnnouncementAsRead } = useAdmin();
 
     const [unreadAnnouncements, setUnreadAnnouncements] = useState<Announcement[]>(() =>
@@ -99,8 +99,8 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
     };
 
     useEffect(() => {
-        if (currentBusiness && currentBusiness.membershipExpiryDate) {
-            const expiryDate = new Date(currentBusiness.membershipExpiryDate);
+        if (currentBusiness && currentBusiness.membership_expiry_date) {
+            const expiryDate = new Date(currentBusiness.membership_expiry_date);
             const now = new Date();
             const thirtyDaysFromNow = new Date(new Date().setDate(now.getDate() + 30));
 
@@ -120,8 +120,8 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
 
     const analytics = useMemo(() => {
         if (!currentBusiness) return null;
-        return getAnalyticsByBusinessId(currentBusiness.id);
-    }, [currentBusiness, getAnalyticsByBusinessId]);
+        return getAnalyticsBybusiness_id(currentBusiness.id);
+    }, [currentBusiness, getAnalyticsBybusiness_id]);
 
     const businessAppointments = useMemo(() => {
         if (!currentBusiness) return [];
@@ -130,12 +130,12 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
 
     const businessReviews = useMemo(() => {
         if (!currentBusiness) return [];
-        return getReviewsByBusinessId(currentBusiness.id);
-    }, [currentBusiness, getReviewsByBusinessId]);
+        return getReviewsBybusiness_id(currentBusiness.id);
+    }, [currentBusiness, getReviewsBybusiness_id]);
 
     const businessOrders = useMemo(() => {
         if (!currentBusiness) return [];
-        return orders.filter(o => o.businessId === currentBusiness.id);
+        return orders.filter(o => o.business_id === currentBusiness.id);
     }, [currentBusiness, orders]);
 
     const stats = useMemo(() => {
@@ -172,7 +172,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
             : currentBusiness.rating || 0;
 
         return {
-            pageViews: currentBusiness.viewCount || 0,
+            pageViews: currentBusiness.view_count || 0,
             contactClicks,
             servicesCount,
             dealsCount,
@@ -193,12 +193,12 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
         }> = [];
 
         businessAppointments
-            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
             .slice(0, 5)
             .forEach(apt => {
                 activities.push({
                     type: 'appointment',
-                    date: new Date(apt.createdAt),
+                    date: new Date(apt.created_at),
                     title: `Lịch hẹn mới: ${apt.customerName}`,
                     description: `${apt.serviceName} - ${apt.date}`,
                     id: apt.id,
@@ -206,13 +206,13 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
             });
 
         businessOrders
-            .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
+            .sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime())
             .slice(0, 5)
             .forEach(order => {
                 activities.push({
                     type: 'order',
-                    date: new Date(order.submittedAt),
-                    title: `Đơn hàng mới: ${order.packageName}`,
+                    date: new Date(order.submitted_at),
+                    title: `Đơn hàng mới: ${order.package_name}`,
                     description: `Giá trị: ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.amount)}`,
                     id: order.id,
                 });
@@ -220,13 +220,13 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
 
         businessReviews
             .filter(r => r.status === 'Visible')
-            .sort((a, b) => new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime())
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
             .slice(0, 5)
             .forEach(review => {
                 activities.push({
                     type: 'review',
-                    date: new Date(review.submittedDate),
-                    title: `Đánh giá mới từ ${review.userName}`,
+                    date: new Date(review.created_at),
+                    title: `Đánh giá mới từ ${review.user_name}`,
                     description: `${review.rating} sao - ${review.comment?.substring(0, 40) || ''}...`,
                     id: review.id,
                 });
@@ -243,7 +243,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
         return <div className="p-8"><EmptyState title="Không tìm thấy doanh nghiệp" message="Vui lòng hoàn tất quy trình đăng ký." /></div>;
     }
 
-    const isVip = currentBusiness.membershipTier === MembershipTier.VIP;
+    const isVip = currentbusiness.membership_tier === MembershipTier.VIP;
 
     const announcementTypeStyles = {
         info: 'bg-blue-50/50 border-blue-400 text-blue-700',

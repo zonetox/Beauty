@@ -22,8 +22,8 @@ const TeamSection: React.FC<TeamSectionProps> = ({ business }) => {
             <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                 {business.team.map((member, index) => (
                     <div key={index} className="text-center">
-                        {/* FIX: Changed 'imageUrl' to 'image_url' to match the TeamMember type. */}
-                        <img src={getOptimizedSupabaseUrl(member.imageUrl, { width: 200, quality: 75 })} alt={member.name} className="w-40 h-40 rounded-full mx-auto object-cover shadow-md mb-4" />
+                        {/* FIX: Changed 'image_url' to 'image_url' to match the TeamMember type. */}
+                        <img src={getOptimizedSupabaseUrl(member.image_url, { width: 200, quality: 75 })} alt={member.name} className="w-40 h-40 rounded-full mx-auto object-cover shadow-md mb-4" />
                         <h4 className="font-bold text-xl text-neutral-dark">{member.name}</h4>
                         <p className="text-primary">{member.role}</p>
                     </div>

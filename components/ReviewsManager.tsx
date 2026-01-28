@@ -100,14 +100,14 @@ const ReplyForm: React.FC<{
 
 const ReviewsManager: React.FC = () => {
     const { currentBusiness } = useBusinessAuth();
-    const { getReviewsByBusinessId, addReply, toggleReviewVisibility, loading } = useReviewsData();
+    const { getReviewsBybusiness_id, addReply, toggleReviewVisibility, loading } = useReviewsData();
     const [replyingTo, setReplyingTo] = useState<string | null>(null);
     const [isReplying, setIsReplying] = useState(false);
     const [togglingId, setTogglingId] = useState<string | null>(null);
     const [statusFilter, setStatusFilter] = useState<'all' | ReviewStatus>('all');
     const [ratingFilter, setRatingFilter] = useState<number | 'all'>('all');
 
-    const allReviews = getReviewsByBusinessId(currentBusiness?.id || -1);
+    const allReviews = getReviewsBybusiness_id(currentBusiness?.id || -1);
 
     // Apply filters
     const reviews = useMemo(() => {
@@ -344,17 +344,17 @@ const ReviewsManager: React.FC = () => {
                             <div className="flex justify-between items-start">
                                 <div className="flex gap-4 flex-1">
                                     <img
-                                        src={review.userAvatarUrl}
-                                        alt={review.userName}
+                                        src={review.user_avatar_url}
+                                        alt={review.user_name}
                                         className="w-12 h-12 rounded-full flex-shrink-0"
                                         onError={(e) => {
-                                            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(review.userName)}&background=random`;
+                                            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(review.user_name)}&background=random`;
                                         }}
                                     />
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-semibold text-neutral-dark">{review.userName}</p>
+                                        <p className="font-semibold text-neutral-dark">{review.user_name}</p>
                                         <p className="text-xs text-gray-400">
-                                            {new Date(review.submittedDate).toLocaleString()}
+                                            {new Date(review.created_at).toLocaleString()}
                                         </p>
                                         <div className="mt-1">
                                             <StarRating rating={review.rating} />
@@ -382,7 +382,7 @@ const ReviewsManager: React.FC = () => {
 
                             {/* Reply Section */}
                             <div className="pl-16 mt-4">
-                                {review.reply ? (
+                                {review.reply_content ? (
                                     <div className="p-3 bg-primary/5 rounded-lg border-l-4 border-primary/50">
                                         <div className="flex justify-between items-start mb-1">
                                             <p className="font-semibold text-primary text-sm">Your reply:</p>
@@ -396,9 +396,9 @@ const ReviewsManager: React.FC = () => {
                                                 </button>
                                             )}
                                         </div>
-                                        <p className="text-gray-600">{review.reply.content}</p>
+                                        <p className="text-gray-600">{review.reply_content}</p>
                                         <p className="text-xs text-gray-400 mt-1">
-                                            {new Date(review.reply.repliedDate).toLocaleString()}
+                                            {new Date(review.reply_date || '').toLocaleString()}
                                         </p>
                                     </div>
                                 ) : (
@@ -416,7 +416,7 @@ const ReviewsManager: React.FC = () => {
                                 )}
                                 {replyingTo === review.id && (
                                     <ReplyForm
-                                        initialContent={review.reply?.content}
+                                        initialContent={review.reply_content}
                                         onSubmit={(content) => handleReplySubmit(review.id, content)}
                                         onCancel={() => setReplyingTo(null)}
                                         isSubmitting={isReplying}

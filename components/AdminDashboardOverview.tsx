@@ -67,12 +67,12 @@ const AdminDashboardOverview: React.FC<DashboardOverviewProps> = ({ businesses, 
         const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
         const revenueThisMonth = orders
-            .filter(o => o.status === OrderStatus.COMPLETED && o.confirmedAt && new Date(o.confirmedAt) >= firstDayOfMonth)
+            .filter(o => o.status === OrderStatus.COMPLETED && o.confirmed_at && new Date(o.confirmed_at) >= firstDayOfMonth)
             .reduce((sum, o) => sum + o.amount, 0);
 
         const pendingOrders = orders.filter(o => o.status === OrderStatus.PENDING || o.status === OrderStatus.AWAITING_CONFIRMATION).length;
         const pendingRegistrations = registrationRequests.filter(r => r.status === 'Pending').length;
-        const activeBusinesses = businesses.filter(b => b.isActive).length;
+        const activeBusinesses = businesses.filter(b => b.is_active).length;
 
         return { revenueThisMonth, pendingOrders, pendingRegistrations, activeBusinesses };
     }, [businesses, orders, registrationRequests]);
@@ -80,13 +80,13 @@ const AdminDashboardOverview: React.FC<DashboardOverviewProps> = ({ businesses, 
     const recentActivities = useMemo(() => {
         const orderActivities = orders.map(o => ({
             type: 'order',
-            date: new Date(o.submittedAt),
+            date: new Date(o.submitted_at),
             data: o,
             id: `order-${o.id}`
         }));
         const regActivities = registrationRequests.map(r => ({
             type: 'registration',
-            date: new Date(r.submittedAt),
+            date: new Date(r.submitted_at),
             data: r,
             id: `reg-${r.id}`
         }));
@@ -112,7 +112,7 @@ const AdminDashboardOverview: React.FC<DashboardOverviewProps> = ({ businesses, 
         sevenDaysAgo.setHours(0, 0, 0, 0);
 
         businesses.forEach(b => {
-            const joinDate = new Date(b?.joinedDate ?? new Date());
+            const joinDate = new Date(b?.joined_date ?? new Date());
             joinDate.setHours(0, 0, 0, 0);
             if (joinDate >= sevenDaysAgo) {
                 const key = joinDate.toISOString().split('T')[0];
@@ -145,11 +145,11 @@ const AdminDashboardOverview: React.FC<DashboardOverviewProps> = ({ businesses, 
                         {recentActivities.map(activity => {
                             if (activity.type === 'order') {
                                 const order = activity.data as Order;
-                                return <ActivityItem key={activity.id} icon={<OrderIcon />} text={<>New order from <strong>{order.businessName}</strong>.</>} time={timeSince(activity.date)} onClick={() => onNavigate('orders')} />
+                                return <ActivityItem key={activity.id} icon={<OrderIcon />} text={<>New order from <strong>{order.business_name}</strong>.</>} time={timeSince(activity.date)} onClick={() => onNavigate('orders')} />
                             }
                             if (activity.type === 'registration') {
                                 const req = activity.data as RegistrationRequest;
-                                return <ActivityItem key={activity.id} icon={<UserIcon />} text={<>New registration request from <strong>{req.businessName}</strong>.</>} time={timeSince(activity.date)} onClick={() => onNavigate('registrations')} />
+                                return <ActivityItem key={activity.id} icon={<UserIcon />} text={<>New registration request from <strong>{req.business_name}</strong>.</>} time={timeSince(activity.date)} onClick={() => onNavigate('registrations')} />
                             }
                             return null;
                         })}

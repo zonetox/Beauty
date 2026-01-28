@@ -16,7 +16,7 @@ const statusStyles: { [key in OrderStatus]: string } = {
 };
 
 // Payment Proof Image Viewer Modal
-const PaymentProofModal: React.FC<{ imageUrl: string; onClose: () => void }> = ({ imageUrl, onClose }) => {
+const PaymentProofModal: React.FC<{ image_url: string; onClose: () => void }> = ({ image_url, onClose }) => {
     return (
         <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4" onClick={onClose}>
             <div className="relative max-w-4xl max-h-full" onClick={(e) => e.stopPropagation()}>
@@ -30,7 +30,7 @@ const PaymentProofModal: React.FC<{ imageUrl: string; onClose: () => void }> = (
                     </svg>
                 </button>
                 <img
-                    src={getOptimizedSupabaseUrl(imageUrl, { width: 1200, quality: 90 })}
+                    src={getOptimizedSupabaseUrl(image_url, { width: 1200, quality: 90 })}
                     alt="Payment Proof"
                     className="max-w-full max-h-[90vh] object-contain rounded-lg"
                 />
@@ -78,8 +78,8 @@ const OrderManagementTable: React.FC<OrderManagementTableProps> = ({ orders, onC
                 <tbody>
                     {orders.map(order => (
                         <tr key={order.id} className="bg-white border-b hover:bg-gray-50">
-                            <td className="px-6 py-4 font-medium text-neutral-dark whitespace-nowrap">{order.businessName}</td>
-                            <td className="px-6 py-4">{order.packageName}</td>
+                            <td className="px-6 py-4 font-medium text-neutral-dark whitespace-nowrap">{order.business_name}</td>
+                            <td className="px-6 py-4">{order.package_name}</td>
                             <td className="px-6 py-4 font-semibold">{formatPrice(order.amount)}</td>
                             <td className="px-6 py-4">
                                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusStyles[order.status]}`}>
@@ -87,9 +87,9 @@ const OrderManagementTable: React.FC<OrderManagementTableProps> = ({ orders, onC
                                 </span>
                             </td>
                             <td className="px-6 py-4">
-                                {order.paymentProofUrl ? (
+                                {order.payment_proof_url ? (
                                     <button
-                                        onClick={() => setViewingProofUrl(order.paymentProofUrl!)}
+                                        onClick={() => setViewingProofUrl(order.payment_proof_url!)}
                                         className="text-primary hover:text-primary-dark underline text-xs flex items-center gap-1"
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -101,7 +101,7 @@ const OrderManagementTable: React.FC<OrderManagementTableProps> = ({ orders, onC
                                     <span className="text-gray-400 text-xs italic">No proof</span>
                                 )}
                             </td>
-                            <td className="px-6 py-4">{formatDate(order.submittedAt)}</td>
+                            <td className="px-6 py-4">{formatDate(order.submitted_at)}</td>
                             <td className="px-6 py-4">
                                 {order.status === OrderStatus.PENDING ? (
                                     <span className="text-gray-500 italic text-xs">Awaiting User Payment</span>
@@ -122,7 +122,7 @@ const OrderManagementTable: React.FC<OrderManagementTableProps> = ({ orders, onC
                                     </div>
                                 ) : (
                                     <span className="text-gray-400 italic text-xs">
-                                        {order.status === OrderStatus.COMPLETED ? `Confirmed on ${formatDate(order.confirmedAt)}` : 'Rejected'}
+                                        {order.status === OrderStatus.COMPLETED ? `Confirmed on ${formatDate(order.confirmed_at)}` : 'Rejected'}
                                     </span>
                                 )}
                             </td>
@@ -131,7 +131,7 @@ const OrderManagementTable: React.FC<OrderManagementTableProps> = ({ orders, onC
                 </tbody>
             </table>
             {viewingProofUrl && (
-                <PaymentProofModal imageUrl={viewingProofUrl} onClose={() => setViewingProofUrl(null)} />
+                <PaymentProofModal image_url={viewingProofUrl} onClose={() => setViewingProofUrl(null)} />
             )}
         </div>
     );

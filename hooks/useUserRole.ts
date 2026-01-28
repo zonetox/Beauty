@@ -18,21 +18,21 @@ export interface UseUserRoleResult {
   isLoading: boolean;
   error: string | null;
   isAdmin: boolean;
-  isBusinessOwner: boolean;
+  is_business_owner: boolean;
   isBusinessStaff: boolean;
-  businessId: number | null;
+  business_id: number | null;
 }
 
 export function useUserRole(): UseUserRoleResult {
-  const { role, state: authState, isDataLoaded, businessId, error } = useAuth();
+  const { role, state: authState, isDataLoaded, business_id, error } = useAuth();
 
   return {
     role,
     isLoading: authState === 'loading' || !isDataLoaded,
     error: error,
     isAdmin: role === 'admin',
-    isBusinessOwner: role === 'business_owner',
+    is_business_owner: role === 'business_owner',
     isBusinessStaff: role === 'business_staff',
-    businessId: businessId
+    business_id: business_id
   };
 }

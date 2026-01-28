@@ -6,9 +6,9 @@ import { useAdminAuth } from '../contexts/AdminContext.tsx';
 
 interface UserManagementTableProps {
     users: AdminUser[];
-    onUpdateUser: (userId: number, updates: Partial<AdminUser>) => void;
+    onUpdateUser: (user_id: number, updates: Partial<AdminUser>) => void;
     onEditUser: (user: AdminUser) => void;
-    onDeleteUser: (userId: number) => void;
+    onDeleteUser: (user_id: number) => void;
 }
 
 const UserManagementTable: React.FC<UserManagementTableProps> = ({ users, onUpdateUser, onEditUser, onDeleteUser }) => {
@@ -19,7 +19,7 @@ const UserManagementTable: React.FC<UserManagementTableProps> = ({ users, onUpda
             toast.error("You cannot lock your own account.");
             return;
         }
-        onUpdateUser(user.id, { isLocked: !user.isLocked });
+        onUpdateUser(user.id, { is_locked: !user.is_locked });
     };
 
     return (
@@ -27,7 +27,7 @@ const UserManagementTable: React.FC<UserManagementTableProps> = ({ users, onUpda
             <table className="w-full text-sm text-left text-gray-500">
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                     <tr>
-                        <th scope="col" className="px-6 py-3">Username</th>
+                        <th scope="col" className="px-6 py-3">user_name</th>
                         <th scope="col" className="px-6 py-3">Role</th>
                         <th scope="col" className="px-6 py-3">Status</th>
                         <th scope="col" className="px-6 py-3">Last Login</th>
@@ -36,9 +36,9 @@ const UserManagementTable: React.FC<UserManagementTableProps> = ({ users, onUpda
                 </thead>
                 <tbody>
                     {users.map(user => (
-                        <tr key={user.id} className={`bg-white border-b hover:bg-gray-50 ${user.isLocked ? 'bg-red-50' : ''}`}>
+                        <tr key={user.id} className={`bg-white border-b hover:bg-gray-50 ${user.is_locked ? 'bg-red-50' : ''}`}>
                             <td className="px-6 py-4 font-medium text-neutral-dark whitespace-nowrap">
-                                {user.username}
+                                {user.user_name}
                                 <div className="text-xs text-gray-500">{user.email}</div>
                             </td>
                             <td className="px-6 py-4">
@@ -47,13 +47,13 @@ const UserManagementTable: React.FC<UserManagementTableProps> = ({ users, onUpda
                                 </span>
                             </td>
                             <td className="px-6 py-4">
-                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${!user.isLocked ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                    {user.isLocked ? 'Locked' : 'Active'}
+                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${!user.is_locked ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                    {user.is_locked ? 'Locked' : 'Active'}
                                 </span>
                             </td>
                             <td className="px-6 py-4">
-                                {user.lastLogin
-                                    ? new Date(user.lastLogin).toLocaleString('en-US', {
+                                {user.last_login
+                                    ? new Date(user.last_login).toLocaleString('en-US', {
                                         year: 'numeric',
                                         month: 'short',
                                         day: 'numeric',
@@ -67,10 +67,10 @@ const UserManagementTable: React.FC<UserManagementTableProps> = ({ users, onUpda
                                 <button onClick={() => onEditUser(user)} className="font-medium text-secondary hover:underline">Edit</button>
                                 <button
                                     onClick={() => handleToggleLock(user)}
-                                    className={`font-medium ${user.isLocked ? 'text-green-600 hover:text-green-800' : 'text-yellow-600 hover:text-yellow-800'} disabled:text-gray-400 disabled:cursor-not-allowed`}
+                                    className={`font-medium ${user.is_locked ? 'text-green-600 hover:text-green-800' : 'text-yellow-600 hover:text-yellow-800'} disabled:text-gray-400 disabled:cursor-not-allowed`}
                                     disabled={user.id === currentUser?.id}
                                 >
-                                    {user.isLocked ? 'Unlock' : 'Lock'}
+                                    {user.is_locked ? 'Unlock' : 'Lock'}
                                 </button>
                                 <button
                                     onClick={() => onDeleteUser(user.id)}

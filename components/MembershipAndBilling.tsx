@@ -35,7 +35,7 @@ const formatDate = (dateString?: string) => {
     });
 };
 
-const formatFeaturedLevel = (level: number) => {
+const formatfeatured_level = (level: number) => {
     if (level === 2) return 'Top';
     if (level === 1) return 'Featured';
     return 'Standard';
@@ -51,14 +51,14 @@ const getNestedValue = (obj: MembershipPackage, path: string): unknown => {
 };
 
 const featureRows = [
-    { key: 'permissions.customLandingPage', label: 'Custom Landing Page' },
-    { key: 'permissions.seoSupport', label: 'SEO Support' },
-    { key: 'permissions.privateBlog', label: 'Private Blog' },
-    { key: 'permissions.photoLimit', label: 'Photo Limit' },
-    { key: 'permissions.videoLimit', label: 'Video Limit' },
-    { key: 'permissions.monthlyPostLimit', label: 'Monthly Blog Posts' },
-    { key: 'permissions.featuredPostLimit', label: 'Featured Posts' },
-    { key: 'permissions.featuredLevel', label: 'Featured Level' },
+    { key: 'permissions.custom_landing_page', label: 'Custom Landing Page' },
+    { key: 'permissions.seo_support', label: 'SEO Support' },
+    { key: 'permissions.private_blog', label: 'Private Blog' },
+    { key: 'permissions.photo_limit', label: 'Photo Limit' },
+    { key: 'permissions.video_limit', label: 'Video Limit' },
+    { key: 'permissions.monthly_post_limit', label: 'Monthly Blog Posts' },
+    { key: 'permissions.featured_post_limit', label: 'Featured Posts' },
+    { key: 'permissions.featured_level', label: 'Featured Level' },
 ];
 
 // --- Icons for comparison table ---
@@ -86,12 +86,12 @@ const MembershipAndBilling: React.FC = () => {
     const [confirmUpgrade, setConfirmUpgrade] = useState<{ isOpen: boolean; package: MembershipPackage | null }>({ isOpen: false, package: null });
     const [uploadProgress, setUploadProgress] = useState(0);
 
-    const currentPackage = packages.find(p => p.tier === currentBusiness?.membershipTier);
+    const currentPackage = packages.find(p => p.tier === currentBusiness?.membership_tier);
 
     const businessOrders = useMemo(() => {
         if (!currentBusiness) return [];
-        return orders.filter(o => o.businessId === currentBusiness.id).sort((a, b) =>
-            new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
+        return orders.filter(o => o.business_id === currentBusiness.id).sort((a, b) =>
+            new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()
         );
     }, [orders, currentBusiness?.id]);
 
@@ -103,17 +103,17 @@ const MembershipAndBilling: React.FC = () => {
     }, [businessOrders]);
 
     const isExpired = useMemo(() => {
-        if (!currentBusiness?.membershipExpiryDate) return false;
-        return new Date(currentBusiness.membershipExpiryDate) < new Date();
-    }, [currentBusiness?.membershipExpiryDate]);
+        if (!currentBusiness?.membership_expiry_date) return false;
+        return new Date(currentBusiness.membership_expiry_date) < new Date();
+    }, [currentBusiness?.membership_expiry_date]);
 
     const daysUntilExpiry = useMemo(() => {
-        if (!currentBusiness?.membershipExpiryDate) return null;
-        const expiry = new Date(currentBusiness.membershipExpiryDate);
+        if (!currentBusiness?.membership_expiry_date) return null;
+        const expiry = new Date(currentBusiness.membership_expiry_date);
         const now = new Date();
         const diff = expiry.getTime() - now.getTime();
         return Math.ceil(diff / (1000 * 60 * 60 * 24));
-    }, [currentBusiness?.membershipExpiryDate]);
+    }, [currentBusiness?.membership_expiry_date]);
 
     /**
      * Renders a permission value with appropriate formatting
@@ -122,8 +122,8 @@ const MembershipAndBilling: React.FC = () => {
      * @returns React element representing the permission
      */
     const renderPermission = React.useCallback((value: unknown, key: string): React.ReactNode => {
-        if (key.endsWith('featuredLevel')) {
-            return <span className="font-semibold">{formatFeaturedLevel(value as number)}</span>;
+        if (key.endsWith('featured_level')) {
+            return <span className="font-semibold">{formatfeatured_level(value as number)}</span>;
         }
         if (typeof value === 'boolean') {
             return value ? <CheckIcon className="text-green-500 mx-auto" /> : <CrossIcon className="text-red-400 mx-auto" />;
@@ -152,14 +152,14 @@ const MembershipAndBilling: React.FC = () => {
         setIsSubmitting(true);
         try {
             const newOrder = {
-                businessId: currentBusiness.id,
-                businessName: currentBusiness.name,
-                packageId: pkg.id,
-                packageName: pkg.name,
+                business_id: currentBusiness.id,
+                business_name: currentBusiness.name,
+                package_id: pkg.id,
+                package_name: pkg.name,
                 amount: pkg.price,
                 status: OrderStatus.AWAITING_CONFIRMATION,
-                paymentMethod: 'Bank Transfer' as const,
-                submittedAt: new Date().toISOString(),
+                payment_method: 'Bank Transfer' as const,
+                submitted_at: new Date().toISOString(),
             };
             await addOrder(newOrder);
             toast.success('Request submitted! Please complete payment. An admin will activate your plan upon confirmation.');
@@ -200,13 +200,13 @@ const MembershipAndBilling: React.FC = () => {
         try {
             // Upload to Supabase Storage
             const folder = `orders/${latestPendingOrder.id}`;
-            const imageUrl = await uploadFile('business-gallery', file, folder);
+            const image_url = await uploadFile('business-gallery', file, folder);
             setUploadProgress(100);
 
             // Update order with payment proof URL
             const { error } = await supabase
                 .from('orders')
-                .update({ payment_proof_url: imageUrl })
+                .update({ payment_proof_url: image_url })
                 .eq('id', latestPendingOrder.id);
 
             if (error) {
@@ -251,7 +251,7 @@ const MembershipAndBilling: React.FC = () => {
         <div className="p-8 space-y-8">
             <h2 className="text-2xl font-bold font-serif text-neutral-dark">Membership & Billing</h2>
 
-            {showPaymentInfo && selectedPackageForPayment && settings?.bankDetails && (
+            {showPaymentInfo && selectedPackageForPayment && settings?.bank_details && (
                 <div className="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg">
                     <div className="flex justify-between items-start">
                         <div>
@@ -267,11 +267,11 @@ const MembershipAndBilling: React.FC = () => {
                         </button>
                     </div>
                     <div className="mt-4 p-4 bg-white rounded border border-blue-200 text-sm space-y-2">
-                        <p><strong>Bank:</strong> {settings.bankDetails.bankName}</p>
-                        <p><strong>Account Name:</strong> {settings.bankDetails.accountName}</p>
-                        <p><strong>Account Number:</strong> {settings.bankDetails.accountNumber}</p>
+                        <p><strong>Bank:</strong> {settings.bank_details.bank_name}</p>
+                        <p><strong>Account Name:</strong> {settings.bank_details.account_name}</p>
+                        <p><strong>Account Number:</strong> {settings.bank_details.account_number}</p>
                         <p><strong>Amount:</strong> <strong className="text-primary">{formatPrice(selectedPackageForPayment.price)}</strong></p>
-                        <p><strong>Transfer Note:</strong> {settings.bankDetails.transferNote.replace('[Tên doanh nghiệp]', currentBusiness.name).replace('[Mã đơn hàng]', 'UPGRADE')}</p>
+                        <p><strong>Transfer Note:</strong> {settings.bank_details.transfer_note.replace('[Tên doanh nghiệp]', currentBusiness.name).replace('[Mã đơn hàng]', 'UPGRADE')}</p>
                     </div>
 
                     {/* Payment Proof Upload */}
@@ -279,7 +279,7 @@ const MembershipAndBilling: React.FC = () => {
                         <div className="mt-4 p-4 bg-white rounded border border-blue-200">
                             <p className="text-sm font-semibold text-blue-800 mb-2">Upload Payment Proof</p>
                             <p className="text-xs text-blue-600 mb-3">After completing the bank transfer, please upload a screenshot or photo of the transfer confirmation.</p>
-                            {latestPendingOrder.paymentProofUrl ? (
+                            {latestPendingOrder.payment_proof_url ? (
                                 <div className="flex items-center gap-2 text-sm text-green-700">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -323,14 +323,14 @@ const MembershipAndBilling: React.FC = () => {
                             <div>
                                 <p className="text-2xl font-bold font-serif text-primary">{currentPackage.name}</p>
                                 <p className="text-gray-600 max-w-lg">{currentPackage.description}</p>
-                                {currentBusiness.membershipExpiryDate && (
+                                {currentBusiness.membership_expiry_date && (
                                     <div className="mt-2">
                                         <p className={`text-sm font-semibold ${isExpired ? 'text-red-600' : daysUntilExpiry !== null && daysUntilExpiry <= 30 ? 'text-yellow-600' : 'text-gray-700'}`}>
                                             {isExpired ? (
-                                                <>Expired on: {formatDate(currentBusiness.membershipExpiryDate)}</>
+                                                <>Expired on: {formatDate(currentBusiness.membership_expiry_date)}</>
                                             ) : (
                                                 <>
-                                                    Expires on: {formatDate(currentBusiness.membershipExpiryDate)}
+                                                    Expires on: {formatDate(currentBusiness.membership_expiry_date)}
                                                     {daysUntilExpiry !== null && daysUntilExpiry <= 30 && (
                                                         <span className="ml-2">({daysUntilExpiry} days remaining)</span>
                                                     )}
@@ -372,7 +372,7 @@ const MembershipAndBilling: React.FC = () => {
                                         {packages.map(pkg => (
                                             <th key={pkg.id} className={`p-4 text-center font-bold min-w-[150px] ${pkg.id === currentPackage?.id ? 'text-primary' : 'text-neutral-dark'}`}>
                                                 {pkg.name}
-                                                {pkg.isPopular && <span className="block text-xs font-normal text-secondary mt-1">Most Popular</span>}
+                                                {pkg.is_popular && <span className="block text-xs font-normal text-secondary mt-1">Most Popular</span>}
                                             </th>
                                         ))}
                                     </tr>
@@ -383,7 +383,7 @@ const MembershipAndBilling: React.FC = () => {
                                         {packages.map(pkg => (
                                             <td key={pkg.id} className="p-4 text-center">
                                                 <div className="text-lg font-bold text-neutral-dark">{formatPrice(pkg.price)}</div>
-                                                <div className="text-xs text-gray-500">/ {pkg.durationMonths} months</div>
+                                                <div className="text-xs text-gray-500">/ {pkg.duration_months} months</div>
                                             </td>
                                         ))}
                                     </tr>
@@ -456,9 +456,9 @@ const MembershipAndBilling: React.FC = () => {
                                 {businessOrders.map(order => (
                                     <tr key={order.id} className="bg-white border-b last:border-b-0 hover:bg-gray-50">
                                         <td className="px-6 py-4 font-mono text-xs">{order.id.substring(0, 8)}...</td>
-                                        <td className="px-6 py-4 font-medium text-neutral-dark">{order.packageName}</td>
+                                        <td className="px-6 py-4 font-medium text-neutral-dark">{order.package_name}</td>
                                         <td className="px-6 py-4">{formatPrice(order.amount)}</td>
-                                        <td className="px-6 py-4">{formatDate(order.submittedAt)}</td>
+                                        <td className="px-6 py-4">{formatDate(order.submitted_at)}</td>
                                         <td className="px-6 py-4">
                                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusStyles[order.status]}`}>
                                                 {order.status}

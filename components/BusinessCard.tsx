@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Business, MembershipTier } from '../types.ts';
+import { Business, membership_tier } from '../types.ts';
 import StarRating from './StarRating.tsx';
 import VerifiedBadge from './VerifiedBadge.tsx';
 import { getOptimizedSupabaseUrl } from '../lib/image.ts';
@@ -18,7 +18,7 @@ const tierStyles = {
   [MembershipTier.FREE]: 'border border-gray-200',
 };
 
-const tierBadge: Record<MembershipTier, { text: string; bg: string; text_color: string }> = {
+const tierBadge: Record<membership_tier, { text: string; bg: string; text_color: string }> = {
   [MembershipTier.VIP]: { text: 'VIP', bg: 'bg-accent', text_color: 'text-neutral-dark' },
   [MembershipTier.PREMIUM]: { text: 'Premium', bg: 'bg-primary', text_color: 'text-white' },
   [MembershipTier.FREE]: { text: 'Free', bg: 'bg-gray-100', text_color: 'text-gray-700' },
@@ -33,7 +33,7 @@ const EyeIcon: React.FC<{ className?: string }> = ({ className = '' }) => (
 
 
 const BusinessCard: React.FC<BusinessCardProps> = ({ business, highlighted = false, onMouseEnter, onMouseLeave }) => {
-  const { slug, name, imageUrl, categories, address, district, city, rating, reviewCount, viewCount, membershipTier, isVerified, phone, email, slogan } = business;
+  const { slug, name, image_url, categories, address, district, city, rating, review_count, view_count, membership_tier, is_verified, phone, email, slogan } = business;
 
   // Stop propagation on link clicks to prevent navigating to the business page
   const handleLinkClick = (e: React.MouseEvent) => {
@@ -45,7 +45,7 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, highlighted = fal
   return (
     <div
       id={`business-card-${business.id}`}
-      className={`business-card bg-white rounded-lg overflow-hidden transition-all duration-200 transform hover:-translate-y-1 cursor-pointer ${tierStyles[membershipTier]} ${highlightClass}`}
+      className={`business-card bg-white rounded-lg overflow-hidden transition-all duration-200 transform hover:-translate-y-1 cursor-pointer ${tierStyles[membership_tier]} ${highlightClass}`}
       onClick={() => window.location.href = `/business/${slug}`}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -58,10 +58,10 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, highlighted = fal
       }}
     >
       <div className="relative">
-        <img className="w-full h-48 object-cover" src={getOptimizedSupabaseUrl(imageUrl, { width: 400, quality: 75 })} alt={name} loading="lazy" />
-        {tierBadge[membershipTier] && (
-          <span className={`absolute top-2 right-2 px-2 py-1 text-xs font-bold rounded ${tierBadge[membershipTier].bg} ${tierBadge[membershipTier].text_color}`}>
-            {tierBadge[membershipTier].text}
+        <img className="w-full h-48 object-cover" src={getOptimizedSupabaseUrl(image_url, { width: 400, quality: 75 })} alt={name} loading="lazy" />
+        {tierBadge[membership_tier] && (
+          <span className={`absolute top-2 right-2 px-2 py-1 text-xs font-bold rounded ${tierBadge[membership_tier].bg} ${tierBadge[membership_tier].text_color}`}>
+            {tierBadge[membership_tier].text}
           </span>
         )}
       </div>
@@ -69,7 +69,7 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, highlighted = fal
         <p className="text-sm text-primary font-medium">{categories[0]}</p>
         <div className="flex items-center gap-2 mt-1">
           <h3 className="text-lg font-bold font-serif text-neutral-dark truncate">{name}</h3>
-          {isVerified && <VerifiedBadge />}
+          {is_verified && <VerifiedBadge />}
         </div>
         {slogan && (
           <p className="text-sm text-gray-500 mt-1 italic truncate">&quot;{slogan}&quot;</p>
@@ -109,11 +109,11 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, highlighted = fal
         <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-3 pt-3 border-t border-gray-100">
           <div className="flex items-center">
             <StarRating rating={rating} />
-            <span className="text-xs text-gray-500 ml-1">({reviewCount})</span>
+            <span className="text-xs text-gray-500 ml-1">({review_count})</span>
           </div>
           <div className="flex items-center text-xs text-gray-500">
             <EyeIcon />
-            <span>{(viewCount || 0).toLocaleString()}</span>
+            <span>{(view_count || 0).toLocaleString()}</span>
           </div>
         </div>
       </div>

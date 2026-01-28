@@ -25,7 +25,7 @@ const getYoutubeEmbedUrl = (url?: string): string | null => {
 };
 
 const VideoSection: React.FC<VideoSectionProps> = ({ business }) => {
-    const embedUrl = getYoutubeEmbedUrl(business.youtubeUrl);
+    const embedUrl = getYoutubeEmbedUrl(business.youtube_url);
 
     if (!embedUrl) {
         return null;

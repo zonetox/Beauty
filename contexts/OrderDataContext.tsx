@@ -3,7 +3,7 @@ import { Order, OrderStatus } from '../types.ts';
 import { supabase } from '../lib/supabaseClient.ts';
 import { useAdminPlatform } from './AdminPlatformContext.tsx';
 import { useAdminAuth } from './AuthContext.tsx';
-import { snakeToCamel } from '../lib/utils.ts';
+
 
 interface OrderDataContextType {
   orders: Order[];
@@ -37,7 +37,7 @@ export const OrderDataProvider: React.FC<{ children: ReactNode }> = ({ children 
     if (error) {
       console.error("Error fetching orders:", error);
     } else if (data) {
-      setOrders(snakeToCamel(data) as Order[]);
+      setOrders(data as unknown as Order[]);
     }
     setLoading(false);
   }, []);
@@ -56,10 +56,10 @@ export const OrderDataProvider: React.FC<{ children: ReactNode }> = ({ children 
       throw new Error("Failed to create order.");
     }
 
-    const newOrder = snakeToCamel(data) as Order;
+    const newOrder = data as unknown as Order;
     setOrders(prev => [newOrder, ...prev]);
     if (currentAdmin) {
-      logAdminAction(currentAdmin.username, 'Create Order', `New order created for ${newOrder.businessName} for package ${newOrder.packageName}.`);
+      logAdminAction(currentAdmin.user_name, 'Create Order', `New order created for ${newOrder.business_name} for package ${newOrder.package_name}.`);
     }
     return newOrder;
   };
@@ -70,20 +70,20 @@ export const OrderDataProvider: React.FC<{ children: ReactNode }> = ({ children 
 
     const updates: Partial<Order> = {
       status: newStatus,
-      confirmedAt: newStatus === OrderStatus.COMPLETED ? new Date().toISOString() : orderToUpdate.confirmedAt,
+      confirmed_at: newStatus === OrderStatus.COMPLETED ? new Date().toISOString() : orderToUpdate.confirmed_at,
       notes: notes || orderToUpdate.notes,
     };
 
     const { data, error } = await supabase.from('orders').update(toSnakeCase(updates)).eq('id', orderId).select().single();
 
     if (!error && data) {
-      const updatedOrder = snakeToCamel(data) as Order;
+      const updatedOrder = data as unknown as Order;
       setOrders(prev => prev.map(o => o.id === orderId ? updatedOrder : o));
       if (currentAdmin) {
         if (newStatus === OrderStatus.COMPLETED) {
-          logAdminAction(currentAdmin.username, 'Confirm Payment', `Confirmed payment for Order #${orderId} (${orderToUpdate.businessName}).`);
+          logAdminAction(currentAdmin.user_name, 'Confirm Payment', `Confirmed payment for Order #${orderId} (${orderToUpdate.business_name}).`);
         } else if (newStatus === OrderStatus.REJECTED) {
-          logAdminAction(currentAdmin.username, 'Reject Payment', `Rejected payment for Order #${orderId} (${orderToUpdate.businessName}).`);
+          logAdminAction(currentAdmin.user_name, 'Reject Payment', `Rejected payment for Order #${orderId} (${orderToUpdate.business_name}).`);
         }
       }
     } else {

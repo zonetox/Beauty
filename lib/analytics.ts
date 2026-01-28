@@ -109,10 +109,10 @@ export const trackPageView = (path: string) => {
 };
 
 // Track business actions
-export const trackBusinessAction = (action: string, businessId: number, properties?: Record<string, unknown>) => {
+export const trackBusinessAction = (action: string, business_id: number, properties?: Record<string, unknown>) => {
   trackEvent('business_action', {
     action,
-    business_id: businessId,
+    business_id: business_id,
     ...properties,
   });
 };
@@ -129,9 +129,9 @@ export const trackConversion = (type: string, value?: number, properties?: Recor
 };
 
 // Track booking events
-export const trackBooking = (businessId: number, serviceId?: string, properties?: Record<string, unknown>) => {
+export const trackBooking = (business_id: number, serviceId?: string, properties?: Record<string, unknown>) => {
   trackEvent('booking', {
-    business_id: businessId,
+    business_id: business_id,
     service_id: serviceId,
     ...properties,
   });

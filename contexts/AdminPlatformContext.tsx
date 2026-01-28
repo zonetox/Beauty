@@ -13,23 +13,23 @@ import { keys } from '../lib/queryKeys.ts';
 interface AdminPlatformContextType {
   // Logs
   logs: AdminLogEntry[];
-  logAdminAction: (adminUsername: string, action: string, details: string) => Promise<void>;
+  logAdminAction: (admin_user_name: string, action: string, details: string) => Promise<void>;
   clearLogs: () => Promise<void>;
   // Notifications
   notifications: Notification[];
-  addNotification: (recipientEmail: string, subject: string, body: string) => Promise<void>;
+  addNotification: (recipient_email: string, subject: string, body: string) => Promise<void>;
   markNotificationAsRead: (notificationId: string) => Promise<void>;
   // Announcements
   announcements: Announcement[];
   addAnnouncement: (title: string, content: string, type: 'info' | 'warning' | 'success') => Promise<void>;
   deleteAnnouncement: (id: string) => Promise<void>;
-  getUnreadAnnouncements: (businessId: number) => Announcement[];
-  markAnnouncementAsRead: (businessId: number, announcementId: string) => void;
+  getUnreadAnnouncements: (business_id: number) => Announcement[];
+  markAnnouncementAsRead: (business_id: number, announcementId: string) => void;
   // Support Tickets
   tickets: SupportTicket[];
-  getTicketsForBusiness: (businessId: number) => SupportTicket[];
-  addTicket: (ticketData: Omit<SupportTicket, 'id' | 'createdAt' | 'lastReplyAt' | 'status' | 'replies'>) => Promise<void>;
-  addReply: (ticketId: string, replyData: Omit<TicketReply, 'id' | 'createdAt'>) => Promise<void>;
+  getTicketsForBusiness: (business_id: number) => SupportTicket[];
+  addTicket: (ticketData: Omit<SupportTicket, 'id' | 'created_at' | 'lastReplyAt' | 'status' | 'replies'>) => Promise<void>;
+  addReply: (ticketId: string, replyData: Omit<TicketReply, 'id' | 'created_at'>) => Promise<void>;
   updateTicketStatus: (ticketId: string, status: TicketStatus) => Promise<void>;
   // Registration Requests
   registrationRequests: RegistrationRequest[];
@@ -61,14 +61,14 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
     queryFn: async () => {
       if (!isSupabaseConfigured) return [];
       const { data, error } = await supabase.from('admin_activity_logs')
-        .select('id, timestamp, admin_username, action, details')
+        .select('id, timestamp, admin_user_name, action, details')
         .order('timestamp', { ascending: false })
         .limit(100);
       if (error) throw error;
       return (data || []).map(log => ({
         id: log.id,
         timestamp: log.timestamp || new Date().toISOString(),
-        adminUsername: log.admin_username,
+        admin_user_name: log.admin_user_name,
         action: log.action,
         details: log.details || ''
       }));
@@ -90,10 +90,10 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
       if (error) throw error;
       return (data || []).map(notif => ({
         id: notif.id,
-        recipientEmail: notif.recipient_email,
+        recipient_email: notif.recipient_email,
         subject: notif.subject,
         body: notif.body,
-        sentAt: notif.sent_at || new Date().toISOString(),
+        sent_at: notif.sent_at || new Date().toISOString(),
         read: notif.read || false
       }));
     },
@@ -129,7 +129,7 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
 
       const mappedTickets = (data as any[]).map(t => ({
         ...(snakeToCamel(t) as any),
-        businessName: t.businesses?.name || t.business_name || 'Unknown Business'
+        business_name: t.businesses?.name || t.business_name || 'Unknown Business'
       }));
       return mappedTickets as SupportTicket[];
     },
@@ -196,10 +196,10 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
   // Using direct async functions with invalidation instead of full useMutation 
   // hooks to keep the context interface cleaner and simpler for this refactor.
 
-  const logAdminAction = async (adminUsername: string, action: string, details: string) => {
+  const logAdminAction = async (admin_user_name: string, action: string, details: string) => {
     if (!isSupabaseConfigured) return;
     const { error } = await supabase.from('admin_activity_logs')
-      .insert({ admin_username: adminUsername, action, details, timestamp: new Date().toISOString() });
+      .insert({ admin_user_name: admin_user_name, action, details, timestamp: new Date().toISOString() });
     if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.logs });
   };
 
@@ -209,12 +209,12 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
     if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.logs });
   };
 
-  const addNotification = async (recipientEmail: string, subject: string, body: string) => {
+  const addNotification = async (recipient_email: string, subject: string, body: string) => {
     if (isSupabaseConfigured) {
-      const { error } = await supabase.functions.invoke('send-email', { body: { to: recipientEmail, subject, html: body.replace(/\n/g, '<br>') } });
+      const { error } = await supabase.functions.invoke('send-email', { body: { to: recipient_email, subject, html: body.replace(/\n/g, '<br>') } });
       if (error) handleEdgeFunctionError(error, 'addNotification');
       const { error: dbError } = await supabase.from('email_notifications_log')
-        .insert({ recipient_email: recipientEmail, subject, body, sent_at: new Date().toISOString(), read: false });
+        .insert({ recipient_email: recipient_email, subject, body, sent_at: new Date().toISOString(), read: false });
       if (!dbError) queryClient.invalidateQueries({ queryKey: keys.admin.notifications });
     }
   };
@@ -241,26 +241,26 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
     if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.announcements });
   };
 
-  const getUnreadAnnouncements = (businessId: number) => {
-    const readKey = `${ANNOUNCEMENT_READ_KEY}_${businessId}`;
+  const getUnreadAnnouncements = (business_id: number) => {
+    const readKey = `${ANNOUNCEMENT_READ_KEY}_${business_id}`;
     const readIds: string[] = JSON.parse(localStorage.getItem(readKey) || '[]');
     return announcements.filter(ann => !readIds.includes(ann.id));
   };
 
-  const markAnnouncementAsRead = (businessId: number, announcementId: string) => {
-    const readKey = `${ANNOUNCEMENT_READ_KEY}_${businessId}`;
+  const markAnnouncementAsRead = (business_id: number, announcementId: string) => {
+    const readKey = `${ANNOUNCEMENT_READ_KEY}_${business_id}`;
     const readIds: string[] = JSON.parse(localStorage.getItem(readKey) || '[]');
     if (!readIds.includes(announcementId)) localStorage.setItem(readKey, JSON.stringify([...readIds, announcementId]));
   };
 
-  const getTicketsForBusiness = (businessId: number) => tickets.filter(t => t.businessId === businessId);
+  const getTicketsForBusiness = (business_id: number) => tickets.filter(t => t.business_id === business_id);
 
-  const addTicket = async (ticketData: Omit<SupportTicket, 'id' | 'createdAt' | 'lastReplyAt' | 'status' | 'replies'>) => {
+  const addTicket = async (ticketData: Omit<SupportTicket, 'id' | 'created_at' | 'lastReplyAt' | 'status' | 'replies'>) => {
     if (!isSupabaseConfigured) return;
     const { error } = await supabase.from('support_tickets')
       .insert({
-        business_id: ticketData.businessId,
-        business_name: ticketData.businessName,
+        business_id: ticketData.business_id,
+        business_name: ticketData.business_name,
         subject: ticketData.subject,
         message: ticketData.message,
         status: TicketStatus.OPEN,
@@ -270,11 +270,11 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
     if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.tickets });
   };
 
-  const addReply = async (ticketId: string, replyData: Omit<TicketReply, 'id' | 'createdAt'>) => {
+  const addReply = async (ticketId: string, replyData: Omit<TicketReply, 'id' | 'created_at'>) => {
     if (!isSupabaseConfigured) return;
     const ticket = tickets.find(t => t.id === ticketId);
     if (!ticket) return;
-    const updatedReplies = [...(ticket.replies || []), { ...replyData, id: crypto.randomUUID(), createdAt: new Date().toISOString() }];
+    const updatedReplies = [...(ticket.replies || []), { ...replyData, id: crypto.randomUUID(), created_at: new Date().toISOString() }];
     const { error } = await supabase.from('support_tickets')
       .update({ replies: updatedReplies as any, last_reply_at: new Date().toISOString() })
       .eq('id', ticketId)

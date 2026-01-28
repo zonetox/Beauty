@@ -39,7 +39,7 @@ const LocationSection: React.FC<{ business: Business }> = ({ business }) => {
                      <div>
                         <h4 className="font-bold text-xl text-neutral-dark mb-2">Giờ hoạt động</h4>
                         <ul className="text-gray-600 space-y-1">
-                            {business.workingHours && Object.entries(business.workingHours).map(([day, time]) => {
+                            {business.working_hours && Object.entries(business.working_hours).map(([day, time]) => {
                                 // Handle both old string format and new object format
                                 let timeDisplay: string;
                                 if (typeof time === 'string') {

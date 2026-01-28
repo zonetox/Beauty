@@ -3,7 +3,7 @@ import { AdminUser, AdminLogEntry, Notification, Announcement, SupportTicket, Ti
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
-import { snakeToCamel } from '../lib/utils.ts';
+// snakeToCamel removed for True Sync
 import { useErrorHandler } from '../lib/useErrorHandler.ts';
 
 // Admin access is determined ONLY by querying the admin_users table
@@ -18,28 +18,28 @@ interface AdminContextType {
     adminUsers: AdminUser[];
     adminLogin: (email: string, pass: string) => Promise<void>;
     adminLogout: () => Promise<void>;
-    addAdminUser: (newUser: Omit<AdminUser, 'id' | 'lastLogin' | 'isLocked'>) => Promise<void>;
-    updateAdminUser: (userId: number, updates: Partial<AdminUser>) => Promise<void>;
-    deleteAdminUser: (userId: number) => Promise<void>;
+    addAdminUser: (newUser: Omit<AdminUser, 'id' | 'lastLogin' | 'is_locked'>) => Promise<void>;
+    updateAdminUser: (user_id: number, updates: Partial<AdminUser>) => Promise<void>;
+    deleteAdminUser: (user_id: number) => Promise<void>;
     // Logs
     logs: AdminLogEntry[];
-    logAdminAction: (adminUsername: string, action: string, details: string) => void;
+    logAdminAction: (admin_user_name: string, action: string, details: string) => void;
     clearLogs: () => void;
     // Notifications
     notifications: Notification[];
-    addNotification: (recipientEmail: string, subject: string, body: string) => void;
+    addNotification: (recipient_email: string, subject: string, body: string) => void;
     markNotificationAsRead: (notificationId: string) => void;
     // Announcements
     announcements: Announcement[];
     addAnnouncement: (title: string, content: string, type: string) => Promise<void>;
     deleteAnnouncement: (id: string) => Promise<void>;
-    getUnreadAnnouncements: (businessId: number) => Announcement[];
-    markAnnouncementAsRead: (businessId: number, announcementId: string) => void;
+    getUnreadAnnouncements: (business_id: number) => Announcement[];
+    markAnnouncementAsRead: (business_id: number, announcementId: string) => void;
     // Support Tickets
     tickets: SupportTicket[];
-    getTicketsForBusiness: (businessId: number) => SupportTicket[];
-    addTicket: (ticketData: Omit<SupportTicket, 'id' | 'createdAt' | 'lastReplyAt' | 'status' | 'replies'>) => Promise<void>;
-    addReply: (ticketId: string, replyData: Omit<TicketReply, 'id' | 'createdAt'>) => Promise<void>;
+    getTicketsForBusiness: (business_id: number) => SupportTicket[];
+    addTicket: (ticketData: Omit<SupportTicket, 'id' | 'created_at' | 'last_reply_at' | 'status' | 'replies'>) => Promise<void>;
+    addReply: (ticketId: string, replyData: Omit<TicketReply, 'id' | 'created_at'>) => Promise<void>;
     updateTicketStatus: (ticketId: string, status: TicketStatus) => Promise<void>;
     // Registration Requests
     registrationRequests: RegistrationRequest[];
@@ -78,7 +78,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             return [];
         }
         const { data, error } = await supabase.from('admin_users')
-            .select('id, username, email, role, permissions, is_locked, last_login')
+            .select('id, user_name, email, role, permissions, is_locked, last_login')
             .order('id');
 
         if (error) {
@@ -87,9 +87,9 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             return [];
         }
 
-        const mappedData = snakeToCamel(data || []) as AdminUser[];
-        setAdminUsers(mappedData);
-        return mappedData;
+        const results = (data || []) as unknown as AdminUser[];
+        setAdminUsers(results);
+        return results;
     }, []);
 
     useEffect(() => {
@@ -106,7 +106,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             if (!mounted) return;
             if (user) {
                 const adminProfile = allAdmins.find(au => au.email === user.email);
-                if (adminProfile && !adminProfile.isLocked) {
+                if (adminProfile && !adminProfile.is_locked) {
                     setCurrentUser({ ...adminProfile, authUser: user });
                 } else {
                     setCurrentUser(null);
@@ -167,7 +167,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
     };
 
-    const addAdminUser = async (newUser: Omit<AdminUser, 'id' | 'lastLogin' | 'isLocked'>) => {
+    const addAdminUser = async (newUser: Omit<AdminUser, 'id' | 'lastLogin' | 'is_locked'>) => {
         if (!isSupabaseConfigured) {
             toast.error("Cannot add admin user: Supabase is not configured.");
             return;
@@ -180,11 +180,11 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         await fetchAdminUsers();
     };
 
-    const updateAdminUser = async (_userId: number, _updates: Partial<AdminUser>) => {
+    const updateAdminUser = async (_user_id: number, _updates: Partial<AdminUser>) => {
         toast.error("Update admin user not implemented in this context.");
     };
 
-    const deleteAdminUser = async (_userId: number) => {
+    const deleteAdminUser = async (_user_id: number) => {
         toast.error("Delete admin user not implemented in this context.");
     };
 
@@ -203,15 +203,15 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 supabase.from('page_content').select('page_name, content_data')
             ]);
 
-            if (announcementsRes.data) setAnnouncements(snakeToCamel(announcementsRes.data) as Announcement[]);
+            if (announcementsRes.data) setAnnouncements(announcementsRes.data as unknown as Announcement[]);
             if (ticketsRes.data) {
                 const mappedTickets = (ticketsRes.data as unknown as (SupportTicket & { businesses?: { name: string } })[]).map(t => ({
-                    ...(snakeToCamel(t) as SupportTicket),
-                    businessName: t.businesses?.name || (t as any).business_name || 'Unknown Business'
+                    ...(t as unknown as SupportTicket),
+                    business_name: t.businesses?.name || (t as any).business_name || 'Unknown Business'
                 }));
                 setTickets(mappedTickets as SupportTicket[]);
             }
-            if (requestsRes.data) setRegistrationRequests(snakeToCamel(requestsRes.data) as RegistrationRequest[]);
+            if (requestsRes.data) setRegistrationRequests(requestsRes.data as unknown as RegistrationRequest[]);
             if (settingsRes.data) setSettings(settingsRes.data.settings_data as unknown as AppSettings);
             if (pageContentRes.data) {
                 const dbContent = (pageContentRes.data as { page_name: string; content_data: unknown }[]).reduce((acc, page) => {
@@ -244,20 +244,20 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // Run only once on mount
 
-    const logAdminAction = (_adminUsername: string, _action: string, _details: string) => {
+    const logAdminAction = (_admin_user_name: string, _action: string, _details: string) => {
         // Placeholder for logging
     };
 
     const clearLogs = () => setLogs([]);
 
-    const addNotification = async (recipientEmail: string, subject: string, body: string) => {
+    const addNotification = async (recipient_email: string, subject: string, body: string) => {
         if (!isSupabaseConfigured) {
-            toast.success(`(Preview) Email to: ${recipientEmail} `);
+            toast.success(`(Preview) Email to: ${recipient_email} `);
             return;
         }
-        const { error } = await supabase.functions.invoke('send-email', { body: { to: recipientEmail, subject, html: body } });
+        const { error } = await supabase.functions.invoke('send-email', { body: { to: recipient_email, subject, html: body } });
         if (error) console.error('Error sending email:', error.message);
-        setNotifications(prev => [{ id: crypto.randomUUID(), recipientEmail, subject, body, sentAt: new Date().toISOString(), read: false }, ...prev]);
+        setNotifications(prev => [{ id: crypto.randomUUID(), recipient_email, subject, body, sent_at: new Date().toISOString(), read: false }, ...prev]);
     };
 
     const markNotificationAsRead = (_notificationId: string) => {
@@ -272,43 +272,43 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         toast.error("Delete announcement not implemented.");
     };
 
-    const getUnreadAnnouncements = (_businessId: number) => [];
+    const getUnreadAnnouncements = (_business_id: number) => [];
 
-    const markAnnouncementAsRead = (_businessId: number, _announcementId: string) => {
+    const markAnnouncementAsRead = (_business_id: number, _announcementId: string) => {
         // Placeholder
     };
 
-    const getTicketsForBusiness = (businessId: number) => tickets.filter(t => t.businessId === businessId);
+    const getTicketsForBusiness = (business_id: number) => tickets.filter(t => t.business_id === business_id);
 
-    const addTicket = async (ticketData: Omit<SupportTicket, 'id' | 'createdAt' | 'lastReplyAt' | 'status' | 'replies'>) => {
+    const addTicket = async (ticketData: Omit<SupportTicket, 'id' | 'created_at' | 'last_reply_at' | 'status' | 'replies'>) => {
         if (!isSupabaseConfigured) return;
         const { data, error } = await supabase.from('support_tickets').insert({
-            business_id: ticketData.businessId,
-            business_name: ticketData.businessName,
+            business_id: ticketData.business_id,
+            business_name: ticketData.business_name,
             subject: ticketData.subject,
             message: ticketData.message,
             status: TicketStatus.OPEN,
             replies: []
         }).select().single();
-        if (!error && data) setTickets(prev => [snakeToCamel(data) as SupportTicket, ...prev]);
+        if (!error && data) setTickets(prev => [data as unknown as SupportTicket, ...prev]);
     };
 
-    const addReply = async (ticketId: string, replyData: Omit<TicketReply, 'id' | 'createdAt'>) => {
+    const addReply = async (ticketId: string, replyData: Omit<TicketReply, 'id' | 'created_at'>) => {
         if (!isSupabaseConfigured) return;
         const ticket = tickets.find(t => t.id === ticketId);
         if (!ticket) return;
-        const updatedReplies = [...(ticket.replies || []), { ...replyData, id: crypto.randomUUID(), createdAt: new Date().toISOString() }];
+        const updatedReplies = [...(ticket.replies || []), { ...replyData, id: crypto.randomUUID(), created_at: new Date().toISOString() }];
         const { data, error } = await supabase.from('support_tickets').update({
             replies: updatedReplies as any,
             last_reply_at: new Date().toISOString()
         }).eq('id', ticketId).select().single();
-        if (!error && data) setTickets(prev => prev.map(t => t.id === ticketId ? (snakeToCamel(data) as SupportTicket) : t));
+        if (!error && data) setTickets(prev => prev.map(t => t.id === ticketId ? (data as unknown as SupportTicket) : t));
     };
 
     const updateTicketStatus = async (ticketId: string, status: TicketStatus) => {
         if (!isSupabaseConfigured) return;
         const { data, error } = await supabase.from('support_tickets').update({ status }).eq('id', ticketId).select().single();
-        if (!error && data) setTickets(prev => prev.map(t => t.id === ticketId ? (snakeToCamel(data) as SupportTicket) : t));
+        if (!error && data) setTickets(prev => prev.map(t => t.id === ticketId ? (data as unknown as SupportTicket) : t));
     };
 
     const approveRegistrationRequest = async (_requestId: string) => {

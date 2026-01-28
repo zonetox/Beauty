@@ -15,7 +15,7 @@ import { getOptimizedSupabaseUrl } from '../lib/image.ts';
 const BusinessPostPage: React.FC = () => {
   const { businessSlug, postSlug } = useParams<{ businessSlug: string; postSlug: string }>();
   const { getBusinessBySlug, businessLoading } = useBusinessData();
-  const { posts, getPostBySlug, incrementViewCount, loading: blogLoading } = useBusinessBlogData();
+  const { posts, getPostBySlug, incrementview_count, loading: blogLoading } = useBusinessBlogData();
 
   const business = useMemo(() => {
     if (!businessSlug) return null;
@@ -38,11 +38,11 @@ const BusinessPostPage: React.FC = () => {
     if (post) {
         const incrementedKey = `view_incremented_biz_post_${post.id}`;
         if (!sessionStorage.getItem(incrementedKey)) {
-            incrementViewCount(post.id);
+            incrementview_count(post.id);
             sessionStorage.setItem(incrementedKey, 'true');
         }
     }
-  }, [post, incrementViewCount]);
+  }, [post, incrementview_count]);
 
   if (isLoading) {
     return (
@@ -60,7 +60,7 @@ const BusinessPostPage: React.FC = () => {
   // SEO metadata
   const seoTitle = `${post.title} | ${business.name} | 1Beauty.asia`;
   const seoDescription = post.excerpt || post.content.substring(0, 160).replace(/<[^>]*>/g, '') || `${post.title} từ ${business.name}`;
-  const seoImage = getOptimizedSupabaseUrl(post.imageUrl, { width: 1200, quality: 85 });
+  const seoImage = getOptimizedSupabaseUrl(post.image_url, { width: 1200, quality: 85 });
   const seoUrl = typeof window !== 'undefined' 
     ? `${window.location.origin}/business/${business.slug}/post/${post.slug}`
     : '';
@@ -85,13 +85,13 @@ const BusinessPostPage: React.FC = () => {
               <div className="mt-4 text-sm text-gray-500">
                 <span>Đăng bởi {post.author}</span>
                 <span className="mx-2">&bull;</span>
-                <span>{post.publishedDate ? new Date(post.publishedDate).toLocaleDateString('vi-VN') : ''}</span>
+                <span>{post.published_date ? new Date(post.published_date).toLocaleDateString('vi-VN') : ''}</span>
                  <span className="mx-2">&bull;</span>
-                <span>{currentPostData.viewCount.toLocaleString()} lượt xem</span>
+                <span>{currentPostData.view_count.toLocaleString()} lượt xem</span>
               </div>
             </header>
             <img 
-              src={getOptimizedSupabaseUrl(post.imageUrl, { width: 1200, quality: 85 })} 
+              src={getOptimizedSupabaseUrl(post.image_url, { width: 1200, quality: 85 })} 
               alt={post.title} 
               className="w-full h-auto max-h-[500px] object-cover rounded-lg shadow-lg mb-8" 
               loading="lazy"

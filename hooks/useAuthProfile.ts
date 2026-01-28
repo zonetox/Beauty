@@ -2,7 +2,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { keys } from '../lib/queryKeys';
 import { Profile } from '../types';
-import { snakeToCamel } from '../lib/utils';
 import { getUserProfile } from '../lib/session';
 
 /**
@@ -26,8 +25,8 @@ export function useAuthProfile(userId: string | undefined | null) {
 
             if (!data) return null;
 
-            // 2. Transform to camelCase for app usage
-            return snakeToCamel(data) as Profile;
+            // 2. Return data directly as it's now snake_case in types.ts
+            return data as Profile;
         },
         enabled: !!userId, // Only run if we have a userId
         staleTime: 1000 * 60 * 15, // 15 minutes (Profiles don't change often)

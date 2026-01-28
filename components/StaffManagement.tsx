@@ -13,10 +13,10 @@ const StaffManagement: React.FC = () => {
   const {
     staff,
     loading,
-    getStaffByBusinessId,
+    get_staff_by_business_id,
     updateStaff,
     removeStaff,
-    refreshStaff
+    refresh_staff
   } = useStaff();
 
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -25,9 +25,9 @@ const StaffManagement: React.FC = () => {
 
   useEffect(() => {
     if (currentBusiness) {
-      getStaffByBusinessId(currentBusiness.id);
+      get_staff_by_business_id(currentBusiness.id);
     }
-  }, [currentBusiness, getStaffByBusinessId]);
+  }, [currentBusiness, get_staff_by_business_id]);
 
   const handleUpdateStaff = async (staffId: string, updates: Partial<BusinessStaff>) => {
     try {
@@ -35,7 +35,7 @@ const StaffManagement: React.FC = () => {
       toast.success('Staff updated successfully');
       setEditingStaff(null);
       if (currentBusiness) {
-        await refreshStaff(currentBusiness.id);
+        await refresh_staff(currentBusiness.id);
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to update staff');
@@ -53,7 +53,7 @@ const StaffManagement: React.FC = () => {
       await removeStaff(confirmDialog.staffId);
       toast.success('Staff removed successfully');
       if (currentBusiness) {
-        await refreshStaff(currentBusiness.id);
+        await refresh_staff(currentBusiness.id);
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to remove staff');
@@ -65,7 +65,7 @@ const StaffManagement: React.FC = () => {
   const handleInviteSuccess = () => {
     setShowInviteModal(false);
     if (currentBusiness) {
-      refreshStaff(currentBusiness.id);
+      refresh_staff(currentBusiness.id);
     }
   };
 
@@ -80,7 +80,7 @@ const StaffManagement: React.FC = () => {
     );
   }
 
-  const businessStaff = staff.filter(s => s.businessId === currentBusiness.id);
+  const businessStaff = staff.filter(s => s.business_id === currentBusiness.id);
 
   return (
     <div className="p-6">
@@ -127,7 +127,7 @@ const StaffManagement: React.FC = () => {
               {businessStaff.map((staffMember) => (
                 <tr key={staffMember.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {staffMember.userEmail || staffMember.userId.substring(0, 8) + '...'}
+                    {staffMember.user_email || staffMember.user_id.substring(0, 8) + '...'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${staffMember.role === StaffMemberRole.ADMIN
@@ -139,16 +139,16 @@ const StaffManagement: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
                     <div className="flex flex-wrap gap-2">
-                      {staffMember.permissions.canEditLandingPage && (
+                      {staffMember.permissions.can_edit_landing_page && (
                         <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">Landing Page</span>
                       )}
-                      {staffMember.permissions.canEditBlog && (
+                      {staffMember.permissions.can_edit_blog && (
                         <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">Blog</span>
                       )}
-                      {staffMember.permissions.canManageMedia && (
+                      {staffMember.permissions.can_manage_media && (
                         <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">Media</span>
                       )}
-                      {staffMember.permissions.canManageServices && (
+                      {staffMember.permissions.can_manage_services && (
                         <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">Services</span>
                       )}
                     </div>
@@ -176,7 +176,7 @@ const StaffManagement: React.FC = () => {
 
       {showInviteModal && (
         <StaffInviteModal
-          businessId={currentBusiness.id}
+          business_id={currentBusiness.id}
           onClose={() => setShowInviteModal(false)}
           onSuccess={handleInviteSuccess}
         />
@@ -247,8 +247,8 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onSave, onClose 
             <label className="flex items-center">
               <input
                 type="checkbox"
-                checked={permissions.canEditLandingPage || false}
-                onChange={(e) => setPermissions({ ...permissions, canEditLandingPage: e.target.checked })}
+                checked={permissions.can_edit_landing_page || false}
+                onChange={(e) => setPermissions({ ...permissions, can_edit_landing_page: e.target.checked })}
                 className="mr-2"
               />
               <span className="text-sm">Edit Landing Page</span>
@@ -256,8 +256,8 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onSave, onClose 
             <label className="flex items-center">
               <input
                 type="checkbox"
-                checked={permissions.canEditBlog || false}
-                onChange={(e) => setPermissions({ ...permissions, canEditBlog: e.target.checked })}
+                checked={permissions.can_edit_blog || false}
+                onChange={(e) => setPermissions({ ...permissions, can_edit_blog: e.target.checked })}
                 className="mr-2"
               />
               <span className="text-sm">Edit Blog</span>
@@ -265,8 +265,8 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onSave, onClose 
             <label className="flex items-center">
               <input
                 type="checkbox"
-                checked={permissions.canManageMedia || false}
-                onChange={(e) => setPermissions({ ...permissions, canManageMedia: e.target.checked })}
+                checked={permissions.can_manage_media || false}
+                onChange={(e) => setPermissions({ ...permissions, can_manage_media: e.target.checked })}
                 className="mr-2"
               />
               <span className="text-sm">Manage Media</span>
@@ -274,8 +274,8 @@ const StaffEditModal: React.FC<StaffEditModalProps> = ({ staff, onSave, onClose 
             <label className="flex items-center">
               <input
                 type="checkbox"
-                checked={permissions.canManageServices || false}
-                onChange={(e) => setPermissions({ ...permissions, canManageServices: e.target.checked })}
+                checked={permissions.can_manage_services || false}
+                onChange={(e) => setPermissions({ ...permissions, can_manage_services: e.target.checked })}
                 className="mr-2"
               />
               <span className="text-sm">Manage Services</span>

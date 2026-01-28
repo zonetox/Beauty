@@ -30,7 +30,7 @@ const BlogManager: React.FC = () => {
     // Move hooks before early return to follow Rules of Hooks
     const businessPosts = useMemo(() => {
         if (!currentBusiness) return [];
-        return posts.filter(p => p.businessId === currentBusiness.id);
+        return posts.filter(p => p.business_id === currentBusiness.id);
     }, [posts, currentBusiness]);
 
     if (!currentBusiness) {
@@ -44,8 +44,8 @@ const BlogManager: React.FC = () => {
         );
     }
 
-    // Check staff permissions: must be business owner or staff with canEditBlog permission
-    if (!staffPermissions.isBusinessOwner && !staffPermissions.canEditBlog) {
+    // Check staff permissions: must be business owner or staff with can_edit_blog permission
+    if (!staffPermissions.is_business_owner && !staffPermissions.can_edit_blog) {
         return (
             <div className="p-8">
                 <ForbiddenState
@@ -79,8 +79,8 @@ const BlogManager: React.FC = () => {
         }
 
         // Image validation
-        if (!postData.imageUrl || postData.imageUrl.trim().length === 0) {
-            newErrors.imageUrl = 'Image URL or file upload is required';
+        if (!postData.image_url || postData.image_url.trim().length === 0) {
+            newErrors.image_url = 'Image URL or file upload is required';
         }
 
         // SEO validation (optional but validate length if provided)
@@ -118,20 +118,20 @@ const BlogManager: React.FC = () => {
         setIsUploadingImage(true);
         try {
             // If editing existing post, use its ID; otherwise generate a temp ID for upload path
-            const postId = editingPost?.id || `temp-${Date.now()}`;
-            const folder = `blog/${postId}`;
+            const post_id = editingPost?.id || `temp-${Date.now()}`;
+            const folder = `blog/${post_id}`;
             const publicUrl = await uploadFile('blog-images', file, folder);
 
             setEditingPost(prev => ({
                 ...prev,
-                imageUrl: publicUrl
+                image_url: publicUrl
             }));
 
             // Clear image error if any
-            if (errors.imageUrl) {
+            if (errors.image_url) {
                 setErrors(prev => {
                     const newErrors = { ...prev };
-                    delete newErrors.imageUrl;
+                    delete newErrors.image_url;
                     return newErrors;
                 });
             }
@@ -155,15 +155,15 @@ const BlogManager: React.FC = () => {
         try {
             const postData = {
                 ...postToSave,
-                businessId: currentBusiness.id,
+                business_id: currentBusiness.id,
                 title: postToSave.title?.trim() || '',
                 excerpt: postToSave.excerpt?.trim() || '',
                 content: postToSave.content || '',
-                imageUrl: postToSave.imageUrl || '',
+                image_url: postToSave.image_url || '',
                 author: currentBusiness.name,
                 status: postToSave.status || BusinessBlogPostStatus.DRAFT,
                 seo: postToSave.seo || undefined,
-                isFeatured: postToSave.isFeatured || false,
+                is_featured: postToSave.is_featured || false,
             };
 
             if (postToSave.id) {
@@ -190,7 +190,7 @@ const BlogManager: React.FC = () => {
         const updatedPost = {
             ...post,
             status: isPublishing ? BusinessBlogPostStatus.PUBLISHED : BusinessBlogPostStatus.DRAFT,
-            publishedDate: (isPublishing && !post.publishedDate) ? new Date().toISOString() : post.publishedDate,
+            published_date: (isPublishing && !post.published_date) ? new Date().toISOString() : post.published_date,
         };
 
         try {
@@ -214,9 +214,9 @@ const BlogManager: React.FC = () => {
         setIsDeleting(post.id);
         try {
             // Delete image from Storage if exists and is from blog-images bucket
-            if (post.imageUrl && post.imageUrl.includes('blog-images')) {
+            if (post.image_url && post.image_url.includes('blog-images')) {
                 try {
-                    await deleteFileByUrl('blog-images', post.imageUrl);
+                    await deleteFileByUrl('blog-images', post.image_url);
                 } catch (deleteError) {
                     // Log but don't fail the delete operation
                     console.warn('Failed to delete blog post image from storage:', deleteError);
@@ -239,8 +239,8 @@ const BlogManager: React.FC = () => {
             excerpt: '',
             content: '<p>Start writing your amazing blog post here!</p>',
             status: BusinessBlogPostStatus.DRAFT,
-            imageUrl: '',
-            isFeatured: false,
+            image_url: '',
+            is_featured: false,
             seo: { title: '', description: '', keywords: '' },
         });
         setErrors({});
@@ -396,21 +396,21 @@ const BlogManager: React.FC = () => {
                             {/* Image URL Input */}
                             <input
                                 type="text"
-                                value={editingPost.imageUrl || ''}
-                                onChange={e => handleFieldChange('imageUrl', e.target.value)}
+                                value={editingPost.image_url || ''}
+                                onChange={e => handleFieldChange('image_url', e.target.value)}
                                 className={`w-full p-3 border rounded-md focus:outline-none focus:ring-primary focus:border-primary ${
-                                    errors.imageUrl ? 'border-red-500' : 'border-gray-300'
+                                    errors.image_url ? 'border-red-500' : 'border-gray-300'
                                 }`}
                                 placeholder="Enter image URL (e.g., https://...) or upload image above"
                                 disabled={isSaving || isUploadingImage}
                             />
-                            {errors.imageUrl && <p className="mt-1 text-sm text-red-600">{errors.imageUrl}</p>}
+                            {errors.image_url && <p className="mt-1 text-sm text-red-600">{errors.image_url}</p>}
 
                             {/* Image Preview */}
-                            {editingPost.imageUrl && (
+                            {editingPost.image_url && (
                                 <div className="mt-3">
                                     <img
-                                        src={editingPost.imageUrl}
+                                        src={editingPost.image_url}
                                         alt="Featured image preview"
                                         className="w-full max-w-md h-auto rounded-md border"
                                         onError={(e) => {
@@ -452,8 +452,8 @@ const BlogManager: React.FC = () => {
                                 <label className="flex items-center gap-2 cursor-pointer">
                                     <input
                                         type="checkbox"
-                                        checked={editingPost.isFeatured || false}
-                                        onChange={e => handleFieldChange('isFeatured', e.target.checked)}
+                                        checked={editingPost.is_featured || false}
+                                        onChange={e => handleFieldChange('is_featured', e.target.checked)}
                                         className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
                                         disabled={isSaving}
                                     />
@@ -608,7 +608,7 @@ const BlogManager: React.FC = () => {
                                 >
                                     <div className="flex items-center gap-4">
                                         <img
-                                            src={post.imageUrl}
+                                            src={post.image_url}
                                             alt={post.title}
                                             className="w-24 h-24 object-cover rounded-md flex-shrink-0"
                                             onError={(e) => {
@@ -618,7 +618,7 @@ const BlogManager: React.FC = () => {
                                         <div className="flex-grow min-w-0">
                                             <div className="flex items-start gap-2 mb-1">
                                                 <h3 className="font-bold text-lg truncate">{post.title}</h3>
-                                                {post.isFeatured && (
+                                                {post.is_featured && (
                                                     <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full flex-shrink-0">
                                                         Featured
                                                     </span>
@@ -636,11 +636,11 @@ const BlogManager: React.FC = () => {
                                                     {post.status}
                                                 </span>
                                                 <span className="text-xs text-gray-500">
-                                                    {post.publishedDate
-                                                        ? `Published: ${new Date(post.publishedDate).toLocaleDateString()}`
-                                                        : `Created: ${new Date(post.createdDate).toLocaleDateString()}`}
+                                                    {post.published_date
+                                                        ? `Published: ${new Date(post.published_date).toLocaleDateString()}`
+                                                        : `Created: ${new Date(post.created_date).toLocaleDateString()}`}
                                                 </span>
-                                                <span className="text-xs text-gray-500">Views: {post.viewCount}</span>
+                                                <span className="text-xs text-gray-500">Views: {post.view_count}</span>
                                             </div>
                                         </div>
                                         <div className="flex flex-col gap-2 flex-shrink-0">

@@ -8,8 +8,8 @@ interface BusinessBlogSectionProps {
 }
 
 const BusinessBlogSection: React.FC<BusinessBlogSectionProps> = ({ business }) => {
-    const { getPostsByBusinessId } = useBusinessBlogData();
-    const publishedPosts = getPostsByBusinessId ? getPostsByBusinessId(business.id).filter(p => p.status === BusinessBlogPostStatus.PUBLISHED) : [];
+    const { getPostsBybusiness_id } = useBusinessBlogData();
+    const publishedPosts = getPostsBybusiness_id ? getPostsBybusiness_id(business.id).filter(p => p.status === BusinessBlogPostStatus.PUBLISHED) : [];
 
     if (publishedPosts.length === 0) {
         return null;

@@ -7,8 +7,8 @@ import { DEFAULT_MEMBERSHIP_PACKAGES } from '../constants.ts';
 interface MembershipPackageContextType {
   packages: MembershipPackage[];
   addPackage: (newPackage: Omit<MembershipPackage, 'id'>) => void;
-  updatePackage: (packageId: string, updates: Partial<MembershipPackage>) => void;
-  deletePackage: (packageId: string) => void;
+  updatePackage: (package_id: string, updates: Partial<MembershipPackage>) => void;
+  deletePackage: (package_id: string) => void;
 }
 
 const MembershipPackageContext = createContext<MembershipPackageContextType | undefined>(undefined);
@@ -58,16 +58,16 @@ export const MembershipPackageProvider: React.FC<{ children: ReactNode }> = ({ c
     updateLocalStorage(updatedPackages);
   };
 
-  const updatePackage = (packageId: string, updates: Partial<MembershipPackage>) => {
+  const updatePackage = (package_id: string, updates: Partial<MembershipPackage>) => {
     const updatedPackages = packages.map(pkg =>
-      pkg.id === packageId ? { ...pkg, ...updates } : pkg
+      pkg.id === package_id ? { ...pkg, ...updates } : pkg
     );
     setPackages(updatedPackages);
     updateLocalStorage(updatedPackages);
   };
 
-  const deletePackage = (packageId: string) => {
-    const updatedPackages = packages.filter(pkg => pkg.id !== packageId);
+  const deletePackage = (package_id: string) => {
+    const updatedPackages = packages.filter(pkg => pkg.id !== package_id);
     setPackages(updatedPackages);
     updateLocalStorage(updatedPackages);
   };

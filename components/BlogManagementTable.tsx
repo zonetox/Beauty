@@ -7,7 +7,7 @@ import { BlogPost } from '../types.ts';
 interface BlogManagementTableProps {
     posts: BlogPost[];
     onEdit: (post: BlogPost) => void;
-    onDelete: (postId: number) => void;
+    onDelete: (post_id: number) => void;
     onUpdate: (post: BlogPost) => void;
 }
 
@@ -15,7 +15,7 @@ const BlogManagementTable: React.FC<BlogManagementTableProps> = ({ posts, onEdit
     // Use useMemo instead of useEffect + setState to avoid cascading renders
     const defaultViewInputs = useMemo(() => {
         return posts.reduce((acc, post) => {
-            acc[post.id] = String(post.viewCount || 0);
+            acc[post.id] = String(post.view_count || 0);
             return acc;
         }, {} as Record<number, string>);
     }, [posts]);
@@ -27,15 +27,15 @@ const BlogManagementTable: React.FC<BlogManagementTableProps> = ({ posts, onEdit
         return { ...defaultViewInputs, ...editedInputs };
     }, [defaultViewInputs, editedInputs]);
 
-    const handleViewChange = (postId: number, value: string) => {
-        setEditedInputs(prev => ({ ...prev, [postId]: value }));
+    const handleViewChange = (post_id: number, value: string) => {
+        setEditedInputs(prev => ({ ...prev, [post_id]: value }));
     };
 
     const handleViewUpdate = (post: BlogPost) => {
         const viewValue = viewInputs[post.id] ?? '0';
-        const newViewCount = parseInt(viewValue, 10);
-        if (!isNaN(newViewCount) && newViewCount !== post.viewCount) {
-            onUpdate({ ...post, viewCount: newViewCount });
+        const newview_count = parseInt(viewValue, 10);
+        if (!isNaN(newview_count) && newview_count !== post.view_count) {
+            onUpdate({ ...post, view_count: newview_count });
             // Remove from editedInputs after update
             setEditedInputs(prev => {
                 const next = { ...prev };

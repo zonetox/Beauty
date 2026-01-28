@@ -1,19 +1,19 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { supabase } from '../lib/supabaseClient.ts';
 import { BusinessStaff, StaffMemberRole } from '../types.ts';
-import { snakeToCamel } from '../lib/utils.ts';
+
 
 interface StaffContextType {
   staff: BusinessStaff[];
   loading: boolean;
   error: string | null;
-  getStaffByBusinessId: (businessId: number) => Promise<BusinessStaff[]>;
-  addStaff: (businessId: number, userId: string, role: StaffMemberRole, permissions: BusinessStaff['permissions']) => Promise<BusinessStaff>;
+  get_staff_by_business_id: (business_id: number) => Promise<BusinessStaff[]>;
+  addStaff: (business_id: number, user_id: string, role: StaffMemberRole, permissions: BusinessStaff['permissions']) => Promise<BusinessStaff>;
   updateStaff: (staffId: string, updates: Partial<BusinessStaff>) => Promise<void>;
   removeStaff: (staffId: string) => Promise<void>;
-  isStaffMember: (userId: string, businessId: number) => Promise<boolean>;
-  getStaffPermissions: (userId: string, businessId: number) => Promise<BusinessStaff['permissions'] | null>;
-  refreshStaff: (businessId: number) => Promise<void>;
+  is_staff_member: (user_id: string, business_id: number) => Promise<boolean>;
+  getStaffPermissions: (user_id: string, business_id: number) => Promise<BusinessStaff['permissions'] | null>;
+  refresh_staff: (business_id: number) => Promise<void>;
 }
 
 const StaffContext = createContext<StaffContextType | undefined>(undefined);
@@ -23,7 +23,7 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const getStaffByBusinessId = useCallback(async (businessId: number): Promise<BusinessStaff[]> => {
+  const get_staff_by_business_id = useCallback(async (business_id: number): Promise<BusinessStaff[]> => {
     setLoading(true);
     setError(null);
     try {
@@ -37,29 +37,31 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             full_name
           )
         `)
-        .eq('business_id', businessId)
+        .eq('business_id', business_id)
         .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;
 
-      const staffList = (data || []).map((item) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const rawItem = item as any;
-        const staff = snakeToCamel(rawItem) as unknown as BusinessStaff & { userEmail?: string; userName?: string };
-
-        // Add email from joined profile if available
-        if (rawItem.profiles) {
-          staff.userEmail = Array.isArray(rawItem.profiles) ? rawItem.profiles[0]?.email : rawItem.profiles.email;
-          staff.userName = Array.isArray(rawItem.profiles) ? rawItem.profiles[0]?.full_name : rawItem.profiles.full_name;
-        }
-        return staff as BusinessStaff;
+      const staff_list = (data || []).map((item: any) => {
+        const staff: BusinessStaff = {
+          id: item.id,
+          business_id: item.business_id,
+          user_id: item.user_id,
+          role: item.role,
+          permissions: item.permissions,
+          created_at: item.created_at,
+          updated_at: item.updated_at,
+          user_email: item.profiles?.email,
+          user_name: item.profiles?.full_name
+        };
+        return staff;
       });
 
       setStaff(prev => {
-        const filtered = prev.filter(s => s.businessId !== businessId);
-        return [...filtered, ...staffList];
+        const filtered = prev.filter(s => s.business_id !== business_id); // Keep staff from other businesses
+        return [...filtered, ...staff_list]; // Add new staff for this business
       });
-      return staffList;
+      return staff_list;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch staff';
       setError(errorMessage);
@@ -71,8 +73,8 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   }, []);
 
   const addStaff = useCallback(async (
-    businessId: number,
-    userId: string,
+    business_id: number,
+    user_id: string,
     role: StaffMemberRole,
     permissions: BusinessStaff['permissions']
   ): Promise<BusinessStaff> => {
@@ -82,8 +84,8 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       const { data, error: insertError } = await supabase
         .from('business_staff')
         .insert({
-          business_id: businessId,
-          user_id: userId,
+          business_id: business_id,
+          user_id: user_id,
           role,
           permissions,
         })
@@ -92,9 +94,9 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
       if (insertError) throw insertError;
 
-      const newStaff = snakeToCamel(data) as BusinessStaff;
-      setStaff(prev => [...prev, newStaff]);
-      return newStaff;
+      const new_staff = data as unknown as BusinessStaff;
+      setStaff(prev => [...prev, new_staff]);
+      return new_staff;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add staff';
       setError(errorMessage);
@@ -153,13 +155,13 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   }, []);
 
-  const isStaffMember = useCallback(async (userId: string, businessId: number): Promise<boolean> => {
+  const is_staff_member = useCallback(async (user_id: string, business_id: number): Promise<boolean> => {
     try {
       const { data, error: fetchError } = await supabase
         .from('business_staff')
         .select('id')
-        .eq('user_id', userId)
-        .eq('business_id', businessId)
+        .eq('user_id', user_id)
+        .eq('business_id', business_id)
         .single();
 
       if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = no rows returned
@@ -173,13 +175,13 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   }, []);
 
-  const getStaffPermissions = useCallback(async (userId: string, businessId: number): Promise<BusinessStaff['permissions'] | null> => {
+  const getStaffPermissions = useCallback(async (user_id: string, business_id: number): Promise<BusinessStaff['permissions'] | null> => {
     try {
       const { data, error: fetchError } = await supabase
         .from('business_staff')
         .select('permissions')
-        .eq('user_id', userId)
-        .eq('business_id', businessId)
+        .eq('user_id', user_id)
+        .eq('business_id', business_id)
         .single();
 
       if (fetchError && fetchError.code !== 'PGRST116') {
@@ -187,17 +189,16 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       }
 
       if (!data) return null;
-
-      return (snakeToCamel(data) as BusinessStaff).permissions;
+      return data.permissions;
     } catch (err) {
       console.error('Error fetching staff permissions:', err);
       return null;
     }
   }, []);
 
-  const refreshStaff = useCallback(async (businessId: number): Promise<void> => {
-    await getStaffByBusinessId(businessId);
-  }, [getStaffByBusinessId]);
+  const refresh_staff = useCallback(async (business_id: number): Promise<void> => {
+    await get_staff_by_business_id(business_id);
+  }, [get_staff_by_business_id]);
 
   return (
     <StaffContext.Provider
@@ -205,13 +206,13 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         staff,
         loading,
         error,
-        getStaffByBusinessId,
+        get_staff_by_business_id,
         addStaff,
         updateStaff,
         removeStaff,
-        isStaffMember,
+        is_staff_member,
         getStaffPermissions,
-        refreshStaff,
+        refresh_staff,
       }}
     >
       {children}

@@ -27,10 +27,10 @@ const SECTION_INFO: SectionInfo[] = [
   { key: 'contact', label: 'Contact & Map', description: 'Contact form and location map' },
 ];
 
-const LandingPageSectionEditor: React.FC<LandingPageSectionEditorProps> = ({ 
-  config, 
-  onChange, 
-  disabled = false 
+const LandingPageSectionEditor: React.FC<LandingPageSectionEditorProps> = ({
+  config,
+  onChange,
+  disabled = false
 }) => {
   // Get sections sorted by order
   const sortedSections = Object.entries(config.sections)
@@ -43,7 +43,7 @@ const LandingPageSectionEditor: React.FC<LandingPageSectionEditorProps> = ({
 
   const handleToggle = (sectionKey: keyof LandingPageConfig['sections']) => {
     if (disabled) return;
-    
+
     const newConfig: LandingPageConfig = {
       sections: {
         ...config.sections,
@@ -58,10 +58,10 @@ const LandingPageSectionEditor: React.FC<LandingPageSectionEditorProps> = ({
 
   const handleMoveUp = (index: number) => {
     if (disabled || index === 0) return;
-    
+
     const currentSection = sortedSections[index];
     const previousSection = sortedSections[index - 1];
-    
+
     const newConfig: LandingPageConfig = {
       sections: {
         ...config.sections,
@@ -80,10 +80,10 @@ const LandingPageSectionEditor: React.FC<LandingPageSectionEditorProps> = ({
 
   const handleMoveDown = (index: number) => {
     if (disabled || index === sortedSections.length - 1) return;
-    
+
     const currentSection = sortedSections[index];
     const nextSection = sortedSections[index + 1];
-    
+
     const newConfig: LandingPageConfig = {
       sections: {
         ...config.sections,
@@ -113,11 +113,10 @@ const LandingPageSectionEditor: React.FC<LandingPageSectionEditorProps> = ({
         {sortedSections.map((section, index) => (
           <div
             key={section.key}
-            className={`flex items-center gap-4 p-4 border rounded-lg transition-colors ${
-              section.enabled
+            className={`flex items-center gap-4 p-4 border rounded-lg transition-colors ${section.enabled
                 ? 'bg-white border-gray-300'
                 : 'bg-gray-50 border-gray-200 opacity-60'
-            }`}
+              }`}
           >
             {/* Drag handle / Order indicator */}
             <div className="flex flex-col gap-1">
@@ -125,11 +124,10 @@ const LandingPageSectionEditor: React.FC<LandingPageSectionEditorProps> = ({
                 type="button"
                 onClick={() => handleMoveUp(index)}
                 disabled={disabled || index === 0}
-                className={`p-1 rounded ${
-                  disabled || index === 0
+                className={`p-1 rounded ${disabled || index === 0
                     ? 'text-gray-300 cursor-not-allowed'
                     : 'text-gray-600 hover:bg-gray-200'
-                }`}
+                  }`}
                 title="Move up"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -140,11 +138,10 @@ const LandingPageSectionEditor: React.FC<LandingPageSectionEditorProps> = ({
                 type="button"
                 onClick={() => handleMoveDown(index)}
                 disabled={disabled || index === sortedSections.length - 1}
-                className={`p-1 rounded ${
-                  disabled || index === sortedSections.length - 1
+                className={`p-1 rounded ${disabled || index === sortedSections.length - 1
                     ? 'text-gray-300 cursor-not-allowed'
                     : 'text-gray-600 hover:bg-gray-200'
-                }`}
+                  }`}
                 title="Move down"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -173,14 +170,11 @@ const LandingPageSectionEditor: React.FC<LandingPageSectionEditorProps> = ({
                 disabled={disabled}
                 className="sr-only peer"
               />
-              <div className={`w-11 h-6 rounded-full peer ${
-                section.enabled ? 'bg-primary' : 'bg-gray-300'
-              } peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 ${
-                disabled ? 'opacity-50 cursor-not-allowed' : ''
-              } transition-colors`}>
-                <div className={`w-5 h-5 bg-white rounded-full shadow transform transition-transform ${
-                  section.enabled ? 'translate-x-5' : 'translate-x-0'
-                }`}></div>
+              <div className={`w-11 h-6 rounded-full peer ${section.enabled ? 'bg-primary' : 'bg-gray-300'
+                } peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 ${disabled ? 'opacity-50 cursor-not-allowed' : ''
+                } transition-colors`}>
+                <div className={`w-5 h-5 bg-white rounded-full shadow transform transition-transform ${section.enabled ? 'translate-x-5' : 'translate-x-0'
+                  }`}></div>
               </div>
             </label>
           </div>
@@ -189,7 +183,7 @@ const LandingPageSectionEditor: React.FC<LandingPageSectionEditorProps> = ({
 
       <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
         <p className="text-sm text-blue-800">
-          <strong>Note:</strong> Disabled sections will not appear on your public landing page. 
+          <strong>Note:</strong> Disabled sections will not appear on your public landing page.
           Use the up/down arrows to change the order of sections.
         </p>
       </div>

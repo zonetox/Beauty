@@ -26,12 +26,12 @@ const BulkImportTool: React.FC = () => {
                     const newBusiness: Business = {
                         id: Date.now() + index, // Simple unique ID generation
                         slug: biz.name.toLowerCase().replace(/\s+/g, '-') + `-${Date.now() + index}`,
-                        isVerified: false,
-                        isActive: true,
+                        is_verified: false,
+                        is_active: true,
                         rating: 0,
-                        reviewCount: 0,
-                        viewCount: 0,
-                        joinedDate: new Date().toISOString(),
+                        review_count: 0,
+                        view_count: 0,
+                        joined_date: new Date().toISOString(),
                         ...biz,
                     } as Business; // Cast after merging defaults
                     

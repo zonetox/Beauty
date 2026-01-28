@@ -12,16 +12,16 @@ import ConfirmDialog from './ConfirmDialog.tsx';
 // Helper function to calculate deal status based on dates
 const calculateDealStatus = (deal: Deal): DealStatus => {
     const now = new Date();
-    const startDate = deal.startDate ? new Date(deal.startDate) : null;
-    const endDate = deal.endDate ? new Date(deal.endDate) : null;
+    const start_date = deal.start_date ? new Date(deal.start_date) : null;
+    const end_date = deal.end_date ? new Date(deal.end_date) : null;
 
-    if (startDate && startDate > now) {
+    if (start_date && start_date > now) {
         return DealStatus.SCHEDULED;
     }
-    if (endDate && endDate < now) {
+    if (end_date && end_date < now) {
         return DealStatus.EXPIRED;
     }
-    if (startDate && endDate && startDate <= now && endDate >= now) {
+    if (start_date && end_date && start_date <= now && end_date >= now) {
         return DealStatus.ACTIVE;
     }
     // Default to ACTIVE if no dates provided
@@ -45,7 +45,7 @@ const DealsManager: React.FC = () => {
             const calculatedStatus = calculateDealStatus(deal);
             // Use calculated status if deal doesn't have explicit status or if dates changed
             const shouldUpdateStatus = !deal.status ||
-                (deal.startDate || deal.endDate) && calculatedStatus !== deal.status;
+                (deal.start_date || deal.end_date) && calculatedStatus !== deal.status;
 
             return {
                 ...deal,
@@ -97,7 +97,7 @@ const DealsManager: React.FC = () => {
             const dealToSave = {
                 ...dealData,
                 status: finalStatus,
-                businessId: currentBusiness.id
+                business_id: currentBusiness.id
             };
 
             if (dealData.id) {
@@ -151,7 +151,7 @@ const DealsManager: React.FC = () => {
                     deal={editingDeal}
                     onSave={handleSaveDeal}
                     onClose={() => setIsModalOpen(false)}
-                    businessId={currentBusiness.id}
+                    business_id={currentBusiness.id}
                 />
             )}
 
@@ -186,9 +186,9 @@ const DealsManager: React.FC = () => {
                             key={deal.id}
                             className="flex items-center gap-4 p-3 border rounded-md bg-white shadow-sm hover:shadow-md transition-shadow"
                         >
-                            {deal.imageUrl && (
+                            {deal.image_url && (
                                 <img
-                                    src={deal.imageUrl}
+                                    src={deal.image_url}
                                     alt={deal.title}
                                     className="w-16 h-16 object-cover rounded-md flex-shrink-0"
                                     onError={(e) => {
@@ -200,18 +200,18 @@ const DealsManager: React.FC = () => {
                                 <p className="font-semibold text-neutral-dark">{deal.title}</p>
                                 <p className="text-sm text-gray-500 truncate">{deal.description || 'No description'}</p>
                                 <div className="flex items-center gap-4 mt-1 text-xs text-gray-400">
-                                    {deal.startDate && (
-                                        <span>Start: {new Date(deal.startDate).toLocaleDateString()}</span>
+                                    {deal.start_date && (
+                                        <span>Start: {new Date(deal.start_date).toLocaleDateString()}</span>
                                     )}
-                                    {deal.endDate && (
-                                        <span>End: {new Date(deal.endDate).toLocaleDateString()}</span>
+                                    {deal.end_date && (
+                                        <span>End: {new Date(deal.end_date).toLocaleDateString()}</span>
                                     )}
-                                    {deal.dealPrice && deal.originalPrice && (
+                                    {deal.dealPrice && deal.original_price && (
                                         <span className="text-primary font-semibold">
                                             {deal.dealPrice.toLocaleString('vi-VN')}đ
-                                            {deal.originalPrice > deal.dealPrice && (
+                                            {deal.original_price > deal.dealPrice && (
                                                 <span className="text-gray-400 line-through ml-1">
-                                                    {deal.originalPrice.toLocaleString('vi-VN')}đ
+                                                    {deal.original_price.toLocaleString('vi-VN')}đ
                                                 </span>
                                             )}
                                         </span>

@@ -154,14 +154,14 @@ export const trackPageViewManually = async (
  * Standalone function that can be used anywhere (doesn't require React hooks)
  * 
  * @param conversionType - Type of conversion: 'click', 'booking', 'contact', 'call'
- * @param businessId - Business ID (optional, for business-specific conversions)
+ * @param business_id - Business ID (optional, for business-specific conversions)
  * @param source - Source of conversion: 'landing_page', 'directory', 'search'
  * @param metadata - Additional metadata (optional)
  * @param userId - User ID (optional, will try to get from session if not provided)
  */
 export const trackConversion = async (
   conversionType: Conversion['conversion_type'],
-  businessId?: number,
+  business_id?: number,
   source?: Conversion['source'],
   metadata?: Record<string, unknown>,
   userId?: string
@@ -193,7 +193,7 @@ export const trackConversion = async (
     });
 
     const insertPromise = supabase.from('conversions').insert({
-      business_id: businessId || null,
+      business_id: business_id || null,
       conversion_type: conversionType,
       source: determinedSource || null,
       user_id: userId || null,

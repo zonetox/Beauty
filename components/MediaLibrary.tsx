@@ -58,7 +58,7 @@ const MediaLibrary: React.FC = () => {
         setLocalMedia(currentBusiness?.gallery || []);
     }, [currentBusiness?.gallery]);
 
-    const currentPackage = useMemo(() => packages.find(p => p.tier === currentBusiness?.membershipTier), [packages, currentBusiness]);
+    const currentPackage = useMemo(() => packages.find(p => p.tier === currentBusiness?.membership_tier), [packages, currentBusiness]);
 
     const photoCount = useMemo(() => localMedia.filter(item => item.type === MediaType.IMAGE).length, [localMedia]);
     const videoCount = useMemo(() => localMedia.filter(item => item.type === MediaType.VIDEO).length, [localMedia]);
@@ -104,13 +104,13 @@ const MediaLibrary: React.FC = () => {
             }
 
             // Check limits
-            if (isImage && photoCount >= currentPackage.permissions.photoLimit) {
-                errors.push(`${file.name}: Photo limit (${currentPackage.permissions.photoLimit}) reached.`);
+            if (isImage && photoCount >= currentPackage.permissions.photo_limit) {
+                errors.push(`${file.name}: Photo limit (${currentPackage.permissions.photo_limit}) reached.`);
                 continue;
             }
 
-            if (isVideo && videoCount >= currentPackage.permissions.videoLimit) {
-                errors.push(`${file.name}: Video limit (${currentPackage.permissions.videoLimit}) reached.`);
+            if (isVideo && videoCount >= currentPackage.permissions.video_limit) {
+                errors.push(`${file.name}: Video limit (${currentPackage.permissions.video_limit}) reached.`);
                 continue;
             }
 
@@ -297,8 +297,8 @@ const MediaLibrary: React.FC = () => {
             <p className="text-gray-500 mb-6">Manage all photos and videos for your landing page.</p>
 
             <div className="bg-gray-50 p-4 rounded-lg border flex flex-col md:flex-row gap-6 mb-6">
-                <StatDisplay label="Photos" value={photoCount} limit={currentPackage.permissions.photoLimit} />
-                <StatDisplay label="Videos" value={videoCount} limit={currentPackage.permissions.videoLimit} />
+                <StatDisplay label="Photos" value={photoCount} limit={currentPackage.permissions.photo_limit} />
+                <StatDisplay label="Videos" value={videoCount} limit={currentPackage.permissions.video_limit} />
             </div>
 
             <div

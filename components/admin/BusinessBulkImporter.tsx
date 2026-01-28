@@ -187,12 +187,12 @@ const BusinessBulkImporter: React.FC = () => {
                 setImportLog(prev => [...prev, `Processing: ${name}...`]);
 
                 // 1. Check or Create User
-                let userId: string | null = null;
+                let user_id: string | null = null;
                 const { data: { users } } = await adminClient.auth.admin.listUsers();
                 const existingUser = users.find(u => u.email === email);
 
                 if (existingUser) {
-                    userId = existingUser.id;
+                    user_id = existingUser.id;
                     setImportLog(prev => [...prev, `   ℹ️ User ${email} already exists.`]);
                 } else {
                     const { data: userData, error: createError } = await adminClient.auth.admin.createUser({
@@ -202,11 +202,11 @@ const BusinessBulkImporter: React.FC = () => {
                         user_metadata: { full_name: name, role: 'business_owner' }
                     });
                     if (createError) throw createError;
-                    userId = userData.user.id;
+                    user_id = userData.user.id;
                     setImportLog(prev => [...prev, `   ✅ User created: ${email}`]);
                 }
 
-                if (!userId) throw new Error("Failed to resolve User ID");
+                if (!user_id) throw new Error("Failed to resolve User ID");
 
                 // 2. Prepare Business Data
                 const slug = `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now().toString().slice(-4)}`;
@@ -215,17 +215,17 @@ const BusinessBulkImporter: React.FC = () => {
                     ? images_str.split(',').map((url: string) => url.trim()).filter((url: string) => url.length > 0)
                     : [];
 
-                const imageUrl = gallery.length > 0
+                const image_url = gallery.length > 0
                     ? gallery[0]
                     : `https://via.placeholder.com/800x600?text=${encodeURIComponent(name)}`;
 
-                const workingHours = {
+                const working_hours = {
                     "Thứ 2 - Thứ 6": `${working_hours_start || '09:00'} - ${working_hours_end || '20:00'}`,
                     "Thứ 7 - Chủ Nhật": "09:00 - 21:00"
                 };
 
                 const businessData = {
-                    owner_id: userId,
+                    owner_id: user_id,
                     name,
                     slug,
                     email,
@@ -238,9 +238,9 @@ const BusinessBulkImporter: React.FC = () => {
                     longitude: longitude ? parseFloat(longitude) : null,
                     description: description || '',
                     categories: [category || 'Spa & Massage'],
-                    image_url: imageUrl,
+                    image_url: image_url,
                     gallery: gallery,
-                    working_hours: workingHours,
+                    working_hours: working_hours,
                     website,
                     is_active: true,
                     is_verified: true,
@@ -277,7 +277,7 @@ const BusinessBulkImporter: React.FC = () => {
     const downloadTemplate = () => {
         const headers = [
             'Name', 'Email', 'Password', 'Phone', 'Address', 'City', 'District', 'Latitude', 'Longitude',
-            'Category', 'Description', 'Working_Hours_Start', 'Working_Hours_End', 'Website', 'Images_Comma_Separated'
+            'Category', 'Description', 'working_hours_Start', 'working_hours_End', 'Website', 'Images_Comma_Separated'
         ];
         const sample = [
             'Spa Hà Nội 123,spa123@example.com,ChangeMe123,0909123456,123 Kim Mã,Hà Nội,Ba Đình,21.0285,105.8542,Spa & Massage,"Spa uy tín hàng đầu",09:00,21:00,https://spa.com,"https://img1.com/a.jpg,https://img2.com/b.jpg"'

@@ -167,11 +167,11 @@ serve(async (req) => {
 
     if (!businessBlogPostsError && businessBlogPosts) {
       // Get business slugs for business blog posts
-      const businessIds = [...new Set(businessBlogPosts.map(p => p.business_id))];
+      const business_ids = [...new Set(businessBlogPosts.map(p => p.business_id))];
       const { data: businessSlugs } = await supabase
         .from('businesses')
         .select('id, slug')
-        .in('id', businessIds)
+        .in('id', business_ids)
         .eq('is_active', true);
 
       const businessSlugMap = new Map(

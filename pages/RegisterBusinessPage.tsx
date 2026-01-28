@@ -3,14 +3,12 @@
 // Replaces the old 2-step process with a robust single-page experience.
 
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../providers/AuthProvider.tsx';
 import SEOHead from '../components/SEOHead.tsx';
 import { BusinessRegistrationFormSchema, BusinessRegistrationFormData } from '../lib/schemas/business.schema.ts';
 import { CATEGORIES } from '../constants.ts'; // Ensure we have categories
-
-import BusinessOnboardingWizard from '../components/BusinessOnboardingWizard.tsx';
 
 const RegisterBusinessPage: React.FC = () => {
     const navigate = useNavigate();
@@ -33,7 +31,7 @@ const RegisterBusinessPage: React.FC = () => {
 
     // If user is ALREADY logged in, show onboarding instead of signup
     if (user) {
-        return <BusinessOnboardingWizard />;
+        return <Navigate to="/business-profile" replace />;
     }
 
     // Handle Input Change

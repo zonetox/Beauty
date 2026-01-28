@@ -62,10 +62,10 @@ const Header: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Get user role from role resolution (based on actual database state)
-  const { role, isAdmin, isBusinessOwner, isBusinessStaff, isLoading: roleLoading } = useUserRole();
+  const { role, isAdmin, is_business_owner, isBusinessStaff, isLoading: roleLoading } = useUserRole();
 
   // Determine if user has business access (owner OR staff)
-  const hasBusinessAccess = isBusinessOwner || isBusinessStaff;
+  const hasBusinessAccess = is_business_owner || isBusinessStaff;
 
   const handleLogout = async () => {
     try {
@@ -138,8 +138,8 @@ const Header: React.FC = () => {
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link to="/" onClick={() => setIsMenuOpen(false)} className="group">
-              {theme.logoUrl ? (
-                <img src={theme.logoUrl} alt="1Beauty Asia Logo" className="h-12 w-auto" />
+              {theme.logo_url ? (
+                <img src={theme.logo_url} alt="1Beauty Asia Logo" className="h-12 w-auto" />
               ) : (
                 <span className="text-2xl font-bold font-outfit text-gradient transition-all duration-300 group-hover:scale-105 inline-block">
                   1Beauty.asia
@@ -176,19 +176,19 @@ const Header: React.FC = () => {
                     aria-expanded={isDropdownOpen}
                     aria-haspopup="true"
                   >
-                    {profile?.avatarUrl ? (
+                    {profile?.avatar_url ? (
                       <img
-                        src={profile.avatarUrl}
-                        alt={profile.fullName || user.email || 'User'}
+                        src={profile.avatar_url}
+                        alt={profile.full_name || user.email || 'User'}
                         className="w-8 h-8 rounded-full object-cover"
                       />
                     ) : (
                       <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-semibold">
-                        {(profile?.fullName || user.user_metadata?.full_name || user.email || 'U').charAt(0).toUpperCase()}
+                        {(profile?.full_name || user.user_metadata?.full_name || user.email || 'U').charAt(0).toUpperCase()}
                       </div>
                     )}
                     <span className="text-sm text-neutral-dark hidden lg:block">
-                      {profile?.fullName || user.user_metadata?.full_name || user.email}
+                      {profile?.full_name || user.user_metadata?.full_name || user.email}
                     </span>
                     <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-neutral-dark transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -201,7 +201,7 @@ const Header: React.FC = () => {
                       <div className="py-2">
                         <div className="px-4 py-2 border-b border-gray-200">
                           <p className="text-sm font-semibold text-neutral-dark">
-                            {profile?.fullName || user.user_metadata?.full_name || 'User'}
+                            {profile?.full_name || user.user_metadata?.full_name || 'User'}
                           </p>
                           <p className="text-xs text-gray-500 truncate">{user.email}</p>
                         </div>
@@ -268,7 +268,7 @@ const Header: React.FC = () => {
               </div>
             ) : (
               <>
-                <NavLink to="/login" className={`${navLinkClass({ isActive: false })} ml-2`}>
+                <NavLink to="/login" className={`${navLinkClass({ is_active: false })} ml-2`}>
                   Đăng nhập
                 </NavLink>
                 {role === 'anonymous' && (
@@ -318,19 +318,19 @@ const Header: React.FC = () => {
               <div className="px-2 space-y-1">
                 <div className="px-3 py-2 mb-2">
                   <div className="flex items-center gap-3">
-                    {profile?.avatarUrl ? (
+                    {profile?.avatar_url ? (
                       <img
-                        src={profile.avatarUrl}
-                        alt={profile.fullName || user.email || 'User'}
+                        src={profile.avatar_url}
+                        alt={profile.full_name || user.email || 'User'}
                         className="w-10 h-10 rounded-full object-cover"
                       />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-semibold">
-                        {(profile?.fullName || user.user_metadata?.full_name || user.email || 'U').charAt(0).toUpperCase()}
+                        {(profile?.full_name || user.user_metadata?.full_name || user.email || 'U').charAt(0).toUpperCase()}
                       </div>
                     )}
                     <div>
-                      <p className="font-medium text-neutral-dark">{profile?.fullName || user.user_metadata?.full_name || user.email}</p>
+                      <p className="font-medium text-neutral-dark">{profile?.full_name || user.user_metadata?.full_name || user.email}</p>
                       <p className="text-xs text-gray-500 truncate">{user.email}</p>
                     </div>
                   </div>

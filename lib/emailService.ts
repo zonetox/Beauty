@@ -299,7 +299,7 @@ export const emailTriggers = {
     email: string,
     businessName: string,
     expiryDate: string,
-    membershipTier: string
+    membership_tier: string
   ) {
     return sendTemplatedEmail({
       to: email,
@@ -307,7 +307,7 @@ export const emailTriggers = {
       templateData: {
         businessName,
         expiryDate,
-        membershipTier,
+        membership_tier,
       },
     });
   },

@@ -2,7 +2,7 @@ import React, { createContext, useContext, ReactNode } from 'react';
 import { BusinessAnalytics } from '../types.ts';
 
 interface AnalyticsDataContextType {
-  getAnalyticsByBusinessId: (businessId: number) => BusinessAnalytics | undefined;
+  getAnalyticsBybusiness_id: (business_id: number) => BusinessAnalytics | undefined;
 }
 
 const AnalyticsDataContext = createContext<AnalyticsDataContextType | undefined>(undefined);
@@ -11,11 +11,11 @@ export const AnalyticsDataProvider: React.FC<{ children: ReactNode }> = ({ child
   // Data is static for this demo, so no state or effects needed.
   const analyticsData: BusinessAnalytics[] = [];
 
-  const getAnalyticsByBusinessId = (businessId: number) => {
-    return analyticsData.find(data => data.businessId === businessId);
+  const getAnalyticsBybusiness_id = (business_id: number) => {
+    return analyticsData.find(data => data.business_id === business_id);
   };
 
-  const value = { getAnalyticsByBusinessId };
+  const value = { getAnalyticsBybusiness_id };
 
   return (
     <AnalyticsDataContext.Provider value={value}>

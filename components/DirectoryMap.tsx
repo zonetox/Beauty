@@ -14,18 +14,18 @@ export interface MapBounds {
 
 interface DirectoryMapProps {
     businesses: Business[];
-    highlightedBusinessId: number | null;
-    selectedBusinessId: number | null;
+    highlightedbusiness_id: number | null;
+    selectedbusiness_id: number | null;
     onBoundsChange: (bounds: MapBounds) => void;
-    onMarkerClick: (businessId: number) => void;
+    onMarkerClick: (business_id: number) => void;
     onPopupClose: () => void;
-    onMarkerMouseEnter: (businessId: number) => void;
+    onMarkerMouseEnter: (business_id: number) => void;
     onMarkerMouseLeave: () => void;
     shouldFitBounds: boolean;
     centerCoords?: [number, number] | null;
 }
 
-const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusinessId, selectedBusinessId, onBoundsChange, onMarkerClick, onPopupClose, onMarkerMouseEnter, onMarkerMouseLeave, shouldFitBounds, centerCoords }) => {
+const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedbusiness_id, selectedbusiness_id, onBoundsChange, onMarkerClick, onPopupClose, onMarkerMouseEnter, onMarkerMouseLeave, shouldFitBounds, centerCoords }) => {
     const mapContainerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<L.Map | null>(null); // To hold the Leaflet map instance
     const markersRef = useRef<{ [key: number]: L.Marker }>({}); // To hold marker instances
@@ -199,15 +199,15 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusi
     useEffect(() => {
         if (!mapRef.current) return;
 
-        if (selectedBusinessId && markersRef.current[selectedBusinessId]) {
-            const selectedMarker = markersRef.current[selectedBusinessId];
+        if (selectedbusiness_id && markersRef.current[selectedbusiness_id]) {
+            const selectedMarker = markersRef.current[selectedbusiness_id];
             if (!selectedMarker.isPopupOpen()) {
                 selectedMarker.openPopup();
             }
             // Pan smoothly to the marker
             mapRef.current.flyTo(selectedMarker.getLatLng(), mapRef.current.getZoom());
         }
-    }, [selectedBusinessId]);
+    }, [selectedbusiness_id]);
 
     // --- Handle Highlighting (Hover or Selection) ---
     useEffect(() => {
@@ -217,13 +217,13 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusi
             const id = Number(idStr);
             const business = businesses.find(b => b.id === id);
             if (business && markersRef.current[id]) {
-                const isHighlighted = id === highlightedBusinessId || id === selectedBusinessId;
+                const isHighlighted = id === highlightedbusiness_id || id === selectedbusiness_id;
                 const category = business?.categories?.[0] ?? BusinessCategory.SPA;
                 markersRef.current[id].setIcon(getIcon(category, isHighlighted));
 
                 // Bring active marker to front. Hovered is on top of selected.
                 if (isHighlighted) {
-                    const zOffset = id === highlightedBusinessId ? 1000 : 900;
+                    const zOffset = id === highlightedbusiness_id ? 1000 : 900;
                     markersRef.current[id].setZIndexOffset(zOffset);
                 } else {
                     markersRef.current[id].setZIndexOffset(0);
@@ -231,7 +231,7 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedBusi
             }
         });
 
-    }, [highlightedBusinessId, selectedBusinessId, businesses, getIcon]);
+    }, [highlightedbusiness_id, selectedbusiness_id, businesses, getIcon]);
 
     return <div ref={mapContainerRef} className="h-full w-full relative z-10" />;
 };

@@ -19,7 +19,7 @@ const LoginPage: React.FC = () => {
     // Redirection useEffect
     useEffect(() => {
         if (state === 'authenticated' && isDataLoaded && profile) {
-            const target = (profile.userType === 'business' || profile.businessId)
+            const target = (profile.user_type === 'business' || profile.business_id)
                 ? '/business-profile'
                 : '/account';
             navigate(target, { replace: true });

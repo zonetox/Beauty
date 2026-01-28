@@ -14,7 +14,7 @@ import LoadingState from './LoadingState.tsx';
 import { useStaffPermissions } from '../hooks/useStaffPermissions.ts';
 import LandingPageSectionEditor from './LandingPageSectionEditor.tsx';
 import LandingPagePreview from './LandingPagePreview.tsx';
-import { LandingPageConfig } from '../types.ts';
+import { landing_page_config } from '../types.ts';
 
 // Helper to convert blob to base64 (for team member images)
 // const blobToBase64 = (blob: Blob): Promise<string> => {
@@ -79,7 +79,7 @@ interface FormErrors {
     phone?: string;
     email?: string;
     categories?: string;
-    imageUrl?: string;
+    image_url?: string;
 }
 
 const BusinessProfileEditor: React.FC = () => {
@@ -96,32 +96,32 @@ const BusinessProfileEditor: React.FC = () => {
     const [isUploadingCover, setIsUploadingCover] = useState(false);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
-    const [workingHoursList, setWorkingHoursList] = useState<Array<{ day: string; time: string }>>([]);
+    const [working_hoursList, setworking_hoursList] = useState<Array<{ day: string; time: string }>>([]);
 
     // Initialize form data from currentBusiness
     useEffect(() => {
         if (currentBusiness) {
             const businessData = JSON.parse(JSON.stringify(currentBusiness));
             // Initialize hero slides if not present
-            if (!businessData.heroSlides || businessData.heroSlides.length === 0) {
-                businessData.heroSlides = [{
+            if (!businessData.hero_slides || businessData.hero_slides.length === 0) {
+                businessData.hero_slides = [{
                     title: currentBusiness.name,
                     subtitle: currentBusiness.slogan || currentBusiness.categories.join(', '),
-                    imageUrl: currentBusiness.heroImageUrl || currentBusiness.imageUrl,
+                    image_url: currentBusiness.hero_image_url || currentBusiness.image_url,
                 }];
             }
             setFormData(businessData);
             // Initialize working hours list
-            const hours = currentBusiness.workingHours || {};
+            const hours = currentBusiness.working_hours || {};
             const hoursList = Object.entries(hours).map(([day, time]) => ({
                 day: String(day || ''),
                 time: String(time || '')
             }));
-            setWorkingHoursList(hoursList.length > 0 ? hoursList : [{ day: '', time: '' }]);
+            setworking_hoursList(hoursList.length > 0 ? hoursList : [{ day: '', time: '' }]);
 
             // Initialize landing_page_config if not present
-            if (!businessData.landingPageConfig) {
-                businessData.landingPageConfig = {
+            if (!businessData.landing_page_config) {
+                businessData.landing_page_config = {
                     sections: {
                         hero: { enabled: true, order: 1 },
                         trust: { enabled: false, order: 2 },
@@ -137,11 +137,11 @@ const BusinessProfileEditor: React.FC = () => {
         }
     }, [currentBusiness]);
 
-    // Update formData when workingHoursList changes
+    // Update formData when working_hoursList changes
     useEffect(() => {
         setFormData((prev) => {
             if (!prev) return null;
-            const workingHoursObject = workingHoursList.reduce((acc, curr) => {
+            const working_hoursObject = working_hoursList.reduce((acc, curr) => {
                 const safeDay = String(curr.day || '').trim();
                 const safeTime = String(curr.time || '').trim();
 
@@ -152,13 +152,13 @@ const BusinessProfileEditor: React.FC = () => {
             }, {} as { [key: string]: string });
 
             // Only update if changed to avoid extra renders
-            if (JSON.stringify(prev.workingHours) === JSON.stringify(workingHoursObject)) {
+            if (JSON.stringify(prev.working_hours) === JSON.stringify(working_hoursObject)) {
                 return prev;
             }
 
-            return { ...prev, workingHours: workingHoursObject };
+            return { ...prev, working_hours: working_hoursObject };
         });
-    }, [workingHoursList]);
+    }, [working_hoursList]);
 
     // Loading state
     if (!currentBusiness || !formData) {
@@ -209,9 +209,9 @@ const BusinessProfileEditor: React.FC = () => {
             newErrors.categories = 'Please select at least one category.';
         }
 
-        if (!formData.imageUrl || formData.imageUrl.trim().length === 0) {
-            // imageUrl is required in schema
-            newErrors.imageUrl = 'Cover image is required.';
+        if (!formData.image_url || formData.image_url.trim().length === 0) {
+            // image_url is required in schema
+            newErrors.image_url = 'Cover image is required.';
         }
 
         setErrors(newErrors);
@@ -269,7 +269,7 @@ const BusinessProfileEditor: React.FC = () => {
             const publicUrl = await uploadFile('business-logos', file, folder);
             setFormData((prev) => {
                 if (!prev) return null;
-                const updated: Business = { ...prev, logoUrl: publicUrl };
+                const updated: Business = { ...prev, logo_url: publicUrl };
                 return updated;
             });
             toast.success('Logo uploaded successfully!');
@@ -298,13 +298,13 @@ const BusinessProfileEditor: React.FC = () => {
             const publicUrl = await uploadFile('business-gallery', file, folder);
             setFormData((prev) => {
                 if (!prev) return null;
-                const updated: Business = { ...prev, imageUrl: publicUrl };
+                const updated: Business = { ...prev, image_url: publicUrl };
                 return updated;
             });
             toast.success('Cover image uploaded successfully!');
             // Clear error if cover image was missing
-            if (errors.imageUrl) {
-                setErrors((prev) => ({ ...prev, imageUrl: undefined }));
+            if (errors.image_url) {
+                setErrors((prev) => ({ ...prev, image_url: undefined }));
             }
         } catch (error: unknown) {
             const err = error as Record<string, unknown>;
@@ -323,10 +323,10 @@ const BusinessProfileEditor: React.FC = () => {
         });
     };
 
-    const handleLandingPageConfigChange = (newConfig: LandingPageConfig) => {
+    const handlelanding_page_configChange = (newConfig: landing_page_config) => {
         setFormData((prev) => {
             if (!prev) return null;
-            return { ...prev, landingPageConfig: newConfig } as Business;
+            return { ...prev, landing_page_config: newConfig } as Business;
         });
     };
 
@@ -338,20 +338,20 @@ const BusinessProfileEditor: React.FC = () => {
         });
     };
 
-    const handleWorkingHoursListChange = (index: number, field: 'day' | 'time', value: string) => {
-        const newList = [...workingHoursList];
+    const handleworking_hoursListChange = (index: number, field: 'day' | 'time', value: string) => {
+        const newList = [...working_hoursList];
         if (newList[index]) {
             newList[index][field] = value;
         }
-        setWorkingHoursList(newList);
+        setworking_hoursList(newList);
     };
 
-    const addWorkingHoursRow = () => {
-        setWorkingHoursList([...workingHoursList, { day: '', time: '' }]);
+    const addworking_hoursRow = () => {
+        setworking_hoursList([...working_hoursList, { day: '', time: '' }]);
     };
 
-    const removeWorkingHoursRow = (index: number) => {
-        setWorkingHoursList(workingHoursList.filter((_, i) => i !== index));
+    const removeworking_hoursRow = (index: number) => {
+        setworking_hoursList(working_hoursList.filter((_, i) => i !== index));
     };
 
     const handleSave = async (e: React.FormEvent) => {
@@ -359,14 +359,14 @@ const BusinessProfileEditor: React.FC = () => {
 
         // Additional validation for landing page tab
         if (activeTab === 'landing') {
-            if (!formData.heroSlides || formData.heroSlides.length === 0) {
+            if (!formData.hero_slides || formData.hero_slides.length === 0) {
                 toast.error('At least one hero slide is required.');
                 return;
             }
-            const invalidSlides = formData.heroSlides.filter((slide: HeroSlide) =>
+            const invalidSlides = formData.hero_slides.filter((slide: HeroSlide) =>
                 !slide.title || slide.title.trim().length === 0 ||
                 !slide.subtitle || slide.subtitle.trim().length === 0 ||
-                !slide.imageUrl || slide.imageUrl.trim().length === 0
+                !slide.image_url || slide.image_url.trim().length === 0
             );
             if (invalidSlides.length > 0) {
                 toast.error('All hero slides must have title, subtitle, and image URL.');
@@ -568,7 +568,7 @@ const BusinessProfileEditor: React.FC = () => {
                                     <label className="block text-sm font-medium text-gray-700">Logo</label>
                                     <div className="flex items-center gap-4">
                                         <img
-                                            src={formData.logoUrl || 'https://placehold.co/128x128/E6A4B4/FFFFFF?text=Logo'}
+                                            src={formData.logo_url || 'https://placehold.co/128x128/E6A4B4/FFFFFF?text=Logo'}
                                             alt="Current Logo"
                                             className="w-32 h-32 object-cover rounded-md border bg-gray-100"
                                         />
@@ -596,15 +596,15 @@ const BusinessProfileEditor: React.FC = () => {
                                 {/* Cover Image */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Cover Image *</label>
-                                    {errors.imageUrl && <p className="text-sm text-red-600 mb-2">{errors.imageUrl}</p>}
+                                    {errors.image_url && <p className="text-sm text-red-600 mb-2">{errors.image_url}</p>}
                                     <InputField
                                         label="Cover Image URL"
-                                        name="imageUrl"
-                                        value={formData.imageUrl || ''}
+                                        name="image_url"
+                                        value={formData.image_url || ''}
                                         onChange={handleChange}
                                         placeholder="https://..."
                                         required
-                                        error={errors.imageUrl}
+                                        error={errors.image_url}
                                     />
                                     <div className="flex items-center gap-2 mt-2">
                                         <span className="text-sm text-gray-500">Or</span>
@@ -627,7 +627,7 @@ const BusinessProfileEditor: React.FC = () => {
                                     <div className="mt-2 p-4 bg-gray-50 rounded-md border">
                                         <p className="text-sm text-gray-700">This image appears in listings.</p>
                                         <img
-                                            src={formData.imageUrl || 'https://placehold.co/400x300/E6A4B4/FFFFFF?text=Cover'}
+                                            src={formData.image_url || 'https://placehold.co/400x300/E6A4B4/FFFFFF?text=Cover'}
                                             alt="Cover preview"
                                             className="mt-2 w-full h-auto object-cover rounded-md aspect-video"
                                         />
@@ -639,8 +639,8 @@ const BusinessProfileEditor: React.FC = () => {
                             <h3 className="text-lg font-semibold text-neutral-dark mb-4">Video Content</h3>
                             <InputField
                                 label="YouTube Video URL"
-                                name="youtubeUrl"
-                                value={formData.youtubeUrl || ''}
+                                name="youtube_url"
+                                value={formData.youtube_url || ''}
                                 onChange={handleChange}
                                 placeholder="https://www.youtube.com/watch?v=..."
                             />
@@ -653,23 +653,23 @@ const BusinessProfileEditor: React.FC = () => {
                     <section>
                         <h3 className="text-lg font-semibold text-neutral-dark mb-4">Working Hours</h3>
                         <div className="space-y-3">
-                            {workingHoursList.map((item, index) => (
+                            {working_hoursList.map((item, index) => (
                                 <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
                                     <input
                                         value={item.day}
-                                        onChange={(e) => handleWorkingHoursListChange(index, 'day', e.target.value)}
+                                        onChange={(e) => handleworking_hoursListChange(index, 'day', e.target.value)}
                                         placeholder="Day(s) (e.g., Monday - Friday)"
                                         className="w-1/3 px-3 py-2 border rounded-md"
                                     />
                                     <input
                                         value={item.time}
-                                        onChange={(e) => handleWorkingHoursListChange(index, 'time', e.target.value)}
+                                        onChange={(e) => handleworking_hoursListChange(index, 'time', e.target.value)}
                                         placeholder="Time (e.g., 9:00 - 21:00)"
                                         className="flex-grow px-3 py-2 border rounded-md"
                                     />
                                     <button
                                         type="button"
-                                        onClick={() => removeWorkingHoursRow(index)}
+                                        onClick={() => removeworking_hoursRow(index)}
                                         className="text-red-500 font-bold p-2 hover:text-red-700"
                                     >
                                         ✕
@@ -679,7 +679,7 @@ const BusinessProfileEditor: React.FC = () => {
                         </div>
                         <button
                             type="button"
-                            onClick={addWorkingHoursRow}
+                            onClick={addworking_hoursRow}
                             className="mt-3 text-sm text-secondary font-semibold hover:underline"
                         >
                             + Add hours
@@ -755,16 +755,16 @@ const BusinessProfileEditor: React.FC = () => {
                                 type="button"
                                 onClick={() => setIsPreviewOpen(true)}
                                 className="px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary-dark transition-colors text-sm font-medium"
-                                disabled={!formData.landingPageConfig}
+                                disabled={!formData.landing_page_config}
                             >
                                 Preview Landing Page
                             </button>
                         </div>
-                        {formData.landingPageConfig ? (
+                        {formData.landing_page_config ? (
                             <LandingPageSectionEditor
-                                config={formData.landingPageConfig}
-                                onChange={handleLandingPageConfigChange}
-                                disabled={!staffPermissions.isOwner && !staffPermissions.canEditLandingPage}
+                                config={formData.landing_page_config}
+                                onChange={handlelanding_page_configChange}
+                                disabled={!staffPermissions.isOwner && !staffPermissions.can_edit_landing_page}
                             />
                         ) : (
                             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -780,7 +780,7 @@ const BusinessProfileEditor: React.FC = () => {
                             <p className="text-sm text-gray-600 mb-4">Add badges, certifications, or awards to build trust with your customers.</p>
 
                             <div className="space-y-4">
-                                {(formData.trustIndicators || []).map((indicator: TrustIndicator, index: number) => (
+                                {(formData.trust_indicators || []).map((indicator: TrustIndicator, index: number) => (
                                     <div key={index} className="p-4 border border-gray-200 rounded-lg">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                                             <div>
@@ -789,11 +789,11 @@ const BusinessProfileEditor: React.FC = () => {
                                                     id={`trust-indicator-type-${index}`}
                                                     value={indicator.type}
                                                     onChange={(e) => {
-                                                        const updated = [...(formData.trustIndicators || [])];
+                                                        const updated = [...(formData.trust_indicators || [])];
                                                         updated[index] = { ...updated[index], type: e.target.value as TrustIndicator['type'] };
                                                         setFormData((prev) => {
                                                             if (!prev) return null;
-                                                            const updatedResult: Business = { ...prev, trustIndicators: updated };
+                                                            const updatedResult: Business = { ...prev, trust_indicators: updated };
                                                             return updatedResult;
                                                         });
                                                     }}
@@ -810,11 +810,11 @@ const BusinessProfileEditor: React.FC = () => {
                                                     type="text"
                                                     value={indicator.title}
                                                     onChange={(e) => {
-                                                        const updated = [...(formData.trustIndicators || [])];
+                                                        const updated = [...(formData.trust_indicators || [])];
                                                         updated[index] = { ...updated[index], title: e.target.value };
                                                         setFormData((prev) => {
                                                             if (!prev) return null;
-                                                            const updatedResult: Business = { ...prev, trustIndicators: updated };
+                                                            const updatedResult: Business = { ...prev, trust_indicators: updated };
                                                             return updatedResult;
                                                         });
                                                     }}
@@ -829,11 +829,11 @@ const BusinessProfileEditor: React.FC = () => {
                                                 type="text"
                                                 value={indicator.icon || ''}
                                                 onChange={(e) => {
-                                                    const updated = [...(formData.trustIndicators || [])];
+                                                    const updated = [...(formData.trust_indicators || [])];
                                                     updated[index] = { ...updated[index], icon: e.target.value };
                                                     setFormData((prev) => {
                                                         if (!prev) return null;
-                                                        const updatedResult: Business = { ...prev, trustIndicators: updated };
+                                                        const updatedResult: Business = { ...prev, trust_indicators: updated };
                                                         return updatedResult;
                                                     });
                                                 }}
@@ -846,11 +846,11 @@ const BusinessProfileEditor: React.FC = () => {
                                             <textarea
                                                 value={indicator.description || ''}
                                                 onChange={(e) => {
-                                                    const updated = [...(formData.trustIndicators || [])];
+                                                    const updated = [...(formData.trust_indicators || [])];
                                                     updated[index] = { ...updated[index], description: e.target.value };
                                                     setFormData((prev) => {
                                                         if (!prev) return null;
-                                                        const updatedResult: Business = { ...prev, trustIndicators: updated };
+                                                        const updatedResult: Business = { ...prev, trust_indicators: updated };
                                                         return updatedResult;
                                                     });
                                                 }}
@@ -862,10 +862,10 @@ const BusinessProfileEditor: React.FC = () => {
                                         <button
                                             type="button"
                                             onClick={() => {
-                                                const updated = (formData.trustIndicators || []).filter((_: TrustIndicator, i: number) => i !== index);
+                                                const updated = (formData.trust_indicators || []).filter((_: TrustIndicator, i: number) => i !== index);
                                                 setFormData((prev) => {
                                                     if (!prev) return null;
-                                                    const updatedResult: Business = { ...prev, trustIndicators: updated };
+                                                    const updatedResult: Business = { ...prev, trust_indicators: updated };
                                                     return updatedResult;
                                                 });
                                             }}
@@ -884,7 +884,7 @@ const BusinessProfileEditor: React.FC = () => {
                                             if (!prev) return null;
                                             const updatedResult: Business = {
                                                 ...prev,
-                                                trustIndicators: [...(prev.trustIndicators || []), newIndicator]
+                                                trust_indicators: [...(prev.trust_indicators || []), newIndicator]
                                             };
                                             return updatedResult;
                                         });
@@ -899,10 +899,10 @@ const BusinessProfileEditor: React.FC = () => {
                 )}
             </div>
 
-            {isPreviewOpen && formData && currentBusiness && formData.landingPageConfig && (
+            {isPreviewOpen && formData && currentBusiness && formData.landing_page_config && (
                 <LandingPagePreview
-                    business={{ ...currentBusiness, landingPageConfig: formData.landingPageConfig }}
-                    config={formData.landingPageConfig}
+                    business={{ ...currentBusiness, landing_page_config: formData.landing_page_config }}
+                    config={formData.landing_page_config}
                     onClose={() => setIsPreviewOpen(false)}
                 />
             )}

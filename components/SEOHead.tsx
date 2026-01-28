@@ -39,7 +39,7 @@ interface LocalBusinessSchema {
   priceRange?: string;
   aggregateRating?: {
     ratingValue?: number;
-    reviewCount?: number;
+    review_count?: number;
   };
   openingHoursSpecification?: Array<{
     dayOfWeek: string[];

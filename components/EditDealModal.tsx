@@ -11,20 +11,20 @@ interface EditDealModalProps {
     deal: Partial<Deal> | null;
     onSave: (deal: Deal) => Promise<void>;
     onClose: () => void;
-    businessId: number;
+    business_id: number;
 }
 
 // Helper function to calculate discount percentage from prices
-const calculateDiscount = (originalPrice?: number, dealPrice?: number): number | undefined => {
-    if (!originalPrice || !dealPrice || originalPrice <= 0) return undefined;
-    return Math.round(((originalPrice - dealPrice) / originalPrice) * 100);
+const calculateDiscount = (original_price?: number, dealPrice?: number): number | undefined => {
+    if (!original_price || !dealPrice || original_price <= 0) return undefined;
+    return Math.round(((original_price - dealPrice) / original_price) * 100);
 };
 
 // Helper function to calculate deal status based on dates
-const calculateDealStatus = (startDate?: string, endDate?: string): DealStatus => {
+const calculateDealStatus = (start_date?: string, end_date?: string): DealStatus => {
     const now = new Date();
-    const start = startDate ? new Date(startDate) : null;
-    const end = endDate ? new Date(endDate) : null;
+    const start = start_date ? new Date(start_date) : null;
+    const end = end_date ? new Date(end_date) : null;
 
     if (start && start > now) {
         return DealStatus.SCHEDULED;
@@ -38,14 +38,14 @@ const calculateDealStatus = (startDate?: string, endDate?: string): DealStatus =
     return DealStatus.ACTIVE;
 };
 
-const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, businessId }) => {
+const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, business_id }) => {
     const [formData, setFormData] = useState<Partial<Deal>>({
         title: '',
         description: '',
-        imageUrl: '',
-        startDate: '',
-        endDate: '',
-        originalPrice: undefined,
+        image_url: '',
+        start_date: '',
+        end_date: '',
+        original_price: undefined,
         dealPrice: undefined,
         discountPercentage: undefined,
         status: DealStatus.ACTIVE
@@ -58,7 +58,7 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
     const [imagePreview, setImagePreview] = useState<string>('');
 
     const isEditMode = Boolean(deal && deal.id);
-    const oldImageUrl = deal?.imageUrl || '';
+    const oldimage_url = deal?.image_url || '';
 
     // Initialize form data
     useEffect(() => {
@@ -72,23 +72,23 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
             setFormData({
                 title: deal.title || '',
                 description: deal.description || '',
-                imageUrl: deal.imageUrl || '',
-                startDate: formatDateForInput(deal.startDate),
-                endDate: formatDateForInput(deal.endDate),
-                originalPrice: deal.originalPrice,
+                image_url: deal.image_url || '',
+                start_date: formatDateForInput(deal.start_date),
+                end_date: formatDateForInput(deal.end_date),
+                original_price: deal.original_price,
                 dealPrice: deal.dealPrice,
                 discountPercentage: deal.discountPercentage,
                 status: deal.status || DealStatus.ACTIVE
             });
-            setImagePreview(deal.imageUrl || '');
+            setImagePreview(deal.image_url || '');
         } else {
             setFormData({
                 title: '',
                 description: '',
-                imageUrl: '',
-                startDate: '',
-                endDate: '',
-                originalPrice: undefined,
+                image_url: '',
+                start_date: '',
+                end_date: '',
+                original_price: undefined,
                 dealPrice: undefined,
                 discountPercentage: undefined,
                 status: DealStatus.ACTIVE
@@ -100,21 +100,21 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
 
     // Auto-calculate discount when prices change
     useEffect(() => {
-        if (formData.originalPrice && formData.dealPrice) {
-            const calculated = calculateDiscount(formData.originalPrice, formData.dealPrice);
+        if (formData.original_price && formData.dealPrice) {
+            const calculated = calculateDiscount(formData.original_price, formData.dealPrice);
             if (calculated !== undefined && calculated >= 0 && calculated <= 100) {
                 setFormData(prev => ({ ...prev, discountPercentage: calculated }));
             }
         }
-    }, [formData.originalPrice, formData.dealPrice]);
+    }, [formData.original_price, formData.dealPrice]);
 
     // Auto-calculate status when dates change
     useEffect(() => {
-        if (formData.startDate || formData.endDate) {
-            const calculatedStatus = calculateDealStatus(formData.startDate, formData.endDate);
+        if (formData.start_date || formData.end_date) {
+            const calculatedStatus = calculateDealStatus(formData.start_date, formData.end_date);
             setFormData(prev => ({ ...prev, status: calculatedStatus }));
         }
-    }, [formData.startDate, formData.endDate]);
+    }, [formData.start_date, formData.end_date]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
@@ -154,23 +154,23 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
         }
 
         // Date validation
-        if (formData.startDate && formData.endDate) {
-            const start = new Date(formData.startDate);
-            const end = new Date(formData.endDate);
+        if (formData.start_date && formData.end_date) {
+            const start = new Date(formData.start_date);
+            const end = new Date(formData.end_date);
             if (start >= end) {
-                newErrors.endDate = 'End date must be after start date';
+                newErrors.end_date = 'End date must be after start date';
             }
         }
 
         // Price validation
-        if (formData.originalPrice !== undefined && formData.originalPrice < 0) {
-            newErrors.originalPrice = 'Original price cannot be negative';
+        if (formData.original_price !== undefined && formData.original_price < 0) {
+            newErrors.original_price = 'Original price cannot be negative';
         }
         if (formData.dealPrice !== undefined && formData.dealPrice < 0) {
             newErrors.dealPrice = 'Deal price cannot be negative';
         }
-        if (formData.originalPrice !== undefined && formData.dealPrice !== undefined) {
-            if (formData.dealPrice > formData.originalPrice) {
+        if (formData.original_price !== undefined && formData.dealPrice !== undefined) {
+            if (formData.dealPrice > formData.original_price) {
                 newErrors.dealPrice = 'Deal price cannot be greater than original price';
             }
         }
@@ -215,7 +215,7 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
         setUploadProgress(0);
         setErrors(prev => {
             const newErrors = { ...prev };
-            delete newErrors.imageUrl;
+            delete newErrors.image_url;
             return newErrors;
         });
 
@@ -228,27 +228,27 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
             reader.readAsDataURL(file);
 
             // Upload to Supabase Storage
-            const folder = `business/${businessId}/deals`;
-            const imageUrl = await uploadFile('business-gallery', file, folder);
+            const folder = `business/${business_id}/deals`;
+            const image_url = await uploadFile('business-gallery', file, folder);
 
             // Delete old image if editing and image changed
-            if (isEditMode && oldImageUrl && oldImageUrl !== imageUrl && oldImageUrl.startsWith('http')) {
+            if (isEditMode && oldimage_url && oldimage_url !== image_url && oldimage_url.startsWith('http')) {
                 try {
-                    await deleteFileByUrl('business-gallery', oldImageUrl);
+                    await deleteFileByUrl('business-gallery', oldimage_url);
                 } catch (deleteError) {
                     // Log but don't fail the upload
                     console.warn('Failed to delete old image:', deleteError);
                 }
             }
 
-            setFormData(prev => ({ ...prev, imageUrl: imageUrl }));
+            setFormData(prev => ({ ...prev, image_url: image_url }));
             setUploadProgress(100);
             toast.success('Image uploaded successfully!');
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Failed to upload image';
             setErrors(prev => ({
                 ...prev,
-                imageUrl: message
+                image_url: message
             }));
             toast.error('Failed to upload image. Please try again.');
         } finally {
@@ -275,17 +275,17 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
             };
 
             // Calculate final status
-            const finalStatus = calculateDealStatus(formData.startDate, formData.endDate);
+            const finalStatus = calculateDealStatus(formData.start_date, formData.end_date);
 
             const dealToSave: Deal = {
                 id: deal?.id || crypto.randomUUID(),
-                businessId: businessId,
+                business_id: business_id,
                 title: formData.title!.trim(),
                 description: formData.description!.trim(),
-                imageUrl: formData.imageUrl || undefined,
-                startDate: formatDateToISO(formData.startDate),
-                endDate: formatDateToISO(formData.endDate),
-                originalPrice: formData.originalPrice,
+                image_url: formData.image_url || undefined,
+                start_date: formatDateToISO(formData.start_date),
+                end_date: formatDateToISO(formData.end_date),
+                original_price: formData.original_price,
                 dealPrice: formData.dealPrice,
                 discountPercentage: formData.discountPercentage,
                 status: finalStatus
@@ -356,7 +356,7 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
                             <div className="mt-1 flex items-center gap-4">
                                 <div className="relative">
                                     <img
-                                        src={imagePreview || formData.imageUrl || 'https://placehold.co/128x128/E6A4B4/FFFFFF?text=No+Image'}
+                                        src={imagePreview || formData.image_url || 'https://placehold.co/128x128/E6A4B4/FFFFFF?text=No+Image'}
                                         alt="Deal preview"
                                         className="w-24 h-24 object-cover rounded-md border bg-gray-100"
                                         onError={(e) => {
@@ -391,7 +391,7 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
                                     <p className="text-xs text-gray-500 mt-1">JPG, PNG, or WebP (max 5MB)</p>
                                 </div>
                             </div>
-                            {errors.imageUrl && <p className="mt-1 text-sm text-red-600">{errors.imageUrl}</p>}
+                            {errors.image_url && <p className="mt-1 text-sm text-red-600">{errors.image_url}</p>}
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
@@ -401,14 +401,14 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
                                 </label>
                                 <input
                                     type="date"
-                                    name="startDate"
-                                    value={formData.startDate || ''}
+                                    name="start_date"
+                                    value={formData.start_date || ''}
                                     onChange={handleChange}
-                                    className={`mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary ${errors.startDate ? 'border-red-500' : 'border-gray-300'
+                                    className={`mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary ${errors.start_date ? 'border-red-500' : 'border-gray-300'
                                         }`}
                                     disabled={isSaving || isUploading}
                                 />
-                                {errors.startDate && <p className="mt-1 text-sm text-red-600">{errors.startDate}</p>}
+                                {errors.start_date && <p className="mt-1 text-sm text-red-600">{errors.start_date}</p>}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -416,14 +416,14 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
                                 </label>
                                 <input
                                     type="date"
-                                    name="endDate"
-                                    value={formData.endDate || ''}
+                                    name="end_date"
+                                    value={formData.end_date || ''}
                                     onChange={handleChange}
-                                    className={`mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary ${errors.endDate ? 'border-red-500' : 'border-gray-300'
+                                    className={`mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary ${errors.end_date ? 'border-red-500' : 'border-gray-300'
                                         }`}
                                     disabled={isSaving || isUploading}
                                 />
-                                {errors.endDate && <p className="mt-1 text-sm text-red-600">{errors.endDate}</p>}
+                                {errors.end_date && <p className="mt-1 text-sm text-red-600">{errors.end_date}</p>}
                             </div>
                         </div>
 
@@ -434,17 +434,17 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
                                 </label>
                                 <input
                                     type="number"
-                                    name="originalPrice"
-                                    value={formData.originalPrice || ''}
+                                    name="original_price"
+                                    value={formData.original_price || ''}
                                     onChange={handleChange}
                                     min="0"
                                     step="1000"
-                                    className={`mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary ${errors.originalPrice ? 'border-red-500' : 'border-gray-300'
+                                    className={`mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary ${errors.original_price ? 'border-red-500' : 'border-gray-300'
                                         }`}
                                     placeholder="e.g., 1000000"
                                     disabled={isSaving || isUploading}
                                 />
-                                {errors.originalPrice && <p className="mt-1 text-sm text-red-600">{errors.originalPrice}</p>}
+                                {errors.original_price && <p className="mt-1 text-sm text-red-600">{errors.original_price}</p>}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">

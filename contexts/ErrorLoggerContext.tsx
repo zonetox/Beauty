@@ -9,7 +9,7 @@ export interface ErrorLog {
   severity: 'error' | 'warning' | 'info';
   url?: string;
   userAgent?: string;
-  userId?: string;
+  user_id?: string;
 }
 
 interface ErrorLoggerContextType {

@@ -162,8 +162,8 @@ interface ConfirmDialogData {
   id?: string | number;
   name?: string;
   requestId?: string;
-  userId?: number;
-  packageId?: string;
+  user_id?: number;
+  package_id?: string;
 }
 
 interface ConfirmDialogState {
@@ -258,7 +258,7 @@ const BlogCategoryManager: React.FC<BlogCategoryManagerProps> = ({ setConfirmDia
   );
 };
 
-const NEW_BUSINESS_TEMPLATE: Business = { id: 0, slug: '', name: 'New Business Name', categories: [BusinessCategory.SPA], membershipTier: MembershipTier.FREE, address: '', phone: '', email: '', imageUrl: `https://picsum.photos/seed/new-business/400/300`, city: 'TP. Hồ Chí Minh', district: '', ward: '', tags: [], rating: 0, reviewCount: 0, viewCount: 0, isActive: true, isVerified: false, joinedDate: new Date().toISOString(), description: 'Please provide a detailed description.', services: [], gallery: [], team: [], reviews: [], workingHours: { 'Thứ 2 - Thứ 6': '9:00 - 20:00' }, socials: {}, staff: [], notificationSettings: { reviewAlerts: true, bookingRequests: false, platformNews: true } };
+const NEW_BUSINESS_TEMPLATE: Business = { id: 0, slug: '', name: 'New Business Name', categories: [BusinessCategory.SPA], membership_tier: MembershipTier.FREE, address: '', phone: '', email: '', image_url: `https://picsum.photos/seed/new-business/400/300`, city: 'TP. Hồ Chí Minh', district: '', ward: '', tags: [], rating: 0, review_count: 0, view_count: 0, is_active: true, is_verified: false, joined_date: new Date().toISOString(), description: 'Please provide a detailed description.', services: [], gallery: [], team: [], reviews: [], working_hours: { 'Thứ 2 - Thứ 6': '9:00 - 20:00' }, socials: {}, staff: [], notification_settings: { review_alerts: true, booking_requests: false, platform_news: true } };
 
 const AdminPage: React.FC = () => {
   const navigate = useNavigate();
@@ -298,15 +298,15 @@ const AdminPage: React.FC = () => {
   const handleSavePost = async (postToSave: BlogPost) => {
     if (postToSave.id === 0) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { id, slug, date, viewCount, ...newPostData } = postToSave;
+      const { id, slug, date, view_count, ...newPostData } = postToSave;
       await addBlogPost(newPostData);
     } else {
       await updateBlogPost(postToSave);
     }
     setEditingPost(null);
   };
-  const handleDeletePost = async (postId: number) => {
-    setConfirmDialog({ isOpen: true, type: 'deletePost', data: { id: postId } });
+  const handleDeletePost = async (post_id: number) => {
+    setConfirmDialog({ isOpen: true, type: 'deletePost', data: { id: post_id } });
   };
 
   const confirmDeletePost = async () => {
@@ -349,8 +349,8 @@ const AdminPage: React.FC = () => {
       return;
     }
 
-    const businessName = confirmDialog.data.name;
-    const businessToDuplicate = businesses.find(b => b.name === businessName);
+    const business_name = confirmDialog.data.name;
+    const businessToDuplicate = businesses.find(b => b.name === business_name);
     if (!businessToDuplicate) {
       setConfirmDialog({ isOpen: false, type: null });
       return;
@@ -366,7 +366,7 @@ const AdminPage: React.FC = () => {
       id: 0, // Signal that this is a new business
       name: newName,
       slug: newSlug,
-      joinedDate: new Date().toISOString(),
+      joined_date: new Date().toISOString(),
     };
     const promise = addBusiness(duplicatedBusiness);
     toast.promise(promise, {
@@ -386,8 +386,8 @@ const AdminPage: React.FC = () => {
     const approvalPromise = approveRegistrationRequest(requestId);
 
     toast.promise(approvalPromise, {
-      loading: `Approving ${request.businessName}...`,
-      success: `Approved registration for ${request.businessName}. An invitation email has been sent.`,
+      loading: `Approving ${request.business_name}...`,
+      success: `Approved registration for ${request.business_name}. An invitation email has been sent.`,
       error: (err) => `Error approving registration: ${err.message}`,
     });
   };
@@ -417,12 +417,12 @@ const AdminPage: React.FC = () => {
 
     setConfirmDialog({ isOpen: false, type: null });
     const rejectionPromise = rejectRegistrationRequest(requestId).then(() => {
-      addNotification(request.email, 'Your Registration Update', `We regret to inform you that your registration for ${request.businessName} has been rejected at this time.`);
+      addNotification(request.email, 'Your Registration Update', `We regret to inform you that your registration for ${request.business_name} has been rejected at this time.`);
     });
 
     toast.promise(rejectionPromise, {
       loading: 'Rejecting request...',
-      success: `Rejected registration for ${request.businessName}.`,
+      success: `Rejected registration for ${request.business_name}.`,
       error: (err) => `Error rejecting request: ${err.message}`,
     });
   };
@@ -442,36 +442,36 @@ const AdminPage: React.FC = () => {
     }
     handleCloseUserModal();
   };
-  const handleDeleteUser = (userId: number) => {
-    if (userId === currentUser?.id) {
+  const handleDeleteUser = (user_id: number) => {
+    if (user_id === currentUser?.id) {
       toast.error("Cannot delete self.");
       return;
     }
-    setConfirmDialog({ isOpen: true, type: 'deleteUser', data: { userId } });
+    setConfirmDialog({ isOpen: true, type: 'deleteUser', data: { user_id } });
   };
 
   const confirmDeleteUser = () => {
-    if (confirmDialog.type === 'deleteUser' && confirmDialog.data?.userId) {
-      deleteAdminUser(confirmDialog.data.userId);
+    if (confirmDialog.type === 'deleteUser' && confirmDialog.data?.user_id) {
+      deleteAdminUser(confirmDialog.data.user_id);
     }
     setConfirmDialog({ isOpen: false, type: null });
   };
   const handleOpenPackageModal = (pkg: MembershipPackage | null) => { setEditingPackage(pkg); setIsPackageModalOpen(true); };
   const handleClosePackageModal = () => { setEditingPackage(null); setIsPackageModalOpen(false); };
   const handleSavePackage = async (pkg: MembershipPackage) => { if (pkg.id) { await updatePackage(pkg.id, pkg); } else { await addPackage(pkg); } handleClosePackageModal(); };
-  const handleDeletePackage = async (packageId: string) => {
-    setConfirmDialog({ isOpen: true, type: 'deletePackage', data: { packageId } });
+  const handleDeletePackage = async (package_id: string) => {
+    setConfirmDialog({ isOpen: true, type: 'deletePackage', data: { package_id } });
   };
 
   const confirmDeletePackage = async () => {
-    if (confirmDialog.type === 'deletePackage' && confirmDialog.data?.packageId) {
-      await deletePackage(confirmDialog.data.packageId);
+    if (confirmDialog.type === 'deletePackage' && confirmDialog.data?.package_id) {
+      await deletePackage(confirmDialog.data.package_id);
     }
     setConfirmDialog({ isOpen: false, type: null });
   };
   const handleOpenAddNewBusiness = () => { setEditingBusiness(NEW_BUSINESS_TEMPLATE); };
-  const handleOpenAddNewPost = () => { setEditingPost({ id: 0, title: 'New Blog Post', slug: '', date: '', author: currentUser?.username || 'Editor', category: 'General', excerpt: '', imageUrl: `https://picsum.photos/seed/new-post-${Date.now()}/400/300`, content: '', viewCount: 0, status: 'Published' }); };
-  const handleOpenAddNewPackage = () => { handleOpenPackageModal({ id: '', tier: MembershipTier.PREMIUM, name: '', price: 0, durationMonths: 12, description: '', features: [''], permissions: { photoLimit: 10, videoLimit: 2, featuredLevel: 1, customLandingPage: true, privateBlog: false, seoSupport: false, monthlyPostLimit: 5, featuredPostLimit: 0, }, isPopular: false, isActive: true }); };
+  const handleOpenAddNewPost = () => { setEditingPost({ id: 0, title: 'New Blog Post', slug: '', date: '', author: currentUser?.user_name || 'Editor', category: 'General', excerpt: '', image_url: `https://picsum.photos/seed/new-post-${Date.now()}/400/300`, content: '', view_count: 0, status: 'Published' }); };
+  const handleOpenAddNewPackage = () => { handleOpenPackageModal({ id: '', tier: MembershipTier.PREMIUM, name: '', price: 0, duration_months: 12, description: '', features: [''], permissions: { photo_limit: 10, video_limit: 2, featured_level: 1, custom_landing_page: true, private_blog: false, seo_support: false, monthly_post_limit: 5, featured_post_limit: 0, }, is_popular: false, is_active: true }); };
 
 
   const handleLogout = async () => {
@@ -601,12 +601,12 @@ const AdminPage: React.FC = () => {
       case 'dashboard': return <AdminDashboardOverview businesses={businesses} orders={orders} registrationRequests={registrationRequests} onNavigate={(tab) => setActiveTab(tab as AdminPageTab)} />;
       // D3.3 FIX: Use PermissionGuard instead of inline permission checks
       case 'analytics': return (
-        <PermissionGuard permission="canViewAnalytics">
+        <PermissionGuard permission="can_view_analytics">
           <AdminAnalyticsDashboard businesses={businesses} orders={orders} registrationRequests={registrationRequests} />
         </PermissionGuard>
       );
       case 'businesses': return (
-        <PermissionGuard permission="canManageBusinesses">
+        <PermissionGuard permission="can_manage_businesses">
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Business Management</h2>
@@ -618,12 +618,12 @@ const AdminPage: React.FC = () => {
         </PermissionGuard>
       );
       case 'registrations': return (
-        <PermissionGuard permission="canManageRegistrations">
+        <PermissionGuard permission="can_manage_registrations">
           <RegistrationRequestsTable requests={registrationRequests} onApprove={handleApproveRequest} onReject={handleRejectRequest} />
         </PermissionGuard>
       );
       case 'orders': return (
-        <PermissionGuard permission="canManageOrders">
+        <PermissionGuard permission="can_manage_orders">
           <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-xl font-semibold mb-4">Order Management</h2>
             <div className="flex items-center gap-4 mb-4">
@@ -638,7 +638,7 @@ const AdminPage: React.FC = () => {
         </PermissionGuard>
       );
       case 'blog': return (
-        <PermissionGuard permission="canManagePlatformBlog">
+        <PermissionGuard permission="can_manage_platform_blog">
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Blog Management</h2>
@@ -652,7 +652,7 @@ const AdminPage: React.FC = () => {
         </PermissionGuard>
       );
       case 'users': return (
-        <PermissionGuard permission="canManageUsers">
+        <PermissionGuard permission="can_manage_users">
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">User Management</h2>
@@ -663,7 +663,7 @@ const AdminPage: React.FC = () => {
         </PermissionGuard>
       );
       case 'packages': return (
-        <PermissionGuard permission="canManagePackages">
+        <PermissionGuard permission="can_manage_packages">
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Membership Packages</h2>
@@ -674,11 +674,11 @@ const AdminPage: React.FC = () => {
         </PermissionGuard>
       );
       case 'settings': return (
-        <PermissionGuard permission="canManageSystemSettings">
+        <PermissionGuard permission="can_manage_system_settings">
           <SystemSettings />
         </PermissionGuard>
       );
-      case 'tools': return currentUser.permissions.canUseAdminTools ? (
+      case 'tools': return currentUser.permissions.can_use_admin_tools ? (
         <div className="space-y-6">
           <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-xl font-semibold mb-4">Bulk Import Businesses</h2>
@@ -690,15 +690,15 @@ const AdminPage: React.FC = () => {
           </div>
         </div>
       ) : <AccessDenied requiredRole="Use Admin Tools" />;
-      case 'content': return currentUser.permissions.canManageSiteContent ? <div className="bg-white p-6 rounded-lg shadow"><h2 className="text-xl font-semibold mb-4">Page Content Management</h2><PageContentEditor /></div> : <AccessDenied requiredRole="Manage Site Content" />;
-      case 'homepage': return currentUser.permissions.canManageSiteContent ? <HomepageEditor /> : <AccessDenied requiredRole="Manage Site Content" />;
-      case 'theme': return currentUser.permissions.canManageSystemSettings ? <ThemeEditor /> : <AccessDenied requiredRole="Manage System Settings" />;
-      case 'activity': return currentUser.permissions.canViewActivityLog ? <AdminActivityLog /> : <AccessDenied requiredRole="View Activity Log" />;
-      case 'notifications': return currentUser.permissions.canViewEmailLog ? <AdminNotificationLog /> : <AccessDenied requiredRole="View Email Log" />;
-      case 'announcements': return currentUser.permissions.canManageAnnouncements ? <AdminAnnouncementsManager /> : <AccessDenied requiredRole="Manage Announcements" />;
-      case 'support': return currentUser.permissions.canManageSupportTickets ? <AdminSupportTickets /> : <AccessDenied requiredRole="Manage Support Tickets" />;
-      case 'abuse-reports': return currentUser.permissions.canManageUsers ? <AdminAbuseReports /> : <AccessDenied requiredRole="Manage Users" />;
-      case 'landing-page-moderation': return currentUser.permissions.canManageBusinesses ? <AdminLandingPageModeration /> : <AccessDenied requiredRole="Manage Businesses" />;
+      case 'content': return currentUser.permissions.can_manage_site_content ? <div className="bg-white p-6 rounded-lg shadow"><h2 className="text-xl font-semibold mb-4">Page Content Management</h2><PageContentEditor /></div> : <AccessDenied requiredRole="Manage Site Content" />;
+      case 'homepage': return currentUser.permissions.can_manage_site_content ? <HomepageEditor /> : <AccessDenied requiredRole="Manage Site Content" />;
+      case 'theme': return currentUser.permissions.can_manage_system_settings ? <ThemeEditor /> : <AccessDenied requiredRole="Manage System Settings" />;
+      case 'activity': return currentUser.permissions.can_view_activity_log ? <AdminActivityLog /> : <AccessDenied requiredRole="View Activity Log" />;
+      case 'notifications': return currentUser.permissions.can_view_email_log ? <AdminNotificationLog /> : <AccessDenied requiredRole="View Email Log" />;
+      case 'announcements': return currentUser.permissions.can_manage_announcements ? <AdminAnnouncementsManager /> : <AccessDenied requiredRole="Manage Announcements" />;
+      case 'support': return currentUser.permissions.can_manage_support_tickets ? <AdminSupportTickets /> : <AccessDenied requiredRole="Manage Support Tickets" />;
+      case 'abuse-reports': return currentUser.permissions.can_manage_users ? <AdminAbuseReports /> : <AccessDenied requiredRole="Manage Users" />;
+      case 'landing-page-moderation': return currentUser.permissions.can_manage_businesses ? <AdminLandingPageModeration /> : <AccessDenied requiredRole="Manage Businesses" />;
       default: return <p>Select a section.</p>;
     }
   };
@@ -717,31 +717,31 @@ const AdminPage: React.FC = () => {
         <div className="text-2xl font-bold font-serif text-primary mb-6 px-3 pt-2">BeautyDir Admin</div>
         <nav>
           <NavLink tabId="dashboard" label="Dashboard" icon={ICONS.dashboard} permission={true} />
-          <NavLink tabId="analytics" label="Analytics" icon={ICONS.analytics} permission={currentUser.permissions.canViewAnalytics} />
+          <NavLink tabId="analytics" label="Analytics" icon={ICONS.analytics} permission={currentUser.permissions.can_view_analytics} />
           <hr className="border-neutral-700 my-2" />
           <p className="px-3 text-xs uppercase text-gray-400 font-semibold tracking-wider mt-4 mb-1">Management</p>
-          <NavLink tabId="businesses" label="Businesses" icon={ICONS.businesses} permission={currentUser.permissions.canManageBusinesses} />
-          <NavLink tabId="registrations" label="Registrations" icon={ICONS.registrations} permission={currentUser.permissions.canManageRegistrations} />
-          <NavLink tabId="orders" label="Orders" icon={ICONS.orders} permission={currentUser.permissions.canManageOrders} />
-          <NavLink tabId="blog" label="Platform Blog" icon={ICONS.blog} permission={currentUser.permissions.canManagePlatformBlog} />
-          <NavLink tabId="users" label="Users" icon={ICONS.users} permission={currentUser.permissions.canManageUsers} />
-          <NavLink tabId="packages" label="Packages" icon={ICONS.packages} permission={currentUser.permissions.canManagePackages} />
+          <NavLink tabId="businesses" label="Businesses" icon={ICONS.businesses} permission={currentUser.permissions.can_manage_businesses} />
+          <NavLink tabId="registrations" label="Registrations" icon={ICONS.registrations} permission={currentUser.permissions.can_manage_registrations} />
+          <NavLink tabId="orders" label="Orders" icon={ICONS.orders} permission={currentUser.permissions.can_manage_orders} />
+          <NavLink tabId="blog" label="Platform Blog" icon={ICONS.blog} permission={currentUser.permissions.can_manage_platform_blog} />
+          <NavLink tabId="users" label="Users" icon={ICONS.users} permission={currentUser.permissions.can_manage_users} />
+          <NavLink tabId="packages" label="Packages" icon={ICONS.packages} permission={currentUser.permissions.can_manage_packages} />
           <hr className="border-neutral-700 my-2" />
           <p className="px-3 text-xs uppercase text-gray-400 font-semibold tracking-wider mt-4 mb-1">Communication</p>
-          <NavLink tabId="announcements" label="Announcements" icon={ICONS.announcements} permission={currentUser.permissions.canManageAnnouncements} />
-          <NavLink tabId="support" label="Support Tickets" icon={ICONS.support} permission={currentUser.permissions.canManageSupportTickets} />
-          <NavLink tabId="abuse-reports" label="Abuse Reports" icon={ICONS['abuse-reports']} permission={currentUser.permissions.canManageUsers} />
+          <NavLink tabId="announcements" label="Announcements" icon={ICONS.announcements} permission={currentUser.permissions.can_manage_announcements} />
+          <NavLink tabId="support" label="Support Tickets" icon={ICONS.support} permission={currentUser.permissions.can_manage_support_tickets} />
+          <NavLink tabId="abuse-reports" label="Abuse Reports" icon={ICONS['abuse-reports']} permission={currentUser.permissions.can_manage_users} />
           <hr className="border-neutral-700 my-2" />
           <p className="px-3 text-xs uppercase text-gray-400 font-semibold tracking-wider mt-4 mb-1">Site Content</p>
-          <NavLink tabId="homepage" label="Homepage Editor" icon={ICONS.settings} permission={currentUser.permissions.canManageSiteContent} />
-          <NavLink tabId="content" label="Page Editor" icon={ICONS.settings} permission={currentUser.permissions.canManageSiteContent} />
-          <NavLink tabId="theme" label="Theme & Branding" icon={ICONS.settings} permission={currentUser.permissions.canManageSystemSettings} />
+          <NavLink tabId="homepage" label="Homepage Editor" icon={ICONS.settings} permission={currentUser.permissions.can_manage_site_content} />
+          <NavLink tabId="content" label="Page Editor" icon={ICONS.settings} permission={currentUser.permissions.can_manage_site_content} />
+          <NavLink tabId="theme" label="Theme & Branding" icon={ICONS.settings} permission={currentUser.permissions.can_manage_system_settings} />
           <hr className="border-neutral-700 my-2" />
           <p className="px-3 text-xs uppercase text-gray-400 font-semibold tracking-wider mt-4 mb-1">System</p>
-          <NavLink tabId="settings" label="System Settings" icon={ICONS.settings} permission={currentUser.permissions.canManageSystemSettings} />
-          <NavLink tabId="tools" label="Admin Tools" icon={ICONS.tools} permission={currentUser.permissions.canUseAdminTools} />
-          <NavLink tabId="activity" label="Activity Log" icon={ICONS.activity} permission={currentUser.permissions.canViewActivityLog} />
-          <NavLink tabId="notifications" label="Email Log" icon={ICONS.notifications} permission={currentUser.permissions.canViewEmailLog} />
+          <NavLink tabId="settings" label="System Settings" icon={ICONS.settings} permission={currentUser.permissions.can_manage_system_settings} />
+          <NavLink tabId="tools" label="Admin Tools" icon={ICONS.tools} permission={currentUser.permissions.can_use_admin_tools} />
+          <NavLink tabId="activity" label="Activity Log" icon={ICONS.activity} permission={currentUser.permissions.can_view_activity_log} />
+          <NavLink tabId="notifications" label="Email Log" icon={ICONS.notifications} permission={currentUser.permissions.can_view_email_log} />
         </nav>
       </aside>
 
@@ -753,7 +753,7 @@ const AdminPage: React.FC = () => {
             <AdminNotifications orders={orders} registrationRequests={registrationRequests} onNavigate={(tab) => setActiveTab(tab as AdminPageTab)} />
             <div className="bg-white p-2 rounded-lg shadow flex items-center gap-3">
               <div>
-                <p className="text-sm font-semibold text-right">Logged in: <strong className="text-primary">{currentUser.username}</strong></p>
+                <p className="text-sm font-semibold text-right">Logged in: <strong className="text-primary">{currentUser.user_name}</strong></p>
                 <p className="text-xs text-gray-500 text-right">{currentUser.role}</p>
               </div>
               <button onClick={handleLogout} className="px-3 py-2 text-sm font-medium text-neutral-dark hover:bg-red-500 hover:text-white rounded-md transition-colors">

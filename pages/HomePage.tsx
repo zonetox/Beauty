@@ -17,7 +17,6 @@ import { useBusinessData } from '../contexts/BusinessDataContext.tsx';
 import { useHomepageData } from '../contexts/HomepageDataContext.tsx';
 import { getOptimizedSupabaseUrl } from '../lib/image.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
-import { snakeToCamel } from '../lib/utils.ts';
 import toast from 'react-hot-toast';
 
 const SkeletonCard: React.FC = () => (
@@ -35,7 +34,7 @@ const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { businesses, businessLoading } = useBusinessData();
   const { homepageData } = useHomepageData();
-  const { heroSlides, sections } = homepageData;
+  const { hero_slides, sections } = homepageData;
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const [hasRecentlyViewed, setHasRecentlyViewed] = useState(false);
@@ -76,12 +75,12 @@ const HomePage: React.FC = () => {
             id: post.id,
             slug: post.slug,
             title: post.title,
-            imageUrl: post.image_url,
+            image_url: post.image_url,
             excerpt: post.excerpt,
             author: post.author,
             date: post.date,
             category: post.category,
-            viewCount: post.view_count,
+            view_count: post.view_count,
           })) as BlogPost[];
           setFeaturedBlogPosts(posts);
         }
@@ -115,12 +114,12 @@ const HomePage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (heroSlides.length === 0) return;
+    if (hero_slides.length === 0) return;
     const timer = setInterval(() => {
-      setCurrentSlide(prev => (prev + 1) % heroSlides.length);
+      setCurrentSlide(prev => (prev + 1) % hero_slides.length);
     }, 5000); // Change slide every 5 seconds
     return () => clearInterval(timer);
-  }, [heroSlides.length]);
+  }, [hero_slides.length]);
 
   const handleSearch = (filters: { keyword: string; category: string; location: string; }) => {
     const query = new URLSearchParams(filters).toString();
@@ -171,7 +170,7 @@ const HomePage: React.FC = () => {
 
   // OPTIMIZED: Fetch deals only from featured businesses
   interface FeaturedDeal extends Deal {
-    businessName: string;
+    business_name: string;
     businessSlug: string;
   }
 
@@ -187,9 +186,9 @@ const HomePage: React.FC = () => {
 
       try {
         // Only fetch deals from featured businesses (limit to 4 businesses)
-        const featuredBusinessIds = businesses.slice(0, 4).map(b => b.id);
+        const featuredbusiness_ids = businesses.slice(0, 4).map(b => b.id);
 
-        if (featuredBusinessIds.length === 0) {
+        if (featuredbusiness_ids.length === 0) {
           if (mounted) setFeaturedDeals([]);
           return;
         }
@@ -198,7 +197,7 @@ const HomePage: React.FC = () => {
         const { data, error } = await supabase
           .from('deals')
           .select('id, business_id, title, description, discount_percentage, original_price, deal_price, start_date, end_date, status, image_url')
-          .in('business_id', featuredBusinessIds)
+          .in('business_id', featuredbusiness_ids)
           .eq('status', 'Active')
           .gte('end_date', new Date().toISOString())
           .order('start_date', { ascending: false })
@@ -213,10 +212,9 @@ const HomePage: React.FC = () => {
               const business = businesses.find(b => b.id === deal.business_id);
               if (!business) return null;
 
-              const camelDeal = snakeToCamel(deal) as Deal;
               return {
-                ...camelDeal,
-                businessName: business.name,
+                ...(deal as unknown as Deal),
+                business_name: business.name,
                 businessSlug: business.slug,
               } as FeaturedDeal;
             })
@@ -298,7 +296,7 @@ const HomePage: React.FC = () => {
               <p className="text-center text-gray-500 mb-8">{section.subtitle}</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                 {featuredDeals.map((deal, index) => (
-                  <DealCard key={index} deal={deal} businessName={deal.businessName} businessSlug={deal.businessSlug} />
+                  <DealCard key={index} deal={deal} business_name={deal.business_name} businessSlug={deal.businessSlug} />
                 ))}
               </div>
             </div>
@@ -357,7 +355,7 @@ const HomePage: React.FC = () => {
                       className={`group relative rounded-3xl overflow-hidden shadow-premium transition-all duration-700 ${bentoClasses[index % 4] || "md:col-span-1"}`}
                     >
                       <img
-                        src={location.imageUrl}
+                        src={location.image_url}
                         alt={`Khám phá ${location.name}`}
                         className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                         loading="lazy"
@@ -381,14 +379,14 @@ const HomePage: React.FC = () => {
   };
 
   // SEO metadata
-  const seoTitle = heroSlides.length > 0 && heroSlides[currentSlide]?.title
-    ? `${heroSlides[currentSlide].title} | 1Beauty.asia`
+  const seoTitle = hero_slides.length > 0 && hero_slides[currentSlide]?.title
+    ? `${hero_slides[currentSlide].title} | 1Beauty.asia`
     : '1Beauty.asia - Khám phá Vẻ đẹp đích thực';
-  const seoDescription = heroSlides.length > 0 && heroSlides[currentSlide]?.subtitle
-    ? heroSlides[currentSlide].subtitle
+  const seoDescription = hero_slides.length > 0 && hero_slides[currentSlide]?.subtitle
+    ? hero_slides[currentSlide].subtitle
     : 'Tìm kiếm hàng ngàn spa, salon, và clinic uy tín gần bạn. Đặt lịch hẹn chỉ trong vài cú nhấp chuột.';
-  const seoImage = heroSlides.length > 0 && heroSlides[currentSlide]?.imageUrl
-    ? getOptimizedSupabaseUrl(heroSlides[currentSlide].imageUrl, { width: 1200, quality: 85 })
+  const seoImage = hero_slides.length > 0 && hero_slides[currentSlide]?.image_url
+    ? getOptimizedSupabaseUrl(hero_slides[currentSlide].image_url, { width: 1200, quality: 85 })
     : 'https://picsum.photos/seed/beauty/1200/630';
 
   // Homepage always renders immediately - no blocking loader
@@ -419,13 +417,13 @@ const HomePage: React.FC = () => {
         {/* Hero Section - Dynamic Slider with Left Alignment */}
         <section className="relative min-h-[700px] flex items-center overflow-hidden bg-neutral-dark">
           {/* Background Slider Layer */}
-          {heroSlides.map((slide, index) => (
+          {hero_slides.map((slide, index) => (
             <div
               key={index}
               className={`absolute inset-0 z-0 transition-opacity duration-1000 ease-in-out ${index === currentSlide ? 'opacity-100' : 'opacity-0'}`}
             >
               <img
-                src={slide.imageUrl || "/premium_beauty_hero.png"}
+                src={slide.image_url || "/premium_beauty_hero.png"}
                 alt={slide.title}
                 className={`w-full h-full object-cover ${index === currentSlide ? 'animate-ken-burns' : ''}`}
                 loading={index === 0 ? "eager" : "lazy"}
@@ -445,9 +443,9 @@ const HomePage: React.FC = () => {
               </div>
 
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold font-outfit text-white mb-6 leading-tight animate-fade-in-up delay-100">
-                {heroSlides.length > 0 ? (
+                {hero_slides.length > 0 ? (
                   <>
-                    {heroSlides[currentSlide].title.split(' ').map((word, i) => (
+                    {hero_slides[currentSlide].title.split(' ').map((word, i) => (
                       <React.Fragment key={i}>
                         {word === 'Nhan' || word === 'sắc' || word === 'Cảm' || word === 'xúc' ? (
                           <span className="text-gradient">{word} </span>
@@ -467,7 +465,7 @@ const HomePage: React.FC = () => {
               </h1>
 
               <p className="text-base md:text-xl text-gray-200 mb-10 max-w-2xl mx-auto leading-relaxed animate-fade-in-up delay-200">
-                {heroSlides.length > 0 ? heroSlides[currentSlide].subtitle : 'Tìm kiếm hàng ngàn spa, salon và clinic uy tín gần bạn. Trải nghiệm dịch vụ làm đẹp đẳng cấp chỉ trong vài cú nhấp chuột.'}
+                {hero_slides.length > 0 ? hero_slides[currentSlide].subtitle : 'Tìm kiếm hàng ngàn spa, salon và clinic uy tín gần bạn. Trải nghiệm dịch vụ làm đẹp đẳng cấp chỉ trong vài cú nhấp chuột.'}
               </p>
 
               <div className="glass-card p-2 md:p-5 rounded-2xl md:rounded-3xl shadow-premium animate-fade-in-up delay-300 max-w-4xl mx-auto">
@@ -490,9 +488,9 @@ const HomePage: React.FC = () => {
               </div>
 
               {/* Slider Controls */}
-              {heroSlides.length > 1 && (
+              {hero_slides.length > 1 && (
                 <div className="mt-12 flex items-center justify-center space-x-3 animate-fade-in-up delay-500">
-                  {heroSlides.map((_, index) => (
+                  {hero_slides.map((_, index) => (
                     <button
                       key={index}
                       onClick={() => setCurrentSlide(index)}

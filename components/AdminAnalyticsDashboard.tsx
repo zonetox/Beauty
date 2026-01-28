@@ -105,7 +105,7 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
     const [pageViews, setPageViews] = useState<PageView[]>([]);
     const [loadingPageViews, setLoadingPageViews] = useState(true);
 
-    const { startDate, endDate } = useMemo(() => {
+    const { start_date, end_date } = useMemo(() => {
         const end = new Date();
         const start = new Date();
         switch (timeRange) {
@@ -120,7 +120,7 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
                 start.setHours(0, 0, 0, 0);
                 break;
         }
-        return { startDate: start, endDate: end };
+        return { start_date: start, end_date: end };
     }, [timeRange]);
 
     // Fetch page views
@@ -152,19 +152,19 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
 
     const filteredData = useMemo(() => {
         const filteredOrders = orders.filter(o => {
-            const date = new Date(o.confirmedAt || o.submittedAt);
-            return date >= startDate && date <= endDate;
+            const date = new Date(o.confirmed_at || o.submitted_at);
+            return date >= start_date && date <= end_date;
         });
         const filteredBusinesses = businesses.filter(b => {
-            const date = new Date(b.joinedDate);
-            return date >= startDate && date <= endDate;
+            const date = new Date(b.joined_date);
+            return date >= start_date && date <= end_date;
         });
         const filteredPageViews = pageViews.filter(pv => {
             const date = new Date(pv.viewed_at);
-            return date >= startDate && date <= endDate;
+            return date >= start_date && date <= end_date;
         });
         return { orders: filteredOrders, businesses: filteredBusinesses, pageViews: filteredPageViews };
-    }, [orders, businesses, pageViews, startDate, endDate]);
+    }, [orders, businesses, pageViews, start_date, end_date]);
 
     const stats = useMemo(() => {
         const revenue = ensureArray(filteredData?.orders)
@@ -193,31 +193,31 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
 
     const revenueChartData: ChartDataPoint[] = useMemo(() => {
         const data: { [key: string]: number } = {};
-        const currentDate = new Date(startDate);
+        const currentDate = new Date(start_date);
 
-        while (currentDate <= endDate) {
+        while (currentDate <= end_date) {
             const dateKey = currentDate.toISOString().split('T')[0];
             data[dateKey] = 0;
             currentDate.setDate(currentDate.getDate() + 1);
         }
 
         ensureArray(filteredData?.orders)
-            .filter(o => o?.status === OrderStatus.COMPLETED && o?.confirmedAt)
+            .filter(o => o?.status === OrderStatus.COMPLETED && o?.confirmed_at)
             .forEach(order => {
-                const dateKey = new Date(order?.confirmedAt ?? new Date()).toISOString().split('T')[0];
+                const dateKey = new Date(order?.confirmed_at ?? new Date()).toISOString().split('T')[0];
                 if (dateKey && Object.prototype.hasOwnProperty.call(data, dateKey)) {
                     data[dateKey]! += ensureNumber(order?.amount, 0);
                 }
             });
 
         return Object.entries(data).map(([label, value]) => ({ label, value }));
-    }, [filteredData, startDate, endDate]);
+    }, [filteredData, start_date, end_date]);
 
     const pageViewsChartData: ChartDataPoint[] = useMemo(() => {
         const data: { [key: string]: number } = {};
-        const currentDate = new Date(startDate);
+        const currentDate = new Date(start_date);
 
-        while (currentDate <= endDate) {
+        while (currentDate <= end_date) {
             const dateKey = currentDate.toISOString().split('T')[0];
             data[dateKey] = 0;
             currentDate.setDate(currentDate.getDate() + 1);
@@ -231,32 +231,32 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
         });
 
         return Object.entries(data).map(([label, value]) => ({ label, value }));
-    }, [filteredData, startDate, endDate]);
+    }, [filteredData, start_date, end_date]);
 
     const topViewed = useMemo(() =>
         ensureArray(businesses)
-            .sort((a, b) => ensureNumber(b?.viewCount, 0) - ensureNumber(a?.viewCount, 0))
+            .sort((a, b) => ensureNumber(b?.view_count, 0) - ensureNumber(a?.view_count, 0))
             .slice(0, 5)
-            .map(b => ({ name: b?.name ?? 'Unknown', value: `${ensureNumber(b?.viewCount, 0).toLocaleString()} views` }))
+            .map(b => ({ name: b?.name ?? 'Unknown', value: `${ensureNumber(b?.view_count, 0).toLocaleString()} views` }))
         , [businesses]);
 
     const topRated = useMemo(() =>
         ensureArray(businesses)
-            .filter(b => ensureNumber(b?.reviewCount, 0) > 0)
+            .filter(b => ensureNumber(b?.review_count, 0) > 0)
             .sort((a, b) => ensureNumber(b?.rating, 0) - ensureNumber(a?.rating, 0))
             .slice(0, 5)
-            .map(b => ({ name: b?.name ?? 'Unknown', value: `${ensureNumber(b?.rating, 0).toFixed(1)} ★ (${ensureNumber(b?.reviewCount, 0)})` }))
+            .map(b => ({ name: b?.name ?? 'Unknown', value: `${ensureNumber(b?.rating, 0).toFixed(1)} ★ (${ensureNumber(b?.review_count, 0)})` }))
         , [businesses]);
 
     const handleExport = () => {
         const headers = ["Order ID", "Business Name", "Package", "Amount", "Status", "Date"];
         const rows = filteredData.orders.filter(o => o.status === OrderStatus.COMPLETED).map(order => [
             order.id,
-            order.businessName,
-            order.packageName,
+            order.business_name,
+            order.package_name,
             order.amount,
             order.status,
-            new Date(order.confirmedAt!).toISOString()
+            new Date(order.confirmed_at!).toISOString()
         ].join(','));
 
         const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
@@ -295,7 +295,7 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                             <AdminStatCard title="Total Page Views" value={stats.totalPageViews.toLocaleString()} icon={<EyeIcon />} />
                             <AdminStatCard title="Unique Sessions" value={stats.uniqueSessions.toLocaleString()} icon={<BusinessIcon />} />
-                            <AdminStatCard title="Avg. Views/Day" value={Math.round(stats.totalPageViews / Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)))).toLocaleString()} icon={<EyeIcon />} />
+                            <AdminStatCard title="Avg. Views/Day" value={Math.round(stats.totalPageViews / Math.max(1, Math.ceil((end_date.getTime() - start_date.getTime()) / (1000 * 60 * 60 * 24)))).toLocaleString()} icon={<EyeIcon />} />
                         </div>
 
                         <div className="mb-6">
@@ -356,10 +356,10 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
                         <tbody className="text-gray-600">
                             {filteredData.orders.filter(o => o.status === OrderStatus.COMPLETED).map(order => (
                                 <tr key={order.id} className="border-b hover:bg-gray-50">
-                                    <td className="px-4 py-3 font-medium text-neutral-dark">{order.businessName}</td>
-                                    <td className="px-4 py-3">{order.packageName}</td>
+                                    <td className="px-4 py-3 font-medium text-neutral-dark">{order.business_name}</td>
+                                    <td className="px-4 py-3">{order.package_name}</td>
                                     <td className="px-4 py-3 font-semibold">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.amount)}</td>
-                                    <td className="px-4 py-3">{new Date(order.confirmedAt!).toLocaleDateString('vi-VN')}</td>
+                                    <td className="px-4 py-3">{new Date(order.confirmed_at!).toLocaleDateString('vi-VN')}</td>
                                 </tr>
                             ))}
                         </tbody>

@@ -11,16 +11,16 @@ interface EditServiceModalProps {
     service: Partial<Service> | null;
     onSave: (service: Service) => Promise<void>;
     onClose: () => void;
-    businessId: number;
+    business_id: number;
 }
 
-const EditServiceModal: React.FC<EditServiceModalProps> = ({ service, onSave, onClose, businessId }) => {
+const EditServiceModal: React.FC<EditServiceModalProps> = ({ service, onSave, onClose, business_id }) => {
     const [formData, setFormData] = useState<Partial<Service>>({
         name: '',
         description: '',
-        imageUrl: '',
+        image_url: '',
         price: '',
-        durationMinutes: undefined
+        duration_minutes: undefined
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -30,7 +30,7 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({ service, onSave, on
     const [imagePreview, setImagePreview] = useState<string>('');
 
     const isEditMode = Boolean(service && service.id);
-    const oldImageUrl = service?.imageUrl || '';
+    const oldimage_url = service?.image_url || '';
 
     // Initialize form data
     useEffect(() => {
@@ -38,18 +38,18 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({ service, onSave, on
             setFormData({
                 name: service.name || '',
                 description: service.description || '',
-                imageUrl: service.imageUrl || '',
+                image_url: service.image_url || '',
                 price: service.price || '',
-                durationMinutes: service.durationMinutes
+                duration_minutes: service.duration_minutes
             });
-            setImagePreview(service.imageUrl || '');
+            setImagePreview(service.image_url || '');
         } else {
             setFormData({
                 name: '',
                 description: '',
-                imageUrl: '',
+                image_url: '',
                 price: '',
-                durationMinutes: undefined
+                duration_minutes: undefined
             });
             setImagePreview('');
         }
@@ -105,13 +105,13 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({ service, onSave, on
         }
 
         // Image validation
-        if (!formData.imageUrl || formData.imageUrl.trim().length === 0) {
-            newErrors.imageUrl = 'Service image is required';
+        if (!formData.image_url || formData.image_url.trim().length === 0) {
+            newErrors.image_url = 'Service image is required';
         }
 
         // Duration validation (optional, but if provided must be positive)
-        if (formData.durationMinutes !== undefined && formData.durationMinutes < 1) {
-            newErrors.durationMinutes = 'Duration must be at least 1 minute';
+        if (formData.duration_minutes !== undefined && formData.duration_minutes < 1) {
+            newErrors.duration_minutes = 'Duration must be at least 1 minute';
         }
 
         setErrors(newErrors);
@@ -147,7 +147,7 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({ service, onSave, on
         setUploadProgress(0);
         setErrors(prev => {
             const newErrors = { ...prev };
-            delete newErrors.imageUrl;
+            delete newErrors.image_url;
             return newErrors;
         });
 
@@ -160,27 +160,27 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({ service, onSave, on
             reader.readAsDataURL(file);
 
             // Upload to Supabase Storage
-            const folder = `business/${businessId}/services`;
-            const imageUrl = await uploadFile('business-gallery', file, folder);
+            const folder = `business/${business_id}/services`;
+            const image_url = await uploadFile('business-gallery', file, folder);
 
             // Delete old image if editing and image changed
-            if (isEditMode && oldImageUrl && oldImageUrl !== imageUrl && oldImageUrl.startsWith('http')) {
+            if (isEditMode && oldimage_url && oldimage_url !== image_url && oldimage_url.startsWith('http')) {
                 try {
-                    await deleteFileByUrl('business-gallery', oldImageUrl);
+                    await deleteFileByUrl('business-gallery', oldimage_url);
                 } catch (deleteError) {
                     // Log but don't fail the upload
                     console.warn('Failed to delete old image:', deleteError);
                 }
             }
 
-            setFormData(prev => ({ ...prev, imageUrl: imageUrl }));
+            setFormData(prev => ({ ...prev, image_url: image_url }));
             setUploadProgress(100);
             toast.success('Image uploaded successfully!');
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Failed to upload image';
             setErrors(prev => ({
                 ...prev,
-                imageUrl: message
+                image_url: message
             }));
             toast.error('Failed to upload image. Please try again.');
         } finally {
@@ -201,12 +201,12 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({ service, onSave, on
         try {
             const serviceToSave: Service = {
                 id: service?.id || crypto.randomUUID(),
-                businessId: businessId,
+                business_id: business_id,
                 name: formData.name!.trim(),
                 description: formData.description!.trim(),
                 price: formData.price!.trim(),
-                imageUrl: formData.imageUrl!,
-                durationMinutes: formData.durationMinutes,
+                image_url: formData.image_url!,
+                duration_minutes: formData.duration_minutes,
                 position: service?.position || 0
             };
 
@@ -257,7 +257,7 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({ service, onSave, on
                             <div className="mt-1 flex items-center gap-4">
                                 <div className="relative">
                                     <img
-                                        src={imagePreview || formData.imageUrl || 'https://placehold.co/128x128/E6A4B4/FFFFFF?text=No+Image'}
+                                        src={imagePreview || formData.image_url || 'https://placehold.co/128x128/E6A4B4/FFFFFF?text=No+Image'}
                                         alt="Service preview"
                                         className="w-24 h-24 object-cover rounded-md border bg-gray-100"
                                         onError={(e) => {
@@ -292,7 +292,7 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({ service, onSave, on
                                     <p className="text-xs text-gray-500 mt-1">JPG, PNG, or WebP (max 5MB)</p>
                                 </div>
                             </div>
-                            {errors.imageUrl && <p className="mt-1 text-sm text-red-600">{errors.imageUrl}</p>}
+                            {errors.image_url && <p className="mt-1 text-sm text-red-600">{errors.image_url}</p>}
                         </div>
 
                         {/* Description */}
@@ -338,16 +338,16 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({ service, onSave, on
                             </label>
                             <input
                                 type="number"
-                                name="durationMinutes"
-                                value={formData.durationMinutes || ''}
+                                name="duration_minutes"
+                                value={formData.duration_minutes || ''}
                                 onChange={handleNumberChange}
                                 min="1"
-                                className={`mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary ${errors.durationMinutes ? 'border-red-500' : 'border-gray-300'
+                                className={`mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary ${errors.duration_minutes ? 'border-red-500' : 'border-gray-300'
                                     }`}
                                 placeholder="e.g., 60"
                                 disabled={isSaving || isUploading}
                             />
-                            {errors.durationMinutes && <p className="mt-1 text-sm text-red-600">{errors.durationMinutes}</p>}
+                            {errors.duration_minutes && <p className="mt-1 text-sm text-red-600">{errors.duration_minutes}</p>}
                         </div>
                     </div>
                     <div className="bg-gray-50 px-6 py-4 flex justify-end gap-3 sticky bottom-0">

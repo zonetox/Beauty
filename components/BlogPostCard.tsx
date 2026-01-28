@@ -18,18 +18,18 @@ interface BlogPostCardProps {
 }
 
 const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
-  const { url, title, imageUrl, excerpt, author, date, category, viewCount } = post;
+  const { url, title, image_url, excerpt, author, date, category, view_count } = post;
   const safeTitle = title ?? 'Untitled';
   const safeAuthor = author ?? 'Unknown';
   const safeDate = date ?? 'No date';
   const safeCategory = category ?? 'Uncategorized';
   const safeExcerpt = excerpt ?? '';
-  const safeImageUrl = imageUrl ?? '';
+  const safeimage_url = image_url ?? '';
   
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden transition-shadow hover:shadow-xl">
       <Link to={url}>
-        <img className="w-full h-56 object-cover" src={getOptimizedSupabaseUrl(safeImageUrl, { width: 500, quality: 75 })} alt={safeTitle} loading="lazy" />
+        <img className="w-full h-56 object-cover" src={getOptimizedSupabaseUrl(safeimage_url, { width: 500, quality: 75 })} alt={safeTitle} loading="lazy" />
         <div className="p-6">
           <p className="text-sm text-primary font-semibold">{safeCategory}</p>
           <h3 className="mt-2 text-xl font-bold text-neutral-dark font-serif">{safeTitle}</h3>
@@ -38,10 +38,10 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
             <span>{safeAuthor}</span>
             <span className="mx-2">&bull;</span>
             <span>{safeDate}</span>
-            {viewCount !== undefined && (
+            {view_count !== undefined && (
                 <>
                     <span className="mx-2">&bull;</span>
-                    <span className="flex items-center"><EyeIcon /> {viewCount.toLocaleString()}</span>
+                    <span className="flex items-center"><EyeIcon /> {view_count.toLocaleString()}</span>
                 </>
             )}
           </div>

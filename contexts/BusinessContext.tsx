@@ -8,7 +8,7 @@ import { PublicDataContext } from './BusinessDataContext.tsx';
 // Removed useAdmin import to avoid circular dependency - admin notifications handled at higher level
 import { activateBusinessFromOrder } from '../lib/businessUtils.ts';
 import toast from 'react-hot-toast';
-import { snakeToCamel, toSnakeCase } from '../lib/utils.ts';
+import { toSnakeCase } from '../lib/utils.ts';
 
 // --- TYPE DEFINITION ---
 interface BusinessContextType {
@@ -17,11 +17,11 @@ interface BusinessContextType {
   posts: BusinessBlogPost[];
   blogLoading: boolean;
   getPostBySlug: (slug: string) => BusinessBlogPost | undefined;
-  getPostsByBusinessId: (businessId: number) => BusinessBlogPost[];
-  addPost: (newPostData: Omit<BusinessBlogPost, 'id' | 'slug' | 'createdDate' | 'viewCount'>) => Promise<void>;
+  getPostsBybusiness_id: (business_id: number) => BusinessBlogPost[];
+  addPost: (newPostData: Omit<BusinessBlogPost, 'id' | 'slug' | 'created_date' | 'view_count'>) => Promise<void>;
   updatePost: (updatedPost: BusinessBlogPost) => Promise<void>;
-  deletePost: (postId: string) => Promise<void>;
-  incrementViewCount: (postId: string) => Promise<void>;
+  deletePost: (post_id: string) => Promise<void>;
+  incrementview_count: (post_id: string) => Promise<void>;
   // Deals
   addDeal: (newDealData: Omit<Deal, 'id'>) => Promise<void>;
   updateDeal: (updatedDeal: Deal) => Promise<void>;
@@ -29,18 +29,18 @@ interface BusinessContextType {
   // Reviews
   reviews: Review[];
   reviewsLoading: boolean;
-  getReviewsByBusinessId: (businessId: number) => Review[];
-  addReview: (reviewData: { businessId: number; rating: number; comment: string; userProfile: Profile }) => Promise<void>;
+  getReviewsBybusiness_id: (business_id: number) => Review[];
+  addReview: (reviewData: { business_id: number; rating: number; comment: string; userProfile: Profile }) => Promise<void>;
   addReply: (reviewId: string, replyContent: string) => Promise<void>;
   toggleReviewVisibility: (reviewId: string) => Promise<void>;
   // Analytics
   analyticsLoading: boolean;
-  getAnalyticsByBusinessId: (businessId: number) => BusinessAnalytics | undefined;
+  getAnalyticsBybusiness_id: (business_id: number) => BusinessAnalytics | undefined;
   // Bookings
   appointments: Appointment[];
   appointmentsLoading: boolean;
-  getAppointmentsForBusiness: (businessId: number) => Appointment[];
-  addAppointment: (newAppointmentData: Omit<Appointment, 'id' | 'createdAt'>) => Promise<void>;
+  getAppointmentsForBusiness: (business_id: number) => Appointment[];
+  addAppointment: (newAppointmentData: Omit<Appointment, 'id' | 'created_at'>) => Promise<void>;
   updateAppointmentStatus: (appointmentId: string, status: AppointmentStatus) => Promise<void>;
   // Orders
   orders: Order[];
@@ -82,8 +82,8 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
 
   // --- IDENTIFY CURRENT BUSINESS ---
   useEffect(() => {
-    if (profile && profile.businessId && businesses.length > 0) {
-      const userBusiness = businesses.find(b => b.id === profile.businessId);
+    if (profile && profile.business_id && businesses.length > 0) {
+      const userBusiness = businesses.find(b => b.id === profile.business_id);
       setCurrentBusiness(userBusiness || null);
     } else {
       setCurrentBusiness(null);
@@ -98,7 +98,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     // Only fetch if user has a business
     // IMPORTANT: Skip if user is admin (admin doesn't need business dashboard data)
     // This prevents loading business data when admin accesses /admin page
-    if (!profile?.businessId) {
+    if (!profile?.business_id) {
       setBlogLoading(false);
       setReviewsLoading(false);
       setOrdersLoading(false);
@@ -109,9 +109,9 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
 
     // Additional check: If user is admin, don't load business dashboard data
     // Admin should use admin panel, not business dashboard
-    // This prevents double loading when admin user also has businessId
+    // This prevents double loading when admin user also has business_id
     // Note: We check via useUserSession to avoid circular dependency
-    // If profile doesn't have businessId, we already returned above
+    // If profile doesn't have business_id, we already returned above
     // This check is mainly to prevent loading when admin accesses /admin page
     // For now, we'll rely on the route protection to prevent this scenario
 
@@ -145,8 +145,8 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
         .select('id, business_id, slug, title, excerpt, image_url, content, author, created_date, published_date, status, view_count, is_featured, seo')
         .order('created_date', { ascending: false }),
       supabase.from('reviews')
-        .select('id, user_id, business_id, user_name, user_avatar_url, rating, comment, submitted_date, status, reply')
-        .order('submitted_date', { ascending: false }),
+        .select('id, user_id, business_id, user_name, user_avatar_url, rating, comment, created_at, status, reply_content, reply_date')
+        .order('created_at', { ascending: false }),
       supabase.from('orders')
         .select('id, business_id, business_name, package_id, package_name, amount, status, payment_method, submitted_at, confirmed_at, notes')
         .order('submitted_at', { ascending: false }),
@@ -162,37 +162,37 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
         .order('converted_at', { ascending: false })
     ]);
 
-    if (postsRes.data) setPosts(snakeToCamel(postsRes.data) as BusinessBlogPost[]);
+    if (postsRes.data) setPosts(postsRes.data as BusinessBlogPost[]);
     if (postsRes.error) console.error("Error fetching business blog posts:", postsRes.error.message);
 
-    if (reviewsRes.data) setReviews(snakeToCamel(reviewsRes.data) as Review[]);
+    if (reviewsRes.data) setReviews(reviewsRes.data as Review[]);
     if (reviewsRes.error) console.error("Error fetching reviews:", reviewsRes.error.message);
 
-    if (ordersRes.data) setOrders(snakeToCamel(ordersRes.data) as Order[]);
+    if (ordersRes.data) setOrders(ordersRes.data as Order[]);
     if (ordersRes.error) console.error("Error fetching orders:", ordersRes.error.message);
 
     if (appointmentsRes.data) {
-      setAppointments(snakeToCamel(appointmentsRes.data) as Appointment[]);
+      setAppointments(appointmentsRes.data as Appointment[]);
     }
     if (appointmentsRes.error) console.error("Error fetching appointments:", appointmentsRes.error.message);
 
     // Calculate analytics from database data (C3.10: Migrated from mock data, Phase 2.2: Added conversions)
     if (businessesRes.data && reviewsRes.data && appointmentsRes.data && ordersRes.data) {
       const analytics: BusinessAnalytics[] = businessesRes.data.map((business: { id: number }) => {
-        const businessId = business.id;
-        const businessReviews = reviewsRes.data.filter((r: { business_id: number | null }) => r.business_id === businessId);
-        const businessAppointments = appointmentsRes.data.filter((a: { business_id: number | null }) => a.business_id === businessId);
-        const businessOrders = ordersRes.data.filter((o: { business_id: number | null }) => o.business_id === businessId);
-        const businessSlug = (businessesRes.data.find((b: { id: number; slug: string }) => b.id === businessId))?.slug;
+        const business_id = business.id;
+        const businessReviews = reviewsRes.data.filter((r: { business_id: number | null }) => r.business_id === business_id);
+        const businessAppointments = appointmentsRes.data.filter((a: { business_id: number | null }) => a.business_id === business_id);
+        const businessOrders = ordersRes.data.filter((o: { business_id: number | null }) => o.business_id === business_id);
+        const businessSlug = (businessesRes.data.find((b: { id: number; slug: string }) => b.id === business_id))?.slug;
 
         // Get page views for this business (from page_views table where page_id = slug or page_type = 'business')
         const businessPageViews = (pageViewsRes.data as unknown as { page_type: string; page_id: string; viewed_at: string }[])?.filter((pv) =>
           (pv.page_type === 'business' && pv.page_id === businessSlug) ||
-          (pv.page_type === 'business' && pv.page_id === String(businessId))
+          (pv.page_type === 'business' && pv.page_id === String(business_id))
         ) || [];
 
         // Get conversions for this business
-        const businessConversions = (conversionsRes.data as unknown as { business_id: number; conversion_type: string; converted_at: string }[])?.filter((c) => c.business_id === businessId) || [];
+        const businessConversions = (conversionsRes.data as unknown as { business_id: number; conversion_type: string; converted_at: string }[])?.filter((c) => c.business_id === business_id) || [];
 
         // Calculate time series for last 30 days
         const timeSeries: AnalyticsDataPoint[] = [];
@@ -226,10 +226,10 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
 
           timeSeries.push({
             date: dateStr,
-            pageViews: dayPageViews || 0,
-            contactClicks: dayContactClicks + dayBookingClicks, // Combine contact and booking
-            callClicks: dayCallClicks,
-            directionClicks: 0, // Not tracked yet
+            page_views: dayPageViews || 0,
+            contact_clicks: dayContactClicks + dayBookingClicks, // Combine contact and booking
+            call_clicks: dayCallClicks,
+            direction_clicks: 0, // Not tracked yet
           });
         }
 
@@ -243,10 +243,10 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
         ];
 
         return {
-          businessId,
-          timeSeries,
-          trafficSources,
-          averageTimeOnPage: 0, // Not tracked in current schema
+          business_id: business_id,
+          time_series: timeSeries,
+          traffic_sources: trafficSources,
+          average_time_on_page: 0, // Not tracked in current schema
         };
       });
 
@@ -259,7 +259,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     setAppointmentsLoading(false);
     setAnalyticsLoading(false);
     // Don't reset hasFetchedRef here - keep it true to prevent re-fetch
-  }, [profile?.businessId]);
+  }, [profile?.business_id]);
 
   // Only fetch when user has a business
   useEffect(() => {
@@ -268,9 +268,9 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (profile?.businessId && !hasFetchedRef.current) {
+    if (profile?.business_id && !hasFetchedRef.current) {
       fetchAllData();
-    } else if (!profile?.businessId) {
+    } else if (!profile?.business_id) {
       // Reset when user doesn't have business (or not logged in)
       hasFetchedRef.current = false;
       setPosts([]);
@@ -285,10 +285,10 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       setAppointmentsLoading(false);
       setAnalyticsLoading(false);
     }
-  }, [profile?.businessId, profileLoading, fetchAllData]); // Depend on profileLoading to wait for auth check
+  }, [profile?.business_id, profileLoading, fetchAllData]); // Depend on profileLoading to wait for auth check
 
   // --- LOGIC (copied from old BusinessBlogDataContext) ---
-  const addPost = async (newPostData: Omit<BusinessBlogPost, 'id' | 'slug' | 'createdDate' | 'viewCount'>) => {
+  const addPost = async (newPostData: Omit<BusinessBlogPost, 'id' | 'slug' | 'created_date' | 'view_count'>) => {
     if (!isSupabaseConfigured) {
       toast.error("Preview Mode: Cannot add post.");
       throw new Error("Preview Mode: Cannot add post.");
@@ -317,10 +317,10 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     }
     // If image changed and old image is from blog-images bucket, delete it
     const oldPost = posts.find(p => p.id === updatedPost.id);
-    if (oldPost && oldPost.imageUrl !== updatedPost.imageUrl && oldPost.imageUrl.includes('blog-images')) {
+    if (oldPost && oldPost.image_url !== updatedPost.image_url && oldPost.image_url.includes('blog-images')) {
       try {
         const { deleteFileByUrl } = await import('../lib/storage.ts');
-        await deleteFileByUrl('blog-images', oldPost.imageUrl);
+        await deleteFileByUrl('blog-images', oldPost.image_url);
       } catch (deleteError) {
         // Log but don't fail the update operation
         console.warn('Failed to delete old blog post image from storage:', deleteError);
@@ -339,24 +339,24 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     toast.success("Post updated successfully!");
   };
 
-  const deletePost = async (postId: string) => {
+  const deletePost = async (post_id: string) => {
     if (!isSupabaseConfigured) {
       toast.error("Preview Mode: Cannot delete post.");
       throw new Error("Preview Mode: Cannot delete post.");
     }
     // Delete image from Storage if exists and is from blog-images bucket
-    const post = posts.find(p => p.id === postId);
-    if (post && post.imageUrl && post.imageUrl.includes('blog-images')) {
+    const post = posts.find(p => p.id === post_id);
+    if (post && post.image_url && post.image_url.includes('blog-images')) {
       try {
         const { deleteFileByUrl } = await import('../lib/storage.ts');
-        await deleteFileByUrl('blog-images', post.imageUrl);
+        await deleteFileByUrl('blog-images', post.image_url);
       } catch (deleteError) {
         // Log but don't fail the delete operation
         console.warn('Failed to delete blog post image from storage:', deleteError);
       }
     }
 
-    const { error } = await supabase.from('business_blog_posts').delete().eq('id', postId);
+    const { error } = await supabase.from('business_blog_posts').delete().eq('id', post_id);
     if (error) {
       console.error("Error deleting business post:", error.message);
       toast.error(`Failed to delete post: ${error.message}`);
@@ -367,12 +367,12 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     toast.success("Post deleted successfully!");
   };
   const getPostBySlug = (slug: string) => posts.find(p => p.slug === slug);
-  const getPostsByBusinessId = (businessId: number) => posts.filter(p => p.businessId === businessId);
-  const incrementViewCount = async (postId: string) => {
+  const getPostsBybusiness_id = (business_id: number) => posts.filter(p => p.business_id === business_id);
+  const incrementview_count = async (post_id: string) => {
     if (!isSupabaseConfigured) return;
-    await supabase.rpc('increment_business_blog_view_count', { p_post_id: postId });
+    await supabase.rpc('increment_business_blog_view_count', { p_post_id: post_id });
   };
-  const addReview = async (reviewData: { businessId: number; rating: number; comment: string; userProfile: Profile }) => {
+  const addReview = async (reviewData: { business_id: number; rating: number; comment: string; userProfile: Profile }) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add review."); throw new Error("Preview Mode"); }
     const { userProfile, ...rest } = reviewData;
     if (!userProfile?.id) {
@@ -380,12 +380,12 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     }
     const newReview = {
       ...rest,
-      userId: userProfile.id,
-      userName: userProfile.fullName || 'Anonymous',
-      userAvatarUrl: userProfile.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.fullName || 'A')}&background=random`,
-      status: 'Visible' as ReviewStatus,
+      user_id: userProfile.id,
+      user_name: userProfile.full_name || 'Anonymous',
+      user_avatar_url: userProfile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.full_name || 'A')}&background=random`,
+      status: ReviewStatus.VISIBLE,
     };
-    const { error } = await supabase.from('reviews').insert(toSnakeCase(newReview));
+    const { error } = await supabase.from('reviews').insert(newReview);
     if (error) {
       console.error("Error adding review:", error.message);
       throw error;
@@ -399,8 +399,8 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       toast.error("Preview Mode: Cannot add reply.");
       throw new Error("Preview Mode: Cannot add reply.");
     }
-    const reply = { content: replyContent, repliedDate: new Date().toISOString() };
-    const { error } = await supabase.from('reviews').update({ reply: toSnakeCase(reply) }).eq('id', reviewId);
+    const reply = { reply_content: replyContent, reply_date: new Date().toISOString() };
+    const { error } = await supabase.from('reviews').update(reply).eq('id', reviewId);
     if (error) {
       console.error("Error adding reply:", error.message);
       toast.error(`Failed to save reply: ${error.message}`);
@@ -430,10 +430,10 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     await fetchAllData();
     toast.success(`Review ${newStatus === ReviewStatus.HIDDEN ? 'hidden' : 'shown'} successfully!`);
   };
-  const getReviewsByBusinessId = (businessId: number) => reviews.filter(r => r.businessId === businessId);
-  const getAnalyticsByBusinessId = (businessId: number) => analyticsData.find(data => data.businessId === businessId);
+  const getReviewsBybusiness_id = (business_id: number) => reviews.filter(r => r.business_id === business_id);
+  const getAnalyticsBybusiness_id = (business_id: number) => analyticsData.find(data => data.business_id === business_id);
 
-  const addAppointment = async (newAppointmentData: Omit<Appointment, 'id' | 'createdAt'>) => {
+  const addAppointment = async (newAppointmentData: Omit<Appointment, 'id' | 'created_at'>) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add appointment."); throw new Error("Preview Mode"); }
     const appointmentToAdd = toSnakeCase(newAppointmentData);
     const { error } = await supabase.from('appointments').insert(appointmentToAdd as any);
@@ -461,7 +461,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     await fetchAllData();
   };
 
-  const getAppointmentsForBusiness = (businessId: number) => appointments.filter(appt => appt.businessId === businessId);
+  const getAppointmentsForBusiness = (business_id: number) => appointments.filter(appt => appt.business_id === business_id);
 
   const addOrder = async (newOrderData: Omit<Order, 'id'>): Promise<Order> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add order."); throw new Error("Preview Mode"); }
@@ -472,7 +472,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     }
     hasFetchedRef.current = false; // Reset to allow refetch
     await fetchAllData();
-    return snakeToCamel(data) as Order;
+    return data as Order;
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: OrderStatus, notes?: string) => {
@@ -482,7 +482,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
 
     const updates = {
       status: newStatus,
-      confirmed_at: newStatus === OrderStatus.COMPLETED ? new Date().toISOString() : orderToUpdate.confirmedAt,
+      confirmed_at: newStatus === OrderStatus.COMPLETED ? new Date().toISOString() : orderToUpdate.confirmed_at,
       notes: notes || orderToUpdate.notes,
     };
 
@@ -490,18 +490,18 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
 
     if (!error && data) {
       if (newStatus === OrderStatus.COMPLETED) {
-        const order = snakeToCamel(data) as unknown as Order;
-        const businessToUpdate = businesses.find(b => b.id === order.businessId);
-        const packagePurchased = packages.find(p => p.id === order.packageId);
+        const order = data as unknown as Order;
+        const businessToUpdate = businesses.find(b => b.id === order.business_id);
+        const packagePurchased = packages.find(p => p.id === order.package_id);
 
         if (businessToUpdate && packagePurchased) {
           // Calculate expiry date for notification
           const expiryDate = new Date();
-          expiryDate.setMonth(expiryDate.getMonth() + packagePurchased.durationMonths);
+          expiryDate.setMonth(expiryDate.getMonth() + (packagePurchased.duration_months || 0));
 
           // Use centralized activation function (removes duplicate logic)
           const activated = await activateBusinessFromOrder(
-            order.businessId,
+            order.business_id,
             packagePurchased
           );
 
@@ -509,9 +509,9 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
             // Refresh business data
             await updateBusiness({
               ...businessToUpdate,
-              membershipTier: packagePurchased.tier,
-              membershipExpiryDate: expiryDate.toISOString(),
-              isActive: true,
+              membership_tier: packagePurchased.tier,
+              membership_expiry_date: expiryDate.toISOString(),
+              is_active: true,
             });
 
             // Send notification - removed to avoid circular dependency
@@ -528,10 +528,10 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
 
   const value = {
     currentBusiness,
-    posts, blogLoading, getPostBySlug, addPost, updatePost, deletePost, incrementViewCount, getPostsByBusinessId,
+    posts, blogLoading, getPostBySlug, addPost, updatePost, deletePost, incrementview_count, getPostsBybusiness_id,
     addDeal, updateDeal, deleteDeal,
-    reviews, reviewsLoading, getReviewsByBusinessId, addReview, addReply, toggleReviewVisibility,
-    analyticsData, analyticsLoading, getAnalyticsByBusinessId,
+    reviews, reviewsLoading, getReviewsBybusiness_id, addReview, addReply, toggleReviewVisibility,
+    analyticsData, analyticsLoading, getAnalyticsBybusiness_id,
     appointments, appointmentsLoading, getAppointmentsForBusiness, addAppointment, updateAppointmentStatus,
     orders, ordersLoading, addOrder, updateOrderStatus,
   };
@@ -555,8 +555,8 @@ export function useBusinessAuth() {
 }
 
 export function useBusinessBlogData() {
-  const { posts, blogLoading, getPostBySlug, addPost, updatePost, deletePost, incrementViewCount, getPostsByBusinessId } = useBusiness();
-  return { posts, loading: blogLoading, getPostBySlug, addPost, updatePost, deletePost, incrementViewCount, getPostsByBusinessId };
+  const { posts, blogLoading, getPostBySlug, addPost, updatePost, deletePost, incrementview_count, getPostsBybusiness_id } = useBusiness();
+  return { posts, loading: blogLoading, getPostBySlug, addPost, updatePost, deletePost, incrementview_count, getPostsBybusiness_id };
 }
 
 export function useDealsData() {
@@ -565,13 +565,13 @@ export function useDealsData() {
 }
 
 export function useReviewsData() {
-  const { reviews, reviewsLoading, getReviewsByBusinessId, addReview, addReply, toggleReviewVisibility } = useBusiness();
-  return { reviews, loading: reviewsLoading, getReviewsByBusinessId, addReview, addReply, toggleReviewVisibility };
+  const { reviews, reviewsLoading, getReviewsBybusiness_id, addReview, addReply, toggleReviewVisibility } = useBusiness();
+  return { reviews, loading: reviewsLoading, getReviewsBybusiness_id, addReview, addReply, toggleReviewVisibility };
 }
 
 export function useAnalyticsData() {
-  const { getAnalyticsByBusinessId, analyticsLoading } = useBusiness();
-  return { getAnalyticsByBusinessId, loading: analyticsLoading };
+  const { getAnalyticsBybusiness_id, analyticsLoading } = useBusiness();
+  return { getAnalyticsBybusiness_id, loading: analyticsLoading };
 }
 
 export function useBookingData() {

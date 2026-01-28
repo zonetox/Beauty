@@ -33,16 +33,16 @@ const AdminLandingPageModeration: React.FC = () => {
             const aPriority = statusPriority[a.landingPageStatus || 'Approved'] || 5;
             const bPriority = statusPriority[b.landingPageStatus || 'Approved'] || 5;
             if (aPriority !== bPriority) return aPriority - bPriority;
-            return new Date(b.joinedDate).getTime() - new Date(a.joinedDate).getTime();
+            return new Date(b.joined_date).getTime() - new Date(a.joined_date).getTime();
         });
     }, [businesses, statusFilter, searchQuery]);
 
-    const updateLandingPageStatus = async (businessId: number, newStatus: LandingPageStatus) => {
+    const updateLandingPageStatus = async (business_id: number, newStatus: LandingPageStatus) => {
         try {
             const { error } = await supabase
                 .from('businesses')
                 .update({ landing_page_status: newStatus })
-                .eq('id', businessId);
+                .eq('id', business_id);
 
             if (error) throw error;
 
@@ -189,9 +189,9 @@ const AdminLandingPageModeration: React.FC = () => {
                                         <tr key={business.id} className="border-b border-gray-100 hover:bg-gray-50">
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    {business.logoUrl && (
+                                                    {business.logo_url && (
                                                         <img
-                                                            src={business.logoUrl}
+                                                            src={business.logo_url}
                                                             alt={business.name}
                                                             className="w-10 h-10 rounded-full object-cover"
                                                         />
@@ -208,7 +208,7 @@ const AdminLandingPageModeration: React.FC = () => {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-gray-600">
-                                                {new Date(business.joinedDate).toLocaleDateString('vi-VN')}
+                                                {new Date(business.joined_date).toLocaleDateString('vi-VN')}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-2">

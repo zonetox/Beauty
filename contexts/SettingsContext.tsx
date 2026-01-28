@@ -12,11 +12,11 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 const LOCAL_STORAGE_KEY = 'app_settings';
 
 const DEFAULT_SETTINGS: AppSettings = {
-  bankDetails: {
-    bankName: 'Vietcombank',
-    accountName: 'CONG TY TNHH BEAUTYDIR',
-    accountNumber: '1234567890',
-    transferNote: 'Vui lòng ghi rõ nội dung chuyển khoản: [Tên doanh nghiệp] - [Mã đơn hàng]',
+  bank_details: {
+    bank_name: 'Vietcombank',
+    account_name: 'CONG TY TNHH BEAUTYDIR',
+    account_number: '1234567890',
+    transfer_note: 'Vui lòng ghi rõ nội dung chuyển khoản: [Tên doanh nghiệp] - [Mã đơn hàng]',
   },
 };
 

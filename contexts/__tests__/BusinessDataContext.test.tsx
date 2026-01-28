@@ -138,12 +138,12 @@ describe('BusinessDataContext', () => {
         id: 1,
         name: 'Test Business',
         slug: 'test-business',
-        isVerified: true,
-        isActive: true,
+        is_verified: true,
+        is_active: true,
         rating: 4.5,
-        reviewCount: 10,
-        viewCount: 100,
-        joinedDate: new Date().toISOString(),
+        review_count: 10,
+        view_count: 100,
+        joined_date: new Date().toISOString(),
       } as Business,
     ];
 

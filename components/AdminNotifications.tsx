@@ -63,7 +63,7 @@ const AdminNotifications: React.FC<AdminNotificationsProps> = ({ orders, registr
                                         <h4 className="text-xs font-bold uppercase text-gray-400 px-2 mb-1">Registrations</h4>
                                         {notifications.pendingRegistrations.slice(0, 3).map(req => (
                                             <button key={req.id} onClick={() => handleNavigate('registrations')} className="w-full text-left p-2 rounded hover:bg-gray-100 text-sm">
-                                                New request from <strong>{req.businessName}</strong>
+                                                New request from <strong>{req.business_name}</strong>
                                             </button>
                                         ))}
                                         {notifications.pendingRegistrations.length > 3 && (
@@ -78,7 +78,7 @@ const AdminNotifications: React.FC<AdminNotificationsProps> = ({ orders, registr
                                         <h4 className="text-xs font-bold uppercase text-gray-400 px-2 mb-1">Orders</h4>
                                         {notifications.pendingOrders.slice(0, 3).map(order => (
                                             <button key={order.id} onClick={() => handleNavigate('orders')} className="w-full text-left p-2 rounded hover:bg-gray-100 text-sm">
-                                                Payment confirmation for <strong>{order.businessName}</strong>
+                                                Payment confirmation for <strong>{order.business_name}</strong>
                                             </button>
                                         ))}
                                          {notifications.pendingOrders.length > 3 && (

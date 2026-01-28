@@ -113,7 +113,7 @@ export async function initializeUserProfile(
  */
 export async function initializeBusinessProfile(
   user: User,
-  businessId: number
+  business_id: number
 ): Promise<PostSignupResult> {
   if (!user || !user.id) {
     return {
@@ -127,7 +127,7 @@ export async function initializeBusinessProfile(
   const { data: business, error: businessError } = await supabase
     .from('businesses')
     .select('id, owner_id')
-    .eq('id', businessId)
+    .eq('id', business_id)
     .eq('owner_id', user.id)
     .single();
 
@@ -160,11 +160,11 @@ export async function initializeBusinessProfile(
     };
   }
 
-  if (profile.business_id !== businessId) {
+  if (profile.business_id !== business_id) {
     // Attempt to link
     const { error: updateError } = await supabase
       .from('profiles')
-      .update({ business_id: businessId })
+      .update({ business_id: business_id })
       .eq('id', user.id);
 
     if (updateError) {

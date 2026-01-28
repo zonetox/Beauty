@@ -7,21 +7,21 @@ import { StaffMemberRole } from '../types.ts';
 import { BusinessStaff } from '../types.ts';
 
 interface StaffInviteModalProps {
-  businessId: number;
+  business_id: number;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-const StaffInviteModal: React.FC<StaffInviteModalProps> = ({ businessId, onClose, onSuccess }) => {
-  const { refreshStaff } = useStaff();
+const StaffInviteModal: React.FC<StaffInviteModalProps> = ({ business_id, onClose, onSuccess }) => {
+  const { refresh_staff } = useStaff();
   const { currentBusiness } = useBusinessAuth();
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<StaffMemberRole>(StaffMemberRole.EDITOR);
   const [permissions, setPermissions] = useState<BusinessStaff['permissions']>({
-    canEditLandingPage: true,
-    canEditBlog: true,
-    canManageMedia: false,
-    canManageServices: false,
+    can_edit_landing_page: true,
+    can_edit_blog: true,
+    can_manage_media: false,
+    can_manage_services: false,
   });
   const [isInviting, setIsInviting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,10 +41,10 @@ const StaffInviteModal: React.FC<StaffInviteModalProps> = ({ businessId, onClose
       const { data, error: inviteError } = await supabase.functions.invoke('invite-staff', {
         body: {
           email,
-          businessId,
+          business_id,
           role,
           permissions,
-          businessName: currentBusiness?.name,
+          business_name: currentBusiness?.name,
         }
       });
 
@@ -57,7 +57,7 @@ const StaffInviteModal: React.FC<StaffInviteModalProps> = ({ businessId, onClose
       }
 
       // Refresh staff list
-      await refreshStaff(businessId);
+      await refresh_staff(business_id);
 
       toast.success(data?.isNewUser
         ? 'Staff member invited successfully. Invitation email sent.'
@@ -119,8 +119,8 @@ const StaffInviteModal: React.FC<StaffInviteModalProps> = ({ businessId, onClose
             <label className="flex items-center">
               <input
                 type="checkbox"
-                checked={permissions.canEditLandingPage || false}
-                onChange={(e) => setPermissions({ ...permissions, canEditLandingPage: e.target.checked })}
+                checked={permissions.can_edit_landing_page || false}
+                onChange={(e) => setPermissions({ ...permissions, can_edit_landing_page: e.target.checked })}
                 className="mr-2"
                 disabled={isInviting}
               />
@@ -129,8 +129,8 @@ const StaffInviteModal: React.FC<StaffInviteModalProps> = ({ businessId, onClose
             <label className="flex items-center">
               <input
                 type="checkbox"
-                checked={permissions.canEditBlog || false}
-                onChange={(e) => setPermissions({ ...permissions, canEditBlog: e.target.checked })}
+                checked={permissions.can_edit_blog || false}
+                onChange={(e) => setPermissions({ ...permissions, can_edit_blog: e.target.checked })}
                 className="mr-2"
                 disabled={isInviting}
               />
@@ -139,8 +139,8 @@ const StaffInviteModal: React.FC<StaffInviteModalProps> = ({ businessId, onClose
             <label className="flex items-center">
               <input
                 type="checkbox"
-                checked={permissions.canManageMedia || false}
-                onChange={(e) => setPermissions({ ...permissions, canManageMedia: e.target.checked })}
+                checked={permissions.can_manage_media || false}
+                onChange={(e) => setPermissions({ ...permissions, can_manage_media: e.target.checked })}
                 className="mr-2"
                 disabled={isInviting}
               />
@@ -149,8 +149,8 @@ const StaffInviteModal: React.FC<StaffInviteModalProps> = ({ businessId, onClose
             <label className="flex items-center">
               <input
                 type="checkbox"
-                checked={permissions.canManageServices || false}
-                onChange={(e) => setPermissions({ ...permissions, canManageServices: e.target.checked })}
+                checked={permissions.can_manage_services || false}
+                onChange={(e) => setPermissions({ ...permissions, can_manage_services: e.target.checked })}
                 className="mr-2"
                 disabled={isInviting}
               />

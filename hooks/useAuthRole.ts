@@ -16,7 +16,7 @@ export function useAuthRole(user: User | null) {
             if (!user) {
                 return {
                     role: 'anonymous' as const,
-                    businessId: null,
+                    business_id: null,
                     error: null
                 };
             }
@@ -30,7 +30,7 @@ export function useAuthRole(user: User | null) {
 
             return {
                 role: result.role,
-                businessId: result.businessId,
+                business_id: result.business_id,
                 profile: result.profile || null,
                 error: result.error || null
             };

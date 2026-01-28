@@ -18,12 +18,12 @@ interface UnifiedPost {
   id: string;
   url: string;
   title: string;
-  imageUrl: string;
+  image_url: string;
   excerpt: string;
   author: string;
   date: string;
   category: string;
-  viewCount?: number;
+  view_count?: number;
   rawDate: Date;
 }
 
@@ -61,32 +61,32 @@ const BlogListPage: React.FC = () => {
         id: `platform-${post.id}`,
         url: `/blog/${post.slug}`,
         title: post.title,
-        imageUrl: post.imageUrl,
+        image_url: post.image_url,
         excerpt: post.excerpt,
         author: post.author,
         date: postDate.toLocaleDateString('vi-VN'),
         category: post.category,
-        viewCount: post.viewCount,
+        view_count: post.view_count,
         rawDate: postDate,
       }
     });
 
     // 2. Process featured business posts
     const featuredBusinessPosts: UnifiedPost[] = businessPosts
-      .filter(post => post.isFeatured && post.status === BusinessBlogPostStatus.PUBLISHED && post.publishedDate)
+      .filter(post => post.is_featured && post.status === BusinessBlogPostStatus.PUBLISHED && post.published_date)
       .map(post => {
-        const business = businesses.find(b => b.id === post.businessId);
+        const business = businesses.find(b => b.id === post.business_id);
         return {
           id: `business-${post.id}`,
           url: `/business/${business?.slug}/post/${post.slug}`,
           title: post.title,
-          imageUrl: post.imageUrl,
+          image_url: post.image_url,
           excerpt: post.excerpt,
           author: post.author,
-          date: new Date(post.publishedDate!).toLocaleDateString('en-GB'),
+          date: new Date(post.published_date!).toLocaleDateString('en-GB'),
           category: business?.name || 'Đối tác',
-          viewCount: post.viewCount,
-          rawDate: new Date(post.publishedDate!),
+          view_count: post.view_count,
+          rawDate: new Date(post.published_date!),
         };
       })
       .filter(post => !post.url.includes('/business/undefined/')); // Filter out posts whose business was not found

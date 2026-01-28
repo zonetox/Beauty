@@ -21,8 +21,8 @@ const ThemeEditor: React.FC = () => {
     const [showResetConfirm, setShowResetConfirm] = useState(false);
     const [uploadingLogo, setUploadingLogo] = useState(false);
     const [uploadingFavicon, setUploadingFavicon] = useState(false);
-    const [logoPreview, setLogoPreview] = useState<string | null>(formData.logoUrl || null);
-    const [faviconPreview, setFaviconPreview] = useState<string | null>(formData.faviconUrl || null);
+    const [logoPreview, setLogoPreview] = useState<string | null>(formData.logo_url || null);
+    const [faviconPreview, setFaviconPreview] = useState<string | null>(formData.favicon_url || null);
     const logoInputRef = useRef<HTMLInputElement>(null);
     const faviconInputRef = useRef<HTMLInputElement>(null);
 
@@ -39,8 +39,8 @@ const ThemeEditor: React.FC = () => {
     const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
-        if (name === 'logoUrl') setLogoPreview(value || null);
-        if (name === 'faviconUrl') setFaviconPreview(value || null);
+        if (name === 'logo_url') setLogoPreview(value || null);
+        if (name === 'favicon_url') setFaviconPreview(value || null);
     };
 
     const handleImageUpload = async (file: File, type: 'logo' | 'favicon') => {
@@ -61,7 +61,7 @@ const ThemeEditor: React.FC = () => {
 
         const setUploading = type === 'logo' ? setUploadingLogo : setUploadingFavicon;
         const setPreview = type === 'logo' ? setLogoPreview : setFaviconPreview;
-        const oldUrl = type === 'logo' ? formData.logoUrl : formData.faviconUrl;
+        const oldUrl = type === 'logo' ? formData.logo_url : formData.favicon_url;
 
         setUploading(true);
         try {
@@ -74,7 +74,7 @@ const ThemeEditor: React.FC = () => {
 
             // Upload to Supabase Storage
             const folder = 'theme';
-            const imageUrl = await uploadFile('business-gallery', file, folder);
+            const image_url = await uploadFile('business-gallery', file, folder);
 
             // Delete old image if it was uploaded to storage
             if (oldUrl && oldUrl.startsWith('http') && oldUrl.includes('supabase.co')) {
@@ -87,9 +87,9 @@ const ThemeEditor: React.FC = () => {
 
             // Update form data
             if (type === 'logo') {
-                setFormData(prev => ({ ...prev, logoUrl: imageUrl }));
+                setFormData(prev => ({ ...prev, logo_url: image_url }));
             } else {
-                setFormData(prev => ({ ...prev, faviconUrl: imageUrl }));
+                setFormData(prev => ({ ...prev, favicon_url: image_url }));
             }
 
             toast.success(`${type === 'logo' ? 'Logo' : 'Favicon'} đã được tải lên thành công!`);
@@ -124,11 +124,11 @@ const ThemeEditor: React.FC = () => {
     const confirmReset = () => {
         setShowResetConfirm(false);
         const defaultTheme: ThemeSettings = {
-          logoUrl: '',
-          faviconUrl: '/favicon.svg',
+          logo_url: '',
+          favicon_url: '/favicon.svg',
           colors: {
-            primary: '#BFA16A', primaryDark: '#A98C5A', secondary: '#4A4A4A',
-            accent: '#EAE0D1', background: '#FDFCF9', neutralDark: '#2D2D2D',
+            primary: '#BFA16A', primary_dark: '#A98C5A', secondary: '#4A4A4A',
+            accent: '#EAE0D1', background: '#FDFCF9', neutral_dark: '#2D2D2D',
           },
           fonts: { sans: 'Inter', serif: 'Playfair Display' },
         };
@@ -158,8 +158,8 @@ const ThemeEditor: React.FC = () => {
                         <div className="flex-1">
                             <input 
                                 type="text" 
-                                name="logoUrl" 
-                                value={formData.logoUrl} 
+                                name="logo_url" 
+                                value={formData.logo_url} 
                                 onChange={handleUrlChange} 
                                 placeholder="URL logo hoặc để trống để dùng text logo" 
                                 className="w-full p-2 border rounded-md" 
@@ -199,8 +199,8 @@ const ThemeEditor: React.FC = () => {
                         <div className="flex-1">
                             <input 
                                 type="text" 
-                                name="faviconUrl" 
-                                value={formData.faviconUrl} 
+                                name="favicon_url" 
+                                value={formData.favicon_url} 
                                 onChange={handleUrlChange} 
                                 placeholder="URL favicon" 
                                 className="w-full p-2 border rounded-md" 
@@ -239,11 +239,11 @@ const ThemeEditor: React.FC = () => {
                  <h3 className="text-lg font-semibold text-neutral-dark border-b pb-2">Colors</h3>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <ColorInput label="Primary" name="primary" value={formData.colors.primary} onChange={handleColorChange} />
-                    <ColorInput label="Primary Dark" name="primaryDark" value={formData.colors.primaryDark} onChange={handleColorChange} />
+                    <ColorInput label="Primary Dark" name="primary_dark" value={formData.colors.primary_dark} onChange={handleColorChange} />
                     <ColorInput label="Secondary" name="secondary" value={formData.colors.secondary} onChange={handleColorChange} />
                     <ColorInput label="Accent" name="accent" value={formData.colors.accent} onChange={handleColorChange} />
                     <ColorInput label="Background" name="background" value={formData.colors.background} onChange={handleColorChange} />
-                    <ColorInput label="Neutral Dark" name="neutralDark" value={formData.colors.neutralDark} onChange={handleColorChange} />
+                    <ColorInput label="Neutral Dark" name="neutral_dark" value={formData.colors.neutral_dark} onChange={handleColorChange} />
                  </div>
             </div>
 

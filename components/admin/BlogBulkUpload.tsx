@@ -100,10 +100,10 @@ const BlogBulkUpload: React.FC = () => {
                 excerpt: row.excerpt || row.title,
                 author: row.author || 'Admin',
                 category: row.category,
-                imageUrl: row.imageUrl || 'https://placehold.co/800x400/E6A4B4/FFFFFF?text=Blog+Image',
+                image_url: row.image_url || 'https://placehold.co/800x400/E6A4B4/FFFFFF?text=Blog+Image',
                 content: row.content,
                 status: (row.status === 'Published' || row.status === 'Draft') ? row.status : 'Published',
-                isFeatured: row.isFeatured === 'TRUE' || row.isFeatured === 'true' || row.isFeatured === '1',
+                is_featured: row.is_featured === 'TRUE' || row.is_featured === 'true' || row.is_featured === '1',
                 seo: {
                     title: row.seoTitle || row.title,
                     description: row.seoDescription || row.excerpt || '',

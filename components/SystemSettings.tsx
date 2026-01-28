@@ -8,7 +8,6 @@ import { useSettings } from '../contexts/AdminContext.tsx';
 import { AppSettings } from '../types.ts';
 import { uploadFile } from '../lib/storage.ts';
 import LoadingState from './LoadingState.tsx';
-import EmptyState from './EmptyState.tsx';
 
 const SystemSettings: React.FC = () => {
     const { settings, updateSettings } = useSettings();
@@ -22,38 +21,38 @@ const SystemSettings: React.FC = () => {
     useEffect(() => {
         if (settings) {
             setFormData({
-                siteName: settings.siteName || 'Beauty Directory',
-                supportEmail: settings.supportEmail || 'support@beautydir.com',
-                maintenanceMode: settings.maintenanceMode || false,
-                logoUrl: settings.logoUrl || '',
-                faviconUrl: settings.faviconUrl || '',
+                site_name: settings.site_name || 'Beauty Directory',
+                support_email: settings.support_email || 'support@beautydir.com',
+                maintenance_mode: settings.maintenance_mode || false,
+                logo_url: settings.logo_url || '',
+                favicon_url: settings.favicon_url || '',
                 colors: {
                     primary: settings.colors?.primary || '#D4A574',
-                    primaryDark: settings.colors?.primaryDark || '#B8935F',
+                    primary_dark: settings.colors?.primary_dark || '#B8935F',
                     secondary: settings.colors?.secondary || '#8B7355',
                     accent: settings.colors?.accent || '#F5E6D3',
                     background: settings.colors?.background || '#FFFFFF',
-                    neutralDark: settings.colors?.neutralDark || '#2C2C2C',
+                    neutral_dark: settings.colors?.neutral_dark || '#2C2C2C',
                 },
-                seoDefaults: {
-                    defaultTitle: settings.seoDefaults?.defaultTitle || 'Beauty Directory - Find the Best Beauty Services',
-                    defaultDescription: settings.seoDefaults?.defaultDescription || 'Discover top-rated spas, salons, and beauty clinics in your area.',
-                    defaultKeywords: settings.seoDefaults?.defaultKeywords || 'beauty, spa, salon, beauty directory',
+                seo_defaults: {
+                    default_title: settings.seo_defaults?.default_title || 'Beauty Directory - Find the Best Beauty Services',
+                    default_description: settings.seo_defaults?.default_description || 'Discover top-rated spas, salons, and beauty clinics in your area.',
+                    default_keywords: settings.seo_defaults?.default_keywords || 'beauty, spa, salon, beauty directory',
                 },
-                emailConfig: {
-                    fromEmail: settings.emailConfig?.fromEmail || 'noreply@beautydir.com',
-                    fromName: settings.emailConfig?.fromName || 'Beauty Directory',
-                    replyTo: settings.emailConfig?.replyTo || 'support@beautydir.com',
+                email_config: {
+                    from_email: settings.email_config?.from_email || 'noreply@beautydir.com',
+                    from_name: settings.email_config?.from_name || 'Beauty Directory',
+                    reply_to: settings.email_config?.reply_to || 'support@beautydir.com',
                 },
-                bankDetails: settings.bankDetails || {
-                    bankName: '',
-                    accountName: '',
-                    accountNumber: '',
-                    transferNote: '',
+                bank_details: settings.bank_details || {
+                    bank_name: '',
+                    account_name: '',
+                    account_number: '',
+                    transfer_note: '',
                 },
             });
-            if (settings.logoUrl) setLogoPreview(settings.logoUrl);
-            if (settings.faviconUrl) setFaviconPreview(settings.faviconUrl);
+            if (settings.logo_url) setLogoPreview(settings.logo_url);
+            if (settings.favicon_url) setFaviconPreview(settings.favicon_url);
         }
     }, [settings]);
 
@@ -112,9 +111,9 @@ const SystemSettings: React.FC = () => {
         setIsUploadingLogo(true);
         try {
             const folder = 'system';
-            const imageUrl = await uploadFile('business-gallery', file, folder);
-            setFormData(prev => ({ ...prev!, logoUrl: imageUrl }));
-            setLogoPreview(imageUrl);
+            const image_url = await uploadFile('business-gallery', file, folder);
+            setFormData(prev => ({ ...prev!, logo_url: image_url }));
+            setLogoPreview(image_url);
             toast.success('Logo uploaded successfully!');
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Failed to upload logo';
@@ -143,9 +142,9 @@ const SystemSettings: React.FC = () => {
         setIsUploadingFavicon(true);
         try {
             const folder = 'system';
-            const imageUrl = await uploadFile('business-gallery', file, folder);
-            setFormData(prev => ({ ...prev!, faviconUrl: imageUrl }));
-            setFaviconPreview(imageUrl);
+            const image_url = await uploadFile('business-gallery', file, folder);
+            setFormData(prev => ({ ...prev!, favicon_url: image_url }));
+            setFaviconPreview(image_url);
             toast.success('Favicon uploaded successfully!');
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Failed to upload favicon';
@@ -190,40 +189,40 @@ const SystemSettings: React.FC = () => {
                     <h3 className="text-xl font-semibold text-neutral-dark mb-4">Site Branding</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label htmlFor="siteName" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="site_name" className="block text-sm font-medium text-gray-700 mb-1">
                                 Site Name
                             </label>
                             <input
                                 type="text"
-                                id="siteName"
-                                name="siteName"
-                                value={formData.siteName || ''}
+                                id="site_name"
+                                name="site_name"
+                                value={formData.site_name || ''}
                                 onChange={handleChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                                 required
                             />
                         </div>
                         <div>
-                            <label htmlFor="supportEmail" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="support_email" className="block text-sm font-medium text-gray-700 mb-1">
                                 Support Email
                             </label>
                             <input
                                 type="email"
-                                id="supportEmail"
-                                name="supportEmail"
-                                value={formData.supportEmail || ''}
+                                id="support_email"
+                                name="support_email"
+                                value={formData.support_email || ''}
                                 onChange={handleChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                                 required
                             />
                         </div>
                         <div>
-                            <label htmlFor="logoUrl" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="logo_url" className="block text-sm font-medium text-gray-700 mb-1">
                                 Logo
                             </label>
                             <input
                                 type="file"
-                                id="logoUrl"
+                                id="logo_url"
                                 accept="image/*"
                                 onChange={handleLogoUpload}
                                 disabled={isUploadingLogo}
@@ -234,17 +233,17 @@ const SystemSettings: React.FC = () => {
                                     <img src={logoPreview} alt="Logo preview" className="h-16 w-auto object-contain" />
                                 </div>
                             )}
-                            {formData.logoUrl && !logoPreview && (
-                                <p className="text-xs text-gray-500 mt-1">Current logo URL: {formData.logoUrl}</p>
+                            {formData.logo_url && !logoPreview && (
+                                <p className="text-xs text-gray-500 mt-1">Current logo URL: {formData.logo_url}</p>
                             )}
                         </div>
                         <div>
-                            <label htmlFor="faviconUrl" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="favicon_url" className="block text-sm font-medium text-gray-700 mb-1">
                                 Favicon
                             </label>
                             <input
                                 type="file"
-                                id="faviconUrl"
+                                id="favicon_url"
                                 accept="image/*"
                                 onChange={handleFaviconUpload}
                                 disabled={isUploadingFavicon}
@@ -255,16 +254,16 @@ const SystemSettings: React.FC = () => {
                                     <img src={faviconPreview} alt="Favicon preview" className="h-8 w-8 object-contain" />
                                 </div>
                             )}
-                            {formData.faviconUrl && !faviconPreview && (
-                                <p className="text-xs text-gray-500 mt-1">Current favicon URL: {formData.faviconUrl}</p>
+                            {formData.favicon_url && !faviconPreview && (
+                                <p className="text-xs text-gray-500 mt-1">Current favicon URL: {formData.favicon_url}</p>
                             )}
                         </div>
                         <div className="md:col-span-2">
                             <label className="flex items-center gap-2">
                                 <input
                                     type="checkbox"
-                                    name="maintenanceMode"
-                                    checked={formData.maintenanceMode || false}
+                                    name="maintenance_mode"
+                                    checked={formData.maintenance_mode || false}
                                     onChange={handleChange}
                                     className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
                                 />
@@ -323,27 +322,27 @@ const SystemSettings: React.FC = () => {
                     <h3 className="text-xl font-semibold text-neutral-dark mb-4">SEO Defaults</h3>
                     <div className="space-y-4">
                         <div>
-                            <label htmlFor="seoDefaults.defaultTitle" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="seo_defaults.default_title" className="block text-sm font-medium text-gray-700 mb-1">
                                 Default Title
                             </label>
                             <input
                                 type="text"
-                                id="seoDefaults.defaultTitle"
-                                name="seoDefaults.defaultTitle"
-                                value={formData.seoDefaults?.defaultTitle || ''}
+                                id="seo_defaults.default_title"
+                                name="seo_defaults.default_title"
+                                value={formData.seo_defaults?.default_title || ''}
                                 onChange={handleChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                                 placeholder="Beauty Directory - Find the Best Beauty Services"
                             />
                         </div>
                         <div>
-                            <label htmlFor="seoDefaults.defaultDescription" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="seo_defaults.default_description" className="block text-sm font-medium text-gray-700 mb-1">
                                 Default Description
                             </label>
                             <textarea
-                                id="seoDefaults.defaultDescription"
-                                name="seoDefaults.defaultDescription"
-                                value={formData.seoDefaults?.defaultDescription || ''}
+                                id="seo_defaults.default_description"
+                                name="seo_defaults.default_description"
+                                value={formData.seo_defaults?.default_description || ''}
                                 onChange={handleChange}
                                 rows={3}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
@@ -351,14 +350,14 @@ const SystemSettings: React.FC = () => {
                             />
                         </div>
                         <div>
-                            <label htmlFor="seoDefaults.defaultKeywords" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="seo_defaults.default_keywords" className="block text-sm font-medium text-gray-700 mb-1">
                                 Default Keywords
                             </label>
                             <input
                                 type="text"
-                                id="seoDefaults.defaultKeywords"
-                                name="seoDefaults.defaultKeywords"
-                                value={formData.seoDefaults?.defaultKeywords || ''}
+                                id="seo_defaults.default_keywords"
+                                name="seo_defaults.default_keywords"
+                                value={formData.seo_defaults?.default_keywords || ''}
                                 onChange={handleChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                                 placeholder="beauty, spa, salon, beauty directory"
@@ -372,42 +371,42 @@ const SystemSettings: React.FC = () => {
                     <h3 className="text-xl font-semibold text-neutral-dark mb-4">Email Configuration</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label htmlFor="emailConfig.fromEmail" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="email_config.from_email" className="block text-sm font-medium text-gray-700 mb-1">
                                 From Email
                             </label>
                             <input
                                 type="email"
-                                id="emailConfig.fromEmail"
-                                name="emailConfig.fromEmail"
-                                value={formData.emailConfig?.fromEmail || ''}
+                                id="email_config.from_email"
+                                name="email_config.from_email"
+                                value={formData.email_config?.from_email || ''}
                                 onChange={handleChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                                 placeholder="noreply@beautydir.com"
                             />
                         </div>
                         <div>
-                            <label htmlFor="emailConfig.fromName" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="email_config.from_name" className="block text-sm font-medium text-gray-700 mb-1">
                                 From Name
                             </label>
                             <input
                                 type="text"
-                                id="emailConfig.fromName"
-                                name="emailConfig.fromName"
-                                value={formData.emailConfig?.fromName || ''}
+                                id="email_config.from_name"
+                                name="email_config.from_name"
+                                value={formData.email_config?.from_name || ''}
                                 onChange={handleChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                                 placeholder="Beauty Directory"
                             />
                         </div>
                         <div className="md:col-span-2">
-                            <label htmlFor="emailConfig.replyTo" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="email_config.reply_to" className="block text-sm font-medium text-gray-700 mb-1">
                                 Reply To
                             </label>
                             <input
                                 type="email"
-                                id="emailConfig.replyTo"
-                                name="emailConfig.replyTo"
-                                value={formData.emailConfig?.replyTo || ''}
+                                id="email_config.reply_to"
+                                name="email_config.reply_to"
+                                value={formData.email_config?.reply_to || ''}
                                 onChange={handleChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                                 placeholder="support@beautydir.com"
@@ -421,55 +420,55 @@ const SystemSettings: React.FC = () => {
                     <h3 className="text-xl font-semibold text-neutral-dark mb-4">Bank Transfer Information</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label htmlFor="bankDetails.bankName" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="bank_details.bank_name" className="block text-sm font-medium text-gray-700 mb-1">
                                 Bank Name
                             </label>
                             <input
                                 type="text"
-                                id="bankDetails.bankName"
-                                name="bankDetails.bankName"
-                                value={formData.bankDetails.bankName}
+                                id="bank_details.bank_name"
+                                name="bank_details.bank_name"
+                                value={formData.bank_details.bank_name}
                                 onChange={handleChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                                 required
                             />
                         </div>
                         <div>
-                            <label htmlFor="bankDetails.accountName" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="bank_details.account_name" className="block text-sm font-medium text-gray-700 mb-1">
                                 Account Name
                             </label>
                             <input
                                 type="text"
-                                id="bankDetails.accountName"
-                                name="bankDetails.accountName"
-                                value={formData.bankDetails.accountName}
+                                id="bank_details.account_name"
+                                name="bank_details.account_name"
+                                value={formData.bank_details.account_name}
                                 onChange={handleChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                                 required
                             />
                         </div>
                         <div>
-                            <label htmlFor="bankDetails.accountNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="bank_details.account_number" className="block text-sm font-medium text-gray-700 mb-1">
                                 Account Number
                             </label>
                             <input
                                 type="text"
-                                id="bankDetails.accountNumber"
-                                name="bankDetails.accountNumber"
-                                value={formData.bankDetails.accountNumber}
+                                id="bank_details.account_number"
+                                name="bank_details.account_number"
+                                value={formData.bank_details.account_number}
                                 onChange={handleChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                                 required
                             />
                         </div>
                         <div>
-                            <label htmlFor="bankDetails.transferNote" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="bank_details.transfer_note" className="block text-sm font-medium text-gray-700 mb-1">
                                 Transfer Note Template
                             </label>
                             <textarea
-                                id="bankDetails.transferNote"
-                                name="bankDetails.transferNote"
-                                value={formData.bankDetails.transferNote}
+                                id="bank_details.transfer_note"
+                                name="bank_details.transfer_note"
+                                value={formData.bank_details.transfer_note}
                                 onChange={handleChange}
                                 rows={3}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
