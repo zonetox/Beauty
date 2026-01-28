@@ -4,7 +4,7 @@
 
 import React, { useMemo, useEffect, useState } from 'react';
 import { useBusiness, useAnalyticsData } from '../contexts/BusinessContext.tsx';
-import { membership_tier, AnalyticsDataPoint, Announcement, AppointmentStatus, OrderStatus } from '../types.ts';
+import { Business, BusinessAnalytics, MembershipTier, Appointment, Review, Order, Announcement, AnalyticsDataPoint, AppointmentStatus, OrderStatus } from '../types.ts';
 import { ActiveTab } from '../pages/UserBusinessDashboardPage';
 import { useAdmin } from '../contexts/AdminContext.tsx';
 import LoadingState from './LoadingState.tsx';
@@ -34,7 +34,7 @@ const StatCard: React.FC<{ title: string, value: string | number, icon: React.Re
     </div>
 );
 
-const BarChart: React.FC<{ data: AnalyticsDataPoint[]; dataKey: 'pageViews'; title: string }> = ({ data, dataKey, title }) => {
+const BarChart: React.FC<{ data: AnalyticsDataPoint[]; dataKey: 'page_views'; title: string }> = ({ data, dataKey, title }) => {
     const values = data.map(d => d[dataKey]);
     const maxValue = Math.max(...values, 1); // Avoid division by zero
 
@@ -141,8 +141,8 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
     const stats = useMemo(() => {
         if (!currentBusiness) {
             return {
-                pageViews: 0,
-                contactClicks: 0,
+                page_views: 0,
+                contact_clicks: 0,
                 searchAppearances: 0,
                 servicesCount: 0,
                 dealsCount: 0,
@@ -153,7 +153,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
             };
         }
 
-        const contactClicks = analytics?.timeSeries.reduce((sum, item) => sum + item.callClicks + item.contactClicks + item.directionClicks, 0) || 0;
+        const contact_clicks = analytics?.time_series.reduce((sum, item) => sum + item.call_clicks + item.contact_clicks + item.direction_clicks, 0) || 0;
 
         const servicesCount = currentBusiness.services?.length || 0;
         const dealsCount = currentBusiness.deals?.length || 0;
@@ -172,8 +172,8 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
             : currentBusiness.rating || 0;
 
         return {
-            pageViews: currentBusiness.view_count || 0,
-            contactClicks,
+            page_views: currentBusiness.view_count || 0,
+            contact_clicks,
             servicesCount,
             dealsCount,
             pendingAppointments,
@@ -199,8 +199,8 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
                 activities.push({
                     type: 'appointment',
                     date: new Date(apt.created_at),
-                    title: `Lịch hẹn mới: ${apt.customerName}`,
-                    description: `${apt.serviceName} - ${apt.date}`,
+                    title: `Lịch hẹn mới: ${apt.customer_name}`,
+                    description: `${apt.service_name} - ${apt.date}`,
                     id: apt.id,
                 });
             });
@@ -243,7 +243,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
         return <div className="p-8"><EmptyState title="Không tìm thấy doanh nghiệp" message="Vui lòng hoàn tất quy trình đăng ký." /></div>;
     }
 
-    const isVip = currentbusiness.membership_tier === MembershipTier.VIP;
+    const isVip = currentBusiness.membership_tier === MembershipTier.VIP;
 
     const announcementTypeStyles = {
         info: 'bg-blue-50/50 border-blue-400 text-blue-700',
@@ -296,7 +296,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
                 <StatCard
                     className="md:col-span-2"
                     title="Lượt xem hồ sơ"
-                    value={stats.pageViews.toLocaleString()}
+                    value={stats.page_views.toLocaleString()}
                     icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path d="M2.458 12C3.732 7.943 7.522 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.022 7-9.542 7-4.478 0-8.268-2.943-9.542-7z" /></svg>}
                     change="+12%"
                     onClick={() => setActiveTab('stats')}
@@ -309,7 +309,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
                 />
                 <StatCard
                     title="Liên hệ"
-                    value={stats.contactClicks.toLocaleString()}
+                    value={stats.contact_clicks.toLocaleString()}
                     icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>}
                     onClick={() => setActiveTab('stats')}
                 />
@@ -339,8 +339,8 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Analytics Chart */}
                 <div className="lg:col-span-2">
-                    {analytics && analytics.timeSeries.length > 0 ? (
-                        <BarChart data={analytics.timeSeries} dataKey="pageViews" title="Thống kê truy cập (7 ngày qua)" />
+                    {analytics && analytics.time_series.length > 0 ? (
+                        <BarChart data={analytics.time_series} dataKey="page_views" title="Thống kê truy cập (7 ngày qua)" />
                     ) : (
                         <div className="glass-card p-4 rounded-3xl h-full flex items-center justify-center">
                             <EmptyState

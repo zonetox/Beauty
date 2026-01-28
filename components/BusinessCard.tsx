@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Business, membership_tier } from '../types.ts';
+import { Business, MembershipTier } from '../types.ts';
 import StarRating from './StarRating.tsx';
 import VerifiedBadge from './VerifiedBadge.tsx';
 import { getOptimizedSupabaseUrl } from '../lib/image.ts';
@@ -18,7 +18,7 @@ const tierStyles = {
   [MembershipTier.FREE]: 'border border-gray-200',
 };
 
-const tierBadge: Record<membership_tier, { text: string; bg: string; text_color: string }> = {
+const tierBadge: Record<MembershipTier, { text: string; bg: string; text_color: string }> = {
   [MembershipTier.VIP]: { text: 'VIP', bg: 'bg-accent', text_color: 'text-neutral-dark' },
   [MembershipTier.PREMIUM]: { text: 'Premium', bg: 'bg-primary', text_color: 'text-white' },
   [MembershipTier.FREE]: { text: 'Free', bg: 'bg-gray-100', text_color: 'text-gray-700' },

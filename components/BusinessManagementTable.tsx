@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Business, membership_tier } from '../types.ts';
+import { Business, MembershipTier } from '../types.ts';
 import ConfirmDialog from './ConfirmDialog.tsx';
 
 // --- SVG Icons for Sorting ---
@@ -84,7 +84,7 @@ const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ busin
         }
     };
 
-    const handleTierChange = (business: Business, newTier: membership_tier) => {
+    const handleTierChange = (business: Business, newTier: MembershipTier) => {
         onUpdate({ ...business, membership_tier: newTier });
     };
 
@@ -254,7 +254,7 @@ const BusinessManagementTable: React.FC<BusinessManagementTableProps> = ({ busin
                                         onChange={(e) => handleTierChange(business, e.target.value as MembershipTier)}
                                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2"
                                     >
-                                        {Object.values(membership_tier).map(tier => (
+                                        {Object.values(MembershipTier).map(tier => (
                                             <option key={tier} value={tier}>{tier}</option>
                                         ))}
                                     </select>
