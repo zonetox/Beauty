@@ -66,13 +66,13 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
 
         const newAppointment = {
             business_id: business.id,
-            serviceId: selectedService.id,
-            serviceName: selectedService.name,
-            customerName: ensureString(customerInfo.name),
-            customerEmail: ensureString(customerInfo.email),
-            customerPhone: ensureString(customerInfo.phone),
+            service_id: selectedService.id,
+            service_name: selectedService.name,
+            customer_name: ensureString(customerInfo.name),
+            customer_email: ensureString(customerInfo.email),
+            customer_phone: ensureString(customerInfo.phone),
             date: dateStr,
-            timeSlot: ensureString(selectedTime),
+            time_slot: ensureString(selectedTime),
             status: AppointmentStatus.PENDING,
             notes: ensureString(customerInfo.notes)
         };
@@ -84,10 +84,10 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
 
         // Track conversion
         trackConversion('booking', business.id, 'landing_page', {
-            serviceId: selectedService.id,
-            serviceName: selectedService.name,
+            service_id: selectedService.id,
+            service_name: selectedService.name,
             date: dateStr,
-            timeSlot: ensureString(selectedTime),
+            time_slot: ensureString(selectedTime),
         }, currentUser?.id);
 
         setIsSubmitting(false);
@@ -148,8 +148,8 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, business }
             const slotEnd = new Date(slotTime.getTime() + serviceDuration * 60000);
 
             const isBooked = existingAppointmentsOnDate.some(appt => {
-                const apptTime = new Date(`${appt?.date ?? dateStr}T${appt?.timeSlot ?? '00:00'}`);
-                const apptService = ensureArray(business?.services).find(s => s?.id === appt?.serviceId);
+                const apptTime = new Date(`${appt?.date ?? dateStr}T${appt?.time_slot ?? '00:00'}`);
+                const apptService = ensureArray(business?.services).find(s => s?.id === appt?.service_id);
                 const apptDuration = ensureNumber(apptService?.duration_minutes, 60);
                 const apptEnd = new Date(apptTime.getTime() + apptDuration * 60000);
 

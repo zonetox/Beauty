@@ -42,7 +42,7 @@ const BookingCalendarView: React.FC<BookingCalendarViewProps> = ({ appointments,
         });
         return map;
     }, [appointments]);
-    
+
     const selectedDateAppointments = appointmentsByDate.get(selectedDate.toDateString()) || [];
 
     const changeMonth = (delta: number) => {
@@ -70,7 +70,7 @@ const BookingCalendarView: React.FC<BookingCalendarViewProps> = ({ appointments,
                 <div className="font-semibold">{day}</div>
                 <div className="mt-1 space-y-1">
                     {dailyAppointments.slice(0, 2).map(appt => (
-                         <div key={appt.id} className={`h-2 w-full rounded ${statusStyles[appt.status]}`} title={`${appt.timeSlot} - ${appt.customerName}`}></div>
+                        <div key={appt.id} className={`h-2 w-full rounded ${statusStyles[appt.status]}`} title={`${appt.time_slot} - ${appt.customer_name}`}></div>
                     ))}
                     {dailyAppointments.length > 2 && <div className="text-xs text-gray-500">+ {dailyAppointments.length - 2} more</div>}
                 </div>
@@ -98,15 +98,15 @@ const BookingCalendarView: React.FC<BookingCalendarViewProps> = ({ appointments,
                 <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
                     {selectedDateAppointments.length > 0 ? selectedDateAppointments.map(appt => (
                         <div key={appt.id} className="p-3 border rounded-lg bg-white shadow-sm">
-                            <p className="font-bold">{appt.timeSlot} - {appt.serviceName}</p>
-                            <p className="text-sm text-gray-600">{appt.customerName}</p>
+                            <p className="font-bold">{appt.time_slot} - {appt.service_name}</p>
+                            <p className="text-sm text-gray-600">{appt.customer_name}</p>
                             <div className="mt-2 flex justify-between items-center">
                                 <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${statusStyles[appt.status]}`}>{appt.status}</span>
                                 {appt.status === AppointmentStatus.PENDING && (
-                                     <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2">
                                         <button onClick={() => onUpdateStatus(appt.id, AppointmentStatus.CONFIRMED)} className="text-xs font-semibold text-green-600 hover:underline">Confirm</button>
                                         <button onClick={() => onQuickReply(appt, 'confirm')} className="text-xs font-semibold text-blue-600 hover:underline">Reply</button>
-                                     </div>
+                                    </div>
                                 )}
                             </div>
                         </div>

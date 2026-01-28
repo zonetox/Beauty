@@ -126,15 +126,15 @@ const BookingsManager: React.FC = () => {
                             {data.map(appt => (
                                 <tr key={appt.id} className="bg-white border-b last:border-b-0 hover:bg-gray-50">
                                     <td className="px-6 py-4 font-medium text-neutral-dark">
-                                        {appt.customerName}
-                                        <p className="font-normal text-xs text-gray-500">{appt.customerPhone}</p>
-                                        {appt.customerEmail && (
-                                            <p className="font-normal text-xs text-gray-500">{appt.customerEmail}</p>
+                                        {appt.customer_name}
+                                        <p className="font-normal text-xs text-gray-500">{appt.customer_phone}</p>
+                                        {appt.customer_email && (
+                                            <p className="font-normal text-xs text-gray-500">{appt.customer_email}</p>
                                         )}
                                     </td>
-                                    <td className="px-6 py-4">{appt.serviceName}</td>
+                                    <td className="px-6 py-4">{appt.service_name}</td>
                                     <td className="px-6 py-4">
-                                        {new Date(`${appt.date}T${appt.timeSlot}`).toLocaleString('vi-VN', {
+                                        {new Date(`${appt.date}T${appt.time_slot}`).toLocaleString('vi-VN', {
                                             day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
                                         })}
                                     </td>
