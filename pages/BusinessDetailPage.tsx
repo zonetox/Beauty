@@ -186,7 +186,7 @@ const BusinessDetailPage: React.FC = () => {
             ratingValue: averageRating,
             review_count: visibleReviews.length,
         } : undefined,
-        openingHoursSpecification: business.WorkingHours ? Object.entries(business.WorkingHours)
+        openingHoursSpecification: business.working_hours ? Object.entries(business.working_hours)
             .filter(([_, hours]) => {
                 // Handle both old string format and new object format
                 if (typeof hours === 'string') {
@@ -246,8 +246,8 @@ const BusinessDetailPage: React.FC = () => {
             .filter((oh): oh is { dayOfWeek: string[]; opens: string; closes: string } => oh !== null) : undefined,
     };
 
-    // Get landing page configuration or use default
-    const landing_page_config: LandingPageConfig = business.LandingPageConfig || {
+    // Get landing_page_configuration or use default
+    const landing_page_config: LandingPageConfig = business.landing_page_config || {
         sections: {
             hero: { enabled: true, order: 1 },
             trust: { enabled: false, order: 2 },
@@ -261,7 +261,7 @@ const BusinessDetailPage: React.FC = () => {
     };
 
     // Get enabled sections sorted by order
-    const enabledSections = Object.entries(landingPageConfig.sections)
+    const enabledSections = Object.entries(landing_page_config.sections)
         .filter(([_, section]) => section.enabled)
         .map(([key, section]) => ({
             key: key as keyof LandingPageConfig['sections'],

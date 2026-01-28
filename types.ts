@@ -267,14 +267,14 @@ export interface Business {
   is_featured?: boolean;
   joined_date: string;
   description: string;
-  WorkingHours?: WorkingHours | null;
+  working_hours?: WorkingHours | null;
   socials?: Socials;
   seo?: SEO;
   staff: StaffMember[];
   notification_settings: NotificationSettings;
   hero_slides?: HeroSlide[];
   hero_image_url?: string;
-  LandingPageConfig?: LandingPageConfig;
+  landing_page_config?: LandingPageConfig;
   trust_indicators?: TrustIndicator[];
   landing_page_status?: 'Pending' | 'Approved' | 'Rejected' | 'Needs Review';
   owner_id?: string;

@@ -268,7 +268,7 @@ const Header: React.FC = () => {
               </div>
             ) : (
               <>
-                <NavLink to="/login" className={`${navLinkClass({ is_active: false })} ml-2`}>
+                <NavLink to="/login" className={`${navLinkClass({ isActive: false })} ml-2`}>
                   Đăng nhập
                 </NavLink>
                 {role === 'anonymous' && (

@@ -19,12 +19,12 @@ import ReviewsSection from './business-landing/ReviewsSection.tsx';
 
 interface LandingPagePreviewProps {
   business: Business;
-  config: landing_page_config;
+  config: LandingPageConfig;
   onClose: () => void;
 }
 
 // Map section keys to components
-const SECTION_COMPONENTS: Record<keyof landing_page_config['sections'], React.ComponentType<any>> = {
+const SECTION_COMPONENTS: Record<keyof LandingPageConfig['sections'], React.ComponentType<any>> = {
   hero: HeroSection,
   trust: () => null, // Trust indicators section - to be implemented in Phase 3.2
   services: ServicesSection,
@@ -36,7 +36,7 @@ const SECTION_COMPONENTS: Record<keyof landing_page_config['sections'], React.Co
 };
 
 const LandingPagePreview: React.FC<LandingPagePreviewProps> = ({ business, config, onClose }) => {
-  // Create a business object with the config applied
+  // Create a preview version of the business with the new config
   const previewBusiness: Business = {
     ...business,
     landing_page_config: config,

@@ -29,7 +29,7 @@ const SkeletonCard: React.FC = () => (
 
 // Helper to check if a business is currently open
 const checkIfOpen = (working_hours: WorkingHours | null | undefined): boolean => {
-    if (!WorkingHours) return false;
+    if (!working_hours) return false;
     try {
         const now = new Date();
         const currentDay = now.getDay(); // Sunday is 0, Monday is 1...
@@ -45,8 +45,8 @@ const checkIfOpen = (working_hours: WorkingHours | null | undefined): boolean =>
             'Thứ 7': 6, 'T7': 6, 'Saturday': 6, 'saturday': 6,
         };
 
-        for (const dayRange in WorkingHours) {
-            const timeRange = WorkingHours[dayRange];
+        for (const dayRange in working_hours) {
+            const timeRange = working_hours[dayRange];
 
             // Handle new object format: {open, close, isOpen}
             if (typeof timeRange === 'object' && timeRange !== null && 'open' in timeRange && 'close' in timeRange) {
@@ -197,7 +197,7 @@ const DirectoryPage: React.FC = () => {
 
         // Filter by open now
         if (activeFilters.isOpenNow) {
-            filtered = filtered.filter(b => checkIfOpen(b.WorkingHours));
+            filtered = filtered.filter(b => checkIfOpen(b.working_hours));
         }
 
         // Sort - ONLY if no search text (preserve database ranking for search results)

@@ -15,9 +15,9 @@ interface EditDealModalProps {
 }
 
 // Helper function to calculate discount percentage from prices
-const calculateDiscount = (original_price?: number, dealPrice?: number): number | undefined => {
-    if (!original_price || !dealPrice || original_price <= 0) return undefined;
-    return Math.round(((original_price - dealPrice) / original_price) * 100);
+const calculateDiscount = (original_price?: number, deal_price?: number): number | undefined => {
+    if (!original_price || !deal_price || original_price <= 0) return undefined;
+    return Math.round(((original_price - deal_price) / original_price) * 100);
 };
 
 // Helper function to calculate deal status based on dates
@@ -46,8 +46,8 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
         start_date: '',
         end_date: '',
         original_price: undefined,
-        dealPrice: undefined,
-        discountPercentage: undefined,
+        deal_price: undefined,
+        discount_percentage: undefined,
         status: DealStatus.ACTIVE
     });
 
@@ -76,8 +76,8 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
                 start_date: formatDateForInput(deal.start_date),
                 end_date: formatDateForInput(deal.end_date),
                 original_price: deal.original_price,
-                dealPrice: deal.dealPrice,
-                discountPercentage: deal.discountPercentage,
+                deal_price: deal.deal_price,
+                discount_percentage: deal.discount_percentage,
                 status: deal.status || DealStatus.ACTIVE
             });
             setImagePreview(deal.image_url || '');
@@ -89,8 +89,8 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
                 start_date: '',
                 end_date: '',
                 original_price: undefined,
-                dealPrice: undefined,
-                discountPercentage: undefined,
+                deal_price: undefined,
+                discount_percentage: undefined,
                 status: DealStatus.ACTIVE
             });
             setImagePreview('');
@@ -100,19 +100,19 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
 
     // Auto-calculate discount when prices change
     useEffect(() => {
-        if (formData.original_price && formData.dealPrice) {
-            const calculated = calculateDiscount(formData.original_price, formData.dealPrice);
+        if (formData.original_price && formData.deal_price) {
+            const calculated = calculateDiscount(formData.original_price, formData.deal_price);
             if (calculated !== undefined && calculated >= 0 && calculated <= 100) {
-                setFormData(prev => ({ ...prev, discountPercentage: calculated }));
+                setFormData(prev => ({ ...prev, discount_percentage: calculated }));
             }
         }
-    }, [formData.original_price, formData.dealPrice]);
+    }, [formData.original_price, formData.deal_price]);
 
     // Auto-calculate status when dates change
     useEffect(() => {
         if (formData.start_date || formData.end_date) {
             const calculatedStatus = calculateDealStatus(formData.start_date, formData.end_date);
-            setFormData(prev => ({ ...prev, status: calculatedStatus }));
+            setFormData(prev => ({ ...prev, status: calculatedStatus as 'Active' | 'Expired' | 'Pending' }));
         }
     }, [formData.start_date, formData.end_date]);
 
@@ -166,19 +166,19 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
         if (formData.original_price !== undefined && formData.original_price < 0) {
             newErrors.original_price = 'Original price cannot be negative';
         }
-        if (formData.dealPrice !== undefined && formData.dealPrice < 0) {
-            newErrors.dealPrice = 'Deal price cannot be negative';
+        if (formData.deal_price !== undefined && formData.deal_price < 0) {
+            newErrors.deal_price = 'Deal price cannot be negative';
         }
-        if (formData.original_price !== undefined && formData.dealPrice !== undefined) {
-            if (formData.dealPrice > formData.original_price) {
-                newErrors.dealPrice = 'Deal price cannot be greater than original price';
+        if (formData.original_price !== undefined && formData.deal_price !== undefined) {
+            if (formData.deal_price > formData.original_price) {
+                newErrors.deal_price = 'Deal price cannot be greater than original price';
             }
         }
 
         // Discount validation
-        if (formData.discountPercentage !== undefined) {
-            if (formData.discountPercentage < 0 || formData.discountPercentage > 100) {
-                newErrors.discountPercentage = 'Discount must be between 0 and 100';
+        if (formData.discount_percentage !== undefined) {
+            if (formData.discount_percentage < 0 || formData.discount_percentage > 100) {
+                newErrors.discount_percentage = 'Discount must be between 0 and 100';
             }
         }
 
@@ -282,13 +282,13 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
                 business_id: business_id,
                 title: formData.title!.trim(),
                 description: formData.description!.trim(),
-                image_url: formData.image_url || undefined,
-                start_date: formatDateToISO(formData.start_date),
-                end_date: formatDateToISO(formData.end_date),
-                original_price: formData.original_price,
-                dealPrice: formData.dealPrice,
-                discountPercentage: formData.discountPercentage,
-                status: finalStatus
+                image_url: formData.image_url || '',
+                start_date: formatDateToISO(formData.start_date) || '',
+                end_date: formatDateToISO(formData.end_date) || '',
+                original_price: formData.original_price || 0,
+                deal_price: formData.deal_price || 0,
+                discount_percentage: formData.discount_percentage || 0,
+                status: finalStatus as 'Active' | 'Expired' | 'Pending'
             };
 
             await onSave(dealToSave);
@@ -452,17 +452,17 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
                                 </label>
                                 <input
                                     type="number"
-                                    name="dealPrice"
-                                    value={formData.dealPrice || ''}
+                                    name="deal_price"
+                                    value={formData.deal_price || ''}
                                     onChange={handleChange}
                                     min="0"
                                     step="1000"
-                                    className={`mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary ${errors.dealPrice ? 'border-red-500' : 'border-gray-300'
+                                    className={`mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary ${errors.deal_price ? 'border-red-500' : 'border-gray-300'
                                         }`}
                                     placeholder="e.g., 500000"
                                     disabled={isSaving || isUploading}
                                 />
-                                {errors.dealPrice && <p className="mt-1 text-sm text-red-600">{errors.dealPrice}</p>}
+                                {errors.deal_price && <p className="mt-1 text-sm text-red-600">{errors.deal_price}</p>}
                             </div>
                         </div>
 
@@ -473,17 +473,17 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
                                 </label>
                                 <input
                                     type="number"
-                                    name="discountPercentage"
-                                    value={formData.discountPercentage || ''}
+                                    name="discount_percentage"
+                                    value={formData.discount_percentage || ''}
                                     onChange={handleChange}
                                     min="0"
                                     max="100"
-                                    className={`mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary ${errors.discountPercentage ? 'border-red-500' : 'border-gray-300'
+                                    className={`mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary ${errors.discount_percentage ? 'border-red-500' : 'border-gray-300'
                                         }`}
                                     placeholder="Auto-calculated"
                                     disabled={isSaving || isUploading}
                                 />
-                                {errors.discountPercentage && <p className="mt-1 text-sm text-red-600">{errors.discountPercentage}</p>}
+                                {errors.discount_percentage && <p className="mt-1 text-sm text-red-600">{errors.discount_percentage}</p>}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">

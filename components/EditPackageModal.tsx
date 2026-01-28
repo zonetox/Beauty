@@ -1,7 +1,7 @@
 // components/EditPackageModal.tsx
 
 import React, { useState, useEffect } from 'react';
-import { MembershipPackage, membership_tier } from '../types.ts';
+import { MembershipPackage, MembershipTier } from '../types.ts';
 
 interface EditPackageModalProps {
   isOpen: boolean;
@@ -124,7 +124,7 @@ const EditPackageModal: React.FC<EditPackageModalProps> = ({ isOpen, onClose, on
               <div>
                 <label className="block text-sm font-medium text-gray-700">Tier</label>
                 <select name="tier" value={formData.tier} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
-                  {Object.values(membership_tier).map(t => <option key={t} value={t}>{t}</option>)}
+                  {Object.values(MembershipTier).map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
             </div>
