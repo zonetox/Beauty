@@ -194,8 +194,9 @@ export interface Review {
   user_avatar_url: string;
   rating: number;
   comment: string;
-  created_at: string;
+  submitted_date: string;
   status: ReviewStatus;
+  reply?: any;
   reply_content?: string;
   reply_date?: string;
 }
@@ -253,6 +254,7 @@ export interface BusinessStaff {
 export interface MembershipPackage {
   id: string;
   name: string;
+  tier: MembershipTier;
   price: number;
   duration_months: number;
   description?: string;
@@ -444,7 +446,7 @@ export interface AdminPermissions {
 
 export interface AdminLogEntry {
   id: string;
-  admin_username: string;
+  admin_user_name: string; // Matches DB column
   action: string;
   details?: string;
   timestamp: string;
@@ -473,7 +475,7 @@ export interface Notification {
 
 export interface AdminUser {
   id: number;
-  user_name: string;
+  username: string;
   email: string;
   password?: string;
   role: AdminUserRole;
@@ -606,7 +608,7 @@ export interface SupportTicket {
   status: TicketStatus;
   created_at: string;
   last_reply_at?: string;
-  replies?: JSON;
+  replies?: any[];
 }
 
 export type PageName = 'about' | 'contact' | 'homepage';

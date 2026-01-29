@@ -108,7 +108,7 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ business }) => {
                                 <img src={review.user_avatar_url} alt={review.user_name} className="w-12 h-12 rounded-full object-cover" />
                                 <div className="ml-4">
                                     <p className="font-semibold text-neutral-dark">{review.user_name}</p>
-                                    <p className="text-sm text-gray-400">{new Date(review.created_at).toLocaleDateString()}</p>
+                                    <p className="text-sm text-gray-400">{new Date(review.submitted_date).toLocaleDateString()}</p>
                                 </div>
                             </div>
                         </div>

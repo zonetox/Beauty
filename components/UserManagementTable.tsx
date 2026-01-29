@@ -27,7 +27,7 @@ const UserManagementTable: React.FC<UserManagementTableProps> = ({ users, onUpda
             <table className="w-full text-sm text-left text-gray-500">
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                     <tr>
-                        <th scope="col" className="px-6 py-3">user_name</th>
+                        <th scope="col" className="px-6 py-3">Username</th>
                         <th scope="col" className="px-6 py-3">Role</th>
                         <th scope="col" className="px-6 py-3">Status</th>
                         <th scope="col" className="px-6 py-3">Last Login</th>
@@ -38,7 +38,7 @@ const UserManagementTable: React.FC<UserManagementTableProps> = ({ users, onUpda
                     {users.map(user => (
                         <tr key={user.id} className={`bg-white border-b hover:bg-gray-50 ${user.is_locked ? 'bg-red-50' : ''}`}>
                             <td className="px-6 py-4 font-medium text-neutral-dark whitespace-nowrap">
-                                {user.user_name}
+                                {user.username}
                                 <div className="text-xs text-gray-500">{user.email}</div>
                             </td>
                             <td className="px-6 py-4">

@@ -78,7 +78,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             return [];
         }
         const { data, error } = await supabase.from('admin_users')
-            .select('id, user_name, email, role, permissions, is_locked, last_login')
+            .select('id, username, email, role, permissions, is_locked, last_login')
             .order('id');
 
         if (error) {

@@ -470,7 +470,7 @@ const AdminPage: React.FC = () => {
     setConfirmDialog({ isOpen: false, type: null });
   };
   const handleOpenAddNewBusiness = () => { setEditingBusiness(NEW_BUSINESS_TEMPLATE); };
-  const handleOpenAddNewPost = () => { setEditingPost({ id: 0, title: 'New Blog Post', slug: '', date: '', author: currentUser?.user_name || 'Editor', category: 'General', excerpt: '', image_url: `https://picsum.photos/seed/new-post-${Date.now()}/400/300`, content: '', view_count: 0, status: 'Published' }); };
+  const handleOpenAddNewPost = () => { setEditingPost({ id: 0, title: 'New Blog Post', slug: '', date: '', author: currentUser?.username || 'Editor', category: 'General', excerpt: '', image_url: `https://picsum.photos/seed/new-post-${Date.now()}/400/300`, content: '', view_count: 0, status: 'Published' }); };
   const handleOpenAddNewPackage = () => { handleOpenPackageModal({ id: '', tier: MembershipTier.PREMIUM, name: '', price: 0, duration_months: 12, description: '', features: [''], permissions: { photo_limit: 10, video_limit: 2, featured_level: 1, custom_landing_page: true, private_blog: false, seo_support: false, monthly_post_limit: 5, featured_post_limit: 0, }, is_popular: false, is_active: true }); };
 
 
@@ -753,7 +753,7 @@ const AdminPage: React.FC = () => {
             <AdminNotifications orders={orders} registrationRequests={registrationRequests} onNavigate={(tab) => setActiveTab(tab as AdminPageTab)} />
             <div className="bg-white p-2 rounded-lg shadow flex items-center gap-3">
               <div>
-                <p className="text-sm font-semibold text-right">Logged in: <strong className="text-primary">{currentUser.user_name}</strong></p>
+                <p className="text-sm font-semibold text-right">Logged in: <strong className="text-primary">{currentUser.username}</strong></p>
                 <p className="text-xs text-gray-500 text-right">{currentUser.role}</p>
               </div>
               <button onClick={handleLogout} className="px-3 py-2 text-sm font-medium text-neutral-dark hover:bg-red-500 hover:text-white rounded-md transition-colors">

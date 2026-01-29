@@ -19,7 +19,7 @@ const AdminActivityLog: React.FC = () => {
     return (
         <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-xl font-semibold text-neutral-dark mb-4">Admin Activity Log</h2>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 mb-4 p-4 bg-gray-50 rounded-md border">
                 <div className="flex-1">
                     <label htmlFor="admin-filter" className="block text-sm font-medium text-gray-700">Filter by Admin</label>
@@ -31,12 +31,12 @@ const AdminActivityLog: React.FC = () => {
                     >
                         <option value="all">All Admins</option>
                         {adminUsers.map(user => (
-                            <option key={user.id} value={user.user_name}>{user.user_name}</option>
+                            <option key={user.id} value={user.username}>{user.username}</option>
                         ))}
                     </select>
                 </div>
                 <div className="flex-1">
-                     <label htmlFor="action-search" className="block text-sm font-medium text-gray-700">Search by Action Type</label>
+                    <label htmlFor="action-search" className="block text-sm font-medium text-gray-700">Search by Action Type</label>
                     <input
                         id="action-search"
                         type="text"
@@ -79,7 +79,7 @@ const AdminActivityLog: React.FC = () => {
                         ))}
                     </tbody>
                 </table>
-                 {filteredLogs.length === 0 && (
+                {filteredLogs.length === 0 && (
                     <p className="text-center text-gray-500 py-8">No activity logs found matching your criteria.</p>
                 )}
             </div>

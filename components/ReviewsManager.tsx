@@ -354,7 +354,7 @@ const ReviewsManager: React.FC = () => {
                                     <div className="flex-1 min-w-0">
                                         <p className="font-semibold text-neutral-dark">{review.user_name}</p>
                                         <p className="text-xs text-gray-400">
-                                            {new Date(review.created_at).toLocaleString()}
+                                            {new Date(review.submitted_date).toLocaleString()}
                                         </p>
                                         <div className="mt-1">
                                             <StarRating rating={review.rating} />

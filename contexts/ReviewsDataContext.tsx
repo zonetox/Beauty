@@ -75,7 +75,7 @@ export const ReviewsDataProvider: React.FC<{ children: ReactNode }> = ({ childre
   const getReviewsBybusiness_id = (business_id: number) => {
     return reviews
       .filter(r => r.business_id === business_id)
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      .sort((a, b) => new Date(b.submitted_date).getTime() - new Date(a.submitted_date).getTime());
   };
 
   const value = { reviews, getReviewsBybusiness_id, addReview, addReply, toggleReviewVisibility };

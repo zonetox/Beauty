@@ -70,7 +70,8 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
         timestamp: log.timestamp || new Date().toISOString(),
         admin_user_name: log.admin_user_name,
         action: log.action,
-        details: log.details || ''
+        details: log.details || '',
+        created_at: log.timestamp || new Date().toISOString()
       }));
     },
     enabled: isSupabaseConfigured,

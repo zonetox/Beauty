@@ -4,7 +4,7 @@
 
 import React, { useMemo, useEffect, useState } from 'react';
 import { useBusiness, useAnalyticsData } from '../contexts/BusinessContext.tsx';
-import { Business, BusinessAnalytics, MembershipTier, Appointment, Review, Order, Announcement, AnalyticsDataPoint, AppointmentStatus, OrderStatus } from '../types.ts';
+import { MembershipTier, Announcement, AnalyticsDataPoint, AppointmentStatus, OrderStatus } from '../types.ts';
 import { ActiveTab } from '../pages/UserBusinessDashboardPage';
 import { useAdmin } from '../contexts/AdminContext.tsx';
 import LoadingState from './LoadingState.tsx';
@@ -220,12 +220,12 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
 
         businessReviews
             .filter(r => r.status === 'Visible')
-            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+            .sort((a, b) => new Date(b.submitted_date).getTime() - new Date(a.submitted_date).getTime())
             .slice(0, 5)
             .forEach(review => {
                 activities.push({
                     type: 'review',
-                    date: new Date(review.created_at),
+                    date: new Date(review.submitted_date),
                     title: `Đánh giá mới từ ${review.user_name}`,
                     description: `${review.rating} sao - ${review.comment?.substring(0, 40) || ''}...`,
                     id: review.id,

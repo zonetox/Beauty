@@ -44,9 +44,9 @@ const AdminGlobalSearch: React.FC<AdminGlobalSearchProps> = ({ businesses, order
             .map(o => ({ type: 'Order', label: `Order #${o.id}`, description: o.business_name, tab: 'orders', id: o.id }));
 
         const userResults: SearchResult[] = adminUsers
-            .filter(u => u.user_name.toLowerCase().includes(lowerQuery) || u.email.toLowerCase().includes(lowerQuery))
+            .filter(u => u.username.toLowerCase().includes(lowerQuery) || u.email.toLowerCase().includes(lowerQuery))
             .slice(0, MAX_RESULTS_PER_TYPE)
-            .map(u => ({ type: 'User', label: u.user_name, description: u.email, tab: 'users', id: u.id }));
+            .map(u => ({ type: 'User', label: u.username, description: u.email, tab: 'users', id: u.id }));
 
         return [...businessResults, ...orderResults, ...userResults].slice(0, 7);
     }, [query, businesses, orders, adminUsers]);
