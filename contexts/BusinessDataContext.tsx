@@ -213,7 +213,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
 
           const { count, error: countError } = await countQuery;
           const countDuration = performance.now() - countStartTime;
-          // eslint-disable-next-line no-console
+           
           if (import.meta.env.MODE === 'development') console.warn(`[PERF] Businesses Count: ${countDuration.toFixed(2)}ms`);
           if (!countError && count !== null) {
             setTotalBusinesses(count);
@@ -252,7 +252,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
         .range(from, to);
 
       if (error) {
-        // eslint-disable-next-line no-console
+         
         if (import.meta.env.MODE === 'development') console.warn('Error fetching search results (best-effort):', error.message);
         // Fallback to cache or empty if search fails
         // toast.error('Failed to load businesses');
@@ -419,7 +419,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
         try {
           const result = await Promise.race([queryPromise, createTimeoutPromise(timeoutMs, `${name} timeout`)]);
           const duration = performance.now() - startTime;
-          // eslint-disable-next-line no-console
+           
           console.warn(`[PERF] ${name}: ${duration.toFixed(2)}ms`);
           return result as T;
         } catch (error: unknown) {
@@ -643,7 +643,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       deals: _d,
       reviews: _r,
       business_blog_posts: _b,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+       
       ...businessToUpdate
     } = updatedBusiness;
 
@@ -786,7 +786,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       if (error) {
         // CRITICAL: Tracking failures are silent - only debug log in development
         if (import.meta.env.MODE === 'development') {
-          // eslint-disable-next-line no-console
+           
           console.warn('[Tracking] Business view count increment failed (best-effort):', error.message);
         }
       } else {

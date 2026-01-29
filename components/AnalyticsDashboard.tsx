@@ -18,10 +18,10 @@ const StatCard: React.FC<{ title: string; value: string; subtext?: string }> = (
     </div>
 );
 
-const BarChart: React.FC<{ data: AnalyticsDataPoint[]; dataKey: 'pageViews' | 'totalClicks'; title: string }> = ({ data, dataKey, title }) => {
+const BarChart: React.FC<{ data: AnalyticsDataPoint[]; dataKey: 'page_views' | 'totalClicks'; title: string }> = ({ data, dataKey, title }) => {
     const values = data.map(d => {
         if (dataKey === 'totalClicks') {
-            return d.callClicks + d.contactClicks + d.directionClicks;
+            return d.call_clicks + d.contact_clicks + d.direction_clicks;
         }
         return d[dataKey];
     });
@@ -46,7 +46,7 @@ const BarChart: React.FC<{ data: AnalyticsDataPoint[]; dataKey: 'pageViews' | 't
                                 className="w-full bg-primary/20 rounded-t-md hover:bg-primary/40 transition-colors cursor-pointer"
                                 /* Dynamic height based on data - CSS inline necessary for dynamic calculations */
                                 style={{ height: `${(values[index] / maxValue) * 100}%`, minHeight: '2px' }}
-                                title={`${values[index]} ${dataKey === 'pageViews' ? 'page views' : 'clicks'}`}
+                                title={`${values[index]} ${dataKey === 'page_views' ? 'page views' : 'clicks'}`}
                             ></div>
                         </div>
                         <p className="text-xs text-gray-500 mt-1">{new Date(item?.date ?? new Date()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
@@ -108,7 +108,7 @@ const AnalyticsDashboard: React.FC = () => {
 
     // Filter data by time range
     const filteredData = useMemo(() => {
-        if (!analytics) return { timeSeries: [], trafficSources: [] };
+        if (!analytics) return { time_series: [], traffic_sources: [] };
 
         const now = new Date();
         let cutoffDate: Date;
@@ -127,20 +127,20 @@ const AnalyticsDashboard: React.FC = () => {
                 cutoffDate = new Date(0);
         }
 
-        const filtered = analytics.timeSeries.filter(item => new Date(item.date) >= cutoffDate);
+        const filtered = analytics.time_series.filter(item => new Date(item.date) >= cutoffDate);
         return {
-            timeSeries: filtered,
-            trafficSources: analytics.trafficSources
+            time_series: filtered,
+            traffic_sources: analytics.traffic_sources
         };
     }, [analytics, timeRange]);
 
     const stats = useMemo(() => {
-        if (!filteredData.timeSeries.length) return { totalViews: 0, totalClicks: 0, conversionRate: 0, avgTime: 0, totalConversions: 0 };
-        const totalViews = filteredData.timeSeries.reduce((sum, item) => sum + item.pageViews, 0);
-        const totalClicks = filteredData.timeSeries.reduce((sum, item) => sum + item.callClicks + item.contactClicks + item.directionClicks, 0);
+        if (!filteredData.time_series.length) return { totalViews: 0, totalClicks: 0, conversionRate: 0, avgTime: 0, totalConversions: 0 };
+        const totalViews = filteredData.time_series.reduce((sum: number, item: AnalyticsDataPoint) => sum + item.page_views, 0);
+        const totalClicks = filteredData.time_series.reduce((sum: number, item: AnalyticsDataPoint) => sum + item.call_clicks + item.contact_clicks + item.direction_clicks, 0);
         // Conversion rate: (Total Conversions / Total Page Views) * 100
         const conversionRate = totalViews > 0 ? (totalClicks / totalViews) * 100 : 0;
-        const avgTime = analytics?.averageTimeOnPage || 0;
+        const avgTime = analytics?.average_time_on_page || 0;
         return {
             totalViews,
             totalClicks,
@@ -151,7 +151,7 @@ const AnalyticsDashboard: React.FC = () => {
     }, [filteredData, analytics]);
 
     const handleExport = () => {
-        if (!analytics || filteredData.timeSeries.length === 0) {
+        if (!analytics || filteredData.time_series.length === 0) {
             toast.error('No data to export');
             return;
         }
@@ -159,13 +159,13 @@ const AnalyticsDashboard: React.FC = () => {
         try {
             // Create CSV content
             const headers = ['Date', 'Page Views', 'Call Clicks', 'Contact Clicks', 'Direction Clicks', 'Total Clicks'];
-            const rows = filteredData.timeSeries.map(item => [
+            const rows = filteredData.time_series.map(item => [
                 item.date,
-                item.pageViews,
-                item.callClicks,
-                item.contactClicks,
-                item.directionClicks,
-                item.callClicks + item.contactClicks + item.directionClicks
+                item.page_views,
+                item.call_clicks,
+                item.contact_clicks,
+                item.direction_clicks,
+                item.call_clicks + item.contact_clicks + item.direction_clicks
             ]);
 
             const csvContent = [
@@ -218,7 +218,7 @@ const AnalyticsDashboard: React.FC = () => {
         return `${m}m ${s}s`;
     };
 
-    const hasData = filteredData.timeSeries.length > 0;
+    const hasData = filteredData.time_series.length > 0;
 
     return (
         <div className="p-8 bg-gray-50/50">
@@ -277,17 +277,17 @@ const AnalyticsDashboard: React.FC = () => {
                     {/* Charts & Data */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <div className="lg:col-span-2">
-                            <BarChart data={filteredData.timeSeries} dataKey="pageViews" title="Page Views Over Time" />
+                            <BarChart data={filteredData.time_series} dataKey="page_views" title="Page Views Over Time" />
                         </div>
                         <div className="lg:col-span-1">
-                            <TrafficSources sources={filteredData.trafficSources} />
+                            <TrafficSources sources={filteredData.traffic_sources} />
                         </div>
                     </div>
 
                     {/* Additional Chart: Clicks Over Time */}
-                    {filteredData.timeSeries.length > 0 && (
+                    {filteredData.time_series.length > 0 && (
                         <div className="mt-8">
-                            <BarChart data={filteredData.timeSeries} dataKey="totalClicks" title="Total Clicks Over Time" />
+                            <BarChart data={filteredData.time_series} dataKey="totalClicks" title="Total Clicks Over Time" />
                         </div>
                     )}
                 </>

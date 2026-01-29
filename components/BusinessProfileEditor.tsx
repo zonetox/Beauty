@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useBusinessAuth } from '../contexts/BusinessContext.tsx';
 import { useBusinessData } from '../contexts/BusinessDataContext.tsx';
-import { BusinessCategory, HeroSlide, TrustIndicator, Business } from '../types.ts';
+import { Business, BusinessCategory, Service, WorkingHours, LandingPageConfig, StaffPermissions } from '../types.ts';
 import { uploadFile } from '../lib/storage.ts';
 import LoadingState from './LoadingState.tsx';
 // import EmptyState from './EmptyState.tsx';

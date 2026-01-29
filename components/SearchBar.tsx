@@ -58,7 +58,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, categories, locations, 
   // Effect to update available districts when city (location) changes
   useEffect(() => {
     if (filters.location && locationsHierarchy) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setDistricts(locationsHierarchy[filters.location] || []);
     } else {
       setDistricts([]);
@@ -72,7 +72,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, categories, locations, 
 
   // Effect to sync component state with URL when it changes (e.g., back/forward buttons)
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setFilters(getFiltersFromUrl());
   }, [getFiltersFromUrl]);
 

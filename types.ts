@@ -115,6 +115,66 @@ export interface TeamMember {
   image_url: string;
 }
 
+export interface Appointment {
+  id: string;
+  business_id: number;
+  service_id: string;
+  service_name: string;
+  staff_member_id?: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  date: string;
+  time_slot: string;
+  status: AppointmentStatus;
+  notes?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface PageView {
+  id: string;
+  page_type: 'homepage' | 'business' | 'blog' | 'directory';
+  page_id?: string;
+  user_id?: string;
+  session_id?: string;
+  ip_address?: string;
+  user_agent?: string;
+  referrer?: string;
+  viewed_at: string;
+}
+
+export interface Conversion {
+  id: string;
+  business_id?: number;
+  conversion_type: 'click' | 'booking' | 'contact' | 'call';
+  source?: 'landing_page' | 'directory' | 'search';
+  user_id?: string;
+  session_id?: string;
+  metadata?: Record<string, any>;
+  converted_at: string;
+}
+
+export interface AnalyticsDataPoint {
+  date: string; // "YYYY-MM-DD"
+  page_views: number;
+  contact_clicks: number;
+  call_clicks: number;
+  direction_clicks: number;
+}
+
+export interface TrafficSource {
+  source: 'Google' | 'Homepage' | 'Blog' | 'Direct Search';
+  percentage: number;
+}
+
+export interface BusinessAnalytics {
+  business_id: number;
+  time_series: AnalyticsDataPoint[];
+  traffic_sources: TrafficSource[];
+  average_time_on_page: number; // in seconds
+}
+
 export interface MediaItem {
   id: string;
   business_id: number;
@@ -150,7 +210,7 @@ export interface WorkingHourRange {
 export type WorkingHour = WorkingHourRange | string | null;
 
 export type WorkingHours = {
-  [day: string]: WorkingHour; // e.g. 'monday', 'tuesday' or 'mon', 'tue'
+  [day: string]: WorkingHour;
 };
 
 // Staff permissions shared type for hooks/components
@@ -186,9 +246,20 @@ export interface BusinessStaff {
   };
   created_at: string;
   updated_at: string;
-  // Optional fields from joined profiles
   user_email?: string;
   user_name?: string;
+}
+
+export interface MembershipPackage {
+  id: string;
+  name: string;
+  price: number;
+  duration_months: number;
+  description?: string;
+  features?: string[];
+  permissions?: any;
+  is_popular?: boolean;
+  is_active?: boolean;
 }
 
 // Abuse Report
@@ -280,13 +351,12 @@ export interface Business {
   owner_id?: string;
 
   // --- RELATIONAL DATA ---
-  // These will be populated by Supabase joins
   services?: Service[];
   deals?: Deal[];
   gallery?: MediaItem[];
   team?: TeamMember[];
   reviews?: Review[];
-  business_blog_posts?: BusinessBlogPost[]; // Business blog posts
+  business_blog_posts?: BusinessBlogPost[];
 }
 
 export interface BlogCategory {
@@ -320,9 +390,10 @@ export interface BlogComment {
   id: string;
   post_id: number;
   author_name: string;
-  author_avatar_url: string;
+  author_avatar_url?: string;
   content: string;
-  date: string; // ISO
+  date: string;
+  created_at?: string;
 }
 
 export interface BusinessBlogPost {
@@ -341,7 +412,6 @@ export interface BusinessBlogPost {
   is_featured?: boolean;
   seo?: SEO;
 }
-
 
 export interface RegistrationRequest {
   id: string;
@@ -372,6 +442,35 @@ export interface AdminPermissions {
   can_view_email_log: boolean;
 }
 
+export interface AdminLogEntry {
+  id: string;
+  admin_username: string;
+  action: string;
+  details?: string;
+  timestamp: string;
+  created_at: string;
+}
+
+export interface EmailLogEntry {
+  id: string;
+  recipient_email: string;
+  subject: string;
+  body: string;
+  sent_at: string;
+  read: boolean;
+  read_at?: string;
+  created_at: string;
+}
+
+export interface Notification {
+  id: string;
+  recipient_email: string;
+  subject: string;
+  body: string;
+  sent_at: string;
+  read: boolean;
+}
+
 export interface AdminUser {
   id: number;
   user_name: string;
@@ -383,12 +482,10 @@ export interface AdminUser {
   is_locked: boolean;
 }
 
-// AuthenticatedAdmin extends AdminUser with auth user
-// Note: authUser type is from Supabase Auth, using any to avoid circular dependency
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 export interface AuthenticatedAdmin extends AdminUser {
-  authUser: SupabaseUser; // Supabase User type from @supabase/supabase-js
+  authUser: SupabaseUser;
 }
 
 export interface Profile {
@@ -398,110 +495,12 @@ export interface Profile {
   avatar_url?: string;
   email?: string;
   user_type?: string;
-  business_id?: number;
-  favorites?: number[]; // business_ids
-}
-
-export interface MembershipPackage {
-  id: string;
-  tier: MembershipTier;
-  name: string;
-  price: number;
-  duration_months: number;
-  description: string;
-  features: string[];
-  permissions: {
-    photo_limit: number;
-    video_limit: number;
-    featured_level: number;
-    custom_landing_page: boolean;
-    private_blog: boolean;
-    seo_support: boolean;
-    monthly_post_limit: number;
-    featured_post_limit: number;
-  };
-  is_popular: boolean;
-  is_active: boolean;
-}
-
-export interface Order {
-  id: string;
-  business_id: number;
-  business_name: string;
-  package_id: string;
-  package_name: string;
-  amount: number;
-  status: OrderStatus;
-  payment_method: 'Bank Transfer' | 'Credit Card' | 'Simulated Gateway';
-  submitted_at: string;
-  confirmed_at?: string;
-  notes?: string;
-  payment_proof_url?: string;
-}
-
-export interface Appointment {
-  id: string;
-  business_id: number;
-  service_id: string;
-  service_name: string;
-  staff_member_id?: string;
-  customer_name: string;
-  customer_email: string;
-  customer_phone: string;
-  date: string;
-  time_slot: string;
-  status: AppointmentStatus;
-  notes?: string;
-  created_at: string;
-}
-
-
-export interface AnalyticsDataPoint {
-  date: string; // "YYYY-MM-DD"
-  page_views: number;
-  contact_clicks: number;
-  call_clicks: number;
-  direction_clicks: number;
-}
-
-export interface TrafficSource {
-  source: 'Google' | 'Homepage' | 'Blog' | 'Direct Search';
-  percentage: number;
-}
-
-export interface BusinessAnalytics {
-  business_id: number;
-  time_series: AnalyticsDataPoint[];
-  traffic_sources: TrafficSource[];
-  average_time_on_page: number; // in seconds
-}
-
-export interface ChartDataPoint {
-  label: string;
-  value: number;
-}
-
-// Admin specific types that are not in database
-export interface AdminLogEntry {
-  id: string;
-  timestamp: string; // ISO
-  admin_user_name: string;
-  action: string;
-  details: string;
-}
-
-export interface Notification {
-  id: string;
-  recipient_email: string;
-  subject: string;
-  body: string;
-  sent_at: string; // ISO
-  read: boolean;
+  business_id?: number | null;
+  favorites?: number[];
 }
 
 export type AdminPageTab = 'dashboard' | 'analytics' | 'businesses' | 'registrations' | 'orders' | 'blog' | 'users' | 'packages' | 'content' | 'homepage' | 'settings' | 'tools' | 'activity' | 'notifications' | 'announcements' | 'support' | 'theme' | 'abuse-reports' | 'landing-page-moderation';
 
-// FIX: Correct HeroSlideItem to HeroSlide
 export interface HeroSlide {
   title: string;
   subtitle: string;
@@ -521,7 +520,6 @@ export interface HomepageData {
   sections: HomepageSection[];
 }
 
-// FIX: Add missing type definitions.
 export interface bank_details {
   bank_name: string;
   account_name: string;
@@ -568,7 +566,22 @@ export interface Announcement {
   title: string;
   content: string;
   type: 'info' | 'warning' | 'success';
-  created_at: string; // ISO / from Supabase
+  created_at: string;
+}
+
+export interface Order {
+  id: string;
+  business_id: number;
+  business_name: string;
+  package_id: string;
+  package_name: string;
+  amount: number;
+  status: OrderStatus;
+  payment_method: 'Bank Transfer' | 'Credit Card' | 'Simulated Gateway';
+  submitted_at: string;
+  confirmed_at?: string;
+  notes?: string;
+  payment_proof_url?: string;
 }
 
 export enum TicketStatus {
@@ -581,7 +594,7 @@ export interface TicketReply {
   id: string;
   author: 'Admin' | string;
   content: string;
-  created_at: string; // ISO
+  created_at: string;
 }
 
 export interface SupportTicket {
@@ -591,49 +604,9 @@ export interface SupportTicket {
   subject: string;
   message: string;
   status: TicketStatus;
-  created_at: string; // ISO
-  last_reply_at: string; // ISO
-  replies: TicketReply[];
-}
-
-export interface ThemeSettings {
-  logo_url: string;
-  favicon_url: string;
-  colors: {
-    primary: string;
-    primary_dark: string;
-    secondary: string;
-    accent: string;
-    background: string;
-    neutral_dark: string;
-  };
-  fonts: {
-    sans: string;
-    serif: string;
-  };
-}
-
-export interface PageView {
-  id: string;
-  page_type: 'homepage' | 'business' | 'blog' | 'directory';
-  page_id?: string;
-  user_id?: string;
-  session_id?: string;
-  ip_address?: string;
-  user_agent?: string;
-  referrer?: string;
-  viewed_at: string;
-}
-
-export interface Conversion {
-  id: string;
-  business_id?: number;
-  conversion_type: 'click' | 'booking' | 'contact' | 'call';
-  source?: 'landing_page' | 'directory' | 'search';
-  user_id?: string;
-  session_id?: string;
-  metadata?: Record<string, any>;
-  converted_at: string;
+  created_at: string;
+  last_reply_at?: string;
+  replies?: JSON;
 }
 
 export type PageName = 'about' | 'contact' | 'homepage';
