@@ -132,7 +132,14 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         const settings = data?.settings_data as { theme?: ThemeSettings } | null;
         if (!error && settings?.theme) {
           // Merge with default to ensure new properties are not missing
-          setTheme({ ...DEFAULT_THEME, ...settings.theme });
+          const mergedTheme = { ...DEFAULT_THEME, ...settings.theme };
+
+          // Force default logo if the value from DB is empty
+          if (!mergedTheme.logo_url) {
+            mergedTheme.logo_url = DEFAULT_THEME.logo_url;
+          }
+
+          setTheme(mergedTheme);
           // Save to localStorage for next time
           try {
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(settings.theme));

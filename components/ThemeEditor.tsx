@@ -116,7 +116,7 @@ const ThemeEditor: React.FC = () => {
         updateTheme(formData);
         toast.success('Theme updated successfully!');
     };
-    
+
     const handleReset = () => {
         setShowResetConfirm(true);
     };
@@ -124,13 +124,13 @@ const ThemeEditor: React.FC = () => {
     const confirmReset = () => {
         setShowResetConfirm(false);
         const defaultTheme: ThemeSettings = {
-          logo_url: '',
-          favicon_url: '/favicon.svg',
-          colors: {
-            primary: '#BFA16A', primary_dark: '#A98C5A', secondary: '#4A4A4A',
-            accent: '#EAE0D1', background: '#FDFCF9', neutral_dark: '#2D2D2D',
-          },
-          fonts: { sans: 'Inter', serif: 'Playfair Display' },
+            logo_url: '/logo.svg',
+            favicon_url: '/favicon.svg',
+            colors: {
+                primary: '#BFA16A', primary_dark: '#A98C5A', secondary: '#4A4A4A',
+                accent: '#EAE0D1', background: '#FDFCF9', neutral_dark: '#2D2D2D',
+            },
+            fonts: { sans: 'Inter', serif: 'Playfair Display' },
         };
         setFormData(defaultTheme);
         updateTheme(defaultTheme);
@@ -150,19 +150,19 @@ const ThemeEditor: React.FC = () => {
             {/* Branding Section */}
             <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-neutral-dark border-b pb-2">Branding</h3>
-                
+
                 {/* Logo Upload */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Logo</label>
                     <div className="flex gap-4 items-start">
                         <div className="flex-1">
-                            <input 
-                                type="text" 
-                                name="logo_url" 
-                                value={formData.logo_url} 
-                                onChange={handleUrlChange} 
-                                placeholder="URL logo hoặc để trống để dùng text logo" 
-                                className="w-full p-2 border rounded-md" 
+                            <input
+                                type="text"
+                                name="logo_url"
+                                value={formData.logo_url}
+                                onChange={handleUrlChange}
+                                placeholder="URL logo hoặc để trống để dùng text logo"
+                                className="w-full p-2 border rounded-md"
                             />
                             <p className="text-xs text-gray-500 mt-1">Hoặc tải lên từ thiết bị (tối đa 2MB)</p>
                         </div>
@@ -197,13 +197,13 @@ const ThemeEditor: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Favicon</label>
                     <div className="flex gap-4 items-start">
                         <div className="flex-1">
-                            <input 
-                                type="text" 
-                                name="favicon_url" 
-                                value={formData.favicon_url} 
-                                onChange={handleUrlChange} 
-                                placeholder="URL favicon" 
-                                className="w-full p-2 border rounded-md" 
+                            <input
+                                type="text"
+                                name="favicon_url"
+                                value={formData.favicon_url}
+                                onChange={handleUrlChange}
+                                placeholder="URL favicon"
+                                className="w-full p-2 border rounded-md"
                             />
                             <p className="text-xs text-gray-500 mt-1">Hoặc tải lên từ thiết bị (tối đa 500KB, khuyến nghị 32x32 hoặc 64x64px)</p>
                         </div>
@@ -236,35 +236,35 @@ const ThemeEditor: React.FC = () => {
 
             {/* Colors Section */}
             <div className="space-y-4">
-                 <h3 className="text-lg font-semibold text-neutral-dark border-b pb-2">Colors</h3>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <h3 className="text-lg font-semibold text-neutral-dark border-b pb-2">Colors</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <ColorInput label="Primary" name="primary" value={formData.colors.primary} onChange={handleColorChange} />
                     <ColorInput label="Primary Dark" name="primary_dark" value={formData.colors.primary_dark} onChange={handleColorChange} />
                     <ColorInput label="Secondary" name="secondary" value={formData.colors.secondary} onChange={handleColorChange} />
                     <ColorInput label="Accent" name="accent" value={formData.colors.accent} onChange={handleColorChange} />
                     <ColorInput label="Background" name="background" value={formData.colors.background} onChange={handleColorChange} />
                     <ColorInput label="Neutral Dark" name="neutral_dark" value={formData.colors.neutral_dark} onChange={handleColorChange} />
-                 </div>
+                </div>
             </div>
 
             {/* Fonts Section */}
-             <div className="space-y-4">
-                 <h3 className="text-lg font-semibold text-neutral-dark border-b pb-2">Fonts</h3>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-neutral-dark border-b pb-2">Fonts</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Main Font (Sans-serif)</label>
                         <select name="sans" value={formData.fonts.sans} onChange={handleFontChange} className="mt-1 w-full p-2 border rounded-md bg-white">
-                           {availableFonts.map(font => <option key={font} value={font}>{font}</option>)}
+                            {availableFonts.map(font => <option key={font} value={font}>{font}</option>)}
                         </select>
                     </div>
-                     <div>
+                    <div>
                         <label className="block text-sm font-medium text-gray-700">Heading Font (Serif)</label>
                         <select name="serif" value={formData.fonts.serif} onChange={handleFontChange} className="mt-1 w-full p-2 border rounded-md bg-white">
                             {availableFonts.map(font => <option key={font} value={font}>{font}</option>)}
                         </select>
                     </div>
-                 </div>
-             </div>
+                </div>
+            </div>
             <ConfirmDialog
                 isOpen={showResetConfirm}
                 title="Reset Theme Settings"
