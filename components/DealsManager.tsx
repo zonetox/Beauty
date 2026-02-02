@@ -206,10 +206,10 @@ const DealsManager: React.FC = () => {
                                     {deal.end_date && (
                                         <span>End: {new Date(deal.end_date).toLocaleDateString()}</span>
                                     )}
-                                    {deal.dealPrice && deal.original_price && (
+                                    {deal.deal_price && deal.original_price && (
                                         <span className="text-primary font-semibold">
-                                            {deal.dealPrice.toLocaleString('vi-VN')}đ
-                                            {deal.original_price > deal.dealPrice && (
+                                            {deal.deal_price.toLocaleString('vi-VN')}đ
+                                            {deal.original_price > deal.deal_price && (
                                                 <span className="text-gray-400 line-through ml-1">
                                                     {deal.original_price.toLocaleString('vi-VN')}đ
                                                 </span>
@@ -218,7 +218,7 @@ const DealsManager: React.FC = () => {
                                     )}
                                 </div>
                             </div>
-                            <span className={`px-3 py-1 text-xs font-semibold rounded-full flex-shrink-0 ${getStatusBadgeClass(deal.displayStatus)}`}>
+                            <span className={`px-3 py-1 text-xs font-semibold rounded-full flex-shrink-0 ${getStatusBadgeClass(deal.displayStatus as DealStatus)}`}>
                                 {deal.displayStatus}
                             </span>
                             <div className="flex gap-2 flex-shrink-0">

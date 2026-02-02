@@ -112,7 +112,7 @@ const BusinessBulkImporter: React.FC = () => {
     const confirmImport = async () => {
         setShowConfirmDialog(false);
         setIsImporting(true);
-        setImportLog(prev => []); // Clear logs
+        setImportLog(() => []); // Clear logs
 
         if (useDirectMode) {
             await handleDirectImport();

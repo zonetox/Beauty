@@ -4,7 +4,7 @@ import { ChartDataPoint } from '../types.ts';
 const AnalyticsChart: React.FC<{ data: ChartDataPoint[], title: string }> = ({ data, title }) => {
     const chartHeight = 250;
     const chartWidth = 500; // SVG viewbox width
-    
+
     // Handle empty data case
     if (!data || data.length === 0) {
         return (
@@ -16,7 +16,7 @@ const AnalyticsChart: React.FC<{ data: ChartDataPoint[], title: string }> = ({ d
             </div>
         );
     }
-    
+
     const maxValue = Math.max(...data.map(d => d.value || 0), 1); // Use 1 as minimum to avoid division by zero
     const yAxisLabels = [0, maxValue / 2, maxValue];
 
@@ -26,7 +26,7 @@ const AnalyticsChart: React.FC<{ data: ChartDataPoint[], title: string }> = ({ d
         if (value >= 1_000) return `${(value / 1_000).toFixed(0)}k`;
         return value.toString();
     };
-    
+
     // Helper function to calculate Y position safely
     const calculateY = (label: number): number => {
         if (maxValue === 0 || !isFinite(label) || !isFinite(maxValue)) return chartHeight;
@@ -34,7 +34,7 @@ const AnalyticsChart: React.FC<{ data: ChartDataPoint[], title: string }> = ({ d
         if (!isFinite(ratio)) return chartHeight;
         return chartHeight - (ratio * (chartHeight - 20));
     };
-    
+
     return (
         <div className="bg-white p-6 rounded-lg shadow h-full">
             <h3 className="text-lg font-semibold text-neutral-dark mb-4">{title}</h3>
@@ -44,7 +44,7 @@ const AnalyticsChart: React.FC<{ data: ChartDataPoint[], title: string }> = ({ d
                     {yAxisLabels.map((label, index) => {
                         const yPos = calculateY(label);
                         if (!isFinite(yPos)) return null;
-                        
+
                         return (
                             <g key={index}>
                                 <text
@@ -74,12 +74,12 @@ const AnalyticsChart: React.FC<{ data: ChartDataPoint[], title: string }> = ({ d
                         const value = point.value || 0;
                         const safeDataLength = Math.max(data.length, 1);
                         const barWidth = Math.max((chartWidth - 30) / safeDataLength * 0.8, 0);
-                        const barHeight = maxValue > 0 && value > 0 
-                            ? Math.max((value / maxValue * (chartHeight - 20)), 0) 
+                        const barHeight = maxValue > 0 && value > 0
+                            ? Math.max((value / maxValue * (chartHeight - 20)), 0)
                             : 0;
                         const x = 30 + (index * ((chartWidth - 30) / safeDataLength)) + ((chartWidth - 30) / safeDataLength * 0.1);
                         const y = Math.max(chartHeight - barHeight, 0);
-                        
+
                         // Ensure all values are finite numbers
                         if (!isFinite(x) || !isFinite(y) || !isFinite(barWidth) || !isFinite(barHeight)) {
                             return null;
@@ -102,7 +102,7 @@ const AnalyticsChart: React.FC<{ data: ChartDataPoint[], title: string }> = ({ d
                                     fill="#6b7280"
                                     textAnchor="middle"
                                 >
-                                    {point.label ? new Date(point.label).toLocaleDateString('en-US', { day: 'numeric'}) : ''}
+                                    {point.label ? new Date(point.label).toLocaleDateString('en-US', { day: 'numeric' }) : ''}
                                 </text>
                                 <title>{`${point.label ? new Date(point.label).toLocaleDateString() : 'N/A'}: ${new Intl.NumberFormat('vi-VN').format(value)} VND`}</title>
                             </g>

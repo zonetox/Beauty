@@ -112,7 +112,7 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
     useEffect(() => {
         if (formData.start_date || formData.end_date) {
             const calculatedStatus = calculateDealStatus(formData.start_date, formData.end_date);
-            setFormData(prev => ({ ...prev, status: calculatedStatus as 'Active' | 'Expired' | 'Pending' }));
+            setFormData(prev => ({ ...prev, status: calculatedStatus as DealStatus }));
         }
     }, [formData.start_date, formData.end_date]);
 
@@ -288,7 +288,7 @@ const EditDealModal: React.FC<EditDealModalProps> = ({ deal, onSave, onClose, bu
                 original_price: formData.original_price || 0,
                 deal_price: formData.deal_price || 0,
                 discount_percentage: formData.discount_percentage || 0,
-                status: finalStatus as 'Active' | 'Expired' | 'Pending'
+                status: finalStatus as DealStatus
             };
 
             await onSave(dealToSave);

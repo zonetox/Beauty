@@ -232,9 +232,9 @@ const BusinessSupportCenter: React.FC = () => {
                             <div className="flex-1 min-w-0">
                                 <p className="font-semibold text-neutral-dark truncate">{ticket.subject}</p>
                                 <p className="text-xs text-gray-500 mt-1">
-                                    {ticket.replies.length > 0 ? (
+                                    {(ticket.replies || []).length > 0 ? (
                                         <>
-                                            {ticket.replies.length} {ticket.replies.length === 1 ? 'reply' : 'replies'} •
+                                            {(ticket.replies || []).length} {(ticket.replies || []).length === 1 ? 'reply' : 'replies'} •
                                         </>
                                     ) : null}
                                     {' '}Last updated: {formatDate(ticket.last_reply_at || ticket.created_at)}

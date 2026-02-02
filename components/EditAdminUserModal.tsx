@@ -35,7 +35,7 @@ const EditAdminUserModal: React.FC<EditAdminUserModalProps> = ({ isOpen, onClose
       return { ...userToEdit, password: '' }; // Don't show password on edit
     }
     return {
-      username: '',
+      admin_username: '',
       email: '',
       password: '',
       role: AdminUserRole.EDITOR,
@@ -94,7 +94,7 @@ const EditAdminUserModal: React.FC<EditAdminUserModalProps> = ({ isOpen, onClose
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Username</label>
-                <input type="text" name="username" value={formData.username || ''} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                <input type="text" name="admin_username" value={formData.admin_username || ''} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Email</label>

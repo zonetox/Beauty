@@ -7,14 +7,13 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useBusinessAuth } from '../contexts/BusinessContext.tsx';
 import { useBusinessData } from '../contexts/BusinessDataContext.tsx';
-import { Business, BusinessCategory, Service, WorkingHours, LandingPageConfig, StaffPermissions } from '../types.ts';
+import { Business, BusinessCategory, LandingPageConfig, HeroSlide, TrustIndicator } from '../types.ts';
 import { uploadFile } from '../lib/storage.ts';
 import LoadingState from './LoadingState.tsx';
 // import EmptyState from './EmptyState.tsx';
 import { useStaffPermissions } from '../hooks/useStaffPermissions.ts';
 import LandingPageSectionEditor from './LandingPageSectionEditor.tsx';
 import LandingPagePreview from './LandingPagePreview.tsx';
-import { landing_page_config } from '../types.ts';
 
 // Helper to convert blob to base64 (for team member images)
 // const blobToBase64 = (blob: Blob): Promise<string> => {
@@ -323,7 +322,7 @@ const BusinessProfileEditor: React.FC = () => {
         });
     };
 
-    const handlelanding_page_configChange = (newConfig: landing_page_config) => {
+    const handlelanding_page_configChange = (newConfig: LandingPageConfig) => {
         setFormData((prev) => {
             if (!prev) return null;
             return { ...prev, landing_page_config: newConfig } as Business;
@@ -764,7 +763,7 @@ const BusinessProfileEditor: React.FC = () => {
                             <LandingPageSectionEditor
                                 config={formData.landing_page_config}
                                 onChange={handlelanding_page_configChange}
-                                disabled={!staffPermissions.isOwner && !staffPermissions.can_edit_landing_page}
+                                disabled={!staffPermissions.is_owner && !staffPermissions.can_edit_landing_page}
                             />
                         ) : (
                             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">

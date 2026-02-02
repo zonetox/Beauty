@@ -59,7 +59,7 @@ export const OrderDataProvider: React.FC<{ children: ReactNode }> = ({ children 
     const newOrder = data as unknown as Order;
     setOrders(prev => [newOrder, ...prev]);
     if (currentAdmin) {
-      logAdminAction(currentAdmin.user_name, 'Create Order', `New order created for ${newOrder.business_name} for package ${newOrder.package_name}.`);
+      logAdminAction(currentAdmin.admin_username, 'Create Order', `New order created for ${newOrder.business_name} for package ${newOrder.package_name}.`);
     }
     return newOrder;
   };
@@ -81,9 +81,9 @@ export const OrderDataProvider: React.FC<{ children: ReactNode }> = ({ children 
       setOrders(prev => prev.map(o => o.id === orderId ? updatedOrder : o));
       if (currentAdmin) {
         if (newStatus === OrderStatus.COMPLETED) {
-          logAdminAction(currentAdmin.user_name, 'Confirm Payment', `Confirmed payment for Order #${orderId} (${orderToUpdate.business_name}).`);
+          logAdminAction(currentAdmin.admin_username, 'Confirm Payment', `Confirmed payment for Order #${orderId} (${orderToUpdate.business_name}).`);
         } else if (newStatus === OrderStatus.REJECTED) {
-          logAdminAction(currentAdmin.user_name, 'Reject Payment', `Rejected payment for Order #${orderId} (${orderToUpdate.business_name}).`);
+          logAdminAction(currentAdmin.admin_username, 'Reject Payment', `Rejected payment for Order #${orderId} (${orderToUpdate.business_name}).`);
         }
       }
     } else {

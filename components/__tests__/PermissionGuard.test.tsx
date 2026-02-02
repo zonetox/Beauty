@@ -28,7 +28,7 @@ describe('PermissionGuard', () => {
   it('should render children when user has permission', () => {
     const userWithPermission: AuthenticatedAdmin = {
       id: 1,
-      user_name: 'admin',
+      admin_username: 'admin',
       email: 'admin@test.com',
       role: AdminUserRole.ADMIN,
       permissions: {
@@ -57,7 +57,7 @@ describe('PermissionGuard', () => {
   it('should show ForbiddenState when user does not have permission', () => {
     const userWithoutPermission: AuthenticatedAdmin = {
       id: 1,
-      user_name: 'admin',
+      admin_username: 'admin',
       email: 'admin@test.com',
       role: AdminUserRole.EDITOR,
       permissions: {
@@ -105,7 +105,7 @@ describe('PermissionGuard', () => {
   it('should render fallback when provided and user does not have permission', () => {
     const userWithoutPermission: AuthenticatedAdmin = {
       id: 1,
-      user_name: 'admin',
+      admin_username: 'admin',
       email: 'admin@test.com',
       role: AdminUserRole.EDITOR,
       permissions: {

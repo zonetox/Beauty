@@ -13,7 +13,7 @@ import { keys } from '../lib/queryKeys.ts';
 interface AdminPlatformContextType {
   // Logs
   logs: AdminLogEntry[];
-  logAdminAction: (admin_user_name: string, action: string, details: string) => Promise<void>;
+  logAdminAction: (admin_username: string, action: string, details: string) => Promise<void>;
   clearLogs: () => Promise<void>;
   // Notifications
   notifications: Notification[];
@@ -61,14 +61,14 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
     queryFn: async () => {
       if (!isSupabaseConfigured) return [];
       const { data, error } = await supabase.from('admin_activity_logs')
-        .select('id, timestamp, admin_user_name, action, details')
+        .select('id, timestamp, admin_username, action, details')
         .order('timestamp', { ascending: false })
         .limit(100);
       if (error) throw error;
       return (data || []).map(log => ({
         id: log.id,
         timestamp: log.timestamp || new Date().toISOString(),
-        admin_user_name: log.admin_user_name,
+        admin_username: log.admin_username,
         action: log.action,
         details: log.details || '',
         created_at: log.timestamp || new Date().toISOString()
@@ -197,10 +197,10 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
   // Using direct async functions with invalidation instead of full useMutation 
   // hooks to keep the context interface cleaner and simpler for this refactor.
 
-  const logAdminAction = async (admin_user_name: string, action: string, details: string) => {
+  const logAdminAction = async (admin_username: string, action: string, details: string) => {
     if (!isSupabaseConfigured) return;
     const { error } = await supabase.from('admin_activity_logs')
-      .insert({ admin_user_name: admin_user_name, action, details, timestamp: new Date().toISOString() });
+      .insert({ admin_username: admin_username, action, details, timestamp: new Date().toISOString() });
     if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.logs });
   };
 

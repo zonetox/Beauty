@@ -13,6 +13,7 @@ import { toSnakeCase } from '../lib/utils.ts';
 // --- TYPE DEFINITION ---
 interface BusinessContextType {
   currentBusiness: Business | null;
+  updateBusiness: (updatedBusiness: Business) => Promise<void>;
   // Business Blog
   posts: BusinessBlogPost[];
   blogLoading: boolean;
@@ -153,7 +154,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       supabase.from('appointments')
         .select('id, business_id, service_id, service_name, staff_member_id, customer_name, customer_email, customer_phone, date, time_slot, status, notes, created_at')
         .order('created_at', { ascending: false }),
-      supabase.from('businesses').select('id, slug, view_count').order('id'),
+      supabase.from('businesses').select('id, slug, view_count, landing_page_status').order('id'),
       supabase.from('page_views')
         .select('id, page_type, page_id, viewed_at')
         .order('viewed_at', { ascending: false }),
@@ -528,6 +529,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
 
   const value = {
     currentBusiness,
+    updateBusiness,
     posts, blogLoading, getPostBySlug, addPost, updatePost, deletePost, incrementview_count, getPostsBybusiness_id,
     addDeal, updateDeal, deleteDeal,
     reviews, reviewsLoading, getReviewsBybusiness_id, addReview, addReply, toggleReviewVisibility,

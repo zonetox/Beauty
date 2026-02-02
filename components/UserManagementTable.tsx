@@ -38,7 +38,7 @@ const UserManagementTable: React.FC<UserManagementTableProps> = ({ users, onUpda
                     {users.map(user => (
                         <tr key={user.id} className={`bg-white border-b hover:bg-gray-50 ${user.is_locked ? 'bg-red-50' : ''}`}>
                             <td className="px-6 py-4 font-medium text-neutral-dark whitespace-nowrap">
-                                {user.username}
+                                {user.admin_username}
                                 <div className="text-xs text-gray-500">{user.email}</div>
                             </td>
                             <td className="px-6 py-4">

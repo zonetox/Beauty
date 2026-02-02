@@ -39,7 +39,7 @@ const BlogComments: React.FC<BlogCommentsProps> = ({ post_id }) => {
             <div className="space-y-8 mb-12">
                 {comments.map(comment => (
                     <div key={comment.id} className="flex gap-4">
-                        <img src={comment.authoravatar_url} alt={comment.author_name} className="w-12 h-12 rounded-full flex-shrink-0 mt-1" loading="lazy" />
+                        <img src={comment.author_avatar_url} alt={comment.author_name} className="w-12 h-12 rounded-full flex-shrink-0 mt-1" loading="lazy" />
                         <div>
                             <p className="font-semibold text-neutral-dark">{comment.author_name}</p>
                             <p className="text-xs text-gray-400 mb-2">{new Date(comment.date).toLocaleString()}</p>

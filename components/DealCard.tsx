@@ -17,7 +17,7 @@ const DealCard: React.FC<DealCardProps> = ({ deal, business_name, businessSlug }
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
   };
 
-  const hasPricing = deal.original_price !== undefined && deal.dealPrice !== undefined;
+  const hasPricing = deal.original_price !== undefined && deal.deal_price !== undefined;
 
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col h-full transition-transform transform hover:-translate-y-1">
@@ -28,9 +28,9 @@ const DealCard: React.FC<DealCardProps> = ({ deal, business_name, businessSlug }
             src={getOptimizedSupabaseUrl(deal.image_url || 'https://picsum.photos/seed/deal/400/300', { width: 400, quality: 75 })}
             alt={deal.title}
           />
-          {deal.discountPercentage && (
+          {deal.discount_percentage && (
             <span className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-              -{deal.discountPercentage}%
+              -{deal.discount_percentage}%
             </span>
           )}
         </div>
@@ -43,7 +43,7 @@ const DealCard: React.FC<DealCardProps> = ({ deal, business_name, businessSlug }
 
         {hasPricing && (
           <div className="flex items-baseline gap-2 mt-3">
-            <p className="text-xl font-bold text-primary">{formatPrice(deal.dealPrice)}</p>
+            <p className="text-xl font-bold text-primary">{formatPrice(deal.deal_price)}</p>
             <p className="text-sm text-gray-400 line-through">{formatPrice(deal.original_price)}</p>
           </div>
         )}

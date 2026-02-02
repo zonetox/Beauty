@@ -382,7 +382,7 @@ const ReviewsManager: React.FC = () => {
 
                             {/* Reply Section */}
                             <div className="pl-16 mt-4">
-                                {review.reply_content ? (
+                                {review.reply?.reply_content ? (
                                     <div className="p-3 bg-primary/5 rounded-lg border-l-4 border-primary/50">
                                         <div className="flex justify-between items-start mb-1">
                                             <p className="font-semibold text-primary text-sm">Your reply:</p>
@@ -396,9 +396,9 @@ const ReviewsManager: React.FC = () => {
                                                 </button>
                                             )}
                                         </div>
-                                        <p className="text-gray-600">{review.reply_content}</p>
+                                        <p className="text-gray-600">{review.reply.reply_content}</p>
                                         <p className="text-xs text-gray-400 mt-1">
-                                            {new Date(review.reply_date || '').toLocaleString()}
+                                            {new Date(review.reply.reply_date || '').toLocaleString()}
                                         </p>
                                     </div>
                                 ) : (
@@ -416,7 +416,7 @@ const ReviewsManager: React.FC = () => {
                                 )}
                                 {replyingTo === review.id && (
                                     <ReplyForm
-                                        initialContent={review.reply_content}
+                                        initialContent={review.reply?.reply_content}
                                         onSubmit={(content) => handleReplySubmit(review.id, content)}
                                         onCancel={() => setReplyingTo(null)}
                                         isSubmitting={isReplying}

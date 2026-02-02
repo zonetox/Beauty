@@ -23,7 +23,7 @@ interface AdminContextType {
     deleteAdminUser: (user_id: number) => Promise<void>;
     // Logs
     logs: AdminLogEntry[];
-    logAdminAction: (admin_user_name: string, action: string, details: string) => void;
+    logAdminAction: (admin_username: string, action: string, details: string) => void;
     clearLogs: () => void;
     // Notifications
     notifications: Notification[];
@@ -244,7 +244,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // Run only once on mount
 
-    const logAdminAction = (_admin_user_name: string, _action: string, _details: string) => {
+    const logAdminAction = (_admin_username: string, _action: string, _details: string) => {
         // Placeholder for logging
     };
 

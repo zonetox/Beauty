@@ -101,7 +101,7 @@ export interface Deal {
   deal_price: number;
   discount_percentage: number;
   image_url: string;
-  status: 'Active' | 'Expired' | 'Pending';
+  status: DealStatus;
   start_date: string;
   end_date: string;
   terms?: string;
@@ -168,6 +168,11 @@ export interface TrafficSource {
   percentage: number;
 }
 
+export interface ChartDataPoint {
+  label: string;
+  value: number;
+}
+
 export interface BusinessAnalytics {
   business_id: number;
   time_series: AnalyticsDataPoint[];
@@ -196,9 +201,10 @@ export interface Review {
   comment: string;
   submitted_date: string;
   status: ReviewStatus;
-  reply?: any;
-  reply_content?: string;
-  reply_date?: string;
+  reply?: {
+    reply_content: string;
+    reply_date: string;
+  };
 }
 
 // Working hours types
@@ -446,7 +452,7 @@ export interface AdminPermissions {
 
 export interface AdminLogEntry {
   id: string;
-  admin_user_name: string; // Matches DB column
+  admin_username: string; // Matches DB column
   action: string;
   details?: string;
   timestamp: string;
@@ -475,7 +481,7 @@ export interface Notification {
 
 export interface AdminUser {
   id: number;
-  username: string;
+  admin_username: string;
   email: string;
   password?: string;
   role: AdminUserRole;
@@ -608,7 +614,7 @@ export interface SupportTicket {
   status: TicketStatus;
   created_at: string;
   last_reply_at?: string;
-  replies?: any[];
+  replies: TicketReply[];
 }
 
 export type PageName = 'about' | 'contact' | 'homepage';
@@ -616,4 +622,21 @@ export type PageName = 'about' | 'contact' | 'homepage';
 export interface PageData {
   layout: LayoutItem[];
   visibility: { [key: string]: boolean };
+}
+
+export interface ThemeSettings {
+  logo_url: string;
+  favicon_url: string;
+  colors: {
+    primary: string;
+    primary_dark: string;
+    secondary: string;
+    accent: string;
+    background: string;
+    neutral_dark: string;
+  };
+  fonts: {
+    sans: string;
+    serif: string;
+  };
 }

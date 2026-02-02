@@ -30,10 +30,10 @@ const AIQuickReplyModal: React.FC<AIQuickReplyModalProps> = ({ isOpen, onClose, 
             }
 
             const prompt = `Bạn là trợ lý hữu ích cho chủ salon làm đẹp tại Việt Nam. Tạo 3 tin nhắn phản hồi chuyên nghiệp và thân thiện bằng tiếng Việt cho tình huống sau:
-            - Tên khách hàng: ${appointment.customerName}
-            - Dịch vụ: ${appointment.serviceName}
+            - Tên khách hàng: ${appointment.customer_name}
+            - Dịch vụ: ${appointment.service_name}
             - Ngày: ${new Date(appointment.date).toLocaleDateString('vi-VN')}
-            - Giờ: ${appointment.timeSlot}
+            - Giờ: ${appointment.time_slot}
             - Hành động mong muốn từ chủ salon: ${contextToActionMap[context]}
             
             Giữ các phản hồi ngắn gọn, lịch sự và sẵn sàng gửi. Format: Danh sách đánh số. Ví dụ:

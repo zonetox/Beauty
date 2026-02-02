@@ -55,7 +55,7 @@ export const ReviewsDataProvider: React.FC<{ children: ReactNode }> = ({ childre
   const addReply = (reviewId: string, replyContent: string) => {
     const updatedReviews = reviews.map(r =>
       r.id === reviewId
-        ? { ...r, reply_content: replyContent, reply_date: new Date().toISOString() }
+        ? { ...r, reply: { reply_content: replyContent, reply_date: new Date().toISOString() } }
         : r
     );
     setReviews(updatedReviews);

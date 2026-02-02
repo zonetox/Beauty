@@ -17,7 +17,7 @@ const AdminLandingPageModeration: React.FC = () => {
 
     const filteredBusinesses = useMemo(() => {
         const filtered = businesses.filter(b => {
-            const status = b.landingPageStatus || 'Approved';
+            const status = b.landing_page_status || 'Approved';
             if (statusFilter !== 'all' && status !== statusFilter) return false;
             if (searchQuery && !b.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
             return true;
@@ -30,8 +30,8 @@ const AdminLandingPageModeration: React.FC = () => {
                 'Approved': 3,
                 'Rejected': 4,
             };
-            const aPriority = statusPriority[a.landingPageStatus || 'Approved'] || 5;
-            const bPriority = statusPriority[b.landingPageStatus || 'Approved'] || 5;
+            const aPriority = statusPriority[a.landing_page_status || 'Approved'] || 5;
+            const bPriority = statusPriority[b.landing_page_status || 'Approved'] || 5;
             if (aPriority !== bPriority) return aPriority - bPriority;
             return new Date(b.joined_date).getTime() - new Date(a.joined_date).getTime();
         });
@@ -79,7 +79,7 @@ const AdminLandingPageModeration: React.FC = () => {
             'Rejected': 0,
         };
         businesses.forEach(b => {
-            const status = b.landingPageStatus || 'Approved';
+            const status = b.landing_page_status || 'Approved';
             counts[status] = (counts[status] || 0) + 1;
         });
         return counts;
@@ -184,7 +184,7 @@ const AdminLandingPageModeration: React.FC = () => {
                             </thead>
                             <tbody>
                                 {filteredBusinesses.map((business) => {
-                                    const currentStatus = (business.landingPageStatus || 'Approved') as LandingPageStatus;
+                                    const currentStatus = (business.landing_page_status || 'Approved') as LandingPageStatus;
                                     return (
                                         <tr key={business.id} className="border-b border-gray-100 hover:bg-gray-50">
                                             <td className="px-6 py-4">

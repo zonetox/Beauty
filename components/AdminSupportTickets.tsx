@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useAdminPlatform } from '../contexts/AdminPlatformContext.tsx';
-import { SupportTicket, TicketStatus, TicketReply } from '../types.ts';
+import { SupportTicket, TicketStatus } from '../types.ts';
 
 const statusStyles: { [key in TicketStatus]: string } = {
     [TicketStatus.OPEN]: 'bg-red-100 text-red-800',
@@ -33,18 +33,18 @@ const TicketDetailModal: React.FC<{ ticket: SupportTicket; onClose: () => void; 
                         <p className="text-sm text-gray-800">{ticket.message}</p>
                         <p className="text-xs text-gray-400 text-right mt-2">{new Date(ticket.created_at).toLocaleString()}</p>
                     </div>
-                    {ticket.replies.map(reply => (
+                    {(ticket.replies || []).map(reply => (
                         <div key={reply.id} className={`p-3 rounded-md ${reply.author === 'Admin' ? 'bg-blue-50' : 'bg-green-50'}`}>
-                             <p className="text-sm font-semibold">{reply.author}</p>
-                             <p className="text-sm text-gray-800 mt-1">{reply.content}</p>
-                             <p className="text-xs text-gray-400 text-right mt-2">{new Date(reply.created_at).toLocaleString()}</p>
+                            <p className="text-sm font-semibold">{reply.author}</p>
+                            <p className="text-sm text-gray-800 mt-1">{reply.content}</p>
+                            <p className="text-xs text-gray-400 text-right mt-2">{new Date(reply.created_at).toLocaleString()}</p>
                         </div>
                     ))}
                 </main>
                 <footer className="p-4 border-t bg-gray-50 space-y-3">
                     <form onSubmit={handleReplySubmit}>
                         <textarea value={replyContent} onChange={e => setReplyContent(e.target.value)} rows={3} className="w-full p-2 border rounded-md" placeholder="Type your reply..." required />
-                         <div className="flex justify-between items-center mt-2">
+                        <div className="flex justify-between items-center mt-2">
                             <div className="flex items-center gap-2">
                                 <label htmlFor="status-select" className="text-sm font-medium">Status:</label>
                                 <select id="status-select" title="Ticket Status" value={ticket.status} onChange={e => onStatusChange(ticket.id, e.target.value as TicketStatus)} className="p-1 border rounded-md text-sm">
@@ -73,7 +73,7 @@ const AdminSupportTickets: React.FC = () => {
 
     const handleReply = (ticketId: string, content: string) => {
         addReply(ticketId, { author: 'Admin', content });
-        setSelectedTicket(prev => prev ? { ...prev, replies: [...prev.replies, {id: '', author: 'Admin', content, created_at: new Date().toISOString()}] } : null);
+        setSelectedTicket(prev => prev ? { ...prev, replies: [...(prev.replies || []), { id: '', author: 'Admin', content, created_at: new Date().toISOString() }] } : null);
     };
 
     return (
@@ -114,7 +114,7 @@ const AdminSupportTickets: React.FC = () => {
                                 <td className="px-6 py-4">
                                     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${statusStyles[ticket.status]}`}>{ticket.status}</span>
                                 </td>
-                                <td className="px-6 py-4">{new Date(ticket.lastReplyAt).toLocaleString()}</td>
+                                <td className="px-6 py-4">{new Date(ticket.last_reply_at || ticket.created_at).toLocaleString()}</td>
                                 <td className="px-6 py-4">
                                     <button onClick={() => setSelectedTicket(ticket)} className="font-medium text-secondary hover:underline">
                                         View & Reply
@@ -124,7 +124,7 @@ const AdminSupportTickets: React.FC = () => {
                         ))}
                     </tbody>
                 </table>
-                 {filteredTickets.length === 0 && <p className="text-center text-gray-500 py-8">No tickets found.</p>}
+                {filteredTickets.length === 0 && <p className="text-center text-gray-500 py-8">No tickets found.</p>}
             </div>
         </div>
     );
