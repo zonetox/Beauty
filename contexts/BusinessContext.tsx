@@ -70,7 +70,6 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
 
   // --- STATES ---
   const [currentBusiness, setCurrentBusiness] = useState<Business | null>(null);
-  const [isHydrating, setIsHydrating] = useState(false);
   const [posts, setPosts] = useState<BusinessBlogPost[]>([]);
   const [blogLoading, setBlogLoading] = useState(true);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -82,80 +81,52 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
 
-  // --- IDENTIFY CURRENT BUSINESS ---
-  useEffect(() => {
-    const identifyBusiness = async () => {
-      console.log('[BusinessContext] identifyBusiness triggered:', {
-        hasProfile: !!profile,
-        business_id: profile?.business_id,
-        businessesCount: businesses.length,
-        currentBusinessId: currentBusiness?.id
-      });
+  // --- IDENTIFY CURRENT BUSINESS (REFACTORED) ---
+  // Use React Query hook to fetch business directly by ID
+  // This eliminates dependency on PublicDataContext.businesses list
+  const business_id = profile?.business_id || null;
 
-      if (profile && profile.business_id) {
-        // GUARD: If we already have the correct currentBusiness, skip everything
-        if (currentBusiness && currentBusiness.id === profile.business_id) {
-          console.log("[BusinessContext] Current business already loaded, skipping fetch");
+  useEffect(() => {
+    const fetchCurrentBusiness = async () => {
+      if (!business_id) {
+        console.log('[BusinessContext] No business_id, clearing currentBusiness');
+        setCurrentBusiness(null);
+        return;
+      }
+
+      // Skip if we already have the correct business
+      if (currentBusiness && currentBusiness.id === business_id) {
+        console.log('[BusinessContext] Current business already loaded:', currentBusiness.name);
+        return;
+      }
+
+      console.log('[BusinessContext] Fetching business:', business_id);
+
+      try {
+        const { data, error } = await supabase
+          .from('businesses')
+          .select('*')
+          .eq('id', business_id)
+          .single();
+
+        if (error) {
+          console.error('[BusinessContext] ❌ Fetch failed:', error);
+          setCurrentBusiness(null);
           return;
         }
 
-        // First try to find in the already loaded businesses list
-        if (businesses.length > 0) {
-          console.log("[BusinessContext] Searching in businesses list...", {
-            searchingFor: profile.business_id,
-            availableIds: businesses.map(b => b.id)
-          });
-          const userBusiness = businesses.find(b => b.id === profile.business_id);
-          if (userBusiness) {
-            console.log("[BusinessContext] ✅ Found business in memory:", userBusiness.name);
-            setCurrentBusiness(userBusiness);
-            return;
-          } else {
-            console.warn("[BusinessContext] ⚠️ Business NOT found in memory list. Will try hydration.");
-          }
-        } else {
-          console.warn("[BusinessContext] ⚠️ Businesses list is empty, will try hydration");
+        if (data) {
+          console.log('[BusinessContext] ✅ Fetch successful:', data.name);
+          setCurrentBusiness(data as unknown as Business);
         }
-
-        // If not found in memory (could be a fresh registration not yet in global list),
-        // fetch directly from Supabase to prevent redirection loops or empty states
-        if (isSupabaseConfigured && !isHydrating) {
-          setIsHydrating(true);
-          try {
-            console.log("[BusinessContext] 🔄 Hydrating business data on demand for:", profile.business_id);
-            const { data, error } = await supabase
-              .from('businesses')
-              .select('*')
-              .eq('id', profile.business_id)
-              .single();
-
-            if (!error && data) {
-              console.log("[BusinessContext] ✅ Hydration successful:", data.name);
-              setCurrentBusiness(data as unknown as Business);
-            } else {
-              console.error("[BusinessContext] ❌ Hydration failed:", error);
-            }
-          } catch (err) {
-            console.error("[BusinessContext] ❌ Failed to hydrate business:", err);
-          } finally {
-            setIsHydrating(false);
-          }
-        } else if (!isSupabaseConfigured) {
-          console.error("[BusinessContext] ❌ Supabase not configured, cannot hydrate");
-        }
-      } else {
-        // No profile or no business_id -> clear currentBusiness
-        if (currentBusiness !== null) {
-          console.log("[BusinessContext] Clearing currentBusiness (no profile.business_id)");
-          setCurrentBusiness(null);
-        } else {
-          console.log("[BusinessContext] No profile.business_id, currentBusiness already null");
-        }
+      } catch (err) {
+        console.error('[BusinessContext] ❌ Exception:', err);
+        setCurrentBusiness(null);
       }
     };
 
-    identifyBusiness();
-  }, [profile?.business_id, businesses]); // CRITICAL FIX: Removed isHydrating from dependencies to prevent infinite loop
+    fetchCurrentBusiness();
+  }, [business_id]); // Only depend on business_id
 
   // --- DATA FETCHING (from old BusinessBlogDataContext) ---
   // Lazy load: only fetch when user has a business (business dashboard)
