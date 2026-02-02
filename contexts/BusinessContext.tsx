@@ -85,6 +85,13 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
   // --- IDENTIFY CURRENT BUSINESS ---
   useEffect(() => {
     const identifyBusiness = async () => {
+      console.log('[BusinessContext] identifyBusiness triggered:', {
+        hasProfile: !!profile,
+        business_id: profile?.business_id,
+        businessesCount: businesses.length,
+        currentBusinessId: currentBusiness?.id
+      });
+
       if (profile && profile.business_id) {
         // GUARD: If we already have the correct currentBusiness, skip everything
         if (currentBusiness && currentBusiness.id === profile.business_id) {
@@ -94,12 +101,20 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
 
         // First try to find in the already loaded businesses list
         if (businesses.length > 0) {
+          console.log("[BusinessContext] Searching in businesses list...", {
+            searchingFor: profile.business_id,
+            availableIds: businesses.map(b => b.id)
+          });
           const userBusiness = businesses.find(b => b.id === profile.business_id);
           if (userBusiness) {
-            console.log("[BusinessContext] Found business in memory:", userBusiness.name);
+            console.log("[BusinessContext] ✅ Found business in memory:", userBusiness.name);
             setCurrentBusiness(userBusiness);
             return;
+          } else {
+            console.warn("[BusinessContext] ⚠️ Business NOT found in memory list. Will try hydration.");
           }
+        } else {
+          console.warn("[BusinessContext] ⚠️ Businesses list is empty, will try hydration");
         }
 
         // If not found in memory (could be a fresh registration not yet in global list),
@@ -107,7 +122,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
         if (isSupabaseConfigured && !isHydrating) {
           setIsHydrating(true);
           try {
-            console.log("[BusinessContext] Hydrating business data on demand for:", profile.business_id);
+            console.log("[BusinessContext] 🔄 Hydrating business data on demand for:", profile.business_id);
             const { data, error } = await supabase
               .from('businesses')
               .select('*')
@@ -115,22 +130,26 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
               .single();
 
             if (!error && data) {
-              console.log("[BusinessContext] Hydration successful:", data.name);
+              console.log("[BusinessContext] ✅ Hydration successful:", data.name);
               setCurrentBusiness(data as unknown as Business);
             } else {
-              console.error("[BusinessContext] Hydration failed:", error);
+              console.error("[BusinessContext] ❌ Hydration failed:", error);
             }
           } catch (err) {
-            console.error("[BusinessContext] Failed to hydrate business:", err);
+            console.error("[BusinessContext] ❌ Failed to hydrate business:", err);
           } finally {
             setIsHydrating(false);
           }
+        } else if (!isSupabaseConfigured) {
+          console.error("[BusinessContext] ❌ Supabase not configured, cannot hydrate");
         }
       } else {
         // No profile or no business_id -> clear currentBusiness
         if (currentBusiness !== null) {
           console.log("[BusinessContext] Clearing currentBusiness (no profile.business_id)");
           setCurrentBusiness(null);
+        } else {
+          console.log("[BusinessContext] No profile.business_id, currentBusiness already null");
         }
       }
     };
