@@ -44,10 +44,14 @@ const UserBusinessDashboardPage: React.FC = () => {
     }, [currentBusiness?.id]);
 
     // If logged in but no business => Redirect to Registration
-    const { isDataLoaded } = useAuth();
+    const { isDataLoaded, role } = useAuth();
+    const isBusinessUser = role === 'business_owner' || role === 'business_staff';
 
     useEffect(() => {
-        if (isDataLoaded && !currentBusiness) {
+        // ONLY redirect regular users to registration
+        // If they are a business user but currentBusiness is null, they should STAY HERE
+        // and wait for the data context to sync.
+        if (isDataLoaded && !currentBusiness && role === 'user') {
             // Give context and then redirect
             const timer = setTimeout(() => {
                 navigate('/register/business', { replace: true });
@@ -55,7 +59,7 @@ const UserBusinessDashboardPage: React.FC = () => {
             return () => clearTimeout(timer);
         }
         return undefined;
-    }, [currentBusiness, isDataLoaded, navigate]);
+    }, [currentBusiness, isDataLoaded, role, navigate]);
 
     if (!isDataLoaded) {
         return (
@@ -70,7 +74,12 @@ const UserBusinessDashboardPage: React.FC = () => {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen bg-background">
                 <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                <p className="mt-4 text-lg font-semibold text-neutral-dark">Bạn chưa có doanh nghiệp. Đang chuyển hướng...</p>
+                <div className="text-center mt-6">
+                    <p className="text-lg font-semibold text-neutral-dark">
+                        {isBusinessUser ? 'Đang đồng bộ dữ liệu doanh nghiệp của bạn...' : 'Đang chuyển hướng...'}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-2">Vui lòng đợi trong giây lát.</p>
+                </div>
             </div>
         );
     }

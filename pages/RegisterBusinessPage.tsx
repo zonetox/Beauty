@@ -29,9 +29,8 @@ const RegisterBusinessPage: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errors, setErrors] = useState<Partial<Record<keyof BusinessRegistrationFormData, string>>>({});
 
-    // If user is ALREADY logged in and HAS a business, show dashboard instead of signup
-    // If they are just a regular user, let them complete business registration
-    if (isDataLoaded && user && (profile?.business_id || role === 'admin')) {
+    // If user is ALREADY logged in as a business/admin, show dashboard instead of signup
+    if (isDataLoaded && user && (role === 'business_owner' || role === 'business_staff' || role === 'admin' || profile?.business_id)) {
         return <Navigate to={role === 'admin' ? "/admin" : "/business-profile"} replace />;
     }
 

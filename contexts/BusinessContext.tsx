@@ -70,6 +70,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
 
   // --- STATES ---
   const [currentBusiness, setCurrentBusiness] = useState<Business | null>(null);
+  const [isHydrating, setIsHydrating] = useState(false);
   const [posts, setPosts] = useState<BusinessBlogPost[]>([]);
   const [blogLoading, setBlogLoading] = useState(true);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -83,13 +84,45 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
 
   // --- IDENTIFY CURRENT BUSINESS ---
   useEffect(() => {
-    if (profile && profile.business_id && businesses.length > 0) {
-      const userBusiness = businesses.find(b => b.id === profile.business_id);
-      setCurrentBusiness(userBusiness || null);
-    } else {
-      setCurrentBusiness(null);
-    }
-  }, [profile, businesses]);
+    const identifyBusiness = async () => {
+      if (profile && profile.business_id) {
+        // First try to find in the already loaded businesses list
+        if (businesses.length > 0) {
+          const userBusiness = businesses.find(b => b.id === profile.business_id);
+          if (userBusiness) {
+            setCurrentBusiness(userBusiness);
+            return;
+          }
+        }
+
+        // If not found in memory (could be a fresh registration not yet in global list),
+        // fetch directly from Supabase to prevent redirection loops or empty states
+        if (isSupabaseConfigured && !isHydrating) {
+          setIsHydrating(true);
+          try {
+            console.log("Hydrating business data on demand for:", profile.business_id);
+            const { data, error } = await supabase
+              .from('businesses')
+              .select('*')
+              .eq('id', profile.business_id)
+              .single();
+
+            if (!error && data) {
+              setCurrentBusiness(data as unknown as Business);
+            }
+          } catch (err) {
+            console.error("Failed to hydrate business:", err);
+          } finally {
+            setIsHydrating(false);
+          }
+        }
+      } else {
+        setCurrentBusiness(null);
+      }
+    };
+
+    identifyBusiness();
+  }, [profile?.business_id, businesses, isHydrating]);
 
   // --- DATA FETCHING (from old BusinessBlogDataContext) ---
   // Lazy load: only fetch when user has a business (business dashboard)
