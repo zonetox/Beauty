@@ -86,10 +86,17 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const identifyBusiness = async () => {
       if (profile && profile.business_id) {
+        // GUARD: If we already have the correct currentBusiness, skip everything
+        if (currentBusiness && currentBusiness.id === profile.business_id) {
+          console.log("[BusinessContext] Current business already loaded, skipping fetch");
+          return;
+        }
+
         // First try to find in the already loaded businesses list
         if (businesses.length > 0) {
           const userBusiness = businesses.find(b => b.id === profile.business_id);
           if (userBusiness) {
+            console.log("[BusinessContext] Found business in memory:", userBusiness.name);
             setCurrentBusiness(userBusiness);
             return;
           }
@@ -100,7 +107,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
         if (isSupabaseConfigured && !isHydrating) {
           setIsHydrating(true);
           try {
-            console.log("Hydrating business data on demand for:", profile.business_id);
+            console.log("[BusinessContext] Hydrating business data on demand for:", profile.business_id);
             const { data, error } = await supabase
               .from('businesses')
               .select('*')
@@ -108,21 +115,28 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
               .single();
 
             if (!error && data) {
+              console.log("[BusinessContext] Hydration successful:", data.name);
               setCurrentBusiness(data as unknown as Business);
+            } else {
+              console.error("[BusinessContext] Hydration failed:", error);
             }
           } catch (err) {
-            console.error("Failed to hydrate business:", err);
+            console.error("[BusinessContext] Failed to hydrate business:", err);
           } finally {
             setIsHydrating(false);
           }
         }
       } else {
-        setCurrentBusiness(null);
+        // No profile or no business_id -> clear currentBusiness
+        if (currentBusiness !== null) {
+          console.log("[BusinessContext] Clearing currentBusiness (no profile.business_id)");
+          setCurrentBusiness(null);
+        }
       }
     };
 
     identifyBusiness();
-  }, [profile?.business_id, businesses, isHydrating]);
+  }, [profile?.business_id, businesses]); // CRITICAL FIX: Removed isHydrating from dependencies to prevent infinite loop
 
   // --- DATA FETCHING (from old BusinessBlogDataContext) ---
   // Lazy load: only fetch when user has a business (business dashboard)
