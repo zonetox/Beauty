@@ -61,7 +61,16 @@ const UserBusinessDashboardPage: React.FC = () => {
         return undefined;
     }, [currentBusiness, isDataLoaded, role, navigate]);
 
+    // DEBUG: Log current state
+    console.log('[UserBusinessDashboardPage] State:', {
+        isDataLoaded,
+        currentBusiness: currentBusiness ? { id: currentBusiness.id, name: currentBusiness.name } : null,
+        role,
+        isBusinessUser
+    });
+
     if (!isDataLoaded) {
+        console.log('[UserBusinessDashboardPage] Rendering: Auth data still loading...');
         return (
             <div className="flex flex-col items-center justify-center min-h-screen bg-background">
                 <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
@@ -71,6 +80,7 @@ const UserBusinessDashboardPage: React.FC = () => {
     }
 
     if (!currentBusiness) {
+        console.log('[UserBusinessDashboardPage] Rendering: No currentBusiness, showing sync message');
         return (
             <div className="flex flex-col items-center justify-center min-h-screen bg-background">
                 <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
@@ -83,6 +93,8 @@ const UserBusinessDashboardPage: React.FC = () => {
             </div>
         );
     }
+
+    console.log('[UserBusinessDashboardPage] Rendering: Dashboard with business:', currentBusiness.name);
 
     const renderContent = () => {
         switch (activeTab) {
