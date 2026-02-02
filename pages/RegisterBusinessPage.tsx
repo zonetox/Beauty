@@ -12,7 +12,7 @@ import { CATEGORIES } from '../constants.ts'; // Ensure we have categories
 
 const RegisterBusinessPage: React.FC = () => {
     const navigate = useNavigate();
-    const { user, register, refreshAuth } = useAuth();
+    const { user, register, refreshAuth, profile, isDataLoaded, role } = useAuth();
 
     // Form State
     const [formData, setFormData] = useState<BusinessRegistrationFormData>({
@@ -29,9 +29,10 @@ const RegisterBusinessPage: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errors, setErrors] = useState<Partial<Record<keyof BusinessRegistrationFormData, string>>>({});
 
-    // If user is ALREADY logged in, show onboarding instead of signup
-    if (user) {
-        return <Navigate to="/business-profile" replace />;
+    // If user is ALREADY logged in and HAS a business, show dashboard instead of signup
+    // If they are just a regular user, let them complete business registration
+    if (isDataLoaded && user && (profile?.business_id || role === 'admin')) {
+        return <Navigate to={role === 'admin' ? "/admin" : "/business-profile"} replace />;
     }
 
     // Handle Input Change

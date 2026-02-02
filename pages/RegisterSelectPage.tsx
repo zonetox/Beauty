@@ -8,17 +8,21 @@ import SEOHead from '../components/SEOHead.tsx';
 
 const RegisterSelectPage: React.FC = () => {
     const navigate = useNavigate();
-    const { state, role } = useAuth();
+    const { state, role, isDataLoaded, profile } = useAuth();
 
     // Redirect ONLY if user already has a role that doesn't need to register
     useEffect(() => {
-        if (state === 'authenticated' && (role === 'admin' || role === 'business_owner' || role === 'business_staff')) {
-            const target = (role === 'admin') ? '/admin' : '/business-profile';
-            navigate(target, { replace: true });
-        } else if (state === 'authenticated' && role === 'user') {
-            navigate('/account', { replace: true });
+        if (state === 'authenticated' && isDataLoaded) {
+            if (role === 'admin' || profile?.business_id || role === 'business_owner' || role === 'business_staff') {
+                const target = (role === 'admin') ? '/admin' : '/business-profile';
+                navigate(target, { replace: true });
+            } else if (role === 'user') {
+                // Regular users stay here to choose "Business" registration if they want
+                // Or if they just wanted "User" registration, they are already logged in so go to account
+                // However, usually if they access this page while logged in as 'user', they want to upgrade to business
+            }
         }
-    }, [state, role, navigate]);
+    }, [state, role, isDataLoaded, profile, navigate]);
 
     const seoTitle = 'Đăng ký tài khoản | 1Beauty.asia';
     const seoDescription = 'Chọn loại tài khoản phù hợp với bạn: Người dùng để tìm kiếm và đặt lịch dịch vụ làm đẹp, hoặc Doanh nghiệp để quảng bá và quản lý dịch vụ của bạn.';

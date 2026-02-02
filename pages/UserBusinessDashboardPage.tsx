@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useBusinessAuth } from '../contexts/BusinessContext.tsx';
+import { useAuth } from '../providers/AuthProvider.tsx';
 import { checkAndHandleTrialExpiry } from '../lib/businessUtils.ts';
 import BusinessDashboardSidebar from '../components/BusinessDashboardSidebar.tsx';
 import DashboardOverview from '../components/DashboardOverview.tsx';
@@ -43,8 +44,10 @@ const UserBusinessDashboardPage: React.FC = () => {
     }, [currentBusiness?.id]);
 
     // If logged in but no business => Redirect to Registration
+    const { isDataLoaded } = useAuth();
+
     useEffect(() => {
-        if (!currentBusiness) {
+        if (isDataLoaded && !currentBusiness) {
             // Give context and then redirect
             const timer = setTimeout(() => {
                 navigate('/register/business', { replace: true });
@@ -52,13 +55,22 @@ const UserBusinessDashboardPage: React.FC = () => {
             return () => clearTimeout(timer);
         }
         return undefined;
-    }, [currentBusiness, navigate]);
+    }, [currentBusiness, isDataLoaded, navigate]);
+
+    if (!isDataLoaded) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+                <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <p className="mt-4 text-lg font-semibold text-neutral-dark">Đang tải dữ liệu doanh nghiệp...</p>
+            </div>
+        );
+    }
 
     if (!currentBusiness) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen bg-background">
                 <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                <p className="mt-4 text-lg font-semibold text-neutral-dark">Đang chuyển tới trang đăng ký...</p>
+                <p className="mt-4 text-lg font-semibold text-neutral-dark">Bạn chưa có doanh nghiệp. Đang chuyển hướng...</p>
             </div>
         );
     }

@@ -12,10 +12,10 @@ const RegisterUserPage: React.FC = () => {
 
     // Redirection useEffect
     useEffect(() => {
-        if (authState === 'authenticated' && isDataLoaded && profile) {
-            const target = (profile.user_type === 'business' || profile.business_id)
-                ? '/business-profile'
-                : '/account';
+        if (authState === 'authenticated' && isDataLoaded) {
+            // Already logged in - take them to appropriate dashboard
+            const hasBusiness = profile?.business_id || profile?.user_type === 'business';
+            const target = hasBusiness ? '/business-profile' : '/account';
             navigate(target, { replace: true });
         }
     }, [authState, isDataLoaded, profile, navigate]);
