@@ -83,8 +83,8 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
         .select('id, business_id, slug, title, excerpt, image_url, content, author, created_date, published_date, status, view_count, is_featured, seo')
         .order('created_date', { ascending: false }),
       supabase.from('reviews')
-        .select('id, user_id, business_id, user_name, user_avatar_url, rating, comment, created_at, status, reply_content, reply_date')
-        .order('created_at', { ascending: false }),
+        .select('id, user_id, business_id, user_name, user_avatar_url, rating, comment, submitted_date, status, reply')
+        .order('submitted_date', { ascending: false }),
       supabase.from('orders')
         .select('id, business_id, business_name, package_id, package_name, amount, status, payment_method, submitted_at, confirmed_at, notes')
         .order('submitted_at', { ascending: false })
@@ -198,7 +198,7 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
     }
   };
   const addReply = async (reviewId: string, replyContent: string) => {
-    const reply = { content: replyContent, replied_date: new Date().toISOString() };
+    const reply = { reply_content: replyContent, reply_date: new Date().toISOString() };
     const { error } = await supabase.from('reviews').update({ reply }).eq('id', reviewId);
     if (error) {
       console.error("Error adding reply:", error);
