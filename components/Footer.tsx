@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext.tsx';
 
@@ -10,6 +10,7 @@ const ZaloIcon: React.FC = () => <svg className="w-6 h-6" fill="currentColor" vi
 
 const Footer: React.FC = () => {
   const { theme } = useTheme();
+  const [logoError, setLogoError] = useState(false);
   const socialLinks = {
     facebook: 'https://facebook.com/1beauty.asia',
     instagram: 'https://instagram.com/1beauty.asia',
@@ -23,8 +24,13 @@ const Footer: React.FC = () => {
           {/* Column 1: Info */}
           <div className="md:col-span-4">
             <Link to="/" className="inline-block mb-6 group">
-              {theme.logo_url ? (
-                <img src={theme.logo_url} alt="1Beauty Asia Logo" className="h-12 w-auto brightness-0 invert" />
+              {(theme.logo_url && !logoError) ? (
+                <img
+                  src={theme.logo_url}
+                  alt="1Beauty Asia Logo"
+                  className="h-12 w-auto brightness-0 invert"
+                  onError={() => setLogoError(true)}
+                />
               ) : (
                 <h3 className="text-2xl font-bold font-outfit text-gradient">1Beauty.asia</h3>
               )}

@@ -60,6 +60,7 @@ const Header: React.FC = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [logoError, setLogoError] = useState(false);
 
   // Get user role from role resolution (based on actual database state)
   const { role, isAdmin, is_business_owner, isBusinessStaff, isLoading: roleLoading } = useUserRole();
@@ -138,8 +139,16 @@ const Header: React.FC = () => {
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link to="/" onClick={() => setIsMenuOpen(false)} className="group">
-              {theme.logo_url ? (
-                <img src={theme.logo_url} alt="1Beauty Asia Logo" className="h-12 w-auto" />
+              {(theme.logo_url && !logoError) ? (
+                <img
+                  src={theme.logo_url}
+                  alt="1Beauty Asia Logo"
+                  className="h-12 w-auto"
+                  onError={() => {
+                    console.warn("Branding logo failed to load, falling back to text.");
+                    setLogoError(true);
+                  }}
+                />
               ) : (
                 <span className="text-2xl font-bold font-outfit text-gradient transition-all duration-300 group-hover:scale-105 inline-block">
                   1Beauty.asia

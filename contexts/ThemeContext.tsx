@@ -139,6 +139,11 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             mergedTheme.logo_url = DEFAULT_THEME.logo_url;
           }
 
+          // Normalize logo_url: ensure absolute path for local files
+          if (mergedTheme.logo_url && !mergedTheme.logo_url.startsWith('http') && !mergedTheme.logo_url.startsWith('/')) {
+            mergedTheme.logo_url = `/${mergedTheme.logo_url}`;
+          }
+
           setTheme(mergedTheme);
           // Save to localStorage for next time
           try {
