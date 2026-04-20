@@ -104,12 +104,12 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
     // Map RPC response to RoleResolutionResult
     return {
       role: context.role,
-      profileId: context.profile.id,
+      profileId: context.profile?.id || null,
       business_id: context.business_id,
       isAdmin: context.role === 'admin',
       is_business_owner: context.role === 'business_owner',
       isBusinessStaff: context.role === 'business_staff',
-      profile: context.profile
+      profile: context.profile || null
     };
 
   } catch (error: unknown) {
