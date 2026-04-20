@@ -106,7 +106,7 @@ const DealsManager: React.FC = () => {
                 await addDeal(dealToSave as Omit<Deal, 'id'>);
             }
             setIsModalOpen(false);
-        } catch (error) {
+        } catch {
             // Error already handled in context with toast
             // Don't close modal on error
         }
@@ -123,7 +123,7 @@ const DealsManager: React.FC = () => {
         try {
             await deleteDeal(confirmDelete.dealId);
             // Success toast is handled in context
-        } catch (error) {
+        } catch {
             // Error already handled in context with toast
         } finally {
             setIsDeleting(null);

@@ -5,7 +5,7 @@ import { Business } from '../types';
 /**
  * Hook to fetch current business by business_id
  * Uses React Query for caching and state management
- * 
+ *
  * @param business_id - The ID of the business to fetch
  * @returns React Query result with business data
  */
@@ -17,7 +17,7 @@ export function useCurrentBusiness(business_id: number | null) {
                 return null;
             }
 
-            console.log('[useCurrentBusiness] Fetching business:', business_id);
+            console.warn('[useCurrentBusiness] Fetching business:', business_id);
 
             const { data, error } = await supabase
                 .from('businesses')
@@ -30,7 +30,7 @@ export function useCurrentBusiness(business_id: number | null) {
                 throw error;
             }
 
-            console.log('[useCurrentBusiness] ✅ Fetch successful:', data?.name);
+            console.warn('[useCurrentBusiness] Fetch successful:', data?.name);
             return data as Business;
         },
         enabled: !!business_id, // Only run if we have a business_id

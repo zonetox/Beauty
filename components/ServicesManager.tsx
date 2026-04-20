@@ -45,7 +45,7 @@ const ServicesManager: React.FC = () => {
                 await addService({ ...serviceToSave, business_id: currentBusiness.id });
             }
             setIsModalOpen(false);
-        } catch (error) {
+        } catch {
             // Error already handled in context with toast
             // Don't close modal on error
         }
@@ -61,7 +61,7 @@ const ServicesManager: React.FC = () => {
         try {
             await deleteService(confirmDelete.serviceId);
             // Success toast is handled in context
-        } catch (error) {
+        } catch {
             // Error already handled in context with toast
         } finally {
             setConfirmDelete({ isOpen: false, serviceId: null });
@@ -101,7 +101,7 @@ const ServicesManager: React.FC = () => {
         setIsReordering(true);
         try {
             await updateServicesOrder(newServices);
-        } catch (error) {
+        } catch {
             // Revert on error
             setLocalServices(currentBusiness?.services || []);
             toast.error('Failed to save service order. Please try again.');

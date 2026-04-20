@@ -1,4 +1,3 @@
-/* eslint-env node */
 // Script to start Vite dev server with Ngrok tunnel
 // Usage: npm run dev:ngrok
 

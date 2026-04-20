@@ -85,15 +85,16 @@ const MembershipAndBilling: React.FC = () => {
     const [isUploadingProof, setIsUploadingProof] = useState(false);
     const [confirmUpgrade, setConfirmUpgrade] = useState<{ isOpen: boolean; package: MembershipPackage | null }>({ isOpen: false, package: null });
     const [uploadProgress, setUploadProgress] = useState(0);
+    const currentBusinessId = currentBusiness?.id ?? null;
 
     const currentPackage = packages.find(p => p.tier === currentBusiness?.membership_tier);
 
     const businessOrders = useMemo(() => {
-        if (!currentBusiness) return [];
-        return orders.filter(o => o.business_id === currentBusiness.id).sort((a, b) =>
+        if (currentBusinessId === null) return [];
+        return orders.filter(o => o.business_id === currentBusinessId).sort((a, b) =>
             new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()
         );
-    }, [orders, currentBusiness?.id]);
+    }, [orders, currentBusinessId]);
 
     // Find the latest order awaiting confirmation (for payment proof upload)
     const latestPendingOrder = useMemo(() => {

@@ -1,0 +1,358 @@
+﻿
+> 1beauty-asia@0.0.0 lint
+> eslint . --ext .ts,.tsx
+
+npm.cmd : (node:1276) ESLintEnvWarning: /* eslint-env */ comments are no longer recognized when linting with flat 
+config and will be reported as errors as of v10.0.0. Replace them with /* global */ comments or define globals in your 
+config file. See https://eslint.org/docs/latest/use/configure/migration-guide#eslint-env-configuration-comments for 
+details. Found in C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\scripts\auto-fix-all.js at line 2.
+At line:2 char:1
++ npm.cmd run lint 2>&1 | Out-File -Encoding utf8 lint-current.txt
++ ~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ((node:1276) ESL...l.js at line 2.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:1276) ESLintEnvWarning: /* eslint-env */ comments are no longer recognized when linting with flat config and 
+will be reported as errors as of v10.0.0. Replace them with /* global */ comments or define globals in your config 
+file. See https://eslint.org/docs/latest/use/configure/migration-guide#eslint-env-configuration-comments for details. 
+Found in C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\scripts\fix-env-vercel.js at line 2.
+(node:1276) ESLintEnvWarning: /* eslint-env */ comments are no longer recognized when linting with flat config and 
+will be reported as errors as of v10.0.0. Replace them with /* global */ comments or define globals in your config 
+file. See https://eslint.org/docs/latest/use/configure/migration-guide#eslint-env-configuration-comments for details. 
+Found in C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\scripts\get-ngrok-url.js at line 1.
+(node:1276) ESLintEnvWarning: /* eslint-env */ comments are no longer recognized when linting with flat config and 
+will be reported as errors as of v10.0.0. Replace them with /* global */ comments or define globals in your config 
+file. See https://eslint.org/docs/latest/use/configure/migration-guide#eslint-env-configuration-comments for details. 
+Found in C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\scripts\health-check.js at line 1.
+(node:1276) ESLintEnvWarning: /* eslint-env */ comments are no longer recognized when linting with flat config and 
+will be reported as errors as of v10.0.0. Replace them with /* global */ comments or define globals in your config 
+file. See https://eslint.org/docs/latest/use/configure/migration-guide#eslint-env-configuration-comments for details. 
+Found in C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\scripts\reset-users-execute.js at line 2.
+(node:1276) ESLintEnvWarning: /* eslint-env */ comments are no longer recognized when linting with flat config and 
+will be reported as errors as of v10.0.0. Replace them with /* global */ comments or define globals in your config 
+file. See https://eslint.org/docs/latest/use/configure/migration-guide#eslint-env-configuration-comments for details. 
+Found in C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\scripts\run-all-checks.js at line 1.
+(node:1276) ESLintEnvWarning: /* eslint-env */ comments are no longer recognized when linting with flat config and 
+will be reported as errors as of v10.0.0. Replace them with /* global */ comments or define globals in your config 
+file. See https://eslint.org/docs/latest/use/configure/migration-guide#eslint-env-configuration-comments for details. 
+Found in C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\scripts\sanitize-docs.js at line 2.
+(node:1276) ESLintEnvWarning: /* eslint-env */ comments are no longer recognized when linting with flat config and 
+will be reported as errors as of v10.0.0. Replace them with /* global */ comments or define globals in your config 
+file. See https://eslint.org/docs/latest/use/configure/migration-guide#eslint-env-configuration-comments for details. 
+Found in C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\scripts\security-audit.js at line 2.
+(node:1276) ESLintEnvWarning: /* eslint-env */ comments are no longer recognized when linting with flat config and 
+will be reported as errors as of v10.0.0. Replace them with /* global */ comments or define globals in your config 
+file. See https://eslint.org/docs/latest/use/configure/migration-guide#eslint-env-configuration-comments for details. 
+Found in C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\scripts\start-dev-with-ngrok.js at line 1.
+(node:1276) ESLintEnvWarning: /* eslint-env */ comments are no longer recognized when linting with flat config and 
+will be reported as errors as of v10.0.0. Replace them with /* global */ comments or define globals in your config 
+file. See https://eslint.org/docs/latest/use/configure/migration-guide#eslint-env-configuration-comments for details. 
+Found in C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\scripts\sync-env-from-vercel-complete.js at line 2.
+(node:1276) ESLintEnvWarning: /* eslint-env */ comments are no longer recognized when linting with flat config and 
+will be reported as errors as of v10.0.0. Replace them with /* global */ comments or define globals in your config 
+file. See https://eslint.org/docs/latest/use/configure/migration-guide#eslint-env-configuration-comments for details. 
+Found in C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\scripts\sync-env-vercel-mcp.js at line 2.
+(node:1276) ESLintEnvWarning: /* eslint-env */ comments are no longer recognized when linting with flat config and 
+will be reported as errors as of v10.0.0. Replace them with /* global */ comments or define globals in your config 
+file. See https://eslint.org/docs/latest/use/configure/migration-guide#eslint-env-configuration-comments for details. 
+Found in C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\scripts\sync-env.js at line 2.
+(node:1276) ESLintEnvWarning: /* eslint-env */ comments are no longer recognized when linting with flat config and 
+will be reported as errors as of v10.0.0. Replace them with /* global */ comments or define globals in your config 
+file. See https://eslint.org/docs/latest/use/configure/migration-guide#eslint-env-configuration-comments for details. 
+Found in C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\scripts\sync-vercel-keys.js at line 2.
+(node:1276) ESLintEnvWarning: /* eslint-env */ comments are no longer recognized when linting with flat config and 
+will be reported as errors as of v10.0.0. Replace them with /* global */ comments or define globals in your config 
+file. See https://eslint.org/docs/latest/use/configure/migration-guide#eslint-env-configuration-comments for details. 
+Found in C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\scripts\verify-connections.js at line 2.
+(node:1276) ESLintEnvWarning: /* eslint-env */ comments are no longer recognized when linting with flat config and 
+will be reported as errors as of v10.0.0. Replace them with /* global */ comments or define globals in your config 
+file. See https://eslint.org/docs/latest/use/configure/migration-guide#eslint-env-configuration-comments for details. 
+Found in C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\scripts\verify-env-and-connection.js at line 2.
+(node:1276) ESLintEnvWarning: /* eslint-env */ comments are no longer recognized when linting with flat config and 
+will be reported as errors as of v10.0.0. Replace them with /* global */ comments or define globals in your config 
+file. See https://eslint.org/docs/latest/use/configure/migration-guide#eslint-env-configuration-comments for details. 
+Found in C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\scripts\verify-env-complete.js at line 2.
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\AdminAnnouncementsManager.tsx
+  55:70  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\AdminSupportTickets.tsx
+  93:154  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\DealsManager.tsx
+  109:18  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  126:18  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\DirectoryMap.tsx
+  147:9  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\LandingPagePreview.tsx
+  27:91  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  47:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  50:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\PageRenderer.tsx
+  28:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\ReportAbuseModal.tsx
+  81:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\ReviewsManager.tsx
+   49:18  warning  '_error' is defined but never used  @typescript-eslint/no-unused-vars
+  168:18  warning  '_error' is defined but never used  @typescript-eslint/no-unused-vars
+  181:18  warning  'error' is defined but never used   @typescript-eslint/no-unused-vars
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\SEOHead.tsx
+  174:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  178:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  197:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  230:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  273:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  288:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\ServicesManager.tsx
+   48:18  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+   64:18  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  104:18  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\SystemSettings.tsx
+   71:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   80:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   82:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  303:65  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  305:69  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\__tests__\PermissionGuard.test.tsx
+   39:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   68:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  116:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\__tests__\ProtectedRoute.test.tsx
+  25:51  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\admin\BlogBulkUpload.tsx
+  36:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  42:52  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\admin\BusinessBulkImporter.tsx
+   46:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   67:52  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  137:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  175:18  warning  'e' is defined but never used             @typescript-eslint/no-unused-vars
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\components\business-landing\VideoSection.tsx
+  21:14  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\AdminPlatformContext.tsx
+   36:62  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  131:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  132:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  175:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  280:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  313:98  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  322:62  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  322:71  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\AuthContext.tsx
+   12:56  warning  Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+   13:30  warning  Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+   25:27  warning  '_logAdminAction' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  111:76  warning  Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\BlogDataContext.tsx
+   39:8    warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   67:31   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  200:150  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  241:167  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  289:144  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  297:40   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\BusinessBlogDataContext.tsx
+   69:24  warning  '_setAppointments' is assigned a value but never used                              @typescript-eslint/no-unused-vars
+  163:11  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  173:9   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\BusinessDataContext.tsx
+    85:44   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   148:102  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   149:53   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   150:49   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   151:53   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   314:50   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   350:44   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   417:80   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   440:50   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   441:51   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   442:50   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   443:48   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   466:51   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   468:46   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   512:43   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   534:43   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   798:44   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  1242:43   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  1323:39   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\HomepageDataContext.tsx
+   71:16  warning  'error' is defined but never used                                                  @typescript-eslint/no-unused-vars
+   90:7   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  145:78  warning  Unexpected any. Specify a different type                                           @typescript-eslint/no-explicit-any
+  148:11  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  199:43  warning  Unexpected any. Specify a different type                                           @typescript-eslint/no-explicit-any
+  203:57  warning  Unexpected any. Specify a different type                                           @typescript-eslint/no-explicit-any
+  226:39  warning  Unexpected any. Specify a different type                                           @typescript-eslint/no-explicit-any
+  230:53  warning  Unexpected any. Specify a different type                                           @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\StaffContext.tsx
+  45:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\contexts\__tests__\BusinessDataContext.test.tsx
+  25:53  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  26:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  37:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  45:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  52:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  79:47  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\hooks\useCurrentBusiness.ts
+  20:13  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  33:13  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\hooks\usePerformanceMonitoring.ts
+  189:51  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  189:84  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  193:85  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  200:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  202:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  202:68  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  207:72  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  215:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  222:73  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\hooks\useStaffPermissions.ts
+  45:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\lib\__tests__\utils-extended.test.ts
+   9:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  18:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  30:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  36:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  44:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  45:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  51:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\lib\__tests__\utils.test.ts
+  73:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  77:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\lib\businessUtils.ts
+  176:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  197:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\lib\cacheManager.ts
+  170:16  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\lib\geminiService.ts
+  7:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\lib\roleResolution.ts
+   65:52  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   74:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   90:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  184:65  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  213:67  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\lib\safeFetch.ts
+  123:51  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  142:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\lib\useErrorHandler.ts
+  20:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  51:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\lib\utils.ts
+   13:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   37:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  108:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\lib\validation-utils.ts
+  20:59   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  24:101  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  45:86   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\pages\BlogListPage.tsx
+  246:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\pages\BlogPostPage.tsx
+  36:86  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\pages\LoginPage.tsx
+  42:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\pages\RegisterBusinessPage.tsx
+   95:23  warning  Unexpected any. Specify a different type                                           @typescript-eslint/no-explicit-any
+   97:13  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  102:13  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\pages\RegisterUserPage.tsx
+  43:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\pages\UserBusinessDashboardPage.tsx
+  65:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  73:9  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  83:9  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  97:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\scripts\check-schema-sync.ts
+   21:1   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+   24:1   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+   62:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+   66:9   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+   92:17  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+   95:21  warning  Unexpected any. Specify a different type                                           @typescript-eslint/no-explicit-any
+  102:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  110:10  warning  Unexpected any. Specify a different type                                           @typescript-eslint/no-explicit-any
+  117:9   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  124:9   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\supabase\functions\bulk-import-businesses\index.ts
+  28:28  warning  Unexpected any. Specify a different type                                           @typescript-eslint/no-explicit-any
+  29:27  warning  Unexpected any. Specify a different type                                           @typescript-eslint/no-explicit-any
+  32:9   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  63:49  warning  'searchError' is assigned a value but never used                                   @typescript-eslint/no-unused-vars
+  68:21  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  79:21  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  99:23  warning  'workingHours' is assigned a value but never used                                  @typescript-eslint/no-unused-vars
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\tests\e2e\admin-verification.spec.ts
+   71:9  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+   87:9  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  119:9  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\tests\e2e\critical-paths.spec.ts
+  110:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\tests\e2e\example.spec.ts
+  28:14  warning  'e' is defined but never used                                                      @typescript-eslint/no-unused-vars
+  30:7   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  55:14  warning  'e' is defined but never used                                                      @typescript-eslint/no-unused-vars
+  56:7   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\tests\regression\critical-paths.test.ts
+  141:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\tests\setup.ts
+   11:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   61:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   81:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   82:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  109:6   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  117:6   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Dell\Desktop\GITHUB CODE\Beauty-main\types.ts
+  154:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  268:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 178 problems (0 errors, 178 warnings)
+

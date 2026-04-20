@@ -27,7 +27,7 @@ const UserAccountPage: React.FC = () => {
             const timeoutId = setTimeout(() => setLoadTimeout(true), 10000);
             return () => clearTimeout(timeoutId);
         }
-        setLoadTimeout(false);
+        void Promise.resolve().then(() => setLoadTimeout(false));
         return undefined;
     }, [loading]);
 
@@ -41,7 +41,9 @@ const UserAccountPage: React.FC = () => {
     // Get favorite businesses
     const favoriteBusinesses = businesses.filter(b => isFavorite(b.id));
 
-    if (loading && !loadTimeout) {
+    const hasLoadTimeout = loading && loadTimeout;
+
+    if (loading && !hasLoadTimeout) {
         return (
             <div className="container mx-auto px-4 py-16 text-center">
                 <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -50,7 +52,7 @@ const UserAccountPage: React.FC = () => {
         );
     }
 
-    if (loadTimeout || (!loading && !currentUser)) {
+    if (hasLoadTimeout || (!loading && !currentUser)) {
         return (
             <div className="container mx-auto px-4 py-16">
                 <EmptyState title="Lỗi tải tài khoản" message="Không thể tải thông tin tài khoản." />

@@ -167,7 +167,7 @@ export class CacheManager<T> {
         if (stored) {
           return JSON.parse(stored);
         }
-      } catch (e) {
+      } catch {
         // Silently fail
       }
     }
@@ -313,3 +313,4 @@ export const invalidateCacheBatches = {
     }
   }
 };
+

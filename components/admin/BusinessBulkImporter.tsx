@@ -172,7 +172,7 @@ const BusinessBulkImporter: React.FC = () => {
                     }
                 }
             );
-        } catch (e) {
+        } catch {
             setImportLog(prev => [...prev, `❌ Invalid Configuration: Could not create Supabase Client.`]);
             setIsImporting(false);
             return;
@@ -409,3 +409,4 @@ const BusinessBulkImporter: React.FC = () => {
 };
 
 export default BusinessBulkImporter;
+

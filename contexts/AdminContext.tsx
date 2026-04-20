@@ -97,7 +97,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         let hasAttemptedAuth = false;
 
         const safetyTimeout = setTimeout(() => {
-            if (mounted && loading && hasAttemptedAuth) {
+            if (mounted && hasAttemptedAuth) {
                 setLoading(false);
             }
         }, 15000);
@@ -205,9 +205,9 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
             if (announcementsRes.data) setAnnouncements(announcementsRes.data as unknown as Announcement[]);
             if (ticketsRes.data) {
-                const mappedTickets = (ticketsRes.data as unknown as (SupportTicket & { businesses?: { name: string } })[]).map(t => ({
+                const mappedTickets = (ticketsRes.data as unknown as (SupportTicket & { businesses?: { name: string }; business_name?: string })[]).map(t => ({
                     ...(t as unknown as SupportTicket),
-                    business_name: t.businesses?.name || (t as any).business_name || 'Unknown Business'
+                    business_name: t.businesses?.name || t.business_name || 'Unknown Business'
                 }));
                 setTickets(mappedTickets as SupportTicket[]);
             }
@@ -299,7 +299,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (!ticket) return;
         const updatedReplies = [...(ticket.replies || []), { ...replyData, id: crypto.randomUUID(), created_at: new Date().toISOString() }];
         const { data, error } = await supabase.from('support_tickets').update({
-            replies: updatedReplies as any,
+            replies: updatedReplies as unknown as TicketReply[],
             last_reply_at: new Date().toISOString()
         }).eq('id', ticketId).select().single();
         if (!error && data) setTickets(prev => prev.map(t => t.id === ticketId ? (data as unknown as SupportTicket) : t));
@@ -321,7 +321,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const updateSettings = async (newSettings: AppSettings) => {
         if (!isSupabaseConfigured) return;
-        const { data, error } = await supabase.from('app_settings').upsert({ id: 1, settings_data: newSettings as any }, { onConflict: 'id' }).select().single();
+        const { data, error } = await supabase.from('app_settings').upsert({ id: 1, settings_data: newSettings as unknown as Record<string, unknown> }, { onConflict: 'id' }).select().single();
         if (!error && data) setSettings(data.settings_data as unknown as AppSettings);
     };
 

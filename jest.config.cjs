@@ -22,6 +22,7 @@ module.exports = {
   ],
   testPathIgnorePatterns: [
     '/node_modules/',
+    '/\\.agent/',
     '/\\.cursor/',
     '/\\.antigravity/',
     '/\\.vscode/',
@@ -44,6 +45,10 @@ module.exports = {
     '.*Partner Relationship.*',
     '<rootDir>/tests/setup.ts', // Exclude setup file from being treated as a test
     '<rootDir>/tests/mocks/import-meta.ts' // Exclude mock file from being treated as a test
+  ],
+  modulePathIgnorePatterns: [
+    '<rootDir>/.agent/',
+    '<rootDir>/.cursor/'
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
@@ -88,6 +93,10 @@ module.exports = {
   testTimeout: 10000,
   transformIgnorePatterns: [
     'node_modules/(?!(react-router-dom|react-router|@supabase|@google/genai)/)'
+  ],
+  watchPathIgnorePatterns: [
+    '<rootDir>/.agent/',
+    '<rootDir>/.cursor/'
   ],
   extensionsToTreatAsEsm: [],
 };

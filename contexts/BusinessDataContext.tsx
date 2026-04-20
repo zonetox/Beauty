@@ -616,7 +616,13 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
    */
   const addBusiness = async (newBusiness: Business): Promise<Business | null> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add business."); return null; }
-    const { id: _id, services: _services, gallery: _gallery, team: _team, deals: _deals, reviews: _reviews, ...businessData } = newBusiness;
+    const businessData = { ...newBusiness } as Partial<Business>;
+    delete businessData.id;
+    delete businessData.services;
+    delete businessData.gallery;
+    delete businessData.team;
+    delete businessData.deals;
+    delete businessData.reviews;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await supabase.from('businesses').insert(toSnakeCase(businessData) as any).select().single();
     if (error) { console.error('Error adding business:', error.message); return null; }
@@ -635,17 +641,15 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
 
     // Strip relational fields and internal fields that are NOT columns in the businesses table
     // to prevent "400 Bad Request" errors from Supabase
-    const {
-      id,
-      services: _s,
-      gallery: _g,
-      team: _t,
-      deals: _d,
-      reviews: _r,
-      business_blog_posts: _b,
-
-      ...businessToUpdate
-    } = updatedBusiness;
+    const { id } = updatedBusiness;
+    const businessToUpdate = { ...updatedBusiness } as Partial<Business & { business_blog_posts?: unknown }>;
+    delete businessToUpdate.id;
+    delete businessToUpdate.services;
+    delete businessToUpdate.gallery;
+    delete businessToUpdate.team;
+    delete businessToUpdate.deals;
+    delete businessToUpdate.reviews;
+    delete businessToUpdate.business_blog_posts;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await supabase.from('businesses').update(toSnakeCase(businessToUpdate) as any).eq('id', id);
@@ -776,7 +780,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     });
 
     return fullBusiness;
-  }, [isSupabaseConfigured]); // Remove businesses dependency to prevent function recreation
+  }, []); // Remove businesses dependency to prevent function recreation
 
   // D2.2 FIX: Use safe RPC function for view count increment
   const incrementBusinessview_count = async (business_id: number) => {
@@ -1172,7 +1176,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       try {
         const savedCommentsJSON = localStorage.getItem(COMMENTS_LOCAL_STORAGE_KEY);
         setComments(savedCommentsJSON ? JSON.parse(savedCommentsJSON) : []);
-      } catch (e) {
+      } catch {
         setComments([]);
       }
     }

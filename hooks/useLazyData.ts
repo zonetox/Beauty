@@ -24,6 +24,8 @@ interface LazyDataState {
   };
 }
 
+type BusinessMarker = LazyDataState['markers'][number];
+
 export function useLazyData() {
   const [state, setState] = useState<LazyDataState>({
     blog_posts: [],
@@ -163,7 +165,7 @@ export function useLazyData() {
 
   const loadMarkers = useCallback(async () => {
     // Check cache first
-    const cached = cacheManager.get<typeof state.markers>(CACHE_KEYS.MARKERS);
+    const cached = cacheManager.get<BusinessMarker[]>(CACHE_KEYS.MARKERS);
     if (cached) {
       setState(prev => ({
         ...prev,
@@ -200,7 +202,7 @@ export function useLazyData() {
       }
     );
 
-    const markers = result.data ? (result.data as unknown as typeof state.markers) : [];
+    const markers = result.data ? (result.data as unknown as BusinessMarker[]) : [];
 
     // Cache the result
     if (markers.length > 0) {

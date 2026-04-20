@@ -5,7 +5,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 
 export default tseslint.config(
   {
-    ignores: ['dist', 'node_modules', '*.config.js', '*.config.ts', 'build'],
+    ignores: ['dist', 'node_modules', 'build', '.agent/**', '.cursor/**', '*.config.js', '*.config.ts'],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -36,12 +36,33 @@ export default tseslint.config(
       'react/react-in-jsx-scope': 'off',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'no-debugger': 'warn',
       'prefer-const': 'warn',
       'no-var': 'error',
+    },
+  },
+  {
+    files: [
+      'components/__tests__/**/*.{ts,tsx}',
+      'contexts/__tests__/**/*.{ts,tsx}',
+      'lib/__tests__/**/*.{ts,tsx}',
+      'tests/**/*.{ts,tsx}',
+    ],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      'no-console': 'off',
+    },
+  },
+  {
+    files: ['scripts/**/*.{ts,js}', 'supabase/functions/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      'no-console': 'off',
     },
   },
   {
@@ -75,3 +96,4 @@ export default tseslint.config(
     },
   }
 );
+

@@ -92,16 +92,20 @@ const RegisterBusinessPage: React.FC = () => {
             toast.success('Đăng ký doanh nghiệp thành công!');
             navigate('/business-profile', { replace: true });
 
-        } catch (err: any) {
-            // DEEP INDUSTRIAL LOGGING
-            console.group('Registration Critical Error Diagnostics');
-            console.error('Core Error:', err);
-            console.error('Error Message:', err.message);
-            console.error('Error Code:', err.code);
-            console.error('Metadata used:', { email: formData.email, business: formData.business_name });
-            console.groupEnd();
+        } catch (error: unknown) {
+            const errorDetails = error instanceof Error ? error : new Error('Unknown registration error');
+            const errorCode = typeof error === 'object' && error !== null && 'code' in error
+                ? String((error as { code?: unknown }).code ?? '')
+                : undefined;
 
-            let msg = err.message || 'Đăng ký thất bại.';
+            console.error('Registration Critical Error Diagnostics:', {
+                error: errorDetails,
+                message: errorDetails.message,
+                code: errorCode,
+                metadata: { email: formData.email, business: formData.business_name },
+            });
+
+            let msg = errorDetails.message || 'Đăng ký thất bại.';
 
             if (msg.includes('rate limit')) msg = 'Quá nhiều yêu cầu. Vui lòng thử lại sau 1 phút.';
             if (msg.includes('already registered') || msg.includes('User already registered')) {
@@ -315,3 +319,4 @@ const RegisterBusinessPage: React.FC = () => {
 };
 
 export default RegisterBusinessPage;
+

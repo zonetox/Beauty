@@ -35,20 +35,7 @@ const env = loadEnvFile(path.join(rootDir, '.env.local'));
 const supabaseUrl = env.SUPABASE_URL || env.VITE_SUPABASE_URL;
 const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SECRET_KEY;
 
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-async function applyMigration() {
-    console.log('🚀 Đang thực thi SQL Migration trên Supabase...');
-
-    // Chúng ta sẽ sử dụng SQL trực tiếp thông qua RPC nếu có, 
-    // hoặc thông qua việc gọi một Edge Function có quyền thực thi SQL.
-    // Tuy nhiên, Supabase JS SDK không hỗ trợ chạy SQL trực tiếp trừ khi có hàm RPC custom.
-    // Ở đây, tôi sẽ thử kiểm tra xem có hàm exec_sql hoặc tương tự không.
-
-    // Giải pháp thay thế: Vì tôi có POSTGRES_URL, tôi sẽ dùng thư viện 'pg' nếu có trong project.
-    // Tôi đã thấy project có 'pg' trong package.json.
-    console.log('💡 Sử dụng thư viện pg để thực thi lệnh ALTER TABLE...');
-}
+createClient(supabaseUrl, supabaseKey);
 
 import pkg from 'pg';
 const { Client } = pkg;

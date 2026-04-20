@@ -178,7 +178,7 @@ const ReviewsManager: React.FC = () => {
             await toggleReviewVisibility(review.id);
             const newStatus = review.status === ReviewStatus.VISIBLE ? ReviewStatus.HIDDEN : ReviewStatus.VISIBLE;
             toast.success(`Review ${newStatus === ReviewStatus.HIDDEN ? 'hidden' : 'shown'} successfully!`);
-        } catch (error) {
+        } catch {
             // Error already handled in context with toast
         } finally {
             setTogglingId(null);

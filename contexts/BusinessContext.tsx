@@ -86,21 +86,15 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
   // This eliminates dependency on PublicDataContext.businesses list
   const business_id = profile?.business_id || null;
 
-  useEffect(() => {
-    const fetchCurrentBusiness = async () => {
-      if (!business_id) {
-        console.log('[BusinessContext] No business_id, clearing currentBusiness');
-        setCurrentBusiness(null);
-        return;
-      }
+    useEffect(() => {
+      const fetchCurrentBusiness = async () => {
+        if (!business_id) {
+          console.warn('[BusinessContext] No business_id, clearing currentBusiness');
+          setCurrentBusiness(null);
+          return;
+        }
 
-      // Skip if we already have the correct business
-      if (currentBusiness && currentBusiness.id === business_id) {
-        console.log('[BusinessContext] Current business already loaded:', currentBusiness.name);
-        return;
-      }
-
-      console.log('[BusinessContext] Fetching business:', business_id);
+      console.warn('[BusinessContext] Fetching business:', business_id);
 
       try {
         const { data, error } = await supabase
@@ -116,7 +110,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
         }
 
         if (data) {
-          console.log('[BusinessContext] ✅ Fetch successful:', data.name);
+          console.warn('[BusinessContext] Business loaded:', data.name);
           setCurrentBusiness(data as unknown as Business);
         }
       } catch (err) {
@@ -337,7 +331,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       slug: slug,
       view_count: 0,
     };
-    const { error } = await supabase.from('business_blog_posts').insert(postToAdd as any);
+    const { error } = await supabase.from('business_blog_posts').insert(postToAdd as unknown as Record<string, unknown>);
     if (error) {
       console.error("Error adding business post:", error.message);
       toast.error(`Failed to add post: ${error.message}`);
@@ -366,7 +360,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     }
 
     const { id, ...postToUpdate } = updatedPost;
-    const { error } = await supabase.from('business_blog_posts').update(toSnakeCase(postToUpdate) as any).eq('id', id);
+    const { error } = await supabase.from('business_blog_posts').update(toSnakeCase(postToUpdate) as unknown as Record<string, unknown>).eq('id', id);
     if (error) {
       console.error("Error updating business post:", error.message);
       toast.error(`Failed to update post: ${error.message}`);
@@ -474,7 +468,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
   const addAppointment = async (newAppointmentData: Omit<Appointment, 'id' | 'created_at'>) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot add appointment."); throw new Error("Preview Mode"); }
     const appointmentToAdd = toSnakeCase(newAppointmentData);
-    const { error } = await supabase.from('appointments').insert(appointmentToAdd as any);
+    const { error } = await supabase.from('appointments').insert(appointmentToAdd as unknown as Record<string, unknown>);
     if (error) {
       console.error("Error adding appointment:", error.message);
       throw error;

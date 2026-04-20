@@ -18,7 +18,7 @@ const getYoutubeEmbedUrl = (url?: string): string | null => {
         if (videoId) {
             return `https://www.youtube.com/embed/${videoId}?autoplay=0&rel=0`;
         }
-    } catch (e) {
+    } catch {
         console.error("Invalid YouTube URL provided for business:", url);
     }
     return null;
@@ -54,3 +54,4 @@ const VideoSection: React.FC<VideoSectionProps> = ({ business }) => {
 };
 
 export default VideoSection;
+

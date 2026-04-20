@@ -11,6 +11,11 @@ interface HomepageDataContextType {
   loading: boolean;
 }
 
+type HomepageQueryResult = {
+  data: { content_data: HomepageData | null } | null;
+  error: { code?: string; message?: string } | null;
+};
+
 const HomepageDataContext = createContext<HomepageDataContextType | undefined>(undefined);
 
 const LOCAL_STORAGE_KEY = 'homepage_content'; // Keep for cache/fallback only
@@ -68,7 +73,7 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
             sections: finalSections,
           };
         }
-      } catch (error) {
+      } catch {
         // Ignore cache parse errors, use default
       }
     }
@@ -87,7 +92,7 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
     // --- CACHE-FIRST: Check for cached homepage data (7-10 min cache) ---
     const cachedData = homepageCacheManager.get();
     if (cachedData !== null) {
-      console.log('✓ Using cached homepage data');
+      console.warn('Using cached homepage data');
       setHomepageData(cachedData as HomepageData);
       setLoading(false);
       return;
@@ -127,7 +132,8 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
 
     try {
       // Fetch from database with timeout protection
-      let data, error;
+      let data: HomepageQueryResult['data'] = null;
+      let error: HomepageQueryResult['error'] = null;
       try {
         const queryPromise = supabase
           .from('page_content')
@@ -142,10 +148,10 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
 
         // Performance logging
         const startTime = performance.now();
-        const result = await Promise.race([queryPromise, timeoutPromise]) as any;
+        const result = await Promise.race([queryPromise, timeoutPromise]) as HomepageQueryResult;
         const duration = performance.now() - startTime;
         if (result.error?.code !== 'TIMEOUT') {
-          console.log(`[PERF] Homepage Content: ${duration.toFixed(2)}ms`);
+          console.warn(`[PERF] Homepage Content: ${duration.toFixed(2)}ms`);
         }
         data = result.data;
         error = result.error;
@@ -196,11 +202,11 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
             const defaultSections = DEFAULT_HOMEPAGE_DATA.sections;
             let finalSections = savedData.sections || [];
             defaultSections.forEach(defaultSection => {
-              if (!finalSections.find((s: any) => s.type === defaultSection.type)) {
+              if (!finalSections.find((s: HomepageSection) => s.type === defaultSection.type)) {
                 finalSections.push(defaultSection);
               }
             });
-            finalSections = finalSections.map((section: any) => {
+            finalSections = finalSections.map((section: HomepageSection) => {
               const defaultMatch = defaultSections.find(s => s.type === section.type);
               return { ...defaultMatch, ...section };
             });
@@ -210,8 +216,8 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
               sections: finalSections,
             };
             setHomepageData(mergedData);
-          } catch (e) {
-            console.error('Failed to parse cached data:', e);
+          } catch (error) {
+            console.error('Failed to parse cached data:', error);
             setHomepageData(DEFAULT_HOMEPAGE_DATA);
           }
         } else {
@@ -223,11 +229,11 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
         const defaultSections = DEFAULT_HOMEPAGE_DATA.sections;
         let finalSections = dbData.sections || [];
         defaultSections.forEach(defaultSection => {
-          if (!finalSections.find((s: any) => s.type === defaultSection.type)) {
+          if (!finalSections.find((s: HomepageSection) => s.type === defaultSection.type)) {
             finalSections.push(defaultSection);
           }
         });
-        finalSections = finalSections.map((section: any) => {
+        finalSections = finalSections.map((section: HomepageSection) => {
           const defaultMatch = defaultSections.find(s => s.type === section.type);
           return { ...defaultMatch, ...section };
         });
@@ -242,8 +248,8 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
         // Cache in localStorage for offline/fallback
         try {
           localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mergedData));
-        } catch (e) {
-          console.warn('Failed to cache homepage data:', e);
+        } catch (error) {
+          console.warn('Failed to cache homepage data:', error);
         }
       } else {
         setHomepageData(DEFAULT_HOMEPAGE_DATA);
@@ -297,15 +303,15 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
         // Fallback to localStorage
         try {
           localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
-        } catch (e) {
-          console.error('Failed to save to localStorage:', e);
+        } catch (error) {
+          console.error('Failed to save to localStorage:', error);
         }
       } else {
         // Cache in localStorage for offline/fallback
         try {
           localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
-        } catch (e) {
-          console.warn('Failed to cache homepage data:', e);
+        } catch (error) {
+          console.warn('Failed to cache homepage data:', error);
         }
       }
     } catch (error) {
@@ -313,8 +319,8 @@ export const HomepageDataProvider: React.FC<{ children: ReactNode }> = ({ childr
       // Fallback to localStorage
       try {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
-      } catch (e) {
-        console.error('Failed to save to localStorage:', e);
+      } catch (fallbackError) {
+        console.error('Failed to save to localStorage:', fallbackError);
       }
     }
   };

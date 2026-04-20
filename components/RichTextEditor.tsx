@@ -2,7 +2,20 @@
 import React, { useRef, useEffect } from 'react';
 
 // Quill is loaded from a CDN script, so we declare it to satisfy TypeScript.
-declare const Quill: any; // External global
+interface QuillInstance {
+    clipboard: { dangerouslyPasteHTML: (html: string, source?: string) => void };
+    root: { innerHTML: string };
+    on: (event: 'text-change', handler: (_delta: unknown, _oldDelta: unknown, source: string) => void) => void;
+    container: HTMLDivElement;
+}
+
+declare const Quill: {
+    new (element: HTMLDivElement, options: {
+        modules: { toolbar: unknown[] };
+        placeholder: string;
+        theme: string;
+    }): QuillInstance;
+}; // External global
 
 interface RichTextEditorProps {
     value: string;
@@ -12,7 +25,22 @@ interface RichTextEditorProps {
 
 const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeholder = "Viết nội dung của bạn ở đây..." }) => {
     const editorRef = useRef<HTMLDivElement>(null);
-    const quillRef = useRef<any>(null);
+    const quillRef = useRef<QuillInstance | null>(null);
+    const onChangeRef = useRef(onChange);
+    const placeholderRef = useRef(placeholder);
+    const valueRef = useRef(value);
+
+    useEffect(() => {
+        onChangeRef.current = onChange;
+    }, [onChange]);
+
+    useEffect(() => {
+        placeholderRef.current = placeholder;
+    }, [placeholder]);
+
+    useEffect(() => {
+        valueRef.current = value;
+    }, [value]);
 
     // This effect initializes the Quill editor. It runs only once.
     useEffect(() => {
@@ -30,18 +58,18 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
                 modules: {
                     toolbar: toolbarOptions,
                 },
-                placeholder: placeholder,
+                placeholder: placeholderRef.current,
                 theme: 'snow'
             });
 
             // Set initial content
             const quill = quillRef.current;
-            quill.clipboard.dangerouslyPasteHTML(value || '');
+            quill.clipboard.dangerouslyPasteHTML(valueRef.current || '');
 
             // Add listener for text changes
-            quill.on('text-change', (_delta: any, _oldDelta: any, source: string) => {
+            quill.on('text-change', (_delta: unknown, _oldDelta: unknown, source: string) => {
                 if (source === 'user') {
-                    onChange(quill.root.innerHTML);
+                    onChangeRef.current(quill.root.innerHTML);
                 }
             });
         }

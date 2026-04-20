@@ -133,8 +133,8 @@ Trả về JSON format:
       
       // Fallback: extract title, excerpt, and content from text
       const lines = response.split('\n').filter(line => line.trim());
-      const title = lines.find(line => line.includes('title') || line.match(/^[A-ZÀ-Ỹ]/))?.replace(/title[:\-]?\s*/i, '').trim() || topic;
-      const excerpt = lines.find(line => line.includes('excerpt') || line.length < 150)?.replace(/excerpt[:\-]?\s*/i, '').trim() || '';
+      const title = lines.find(line => line.includes('title') || line.match(/^[A-ZÀ-Ỹ]/))?.replace(/title[:-]?\s*/i, '').trim() || topic;
+      const excerpt = lines.find(line => line.includes('excerpt') || line.length < 150)?.replace(/excerpt[:-]?\s*/i, '').trim() || '';
       const content = response;
 
       return {
@@ -206,7 +206,7 @@ Format: Mỗi đề xuất trên một dòng, không đánh số.`;
     const suggestions = response
       .split('\n')
       .map(line => line.trim())
-      .filter(line => line.length > 0 && !line.match(/^\d+[\.\)]/))
+      .filter(line => line.length > 0 && !line.match(/^\d+[.)]/))
       .slice(0, 5);
     
     return suggestions.length > 0 ? suggestions : null;

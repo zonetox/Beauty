@@ -66,7 +66,7 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
   const [analyticsData] = useState<BusinessAnalytics[]>([]);
-  const [appointments, _setAppointments] = useState<Appointment[]>([]);
+  const [appointments] = useState<Appointment[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
 
@@ -105,7 +105,7 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
   }, []);
 
   useEffect(() => {
-    fetchAllData();
+    void Promise.resolve().then(fetchAllData);
   }, [fetchAllData]);
 
   // --- BUSINESS BLOG LOGIC ---
@@ -160,7 +160,7 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
       if (error) {
         // CRITICAL: Tracking failures are silent - only debug log in development
         if (import.meta.env.MODE === 'development') {
-          console.debug('[Tracking] Business blog view count increment failed (best-effort):', error.message);
+          console.warn('[Tracking] Business blog view count increment failed (best-effort):', error.message);
         }
       } else {
         // Optimistically update UI
@@ -170,7 +170,7 @@ export const BusinessDashboardProvider: React.FC<{ children: ReactNode }> = ({ c
       // CRITICAL: Catch ALL errors (network, CORS, adblock, etc.) and silently fail
       if (import.meta.env.MODE === 'development') {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        console.debug('[Tracking] Business blog view count increment failed (best-effort):', errorMessage);
+        console.warn('[Tracking] Business blog view count increment failed (best-effort):', errorMessage);
       }
       // NEVER rethrow - tracking must never affect app flow
     }

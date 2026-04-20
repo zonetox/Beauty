@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* eslint-env node */
 /**
  * Script tự động fix tất cả - KHÔNG PUSH CODE
  * 

@@ -1,4 +1,3 @@
-/* eslint-env node */
 // Script to get current Ngrok URL from web interface
 // Usage: node scripts/get-ngrok-url.js
 

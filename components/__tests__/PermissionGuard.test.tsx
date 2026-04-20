@@ -54,7 +54,7 @@ describe('PermissionGuard', () => {
     expect(screen.getByText('Protected Content')).toBeInTheDocument();
   });
 
-  it('should show ForbiddenState when user does not have permission', () => {
+  it('should show permission warning when user does not have permission', () => {
     const userWithoutPermission: AuthenticatedAdmin = {
       id: 1,
       admin_username: 'admin',
@@ -80,7 +80,8 @@ describe('PermissionGuard', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('Access Denied')).toBeInTheDocument();
+    expect(screen.getByText(/Bạn không có quyền truy cập chức năng này/i)).toBeInTheDocument();
+    expect(screen.getByText(/\(can_manage_businesses\)/)).toBeInTheDocument();
     expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
   });
 

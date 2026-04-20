@@ -62,7 +62,7 @@ const UserBusinessDashboardPage: React.FC = () => {
     }, [currentBusiness, isDataLoaded, role, navigate]);
 
     // DEBUG: Log current state
-    console.log('[UserBusinessDashboardPage] State:', {
+    console.warn('[UserBusinessDashboardPage] State:', {
         isDataLoaded,
         currentBusiness: currentBusiness ? { id: currentBusiness.id, name: currentBusiness.name } : null,
         role,
@@ -70,7 +70,7 @@ const UserBusinessDashboardPage: React.FC = () => {
     });
 
     if (!isDataLoaded) {
-        console.log('[UserBusinessDashboardPage] Rendering: Auth data still loading...');
+        console.warn('[UserBusinessDashboardPage] Rendering: Auth data still loading...');
         return (
             <div className="flex flex-col items-center justify-center min-h-screen bg-background">
                 <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
@@ -80,7 +80,7 @@ const UserBusinessDashboardPage: React.FC = () => {
     }
 
     if (!currentBusiness) {
-        console.log('[UserBusinessDashboardPage] Rendering: No currentBusiness, showing sync message');
+        console.warn('[UserBusinessDashboardPage] Rendering: No currentBusiness, showing sync message');
         return (
             <div className="flex flex-col items-center justify-center min-h-screen bg-background">
                 <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
@@ -94,7 +94,7 @@ const UserBusinessDashboardPage: React.FC = () => {
         );
     }
 
-    console.log('[UserBusinessDashboardPage] Rendering: Dashboard with business:', currentBusiness.name);
+    console.warn('[UserBusinessDashboardPage] Rendering: Dashboard with business:', currentBusiness.name);
 
     const renderContent = () => {
         switch (activeTab) {
@@ -172,3 +172,7 @@ const UserBusinessDashboardPage: React.FC = () => {
 };
 
 export default UserBusinessDashboardPage;
+
+
+
+

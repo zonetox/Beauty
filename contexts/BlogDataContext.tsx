@@ -172,7 +172,7 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
   }, []);
 
   useEffect(() => {
-    fetchBlogCategories();
+    void Promise.resolve().then(fetchBlogCategories);
   }, [fetchBlogCategories]);
 
   // Remove unused function

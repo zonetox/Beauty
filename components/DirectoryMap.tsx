@@ -144,7 +144,7 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedbusi
             b.lngNum > 0
         );
 
-        console.log(`DirectoryMap: processing ${businesses.length} raw -> ${validBusinesses.length} valid businesses`);
+        console.warn(`DirectoryMap: processing ${businesses.length} raw -> ${validBusinesses.length} valid businesses`);
 
         validBusinesses.forEach(business => {
             const popupContent = ReactDOMServer.renderToString(<MapBusinessCard business={business} />);
@@ -237,3 +237,4 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedbusi
 };
 
 export default DirectoryMap;
+

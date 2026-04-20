@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* eslint-env node */
 /**
  * Script sanitize documentation files - thay thế real secrets bằng placeholders
  */

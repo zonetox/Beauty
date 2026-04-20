@@ -101,7 +101,6 @@ Deno.serve(async (req: Request) => {
     }
 
     // 2. Check if user already exists
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { data: existingProfile, error: _profileError } = await supabaseAdmin
       .from('profiles')
       .select('id, email')
@@ -170,7 +169,6 @@ Deno.serve(async (req: Request) => {
     }
 
     // 3. Check if user is already a staff member for this business
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { data: existingStaff, error: _staffCheckError } = await supabaseAdmin
       .from('business_staff')
       .select('id')
@@ -213,3 +211,4 @@ Deno.serve(async (req: Request) => {
     return createErrorResponse(error instanceof Error ? error.message : 'An unexpected error occurred', 500, req.headers.get('origin'), 'INTERNAL_ERROR');
   }
 });
+
