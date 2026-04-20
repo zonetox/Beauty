@@ -54,6 +54,14 @@ yarn-error.log*
 *.sqlite
 *.sqlite3
 
+# Security & Secrets (Recursive)
+**/.env*
+**/*.key
+**/*.pem
+**/*.secret
+**/.vercel
+.vercel/
+
 # Misc
 .cursor/
 .antigravity/

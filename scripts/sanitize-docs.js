@@ -11,20 +11,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
 
-// Real secrets cần thay thế
+// Placeholder secrets for sanitization patterns
 const secretsToReplace = {
-  // Supabase Secret Key
-  'sb_secret_RYrbCXev57Nfym7QwQhxHA_4G6gsyll': 'sb_secret_YOUR_SECRET_KEY_HERE',
-
-  // Supabase Publishable Key (có thể giữ lại vì publishable key có thể public, nhưng để an toàn vẫn thay)
-  'sb_publishable_4pjxJvJw48bjVJ0WPScWHQ_j3dPX2Fb': 'sb_publishable_YOUR_PUBLISHABLE_KEY_HERE',
-
-  // Old JWT tokens
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZka2xhemxjYnhhaWFwc25uYnFxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTU3NjYzMCwiZXhwIjoyMDc3MTUyNjMwfQ.OSzYvp44VbheYC1zuylRRrdDrrgmcYuC38TQsJcMhoU': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.YOUR_SERVICE_ROLE_JWT_HERE',
-
-  // Old passwords (đã rotate)
-  'q1b8nn0MS1YLsOnN': 'YOUR_POSTGRES_PASSWORD_HERE',
-  're_dHNJuyTq_ydiGFqf2RGmtpAR2kBuaURw6': 're_YOUR_RESEND_API_KEY_HERE',
+  // Pattern to replace Supabase Secrets (generic)
+  'sb_secret_[a-zA-Z0-9_-]+': 'sb_secret_YOUR_SECRET_KEY_HERE',
+  'sb_publishable_[a-zA-Z0-9_-]+': 'sb_publishable_YOUR_PUBLISHABLE_KEY_HERE',
 };
 
 // Files cần sanitize
@@ -48,11 +39,22 @@ function sanitizeFile(filePath) {
   let content = fs.readFileSync(fullPath, 'utf-8');
   let modified = false;
 
-  Object.entries(secretsToReplace).forEach(([realSecret, placeholder]) => {
-    if (content.includes(realSecret)) {
-      content = content.replace(new RegExp(realSecret.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), placeholder);
-      modified = true;
-      console.log(`  ✅ Replaced: ${realSecret.substring(0, 30)}... → ${placeholder}`);
+  Object.entries(secretsToReplace).forEach(([pattern, placeholder]) => {
+    // Nếu là regex pattern, dùng regex
+    if (pattern.includes('[') || pattern.includes('+')) {
+      const regex = new RegExp(pattern, 'g');
+      if (regex.test(content)) {
+        content = content.replace(regex, placeholder);
+        modified = true;
+        console.log(`  ✅ Replaced pattern: ${pattern} → ${placeholder}`);
+      }
+    } else {
+      // Nếu là string literal
+      if (content.includes(pattern)) {
+        content = content.replace(new RegExp(pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), placeholder);
+        modified = true;
+        console.log(`  ✅ Replaced: ${pattern.substring(0, 30)}... → ${placeholder}`);
+      }
     }
   });
 

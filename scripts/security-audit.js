@@ -115,8 +115,10 @@ function checkGitHistory() {
   console.log('\n🔍 Kiểm tra Git History...\n');
 
   const knownLeakedSecrets = [
-    'q1b8nn0MS1YLsOnN', // Old POSTGRES_PASSWORD
-    're_dHNJuyTq_ydiGFqf2RGmtpAR2kBuaURw6', // Old RESEND_API_KEY
+    // Substrings of previously leaked secrets to avoid direct exposure
+    'q1b8nn0MS1Y',
+    're_dHNJuyTq',
+    'sb_secret_RYrbC',
   ];
 
   knownLeakedSecrets.forEach(secret => {
