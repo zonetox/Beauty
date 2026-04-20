@@ -1585,7 +1585,12 @@ export const useBlogData = () => {
     blogCategories: context.blogCategories,
     addBlogCategory: context.addBlogCategory,
     updateBlogCategory: context.updateBlogCategory,
-    deleteBlogCategory: context.deleteBlogCategory
+    deleteBlogCategory: context.deleteBlogCategory,
+    // Aliases for compatibility
+    categories: context.blogCategories,
+    addCategory: context.addBlogCategory,
+    updateCategory: context.updateBlogCategory,
+    deleteCategory: context.deleteBlogCategory
   };
 };
 
