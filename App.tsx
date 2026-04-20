@@ -44,9 +44,8 @@ const BusinessPostPage = lazy(() => import('./pages/BusinessPostPage.tsx'));
 const AboutPage = lazy(() => import('./pages/AboutPage.tsx'));
 const ContactPage = lazy(() => import('./pages/ContactPage.tsx'));
 const ForBusinessPage = lazy(() => import('./pages/ForBusinessPage.tsx'));
-const RegisterSelectPage = lazy(() => import('./pages/RegisterSelectPage.tsx'));
-const RegisterUserPage = lazy(() => import('./pages/RegisterUserPage.tsx'));
-const RegisterBusinessPage = lazy(() => import('./pages/RegisterBusinessPage.tsx'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage.tsx'));
+
 const BusinessSetupPage = lazy(() => import('./pages/BusinessSetupPage.tsx'));
 const AdminPage = lazy(() => import('./pages/AdminPage.tsx'));
 const AdminLoginPage = lazy(() => import('./pages/AdminLoginPage.tsx'));
@@ -154,9 +153,8 @@ const AppContent: React.FC = () => {
                                                         <Route path="about" element={<AboutPage />} />
                                                         <Route path="contact" element={<ContactPage />} />
                                                         <Route path="for-business" element={<ForBusinessPage />} />
-                                                        <Route path="register" element={<RegisterSelectPage />} />
-                                                        <Route path="register/user" element={<RegisterUserPage />} />
-                                                        <Route path="register/business" element={<RegisterBusinessPage />} />
+                                                        <Route path="register" element={<RegisterPage />} />
+
                                                         <Route path="account/business/setup" element={
                                                             <ProtectedRoute>
                                                                 <BusinessSetupPage />

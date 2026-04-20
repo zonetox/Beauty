@@ -7,12 +7,10 @@ import toast from 'react-hot-toast';
 import { useNavigate, Link } from 'react-router-dom';
 import { BusinessCategory } from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
-import { createBusinessWithTrial } from '../lib/businessUtils.ts';
 import { useAuth } from '../providers/AuthProvider.tsx';
 import { useUserRole } from '../hooks/useUserRole.ts';
 import SEOHead from '../components/SEOHead.tsx';
 import { initializeUserProfile } from '../lib/postSignupInitialization';
-import { verifyBusinessLinked } from '../lib/roleResolution';
 
 type user_type = 'user' | 'business';
 
@@ -120,10 +118,11 @@ const RegisterPage: React.FC = () => {
 
     try {
       // 1. Create Supabase Auth user using AuthProvider
-      const displayName = user_type === 'business' ? formData.business_name : formData.full_name;
+      // Pass user_type into metadata so the system knows what this user intends to be
       await register(formData.email, formData.password, {
-        full_name: displayName,
+        full_name: formData.full_name,
         phone: formData.phone,
+        user_type: user_type
       });
 
       // Get the newly created user from auth state
@@ -132,7 +131,7 @@ const RegisterPage: React.FC = () => {
       // Get user from current session
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {
-        throw new Error('Failed to create user account. Please try again.');
+        throw new Error('Đăng ký thất bại. Vui lòng thử lại.');
       }
       const newUser = session.user;
 
@@ -140,41 +139,16 @@ const RegisterPage: React.FC = () => {
       const profileResult = await initializeUserProfile(newUser, 3000);
 
       if (!profileResult.success || !profileResult.profileId) {
-        // BLOCK access - profile initialization failed
-        throw new Error(profileResult.error || 'Account initialization failed. Please contact support.');
+        throw new Error(profileResult.error || 'Khởi tạo tài khoản thất bại. Vui lòng thử lại.');
       }
 
-      // 3. Handle business registration if user type is 'business'
+      await refreshAuth();
+
+      // 3. Redirection based on user_type
       if (user_type === 'business') {
-        const business = await createBusinessWithTrial({
-          name: formData.business_name.trim(),
-          owner_id: newUser.id,
-          email: formData.email,
-          phone: formData.phone.trim(),
-          address: formData.address.trim(),
-          categories: [formData.category],
-        });
-
-        if (!business) {
-          throw new Error('Failed to create business. Please try again.');
-        }
-
-        // MANDATORY: Verify business is linked to profile
-        const businessResult = await verifyBusinessLinked(newUser.id);
-
-        if (!businessResult.exists || !businessResult.business_id) {
-          throw new Error(businessResult.error || 'Business account setup incomplete. Please contact support.');
-        }
-
-        // Refresh profile to get business_id
-        await refreshAuth();
-
-        toast.success('Đăng ký thành công! Tài khoản doanh nghiệp của bạn đã được tạo với gói dùng thử 30 ngày.');
-        navigate('/account', { replace: true });
+        toast.success('Đăng ký thành công! Vui lòng điền thông tin doanh nghiệp của bạn.');
+        navigate('/account/business/setup', { replace: true });
       } else {
-        // User registration - profile already created and verified
-        await refreshAuth();
-
         toast.success('Đăng ký thành công! Chào mừng bạn đến với 1Beauty.asia.');
         navigate('/', { replace: true });
       }
@@ -229,8 +203,8 @@ const RegisterPage: React.FC = () => {
                     className="sr-only"
                   />
                   <div className={`p-4 border-2 rounded-lg text-center transition-all ${user_type === 'user'
-                      ? 'border-primary bg-primary/5'
-                      : 'border-gray-200 hover:border-gray-300'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-gray-200 hover:border-gray-300'
                     }`}>
                     <div className="font-semibold text-lg mb-1">Người dùng</div>
                     <div className="text-sm text-gray-600">Xem doanh nghiệp, đặt lịch, đánh giá</div>
@@ -246,8 +220,8 @@ const RegisterPage: React.FC = () => {
                     className="sr-only"
                   />
                   <div className={`p-4 border-2 rounded-lg text-center transition-all ${user_type === 'business'
-                      ? 'border-primary bg-primary/5'
-                      : 'border-gray-200 hover:border-gray-300'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-gray-200 hover:border-gray-300'
                     }`}>
                     <div className="font-semibold text-lg mb-1">Doanh nghiệp</div>
                     <div className="text-sm text-gray-600">Quảng bá dịch vụ, quản lý đặt lịch</div>
@@ -265,65 +239,28 @@ const RegisterPage: React.FC = () => {
             {error && <p className="text-red-500 text-center bg-red-100 p-3 rounded-md mb-4">{error}</p>}
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
-                {user_type === 'business' ? (
-                  <>
-                    <div>
-                      <label htmlFor="business_name" className="block text-sm font-medium text-gray-700">Tên doanh nghiệp <span className="text-red-500">*</span></label>
-                      <input id="business_name" type="text" name="business_name" value={formData.business_name} onChange={handleChange} required title="Tên doanh nghiệp" placeholder="Nhập tên doanh nghiệp" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
-                    </div>
-                    <div>
-                      <label htmlFor="category" className="block text-sm font-medium text-gray-700">Lĩnh vực <span className="text-red-500">*</span></label>
-                      <select id="category" name="category" value={formData.category} onChange={handleChange} required title="Chọn lĩnh vực doanh nghiệp" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
-                        {Object.values(BusinessCategory).map(cat => (
-                          <option key={cat} value={cat}>{cat}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Địa chỉ doanh nghiệp <span className="text-red-500">*</span></label>
-                      <input type="text" name="address" value={formData.address} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" placeholder="Nhập địa chỉ đầy đủ của doanh nghiệp" />
-                    </div>
-                    <div>
-                      <label htmlFor="business-email" className="block text-sm font-medium text-gray-700">Email <span className="text-red-500">*</span></label>
-                      <input id="business-email" type="email" name="email" value={formData.email} onChange={handleChange} required title="Email doanh nghiệp" placeholder="Nhập email doanh nghiệp" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
-                    </div>
-                    <div>
-                      <label htmlFor="business-phone" className="block text-sm font-medium text-gray-700">Số điện thoại <span className="text-red-500">*</span></label>
-                      <input id="business-phone" type="tel" name="phone" value={formData.phone} onChange={handleChange} required title="Số điện thoại doanh nghiệp" placeholder="0987654321" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
-                    </div>
-                    <div>
-                      <label htmlFor="business-password" className="block text-sm font-medium text-gray-700">Mật khẩu <span className="text-red-500">*</span></label>
-                      <input id="business-password" type="password" name="password" value={formData.password} onChange={handleChange} required title="Mật khẩu (tối thiểu 6 ký tự)" placeholder="Nhập mật khẩu" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
-                    </div>
-                    <div>
-                      <label htmlFor="business-confirm-password" className="block text-sm font-medium text-gray-700">Xác nhận mật khẩu <span className="text-red-500">*</span></label>
-                      <input id="business-confirm-password" type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required title="Xác nhận mật khẩu" placeholder="Nhập lại mật khẩu" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div>
-                      <label htmlFor="full_name" className="block text-sm font-medium text-gray-700">Họ và tên <span className="text-red-500">*</span></label>
-                      <input id="full_name" type="text" name="full_name" value={formData.full_name} onChange={handleChange} required title="Họ và tên" placeholder="Nhập họ và tên" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
-                    </div>
-                    <div>
-                      <label htmlFor="user-email" className="block text-sm font-medium text-gray-700">Email <span className="text-red-500">*</span></label>
-                      <input id="user-email" type="email" name="email" value={formData.email} onChange={handleChange} required title="Email" placeholder="Nhập email" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
-                    </div>
-                    <div>
-                      <label htmlFor="user-phone" className="block text-sm font-medium text-gray-700">Số điện thoại</label>
-                      <input id="user-phone" type="tel" name="phone" value={formData.phone} onChange={handleChange} title="Số điện thoại" placeholder="0987654321" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
-                    </div>
-                    <div>
-                      <label htmlFor="user-password" className="block text-sm font-medium text-gray-700">Mật khẩu <span className="text-red-500">*</span></label>
-                      <input id="user-password" type="password" name="password" value={formData.password} onChange={handleChange} required title="Mật khẩu (tối thiểu 6 ký tự)" placeholder="Nhập mật khẩu" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
-                    </div>
-                    <div>
-                      <label htmlFor="user-confirm-password" className="block text-sm font-medium text-gray-700">Xác nhận mật khẩu <span className="text-red-500">*</span></label>
-                      <input id="user-confirm-password" type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required title="Xác nhận mật khẩu" placeholder="Nhập lại mật khẩu" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
-                    </div>
-                  </>
-                )}
+                <>
+                  <div>
+                    <label htmlFor="full_name" className="block text-sm font-medium text-gray-700">Họ và tên <span className="text-red-500">*</span></label>
+                    <input id="full_name" type="text" name="full_name" value={formData.full_name} onChange={handleChange} required title="Họ và tên" placeholder="Nhập họ và tên" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                  </div>
+                  <div>
+                    <label htmlFor="user-email" className="block text-sm font-medium text-gray-700">Email <span className="text-red-500">*</span></label>
+                    <input id="user-email" type="email" name="email" value={formData.email} onChange={handleChange} required title="Email" placeholder="Nhập email" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                  </div>
+                  <div>
+                    <label htmlFor="user-phone" className="block text-sm font-medium text-gray-700">Số điện thoại</label>
+                    <input id="user-phone" type="tel" name="phone" value={formData.phone} onChange={handleChange} title="Số điện thoại" placeholder="0987654321" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                  </div>
+                  <div>
+                    <label htmlFor="user-password" className="block text-sm font-medium text-gray-700">Mật khẩu <span className="text-red-500">*</span></label>
+                    <input id="user-password" type="password" name="password" value={formData.password} onChange={handleChange} required title="Mật khẩu (tối thiểu 6 ký tự)" placeholder="Nhập mật khẩu" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                  </div>
+                  <div>
+                    <label htmlFor="user-confirm-password" className="block text-sm font-medium text-gray-700">Xác nhận mật khẩu <span className="text-red-500">*</span></label>
+                    <input id="user-confirm-password" type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required title="Xác nhận mật khẩu" placeholder="Nhập lại mật khẩu" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                  </div>
+                </>
               </div>
               <button type="submit" disabled={isSubmitting} className="mt-6 w-full bg-primary text-white py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium hover:bg-primary-dark disabled:bg-primary/50 disabled:cursor-not-allowed">
                 {isSubmitting ? 'Đang đăng ký...' : 'Đăng ký'}

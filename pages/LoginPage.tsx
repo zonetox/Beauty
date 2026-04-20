@@ -34,10 +34,12 @@ const LoginPage: React.FC = () => {
         try {
             await login(email, password);
             // Handle redirection after fresh login
-            const { data } = await supabase.rpc('get_user_context', { p_user_id: (await supabase.auth.getUser()).data.user?.id });
-            const target = (data?.role === 'business_owner' || data?.role === 'business_staff')
-                ? '/business-profile'
-                : '/account';
+            const authUser = (await supabase.auth.getUser()).data.user;
+            const { data } = await supabase.rpc('get_user_context', { p_user_id: authUser?.id });
+            const isPendingBusiness = authUser?.user_metadata?.user_type === 'business' && !data?.business_id;
+            let target = '/account';
+            if (isPendingBusiness) { target = '/account/business/setup'; }
+            else if (data?.role === 'business_owner' || data?.role === 'business_staff') { target = '/business-profile'; }
             navigate(target, { replace: true });
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : 'Đăng nhập thất bại.';
@@ -72,3 +74,4 @@ const LoginPage: React.FC = () => {
 };
 
 export default LoginPage;
+
