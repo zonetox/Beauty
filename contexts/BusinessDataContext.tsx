@@ -19,7 +19,7 @@ import { cacheManager, CACHE_KEYS, CACHE_TTL } from '../lib/cache.ts';
 export interface PublicDataContextType {
   // Business Data
   businesses: Business[];
-  businessMarkers: { id: number, name: string, latitude: number, longitude: number, categories: string[], is_active: boolean }[];
+  businessMarkers: { id: number, name: string, slug?: string, logo_url?: string, address?: string, rating?: number, review_count?: number, latitude: number, longitude: number, categories: string[], is_active: boolean }[];
   businessLoading: boolean;
   totalBusinesses: number;
   currentPage: number;
@@ -114,7 +114,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
 
   // --- STATES ---
   const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [businessMarkers, setBusinessMarkers] = useState<{ id: number, name: string, latitude: number, longitude: number, categories: string[], is_active: boolean }[]>(initialCache.markers);
+  const [businessMarkers, setBusinessMarkers] = useState<{ id: number, name: string, slug?: string, logo_url?: string, address?: string, rating?: number, review_count?: number, latitude: number, longitude: number, categories: string[], is_active: boolean }[]>(initialCache.markers);
   // Start with loading false if we have cached data (page can render immediately)
   const [businessLoading, setBusinessLoading] = useState(!initialCache.hasCache);
   const [totalBusinesses, setTotalBusinesses] = useState(0);
@@ -191,7 +191,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
         const business_ids = (searchData as SearchResult[]).map((b) => b.id);
         const { data: fullData, error: fetchError } = await supabase
           .from('businesses')
-          .select('id, slug, name, logo_url, image_url, slogan, categories, address, city, district, ward, tags, phone, email, website, rating, review_count, view_count, membership_tier, is_verified, is_active, is_featured, joined_date, description, working_hours, socials, seo, hero_slides, hero_image_url, owner_id, landing_page_config, trust_indicators, staff, notification_settings', { count: 'exact' })
+          .select('id, slug, name, logo_url, image_url, slogan, categories, address, city, district, ward, tags, phone, email, website, rating, review_count, view_count, membership_tier, is_verified, is_active, is_featured, joined_date, description, working_hours, socials, seo, hero_slides, hero_image_url, owner_id, landing_page_config, trust_indicators, staff, notification_settings, latitude, longitude', { count: 'exact' })
           .in('id', business_ids);
 
         // Preserve order from search_businesses_advanced (ranked by final_score)
@@ -311,7 +311,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       // OPTIMIZE: Select only fields needed for homepage display
       const [businessesResult, countResult] = await Promise.all([
         supabase.from('businesses')
-          .select('id, slug, name, logo_url, image_url, slogan, categories, address, city, district, ward, tags, phone, email, website, rating, review_count, view_count, membership_tier, is_verified, is_active, is_featured, joined_date, description, working_hours, socials, seo, hero_slides, hero_image_url, owner_id, landing_page_config, trust_indicators, staff, notification_settings', { count: 'exact' })
+          .select('id, slug, name, logo_url, image_url, slogan, categories, address, city, district, ward, tags, phone, email, website, rating, review_count, view_count, membership_tier, is_verified, is_active, is_featured, joined_date, description, working_hours, socials, seo, hero_slides, hero_image_url, owner_id, landing_page_config, trust_indicators, staff, notification_settings, latitude, longitude', { count: 'exact' })
           .eq('is_active', true)
           .eq('is_featured', true)
           .order('id', { ascending: true })
@@ -389,7 +389,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       });
 
       const markerPromise = supabase.from('businesses')
-        .select('id, name, latitude, longitude, categories, is_active')
+        .select('id, name, slug, logo_url, address, rating, review_count, latitude, longitude, categories, is_active')
         .eq('is_active', true)
         .not('latitude', 'is', null)
         .not('longitude', 'is', null)
