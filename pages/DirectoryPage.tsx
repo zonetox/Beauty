@@ -127,8 +127,9 @@ const checkIfOpen = (working_hours: WorkingHours | null | undefined): boolean =>
 const DirectoryPage: React.FC = () => {
     const {
         businesses, businessMarkers, totalBusinesses,
-        fetchBusinesses, loading: contextLoading
+        fetchBusinesses
     } = useBusinessData();
+    const [isFetching, setIsFetching] = useState(true);
 
     // const [mapVisibleBusinesses, setMapVisibleBusinesses] = useState<Business[]>([]); // Refactored to useMemo below
     const [highlightedbusiness_id, setHighlightedbusiness_id] = useState<number | null>(null);
@@ -162,13 +163,18 @@ const DirectoryPage: React.FC = () => {
     // FIX: Remove fetchBusinesses and getFiltersFromUrl from dependencies to prevent infinite loop
     // They are stable references from context, but including them causes re-renders
     useEffect(() => {
+        let isMounted = true;
         const filters = getFiltersFromUrl();
+        setIsFetching(true);
         fetchBusinesses(filters.page, {
             search: filters.keyword,
             location: filters.location,
             district: filters.district,
             category: filters.category
+        }).finally(() => {
+            if (isMounted) setIsFetching(false);
         });
+        return () => { isMounted = false; };
     }, [location.search, fetchBusinesses, getFiltersFromUrl]);
 
     // Fast marker filtering for Map (uses the lightweight markers state)
@@ -353,13 +359,12 @@ const DirectoryPage: React.FC = () => {
                 )}
 
                 <div className="container mx-auto px-4 py-6">
-                    {/* Search Bar */}
                     <SearchBar
                         onSearch={handleFilterChange}
                         categories={CATEGORIES}
                         locations={CITIES}
                         locationsHierarchy={LOCATIONS_HIERARCHY}
-                        isLoading={contextLoading}
+                        isLoading={isFetching}
                     />
 
                     {/* View Mode Toggle */}
@@ -461,7 +466,7 @@ const DirectoryPage: React.FC = () => {
                             )}
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                                 <h2 className="text-lg font-semibold text-neutral-dark flex-shrink-0">
-                                    {contextLoading ? 'Đang tìm kiếm...' : (
+                                    {isFetching ? 'Đang tìm kiếm...' : (
                                         <span>
                                             {filterByMap && businesses.length > 0
                                                 ? <>Hiển thị <strong className="text-primary">{mapVisibleBusinesses.length}</strong> hiện tại (tổng {totalBusinesses})</>
@@ -531,7 +536,7 @@ const DirectoryPage: React.FC = () => {
                             </div>
 
                             <div ref={listContainerRef}>
-                                {contextLoading ? (
+                                {isFetching ? (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                         {[...Array(12)].map((_, i) => <SkeletonCard key={i} />)}
                                     </div>
