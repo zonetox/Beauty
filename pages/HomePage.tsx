@@ -12,8 +12,8 @@ import RecentlyViewed from '../components/RecentlyViewed.tsx';
 import SEOHead from '../components/SEOHead.tsx';
 import EmptyState from '../components/EmptyState.tsx';
 import { CATEGORIES, CITIES, FEATURED_LOCATIONS } from '../constants.ts';
-import { HomepageSection, BlogPost, Deal } from '../types.ts';
-import { useBusinessData } from '../contexts/BusinessDataContext.tsx';
+import { HomepageSection, Deal } from '../types.ts';
+import { useBusinessData, useBlogData } from '../contexts/BusinessDataContext.tsx';
 import { useHomepageData } from '../contexts/HomepageDataContext.tsx';
 import { useCMS } from '../contexts/CMSContext.tsx';
 import { useAuth } from '../providers/AuthProvider.tsx';
@@ -36,9 +36,10 @@ const SkeletonCard: React.FC = () => (
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { businesses, businessLoading } = useBusinessData();
+  const { blogPosts: featuredBlogPosts, loading: blogLoading } = useBlogData();
   const { homepageData, updateHomepageData } = useHomepageData();
   const { hero_slides, sections } = homepageData;
-  const { isEditing, setIsEditing, stagedChanges, clearChanges, saveChanges } = useCMS();
+  const { isEditing, setIsEditing, clearChanges, saveChanges } = useCMS();
   const { user } = useAuth();
 
   // Check if user is admin
@@ -75,61 +76,7 @@ const HomePage: React.FC = () => {
   const [newsletterError, setNewsletterError] = useState('');
   const [isSubmittingNewsletter, setIsSubmittingNewsletter] = useState(false);
 
-  // OPTIMIZED: Only fetch featured blog posts (3 posts) instead of all
-  const [featuredBlogPosts, setFeaturedBlogPosts] = useState<BlogPost[]>([]);
-  const [blogLoading, setBlogLoading] = useState(false);
-
-  // OPTIMIZED: Fetch only 3 featured blog posts for homepage
-  useEffect(() => {
-    let mounted = true;
-
-    const fetchFeaturedBlogPosts = async () => {
-      if (!isSupabaseConfigured) {
-        setBlogLoading(false);
-        return;
-      }
-
-      try {
-        setBlogLoading(true);
-
-        // Only fetch 3 latest blog posts for homepage
-        const { data, error } = await supabase
-          .from('blog_posts')
-          .select('id, slug, title, image_url, excerpt, author, date, category, view_count')
-          .order('date', { ascending: false })
-          .limit(3);
-
-        if (error) {
-          console.error('Error fetching featured blog posts:', error);
-          if (mounted) setFeaturedBlogPosts([]);
-        } else if (data && mounted) {
-          const posts = data.map((post) => ({
-            id: post.id,
-            slug: post.slug,
-            title: post.title,
-            image_url: post.image_url,
-            excerpt: post.excerpt,
-            author: post.author,
-            date: post.date,
-            category: post.category,
-            view_count: post.view_count,
-          })) as BlogPost[];
-          setFeaturedBlogPosts(posts);
-        }
-      } catch (error) {
-        console.error('Error fetching featured blog posts:', error);
-        if (mounted) setFeaturedBlogPosts([]);
-      } finally {
-        if (mounted) setBlogLoading(false);
-      }
-    };
-
-    fetchFeaturedBlogPosts();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  // OPTIMIZED: Using blog data from PublicDataProvider instead of separate fetch
 
   useEffect(() => {
     const viewedRaw = localStorage.getItem('recently_viewed_businesses');
@@ -270,9 +217,9 @@ const HomePage: React.FC = () => {
     };
   }, [businesses, businessLoading]);
 
-  // OPTIMIZED: Use featured blog posts directly (already limited to 3)
+  // OPTIMIZED: Filter featured blog posts (limit 3)
   const featuredPosts = useMemo(() => {
-    return featuredBlogPosts;
+    return featuredBlogPosts.slice(0, 3);
   }, [featuredBlogPosts]);
 
   // Do NOT block rendering - use skeletons for loading states instead

@@ -55,13 +55,8 @@ const LoginPage = safeLazy(() => import('./pages/LoginPage.tsx'));
 const ResetPasswordPage = safeLazy(() => import('./pages/ResetPasswordPage.tsx'));
 const ConnectionTestPage = safeLazy(() => import('./pages/ConnectionTestPage.tsx'));
 
-// Loading component for Suspense fallback
-const LoadingSpinner: React.FC = () => (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background">
-        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-4 text-lg font-semibold text-neutral-dark">Loading...</p>
-    </div>
-);
+// Unified loading component using the initialization screen
+const LoadingSpinner: React.FC = () => <AppInitializationScreen message="Đang tải thành phần..." />;
 
 
 // Web Vitals tracking component

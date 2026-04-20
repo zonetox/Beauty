@@ -1,7 +1,7 @@
 
-import { createContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
+import { createContext, useState, useEffect, useContext, useCallback, useRef, ReactNode } from 'react';
 import toast from 'react-hot-toast';
-import { Business, BlogPost, BlogComment, BlogCategory, MembershipPackage, Service, MediaItem, TeamMember, Deal, MediaType, Review, HomepageData, HomepageSection, PageData, PageName } from '../types.ts';
+import { Business, BlogPost, BlogComment, BlogCategory, MembershipPackage, Service, MediaItem, TeamMember, Deal, MediaType, Review, HomepageData, PageData } from '../types.ts';
 import { DEFAULT_HOMEPAGE_DATA } from '../constants.ts';
 import { DEFAULT_PAGE_CONTENT } from './PageContentContext.tsx';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
@@ -1538,7 +1538,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
   };
 
   const getPageContent = (page: 'about' | 'contact'): PageData | undefined => {
-    return pageContent[page] || DEFAULT_PAGE_CONTENT[page as PageName];
+    return pageContent[page] || (DEFAULT_PAGE_CONTENT as Record<string, PageData>)[page];
   };
 
   const value = {
@@ -1582,10 +1582,10 @@ export const useBlogData = () => {
     comments: context.comments,
     getCommentsBypost_id: context.getCommentsBypost_id,
     addComment: context.addComment,
-    categories: context.blogCategories,
-    addCategory: context.addBlogCategory,
-    updateCategory: context.updateBlogCategory,
-    deleteCategory: context.deleteBlogCategory
+    blogCategories: context.blogCategories,
+    addBlogCategory: context.addBlogCategory,
+    updateBlogCategory: context.updateBlogCategory,
+    deleteBlogCategory: context.deleteBlogCategory
   };
 };
 
