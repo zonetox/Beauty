@@ -9,8 +9,8 @@ interface AdminAuthContextType {
   currentUser: AuthenticatedAdmin | null;
   loading: boolean;
   adminUsers: AdminUser[];
-  adminLogin: (email: string, pass: string) => Promise<any>;
-  adminLogout: () => Promise<any>;
+  adminLogin: (email: string, pass: string) => Promise<void>;
+  adminLogout: () => Promise<void>;
   addAdminUser: (newUser: Omit<AdminUser, 'id' | 'lastLogin' | 'is_locked'>) => Promise<void>;
   updateAdminUser: (user_id: number, updates: Partial<AdminUser>) => Promise<void>;
   deleteAdminUser: (user_id: number) => Promise<void>;
@@ -22,7 +22,7 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [currentUser, setCurrentUser] = useState<AuthenticatedAdmin | null>(null);
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const { logAdminAction: _logAdminAction } = useAdminPlatform();
+  useAdminPlatform();
 
   const fetchAdminUsers = useCallback(async () => {
     const { data, error } = await supabase.from('admin_users').select('*').order('id');
@@ -108,7 +108,7 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
     setAdminUsers(users);
   };
   const updateAdminUser = async (user_id: number, updates: Partial<AdminUser>) => {
-    const { error } = await supabase.from('admin_users').update(updates as any).eq('id', user_id);
+    const { error } = await supabase.from('admin_users').update(updates as unknown as Record<string, unknown>).eq('id', user_id);
     if (error) throw error;
     const users = await fetchAdminUsers();
     setAdminUsers(users);

@@ -6,6 +6,10 @@ import { supabase } from '../lib/supabaseClient.ts';
 import toast from 'react-hot-toast';
 import { useAuth } from '../providers/AuthProvider.tsx';
 
+interface AbuseReportInsertError {
+  message?: string;
+}
+
 interface ReportAbuseModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -78,9 +82,10 @@ const ReportAbuseModal: React.FC<ReportAbuseModalProps> = ({
       // Reset form
       setSelectedReason('');
       setCustomReason('');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error reporting abuse:', error);
-      toast.error(error?.message || 'Failed to submit report. Please try again.');
+      const message = (error as AbuseReportInsertError)?.message || 'Failed to submit report. Please try again.';
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }

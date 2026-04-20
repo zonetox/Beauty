@@ -151,7 +151,7 @@ export interface Conversion {
   source?: 'landing_page' | 'directory' | 'search';
   user_id?: string;
   session_id?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   converted_at: string;
 }
 
@@ -257,6 +257,17 @@ export interface BusinessStaff {
   user_name?: string;
 }
 
+export interface PackagePermissions {
+  photo_limit?: number;
+  video_limit?: number;
+  monthly_post_limit?: number;
+  featured_post_limit?: number;
+  custom_landing_page?: boolean;
+  private_blog?: boolean;
+  seo_support?: boolean;
+  [key: string]: unknown;
+}
+
 export interface MembershipPackage {
   id: string;
   name: string;
@@ -265,7 +276,7 @@ export interface MembershipPackage {
   duration_months: number;
   description?: string;
   features?: string[];
-  permissions?: any;
+  permissions?: PackagePermissions;
   is_popular?: boolean;
   is_active?: boolean;
 }

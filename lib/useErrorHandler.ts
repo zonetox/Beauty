@@ -17,7 +17,7 @@ export function useErrorHandler() {
    * @returns Standardized error object
    */
   const handleError = (
-    error: any,
+    error: unknown,
     context?: string,
     showToast: boolean = true
   ): StandardError => {
@@ -48,7 +48,7 @@ export function useErrorHandler() {
    * @param showToast - Whether to show toast notification (default: true)
    */
   const handleEdgeFunctionError = (
-    errorResponse: any,
+    errorResponse: { error?: string; message?: string; code?: string; statusCode?: number; status?: number } | null | undefined,
     context?: string,
     showToast: boolean = true
   ): StandardError => {

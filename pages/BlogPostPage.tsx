@@ -7,6 +7,7 @@ import { useBlogData } from '../contexts/BusinessDataContext.tsx';
 import SEOHead from '../components/SEOHead.tsx';
 import LoadingState from '../components/LoadingState.tsx';
 import SafeHtmlRenderer from '../components/SafeHtmlRenderer.tsx';
+import { SEO } from '../types.ts';
 
 const BlogPostPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -33,7 +34,7 @@ const BlogPostPage: React.FC = () => {
   }
 
   // ULTRA-DEFENSIVE SEO PARSING: Support object or string-fallback
-  const seo = (typeof post.seo === 'object' && post.seo !== null ? post.seo : {}) as any;
+  const seo: SEO = typeof post.seo === 'object' && post.seo !== null ? post.seo : {};
 
   const seoTitle = seo.title || post.title || 'Bài viết | 1Beauty.asia';
   const seoDescription = seo.description || post.excerpt || '';

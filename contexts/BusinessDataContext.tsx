@@ -74,6 +74,22 @@ export interface PublicDataContextType {
 export const PublicDataContext = createContext<PublicDataContextType | undefined>(undefined);
 
 const COMMENTS_LOCAL_STORAGE_KEY = 'blog_comments';
+const isDevelopment = typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'development';
+
+type BusinessMarker = PublicDataContextType['businessMarkers'][number];
+type QueryResponse<T> = {
+  data: T | null;
+  error: { message: string; code?: string } | null;
+};
+type BlogCommentInsertRow = {
+  id: string;
+  post_id: number;
+  author_name: string;
+  author_avatar_url?: string | null;
+  content: string;
+  date?: string | null;
+  created_at?: string | null;
+};
 
 
 export function PublicDataProvider({ children }: { children: ReactNode }) {
@@ -82,7 +98,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
   const getInitialCachedData = () => {
     const cachedBlogPosts = cacheManager.get<BlogPost[]>(CACHE_KEYS.BLOG_POSTS);
     const cachedCategories = cacheManager.get<BlogCategory[]>(CACHE_KEYS.BLOG_CATEGORIES);
-    const cachedMarkers = cacheManager.get<any[]>(CACHE_KEYS.MARKERS);
+    const cachedMarkers = cacheManager.get<BusinessMarker[]>(CACHE_KEYS.MARKERS);
     const cachedPackages = cacheManager.get<MembershipPackage[]>(CACHE_KEYS.PACKAGES);
 
     return {
@@ -145,10 +161,10 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       // This function supports: search text, category, city, district, tags, limit, offset
       const { data: searchData, error: searchError } = await supabase
         .rpc('search_businesses_advanced', {
-          p_search_text: (options.search && options.search.trim() ? options.search.trim() : null) as any,
-          p_category: (options.category || null) as any,
-          p_city: (options.location || null) as any,
-          p_district: (options.district || null) as any,
+          p_search_text: options.search && options.search.trim() ? options.search.trim() : null,
+          p_category: options.category || null,
+          p_city: options.location || null,
+          p_district: options.district || null,
           p_tags: undefined as string[] | undefined, // Tags filter not used in current frontend, but supported
           p_limit: PAGE_SIZE,
           p_offset: from
@@ -214,7 +230,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
           const { count, error: countError } = await countQuery;
           const countDuration = performance.now() - countStartTime;
 
-          if (import.meta.env.MODE === 'development') console.warn(`[PERF] Businesses Count: ${countDuration.toFixed(2)}ms`);
+          if (isDevelopment) console.warn(`[PERF] Businesses Count: ${countDuration.toFixed(2)}ms`);
           if (!countError && count !== null) {
             setTotalBusinesses(count);
           } else {
@@ -253,7 +269,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
 
       if (error) {
 
-        if (import.meta.env.MODE === 'development') console.warn('Error fetching search results (best-effort):', error.message);
+        if (isDevelopment) console.warn('Error fetching search results (best-effort):', error.message);
         // Fallback to cache or empty if search fails
         // toast.error('Failed to load businesses');
       } else if (data) {
@@ -311,7 +327,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
         setBusinesses([]);
         setTotalBusinesses(0);
       } else if (businessesResult.data) {
-        const mapped = (businessesResult.data as any[]).map((b) => ({
+        const mapped = (businessesResult.data as Business[]).map((b) => ({
           ...(b as Business),
           services: [],
           gallery: [],
@@ -347,7 +363,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     // Note: Cached data is already loaded in initial state, so we only need to check if we should fetch
     const cachedBlogPosts = cacheManager.get<BlogPost[]>(CACHE_KEYS.BLOG_POSTS);
     const cachedCategories = cacheManager.get<BlogCategory[]>(CACHE_KEYS.BLOG_CATEGORIES);
-    const cachedMarkers = cacheManager.get<any[]>(CACHE_KEYS.MARKERS);
+    const cachedMarkers = cacheManager.get<BusinessMarker[]>(CACHE_KEYS.MARKERS);
     const cachedPackages = cacheManager.get<MembershipPackage[]>(CACHE_KEYS.PACKAGES);
 
     // If all cached and not background refresh, return early (no fetch on page load)
@@ -414,7 +430,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
        * @param timeoutMs - Timeout in milliseconds
        * @returns The query result
        */
-      const measureQuery = async <T,>(name: string, queryPromise: Promise<T> | any, timeoutMs: number): Promise<T> => {
+      const measureQuery = async <T,>(name: string, queryPromise: PromiseLike<T>, timeoutMs: number): Promise<T> => {
         const startTime = performance.now();
         try {
           const result = await Promise.race([queryPromise, createTimeoutPromise(timeoutMs, `${name} timeout`)]);
@@ -437,10 +453,10 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       // Execute all non-critical queries in parallel with specific timeouts
       const [businessesResult, markersResult, blogResult, catResult, pkgResult] = await Promise.allSettled([
         measureQuery('All Businesses', allBusinessesPromise, TIMEOUTS.BUSINESSES),
-        measureQuery('Markers', markerPromise as any, TIMEOUTS.MARKERS),
-        measureQuery('Blog Posts', blogPromise as any, TIMEOUTS.BLOG),
-        measureQuery('Categories', catPromise as any, TIMEOUTS.BLOG), // Same timeout as blog
-        measureQuery('Packages', pkgPromise as any, TIMEOUTS.PACKAGES)
+        measureQuery<QueryResponse<BusinessMarker[]>>('Markers', markerPromise, TIMEOUTS.MARKERS),
+        measureQuery<QueryResponse<unknown[]>>('Blog Posts', blogPromise, TIMEOUTS.BLOG),
+        measureQuery<QueryResponse<BlogCategory[]>>('Categories', catPromise, TIMEOUTS.BLOG), // Same timeout as blog
+        measureQuery<QueryResponse<unknown[]>>('Packages', pkgPromise, TIMEOUTS.PACKAGES)
       ]);
 
       // Helper to check if error is a timeout
@@ -463,9 +479,9 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
 
       // Process markers
       if (markersResult.status === 'fulfilled') {
-        const markerData = markersResult.value as any;
+        const markerData = markersResult.value;
         if (markerData?.data) {
-          const markers = markerData.data as any[];
+          const markers = markerData.data;
           setBusinessMarkers(markers);
           // Cache markers: 1 hour
           cacheManager.set(CACHE_KEYS.MARKERS, markers, CACHE_TTL.MARKERS);
@@ -478,14 +494,9 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       }
 
       // Process blog posts
-      interface BlogResponse {
-        error: { message: string } | null;
-        data: unknown;
-      }
-      let blogRes: BlogResponse = { error: null, data: null };
+      let blogRes: QueryResponse<unknown[]> = { error: null, data: null };
       if (blogResult.status === 'fulfilled') {
-        const result = blogResult.value as BlogResponse;
-        blogRes = result;
+        blogRes = blogResult.value;
       } else {
         // Silent timeout - has fallback (cache or empty data)
         blogRes = { error: { message: 'Timeout' }, data: null };
@@ -507,10 +518,9 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       }
 
       // Process categories
-      let catRes: { error: { message: string } | null; data: unknown } = { error: null, data: null };
+      let catRes: QueryResponse<BlogCategory[]> = { error: null, data: null };
       if (catResult.status === 'fulfilled') {
-        const result = catResult.value as any;
-        catRes = result;
+        catRes = catResult.value;
       } else {
         // Silent timeout - has fallback (cache or empty data)
         catRes = { error: { message: 'Timeout' }, data: null };
@@ -529,10 +539,9 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       }
 
       // Process packages
-      let pkgRes: { error: { message: string } | null; data: unknown } = { error: null, data: null };
+      let pkgRes: QueryResponse<unknown[]> = { error: null, data: null };
       if (pkgResult.status === 'fulfilled') {
-        const result = pkgResult.value as any;
-        pkgRes = result;
+        pkgRes = pkgResult.value;
       } else {
         // Silent timeout - has fallback (cache or empty data)
         pkgRes = { error: { message: 'Timeout' }, data: null };
@@ -696,17 +705,17 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
    * @returns Promise resolving to Business object or null if not found
    */
   const fetchBusinessBySlug = useCallback(async (slug: string): Promise<Business | null> => {
-    if (import.meta.env.MODE === 'development') console.warn('[fetchBusinessBySlug] Starting fetch for slug:', slug);
+    if (isDevelopment) console.warn('[fetchBusinessBySlug] Starting fetch for slug:', slug);
 
     if (!isSupabaseConfigured) {
-      if (import.meta.env.MODE === 'development') console.warn('[fetchBusinessBySlug] Supabase not configured, using cached data');
+      if (isDevelopment) console.warn('[fetchBusinessBySlug] Supabase not configured, using cached data');
       // Fallback to businesses list if available
       const cached = businessesRef.current.find(b => b.slug === slug);
       return cached || null;
     }
 
     // 1. Fetch the main business record with selective fields
-    if (import.meta.env.MODE === 'development') console.warn('[fetchBusinessBySlug] Fetching business data from database...');
+    if (isDevelopment) console.warn('[fetchBusinessBySlug] Fetching business data from database...');
     const { data: businessData, error: businessError } = await supabase
       .from('businesses')
       .select('id, slug, name, logo_url, image_url, slogan, categories, address, city, district, ward, latitude, longitude, tags, phone, email, website, youtube_url, rating, review_count, view_count, membership_tier, membership_expiry_date, is_verified, is_active, is_featured, joined_date, description, working_hours, socials, seo, notification_settings, hero_slides, hero_image_url, staff, owner_id, landing_page_config, trust_indicators, landing_page_status')
@@ -717,15 +726,15 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       console.error("[fetchBusinessBySlug] Error fetching business details:", businessError?.message, businessError);
       // Fallback to cached businesses list
       const cached = businessesRef.current.find(b => b.slug === slug);
-      if (import.meta.env.MODE === 'development') console.warn('[fetchBusinessBySlug] Using cached data:', cached ? cached.name : 'Not found');
+      if (isDevelopment) console.warn('[fetchBusinessBySlug] Using cached data:', cached ? cached.name : 'Not found');
       return cached || null;
     }
 
-    if (import.meta.env.MODE === 'development') console.warn('[fetchBusinessBySlug] Business found:', businessData.name, 'ID:', businessData.id);
+    if (isDevelopment) console.warn('[fetchBusinessBySlug] Business found:', businessData.name, 'ID:', businessData.id);
 
     // 2. Parallel fetch for relations with selective fields
     const business_id = businessData.id;
-    if (import.meta.env.MODE === 'development') console.warn('[fetchBusinessBySlug] Fetching related data for business ID:', business_id);
+    if (isDevelopment) console.warn('[fetchBusinessBySlug] Fetching related data for business ID:', business_id);
     const [servicesRes, mediaRes, teamRes, dealsRes, reviewsRes] = await Promise.all([
       supabase.from('services')
         .select('id, business_id, name, price, description, image_url, duration_minutes, position')
@@ -754,7 +763,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     if (dealsRes.error) console.error('[fetchBusinessBySlug] Deals error:', dealsRes.error.message);
     if (reviewsRes.error) console.error('[fetchBusinessBySlug] Reviews error:', reviewsRes.error.message);
 
-    if (import.meta.env.MODE === 'development') console.warn('[fetchBusinessBySlug] Related data counts:', {
+    if (isDevelopment) console.warn('[fetchBusinessBySlug] Related data counts:', {
       services: servicesRes.data?.length || 0,
       media: mediaRes.data?.length || 0,
       team: teamRes.data?.length || 0,
@@ -772,7 +781,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       reviews: (reviewsRes.data || []) as unknown as Review[]
     };
 
-    if (import.meta.env.MODE === 'development') console.warn('[fetchBusinessBySlug] Full business object assembled:', fullBusiness.name, {
+    if (isDevelopment) console.warn('[fetchBusinessBySlug] Full business object assembled:', fullBusiness.name, {
       servicesCount: fullBusiness.services?.length || 0,
       galleryCount: fullBusiness.gallery?.length || 0,
       dealsCount: fullBusiness.deals?.length || 0,
@@ -789,17 +798,17 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.rpc('increment_business_view_count', { p_business_id: business_id });
       if (error) {
         // CRITICAL: Tracking failures are silent - only debug log in development
-        if (import.meta.env.MODE === 'development') {
+        if (isDevelopment) {
 
           console.warn('[Tracking] Business view count increment failed (best-effort):', error.message);
         }
       } else {
         // Optimistically update UI
-        setBusinesses(prev => prev.map((b: any) => b.id === business_id ? { ...b, view_count: (b.view_count || 0) + 1 } : b));
+        setBusinesses(prev => prev.map((b: Business) => b.id === business_id ? { ...b, view_count: (b.view_count || 0) + 1 } : b));
       }
     } catch (error) {
       // CRITICAL: Catch ALL errors (network, CORS, adblock, etc.) and silently fail
-      if (import.meta.env.MODE === 'development') {
+      if (isDevelopment) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         console.warn('[Tracking] Business view count increment failed (best-effort):', errorMessage);
       }
@@ -1234,16 +1243,16 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.rpc('increment_blog_view_count', { p_post_id: post_id });
       if (error) {
         // CRITICAL: Tracking failures are silent - only debug log in development
-        if (import.meta.env.MODE === 'development') {
+        if (isDevelopment) {
           console.warn('[Tracking] Blog view count increment failed (best-effort):', error.message);
         }
       } else {
         // Optimistically update UI
-        setBlogPosts(prev => prev.map((b: any) => b.id === post_id ? { ...b, view_count: (b.view_count || 0) + 1 } : b));
+        setBlogPosts(prev => prev.map((b: BlogPost) => b.id === post_id ? { ...b, view_count: (b.view_count || 0) + 1 } : b));
       }
     } catch (error) {
       // CRITICAL: Catch ALL errors (network, CORS, adblock, etc.) and silently fail
-      if (import.meta.env.MODE === 'development') {
+      if (isDevelopment) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         console.warn('[Tracking] Blog view count increment failed (best-effort):', errorMessage);
       }
@@ -1316,13 +1325,14 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
         }
       } else if (data) {
         // Convert database format to BlogComment format
+        const commentRow = data as BlogCommentInsertRow;
         const newComment: BlogComment = {
-          id: data.id,
-          post_id: data.post_id,
-          author_name: data.author_name,
-          author_avatar_url: (data as any).author_avatar_url || '',
-          content: data.content,
-          date: data.date || data.created_at || new Date().toISOString(),
+          id: commentRow.id,
+          post_id: commentRow.post_id,
+          author_name: commentRow.author_name,
+          author_avatar_url: commentRow.author_avatar_url || '',
+          content: commentRow.content,
+          date: commentRow.date || commentRow.created_at || new Date().toISOString(),
         };
         const updatedComments = [newComment, ...comments];
         setComments(updatedComments);

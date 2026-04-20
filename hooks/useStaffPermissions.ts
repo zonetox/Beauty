@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useBusinessAuth } from '../contexts/BusinessContext.tsx';
 import { useAuth } from '../providers/AuthProvider.tsx';
 import { useStaff } from '../contexts/StaffContext.tsx';
-import { StaffPermissions } from '../types.ts';
+import { Business, StaffPermissions } from '../types.ts';
 
 /**
  * Hook to check if current user has staff permissions for the current business
@@ -42,7 +42,7 @@ export const useStaffPermissions = (): StaffPermissions => {
 
       // Check if user is business owner
       const isOwner = currentBusiness.owner_id === currentUser.id ||
-        (currentBusiness as any).ownerId === currentUser.id;
+        (currentBusiness as Business & { ownerId?: string }).ownerId === currentUser.id;
 
       if (isOwner) {
         // Business owners have all permissions

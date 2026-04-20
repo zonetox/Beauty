@@ -12,6 +12,7 @@ import { BusinessBlogPostStatus } from '../types.ts';
 import { useBlogData, useBusinessData } from '../contexts/BusinessDataContext.tsx';
 import { useBusinessBlogData } from '../contexts/BusinessContext.tsx';
 import Pagination from '../components/Pagination.tsx';
+import { BlogPost } from '../types.ts';
 
 // Unified type for display purposes
 interface UnifiedPost {
@@ -28,6 +29,23 @@ interface UnifiedPost {
 }
 
 const POSTS_PER_PAGE = 6;
+
+const toBlogCardPost = (post: UnifiedPost): Partial<BlogPost> & { url: string } => ({
+  id: typeof post.id === 'string' && post.id.startsWith('platform-')
+    ? parseInt(post.id.replace('platform-', ''), 10)
+    : 0,
+  url: post.url,
+  slug: post.url.split('/').pop() || '',
+  title: post.title,
+  image_url: post.image_url,
+  excerpt: post.excerpt,
+  author: post.author,
+  date: post.rawDate.toISOString(),
+  category: post.category,
+  content: '',
+  view_count: post.view_count || 0,
+  status: 'Published',
+});
 
 const BlogListPage: React.FC = () => {
   const { blogPosts: platformPosts, loading: platformLoading } = useBlogData();
@@ -238,12 +256,7 @@ const BlogListPage: React.FC = () => {
                     {paginatedPosts.map(post => (
                       <BlogPostCard
                         key={post.id}
-                        post={{
-                          ...post,
-                          id: typeof post.id === 'string' && post.id.startsWith('platform-')
-                            ? parseInt(post.id.replace('platform-', ''), 10)
-                            : 0 // Business posts use string IDs anyway, or fallback to 0
-                        } as any}
+                        post={toBlogCardPost(post)}
                       />
                     ))}
                   </div>

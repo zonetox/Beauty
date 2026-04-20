@@ -4,6 +4,36 @@ import { createClient } from '@supabase/supabase-js'; // Import createClient for
 import toast from 'react-hot-toast';
 import ConfirmDialog from '../ConfirmDialog.tsx';
 
+interface BusinessCsvRow {
+    name: string;
+    email: string;
+    password: string;
+    address?: string;
+    phone?: string;
+    city?: string;
+    district?: string;
+    ward?: string;
+    latitude?: string;
+    longitude?: string;
+    category?: string;
+    description?: string;
+    images_str?: string;
+    working_hours_start?: string;
+    working_hours_end?: string;
+    website?: string;
+    [key: string]: string | undefined;
+}
+
+interface BulkImportFailure {
+    name?: string;
+    error?: string;
+}
+
+interface BulkImportResult {
+    success?: Array<{ name?: string }>;
+    failed?: BulkImportFailure[];
+}
+
 // Helper to parse CSV manually to avoid dependencies
 const parseCSV = (text: string) => {
     const lines = text.split(/\r?\n/).filter(line => line.trim() !== ''); // Handle CRLF or LF
@@ -13,7 +43,7 @@ const parseCSV = (text: string) => {
 
     // Robust CSV line splitter that handles quoted commas
     const splitLine = (line: string) => {
-        const result = [];
+        const result: string[] = [];
         let current = '';
         let inQuotes = false;
 
@@ -43,7 +73,7 @@ const parseCSV = (text: string) => {
         if (!line.trim()) return null;
         const values = splitLine(line);
         // Create object based on headers
-        const row: any = {};
+        const row: Record<string, string> = {};
         headers.forEach((header, index) => {
             // Normalize header key
             const key = header.toLowerCase().replace(/[\s\W_]+/g, '_');
@@ -59,12 +89,12 @@ const parseCSV = (text: string) => {
 
             row[mappedKey] = values[index] || '';
         });
-        return row;
-    }).filter(r => r !== null);
+        return row as unknown as BusinessCsvRow;
+    }).filter((r): r is BusinessCsvRow => r !== null);
 };
 
 const BusinessBulkImporter: React.FC = () => {
-    const [previewData, setPreviewData] = useState<any[]>([]);
+    const [previewData, setPreviewData] = useState<BusinessCsvRow[]>([]);
     const [isImporting, setIsImporting] = useState(false);
     const [importLog, setImportLog] = useState<string[]>([]);
     const [fileKey, setFileKey] = useState(Date.now());
@@ -131,17 +161,18 @@ const BusinessBulkImporter: React.FC = () => {
 
             if (error) throw error;
 
+            const resultData = data as BulkImportResult;
             const logs = [
-                `✅ Success: ${data.success?.length || 0}`,
-                `❌ Failed: ${data.failed?.length || 0}`,
-                ...(data.failed || []).map((f: any) => `⚠️ Fail detail (${f.name}): ${f.error || 'Unknown'}`)
+                `✅ Success: ${resultData.success?.length || 0}`,
+                `❌ Failed: ${resultData.failed?.length || 0}`,
+                ...(resultData.failed || []).map((f) => `⚠️ Fail detail (${f.name}): ${f.error || 'Unknown'}`)
             ];
 
             setImportLog(prev => [...prev, ...logs]);
-            if (!data.failed || data.failed.length === 0) {
+            if (!resultData.failed || resultData.failed.length === 0) {
                 toast.success('All businesses imported successfully!');
             } else {
-                toast.error(`Import completed with ${data.failed.length} errors.`);
+                toast.error(`Import completed with ${resultData.failed.length} errors.`);
             }
 
         } catch (err) {

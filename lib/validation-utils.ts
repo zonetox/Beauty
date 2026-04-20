@@ -17,11 +17,11 @@ export function validateData<T>(
             console.error(`❌ SCHEMA VALIDATION FAILED in [${context}]`);
             console.error('Expected Schema:', schema.description || 'Generic Schema');
             console.error('Received Data:', data);
-            console.error('Validation Errors:', (error as any).errors);
+            console.error('Validation Errors:', error.issues);
 
             // In development, throw to alert the developer immediately
             if (import.meta.env?.MODE === 'development') {
-                throw new Error(`Schema validation failed in ${context}: ${JSON.stringify((error as any).errors, null, 2)}`);
+                throw new Error(`Schema validation failed in ${context}: ${JSON.stringify(error.issues, null, 2)}`);
             }
         }
         // In production, we might want to log to Sentry but return the data (best effort)
@@ -42,7 +42,7 @@ export function safeValidateData<T>(
 ): T | null {
     const result = schema.safeParse(data);
     if (!result.success) {
-        console.warn(`⚠️ Soft validation failure in [${context}]:`, (result.error as any).formErrors);
+        console.warn(`⚠️ Soft validation failure in [${context}]:`, result.error.flatten().formErrors);
         return null;
     }
     return result.data;

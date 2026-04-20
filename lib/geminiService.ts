@@ -4,8 +4,10 @@ import { GoogleGenAI } from "@google/genai";
 // Get API key from environment
 const getApiKey = (): string | null => {
   // Try both env variable names for compatibility
-  const envAny = (import.meta.env as any);
-  const apiKey = envAny.VITE_GEMINI_API_KEY || envAny.GEMINI_API_KEY || 
+  const envVars = import.meta.env as ImportMetaEnv & {
+    GEMINI_API_KEY?: string;
+  };
+  const apiKey = envVars.VITE_GEMINI_API_KEY || envVars.GEMINI_API_KEY || 
                  (typeof process !== 'undefined' ? process.env?.GEMINI_API_KEY : null) ||
                  (typeof process !== 'undefined' ? process.env?.API_KEY : null);
   

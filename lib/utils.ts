@@ -10,7 +10,7 @@ import { PostgrestResponse } from '@supabase/supabase-js';
  * @param obj - The object to convert
  * @returns The object with camelCase keys
  */
-export function snakeToCamel(obj: unknown): any {
+export function snakeToCamel(obj: unknown): unknown {
     if (obj === null || typeof obj !== 'object') {
         return obj;
     }
@@ -34,7 +34,7 @@ export function snakeToCamel(obj: unknown): any {
         const value = (obj as Record<string, unknown>)[key];
         (result as Record<string, unknown>)[camelKey] = snakeToCamel(value);
         return result;
-    }, {} as any);
+    }, {} as Record<string, unknown>);
 }
 
 /**
@@ -105,5 +105,5 @@ export function toSnakeCase<T>(obj: T): T {
         const value = (obj as Record<string, unknown>)[key];
         (result as Record<string, unknown>)[snakeKey] = toSnakeCase(value);
         return result;
-    }, {} as any);
+    }, {} as Record<string, unknown>) as T;
 }

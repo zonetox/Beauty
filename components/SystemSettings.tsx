@@ -9,6 +9,8 @@ import { AppSettings } from '../types.ts';
 import { uploadFile } from '../lib/storage.ts';
 import LoadingState from './LoadingState.tsx';
 
+type ColorSettings = NonNullable<NonNullable<AppSettings['colors']>>;
+
 const SystemSettings: React.FC = () => {
     const { settings, updateSettings } = useSettings();
     const [formData, setFormData] = useState<AppSettings | null>(null);
@@ -17,6 +19,20 @@ const SystemSettings: React.FC = () => {
     const [isUploadingFavicon, setIsUploadingFavicon] = useState(false);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
     const [faviconPreview, setFaviconPreview] = useState<string | null>(null);
+
+    const updateNestedField = (
+        section: keyof AppSettings,
+        key: string,
+        value: string | boolean,
+    ) => {
+        setFormData(prev => ({
+            ...prev!,
+            [section]: {
+                ...((prev?.[section] as Record<string, unknown> | undefined) || {}),
+                [key]: value,
+            },
+        }));
+    };
 
     useEffect(() => {
         if (settings) {
@@ -65,25 +81,7 @@ const SystemSettings: React.FC = () => {
         if (name.includes('.')) {
             const keys = name.split('.');
             if (keys.length === 2 && keys[0] && keys[1]) {
-                setFormData(prev => ({
-                    ...prev!,
-                    [keys[0]]: {
-                        ...(prev as any)[keys[0]],
-                        [keys[1]]: type === 'checkbox' ? checked : value,
-                    },
-                }));
-            } else if (keys.length === 3 && keys[0] && keys[1] && keys[2]) {
-                // For nested objects like colors.primary
-                setFormData(prev => ({
-                    ...prev!,
-                    [keys[0]]: {
-                        ...(prev as any)[keys[0]],
-                        [keys[1]]: {
-                            ...(prev as any)[keys[0]]?.[keys[1]],
-                            [keys[2]]: type === 'checkbox' ? checked : value,
-                        },
-                    },
-                }));
+                updateNestedField(keys[0] as keyof AppSettings, keys[1], type === 'checkbox' ? checked : value);
             }
         } else {
             setFormData(prev => ({
@@ -296,15 +294,11 @@ const SystemSettings: React.FC = () => {
                                         type="text"
                                         value={value || ''}
                                         onChange={(e) => {
-                                            const keys = `colors.${key}`.split('.');
                                             setFormData(prev => ({
                                                 ...prev!,
-                                                [keys[0]]: {
-                                                    ...(prev as any)[keys[0]],
-                                                    [keys[1]]: {
-                                                        ...(prev as any)[keys[0]]?.[keys[1]],
-                                                        [keys[2]]: e.target.value,
-                                                    },
+                                                colors: {
+                                                    ...((prev?.colors as ColorSettings | undefined) || {}),
+                                                    [key]: e.target.value,
                                                 },
                                             }));
                                         }}

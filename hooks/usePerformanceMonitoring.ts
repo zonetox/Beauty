@@ -13,6 +13,19 @@ interface PerformanceMetrics {
   interactionTime?: number;
 }
 
+interface LargestContentfulPaintLike extends PerformanceEntry {
+  renderTime?: number;
+}
+
+interface FirstInputLike extends PerformanceEntry {
+  processingStart?: number;
+}
+
+interface LayoutShiftLike extends PerformanceEntry {
+  hadRecentInput?: boolean;
+  value?: number;
+}
+
 export const usePerformanceMonitoring = (componentName: string) => {
   // eslint-disable-next-line react-hooks/purity
   const mountStartTime = useRef<number>(Date.now());
@@ -186,25 +199,26 @@ export const useWebVitals = () => {
         lcpObserver = new PerformanceObserver((list) => {
           const entries = list.getEntries();
           const lastEntry = entries[entries.length - 1] as PerformanceEntry | undefined;
-          const lcp = lastEntry && ((lastEntry as any).renderTime ?? (lastEntry as any).startTime) || 0;
+          const lcpEntry = lastEntry as LargestContentfulPaintLike | undefined;
+          const lcp = lcpEntry ? (lcpEntry.renderTime ?? lcpEntry.startTime) : 0;
           trackEvent('web_vital', { metric: 'LCP', value: lcp });
           if (lcp > 2500) Sentry.addBreadcrumb({ category: 'performance', message: 'Poor LCP', level: 'warning', data: { lcp } });
         });
-        lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true } as any);
+        lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true } as PerformanceObserverInit);
       } catch {
         // Ignore error if observer is not supported
       }
 
       try {
         fidObserver = new PerformanceObserver((list) => {
-          const entries = list.getEntries() as any[];
+          const entries = list.getEntries() as FirstInputLike[];
           entries.forEach((entry) => {
-            const fid = (entry as any).processingStart - (entry as any).startTime;
+            const fid = (entry.processingStart ?? entry.startTime) - entry.startTime;
             trackEvent('web_vital', { metric: 'FID', value: fid });
             if (fid > 100) Sentry.addBreadcrumb({ category: 'performance', message: 'Poor FID', level: 'warning', data: { fid } });
           });
         });
-        fidObserver.observe({ type: 'first-input', buffered: true } as any);
+        fidObserver.observe({ type: 'first-input', buffered: true } as PerformanceObserverInit);
       } catch {
         // Ignore error if observer is not supported
       }
@@ -212,14 +226,14 @@ export const useWebVitals = () => {
       try {
         let clsValue = 0;
         clsObserver = new PerformanceObserver((list) => {
-          const entries = list.getEntries() as any[];
+          const entries = list.getEntries() as LayoutShiftLike[];
           entries.forEach((entry) => {
             if (!entry.hadRecentInput) clsValue += entry.value ?? 0;
           });
           trackEvent('web_vital', { metric: 'CLS', value: clsValue });
           if (clsValue > 0.25) Sentry.addBreadcrumb({ category: 'performance', message: 'Poor CLS', level: 'warning', data: { cls: clsValue } });
         });
-        clsObserver.observe({ type: 'layout-shift', buffered: true } as any);
+        clsObserver.observe({ type: 'layout-shift', buffered: true } as PerformanceObserverInit);
       } catch {
         // Ignore error if observer is not supported
       }

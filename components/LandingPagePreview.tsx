@@ -24,7 +24,7 @@ interface LandingPagePreviewProps {
 }
 
 // Map section keys to components
-const SECTION_COMPONENTS: Record<keyof LandingPageConfig['sections'], React.ComponentType<any>> = {
+const SECTION_COMPONENTS = {
   hero: HeroSection,
   trust: () => null, // Trust indicators section - to be implemented in Phase 3.2
   services: ServicesSection,
@@ -33,7 +33,7 @@ const SECTION_COMPONENTS: Record<keyof LandingPageConfig['sections'], React.Comp
   reviews: ReviewsSection,
   cta: BookingCtaSection,
   contact: LocationSection,
-};
+} as const;
 
 const LandingPagePreview: React.FC<LandingPagePreviewProps> = ({ business, config, onClose }) => {
   // Create a preview version of the business with the new config
@@ -44,10 +44,10 @@ const LandingPagePreview: React.FC<LandingPagePreviewProps> = ({ business, confi
 
   // Get sections sorted by order and filtered by enabled
   const enabledSections = Object.entries(config.sections)
-    .filter(([_, section]) => (section as any).enabled)
+    .filter(([, section]) => section.enabled)
     .map(([key, section]) => ({
       key: key as keyof LandingPageConfig['sections'],
-      order: (section as any).order,
+      order: section.order,
     }))
     .sort((a, b) => a.order - b.order);
 
@@ -91,7 +91,7 @@ const LandingPagePreview: React.FC<LandingPagePreviewProps> = ({ business, confi
               {enabledSections
                 .filter(s => s.key !== 'hero') // Hero is rendered separately
                 .map(({ key }) => {
-                  const Component = SECTION_COMPONENTS[key];
+                  const Component = SECTION_COMPONENTS[key] as React.ComponentType<{ business: Business }>;
                   if (!Component) return null;
 
                   // Special handling for sections that need different props

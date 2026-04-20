@@ -33,7 +33,7 @@ interface AdminPlatformContextType {
   updateTicketStatus: (ticketId: string, status: TicketStatus) => Promise<void>;
   // Registration Requests
   registrationRequests: RegistrationRequest[];
-  approveRegistrationRequest: (requestId: string) => Promise<any>;
+  approveRegistrationRequest: (requestId: string) => Promise<unknown>;
   rejectRegistrationRequest: (requestId: string) => Promise<void>;
   // Settings
   settings: AppSettings | null;
@@ -48,6 +48,24 @@ interface AdminPlatformContextType {
 const AdminPlatformContext = createContext<AdminPlatformContextType | undefined>(undefined);
 
 const ANNOUNCEMENT_READ_KEY = 'read_announcements_by_business';
+
+type SupportTicketRow = {
+  id: string;
+  business_id: number;
+  business_name?: string;
+  subject: string;
+  message: string;
+  status: TicketStatus;
+  created_at: string;
+  last_reply_at?: string | null;
+  replies?: TicketReply[] | null;
+  businesses?: { name?: string | null } | null;
+};
+
+type PageContentRow = {
+  page_name: PageName;
+  content_data: PageData;
+};
 
 export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const queryClient = useQueryClient();
@@ -128,8 +146,8 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
         .limit(100);
       if (error) throw error;
 
-      const mappedTickets = (data as any[]).map(t => ({
-        ...(snakeToCamel(t) as any),
+      const mappedTickets = (data as SupportTicketRow[]).map(t => ({
+        ...(snakeToCamel(t) as Omit<SupportTicket, 'business_name'>),
         business_name: t.businesses?.name || t.business_name || 'Unknown Business'
       }));
       return mappedTickets as SupportTicket[];
@@ -172,7 +190,7 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
       const { data, error } = await supabase.from('page_content').select('page_name, content_data');
       if (error) throw error;
 
-      const dbContent = (data as any[])?.reduce((acc, page) => {
+      const dbContent = (data as PageContentRow[])?.reduce((acc, page) => {
         acc[page.page_name as PageName] = page.content_data as PageData;
         return acc;
       }, {} as Record<PageName, PageData>) || {};
@@ -277,7 +295,7 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
     if (!ticket) return;
     const updatedReplies = [...(ticket.replies || []), { ...replyData, id: crypto.randomUUID(), created_at: new Date().toISOString() }];
     const { error } = await supabase.from('support_tickets')
-      .update({ replies: updatedReplies as any, last_reply_at: new Date().toISOString() })
+      .update({ replies: updatedReplies as unknown as Record<string, unknown>[], last_reply_at: new Date().toISOString() })
       .eq('id', ticketId)
       .select().single();
     if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.tickets });
@@ -310,7 +328,7 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
 
   const updateSettings = async (newSettings: AppSettings) => {
     if (!isSupabaseConfigured) return;
-    const { error } = await supabase.from('app_settings').update({ settings_data: newSettings as any }).eq('id', 1);
+    const { error } = await supabase.from('app_settings').update({ settings_data: newSettings as unknown as Record<string, unknown> }).eq('id', 1);
     if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.settings });
   };
 
@@ -319,7 +337,7 @@ export const AdminPlatformProvider: React.FC<{ children: ReactNode }> = ({ child
   const updatePageContent = async (page: PageName, newContent: PageData) => {
     if (!isSupabaseConfigured) return;
     const { error } = await supabase.from('page_content')
-      .upsert({ page_name: page, content_data: newContent as any } as any, { onConflict: 'page_name' });
+      .upsert({ page_name: page, content_data: newContent as unknown as Record<string, unknown> }, { onConflict: 'page_name' });
     if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.pageContent });
   };
 

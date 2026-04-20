@@ -39,8 +39,9 @@ const LoginPage: React.FC = () => {
                 ? '/business-profile'
                 : '/account';
             navigate(target, { replace: true });
-        } catch (err: any) {
-            setError(err.message || 'Đăng nhập thất bại.');
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Đăng nhập thất bại.';
+            setError(message);
             setIsLoading(false);
         }
     };

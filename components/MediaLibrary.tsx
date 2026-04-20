@@ -13,15 +13,16 @@ import EditMediaModal from './EditMediaModal.tsx';
 import ConfirmDialog from './ConfirmDialog.tsx';
 
 // --- Reusable Components ---
-const StatDisplay: React.FC<{ label: string; value: number; limit: number }> = ({ label, value, limit }) => {
-    const percentage = limit > 0 ? (value / limit) * 100 : 0;
-    const isOverLimit = value > limit;
+const StatDisplay: React.FC<{ label: string; value: number; limit?: number }> = ({ label, value, limit }) => {
+    const hasLimit = typeof limit === 'number';
+    const percentage = hasLimit && limit > 0 ? (value / limit) * 100 : 0;
+    const isOverLimit = hasLimit && value > limit;
     return (
         <div className="flex-1">
             <div className="flex justify-between items-baseline mb-1">
                 <span className="text-sm font-medium text-gray-700">{label}</span>
                 <span className={`text-xs font-semibold ${isOverLimit ? 'text-red-600' : 'text-gray-500'}`}>
-                    {value} / {limit}
+                    {value} / {hasLimit ? limit : '-'}
                 </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2.5">
@@ -59,6 +60,8 @@ const MediaLibrary: React.FC = () => {
     }, [currentBusiness?.gallery]);
 
     const currentPackage = useMemo(() => packages.find(p => p.tier === currentBusiness?.membership_tier), [packages, currentBusiness]);
+    const photoLimit = currentPackage?.permissions?.photo_limit;
+    const videoLimit = currentPackage?.permissions?.video_limit;
 
     const photoCount = useMemo(() => localMedia.filter(item => item.type === MediaType.IMAGE).length, [localMedia]);
     const videoCount = useMemo(() => localMedia.filter(item => item.type === MediaType.VIDEO).length, [localMedia]);
@@ -104,13 +107,13 @@ const MediaLibrary: React.FC = () => {
             }
 
             // Check limits
-            if (isImage && photoCount >= currentPackage.permissions.photo_limit) {
-                errors.push(`${file.name}: Photo limit (${currentPackage.permissions.photo_limit}) reached.`);
+            if (isImage && typeof photoLimit === 'number' && photoCount >= photoLimit) {
+                errors.push(`${file.name}: Photo limit (${photoLimit}) reached.`);
                 continue;
             }
 
-            if (isVideo && videoCount >= currentPackage.permissions.video_limit) {
-                errors.push(`${file.name}: Video limit (${currentPackage.permissions.video_limit}) reached.`);
+            if (isVideo && typeof videoLimit === 'number' && videoCount >= videoLimit) {
+                errors.push(`${file.name}: Video limit (${videoLimit}) reached.`);
                 continue;
             }
 
@@ -297,8 +300,8 @@ const MediaLibrary: React.FC = () => {
             <p className="text-gray-500 mb-6">Manage all photos and videos for your landing page.</p>
 
             <div className="bg-gray-50 p-4 rounded-lg border flex flex-col md:flex-row gap-6 mb-6">
-                <StatDisplay label="Photos" value={photoCount} limit={currentPackage.permissions.photo_limit} />
-                <StatDisplay label="Videos" value={videoCount} limit={currentPackage.permissions.video_limit} />
+                <StatDisplay label="Photos" value={photoCount} limit={photoLimit} />
+                <StatDisplay label="Videos" value={videoCount} limit={videoLimit} />
             </div>
 
             <div

@@ -2,6 +2,22 @@ import React, { createContext, useContext, useState, useCallback, ReactNode } fr
 import { supabase } from '../lib/supabaseClient.ts';
 import { BusinessStaff, StaffMemberRole } from '../types.ts';
 
+interface StaffProfileRow {
+  email?: string;
+  full_name?: string;
+}
+
+interface BusinessStaffRow {
+  id: string;
+  business_id: number;
+  user_id: string;
+  role: StaffMemberRole;
+  permissions: BusinessStaff['permissions'];
+  created_at: string;
+  updated_at: string;
+  profiles?: StaffProfileRow | null;
+}
+
 
 interface StaffContextType {
   staff: BusinessStaff[];
@@ -42,7 +58,7 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
       if (fetchError) throw fetchError;
 
-      const staff_list = (data || []).map((item: any) => {
+      const staff_list = ((data || []) as BusinessStaffRow[]).map((item) => {
         const staff: BusinessStaff = {
           id: item.id,
           business_id: item.business_id,

@@ -4,6 +4,12 @@
 
 import { useEffect } from 'react';
 
+type JsonPrimitive = string | number | boolean | null;
+type JsonValue = JsonPrimitive | JsonObject | JsonValue[];
+interface JsonObject {
+  [key: string]: JsonValue;
+}
+
 interface ArticleSchema {
   headline?: string;
   author?: {
@@ -171,11 +177,11 @@ const SEOHead: React.FC<SEOHeadProps> = ({
     existingSchemaScripts.forEach(script => script.remove());
 
     // Build array of schemas (can have multiple)
-    const schemas: any[] = [];
+    const schemas: JsonObject[] = [];
 
     // Main schema based on type
     if (type === 'website') {
-      const websiteSchema: any = {
+      const websiteSchema: JsonObject = {
         '@context': 'https://schema.org',
         '@type': 'WebSite',
         name: '1Beauty.asia',
@@ -194,7 +200,7 @@ const SEOHead: React.FC<SEOHeadProps> = ({
       };
       schemas.push(websiteSchema);
     } else if (type === 'article' && articleSchema) {
-      const articleSchemaObj: any = {
+      const articleSchemaObj: JsonObject = {
         '@context': 'https://schema.org',
         '@type': 'Article',
         headline: articleSchema.headline || title,
@@ -227,7 +233,7 @@ const SEOHead: React.FC<SEOHeadProps> = ({
       }
       schemas.push(articleSchemaObj);
     } else if (type === 'business' && businessSchema) {
-      const businessSchemaObj: any = {
+      const businessSchemaObj: JsonObject = {
         '@context': 'https://schema.org',
         '@type': 'LocalBusiness',
         name: businessSchema.name || title,
@@ -270,7 +276,7 @@ const SEOHead: React.FC<SEOHeadProps> = ({
 
     // Add Organization schema if provided
     if (organizationSchema) {
-      const orgSchema: any = {
+      const orgSchema: JsonObject = {
         '@context': 'https://schema.org',
         '@type': 'Organization',
         name: organizationSchema.name || '1Beauty.asia',
@@ -285,7 +291,7 @@ const SEOHead: React.FC<SEOHeadProps> = ({
     // Add Review schemas if provided
     if (reviewSchema && reviewSchema.length > 0) {
       reviewSchema.forEach(review => {
-        const reviewSchemaObj: any = {
+        const reviewSchemaObj: JsonObject = {
           '@context': 'https://schema.org',
           '@type': 'Review',
           ...(review.author && { author: review.author }),

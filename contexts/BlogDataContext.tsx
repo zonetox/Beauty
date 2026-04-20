@@ -4,6 +4,9 @@ import { BlogPost, BlogComment, BlogCategory } from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { BLOG_CATEGORIES as initialBlogCategories } from '../constants.ts';
 
+type BlogPostStatus = BlogPost['status'];
+type BlogSeoData = NonNullable<BlogPost['seo']>;
+
 interface BlogDataContextType {
   blogPosts: BlogPost[];
   loading: boolean;
@@ -36,9 +39,49 @@ interface BlogPostDbRow {
   view_count: number;
   status: string;
   is_featured: boolean;
-  seo: any;
+  seo: BlogSeoData | null;
   updated_at: string;
 }
+
+interface BlogCommentDbRow {
+  id: string;
+  post_id: number;
+  author_name: string;
+  content: string;
+  date?: string | null;
+  created_at?: string | null;
+}
+
+interface BlogMutationResponse<T> {
+  data: T | null;
+  error: unknown;
+}
+
+const normalizeSeo = (seo: BlogPostDbRow['seo']): BlogSeoData | undefined => {
+  if (!seo) return undefined;
+  return {
+    title: seo.title || '',
+    description: seo.description || '',
+    keywords: seo.keywords || ''
+  };
+};
+
+const normalizeBlogPost = (post: BlogPostDbRow): BlogPost => ({
+  id: post.id,
+  slug: post.slug,
+  title: post.title,
+  image_url: post.image_url,
+  excerpt: post.excerpt,
+  author: post.author,
+  date: post.date,
+  category: post.category,
+  content: post.content,
+  view_count: post.view_count || 0,
+  status: (post.status || 'Published') as BlogPostStatus,
+  is_featured: post.is_featured,
+  seo: normalizeSeo(post.seo),
+  updated_at: post.updated_at
+});
 
 const BlogDataContext = createContext<BlogDataContextType | undefined>(undefined);
 
@@ -64,22 +107,7 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
       if (error) {
         console.error("Error fetching blog posts:", error);
       } else if (data && !cancelled) {
-        setBlogPosts((data as any[]).map((post) => ({
-          id: post.id,
-          slug: post.slug,
-          title: post.title,
-          image_url: post.image_url,
-          excerpt: post.excerpt,
-          author: post.author,
-          date: post.date,
-          category: post.category,
-          content: post.content,
-          view_count: post.view_count || 0,
-          status: post.status || 'Published',
-          is_featured: post.is_featured,
-          seo: post.seo,
-          updated_at: post.updated_at
-        })));
+        setBlogPosts((data as BlogPostDbRow[]).map(normalizeBlogPost));
       }
       if (!cancelled) {
         setLoading(false);
@@ -124,11 +152,11 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
           if (savedCommentsJSON) {
             setComments(JSON.parse(savedCommentsJSON));
           }
-        } catch (e) {
-          console.error('Failed to parse comments from localStorage:', e);
+        } catch (error) {
+          console.error('Failed to parse comments from localStorage:', error);
         }
       } else if (data) {
-        const mappedComments: BlogComment[] = data.map(comment => ({
+        const mappedComments: BlogComment[] = (data as BlogCommentDbRow[]).map(comment => ({
           id: comment.id,
           post_id: comment.post_id,
           author_name: comment.author_name,
@@ -165,8 +193,8 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
         // Fallback to initial constants if DB is empty
         setBlogCategories(initialBlogCategories);
       }
-    } catch (err) {
-      console.error('Failed to fetch categories:', err);
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
       setBlogCategories(initialBlogCategories);
     }
   }, []);
@@ -197,25 +225,12 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
       view_count: 0
     };
 
-    const { data, error } = await supabase.from('blog_posts').insert(postToAdd).select().single() as unknown as { data: BlogPostDbRow | null, error: any };
+    const { data, error } = await supabase.from('blog_posts').insert(postToAdd).select().single() as unknown as BlogMutationResponse<BlogPostDbRow>;
 
     if (!error && data) {
       setBlogPosts(prev => [({
-        id: data.id,
-        slug: data.slug,
-        title: data.title,
-        image_url: data.image_url,
-        excerpt: data.excerpt,
-        author: data.author,
-        date: data.date,
-        category: data.category,
-        content: data.content,
-        view_count: data.view_count || 0,
-        status: data.status,
-        is_featured: data.is_featured,
-        seo: data.seo,
-        updated_at: data.updated_at
-      } as BlogPost), ...prev]);
+        ...normalizeBlogPost(data)
+      }), ...prev]);
     } else {
       console.error("Error adding post:", error);
       throw error;
@@ -238,25 +253,10 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
       updated_at: new Date().toISOString()
     };
 
-    const { data, error } = await supabase.from('blog_posts').update(mappedUpdates).eq('id', id).select().single() as unknown as { data: BlogPostDbRow | null, error: any };
+    const { data, error } = await supabase.from('blog_posts').update(mappedUpdates).eq('id', id).select().single() as unknown as BlogMutationResponse<BlogPostDbRow>;
 
     if (!error && data) {
-      const updatedData = {
-        id: data.id,
-        slug: data.slug,
-        title: data.title,
-        image_url: data.image_url,
-        excerpt: data.excerpt,
-        author: data.author,
-        date: data.date,
-        category: data.category,
-        content: data.content,
-        view_count: data.view_count || 0,
-        status: data.status,
-        is_featured: data.is_featured,
-        seo: data.seo,
-        updated_at: data.updated_at
-      } as BlogPost;
+      const updatedData = normalizeBlogPost(data);
       setBlogPosts(prev => prev.map(p => (p.id === id ? updatedData : p)));
     } else {
       console.error("Error updating post:", error);
@@ -286,7 +286,7 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
       };
     });
 
-    const { data, error } = await supabase.from('blog_posts').insert(postsToAdd).select() as unknown as { data: BlogPostDbRow[] | null, error: any };
+    const { data, error } = await supabase.from('blog_posts').insert(postsToAdd).select() as unknown as BlogMutationResponse<BlogPostDbRow[]>;
 
     if (error) {
       console.error("Error bulk adding posts:", error);
@@ -294,22 +294,7 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
 
     if (data) {
-      const newPosts = data.map((post: any) => ({
-        id: post.id,
-        slug: post.slug,
-        title: post.title,
-        image_url: post.image_url,
-        excerpt: post.excerpt,
-        author: post.author,
-        date: post.date,
-        category: post.category,
-        content: post.content,
-        view_count: post.view_count || 0,
-        status: post.status,
-        is_featured: post.is_featured,
-        seo: post.seo,
-        updated_at: post.updated_at
-      } as BlogPost));
+      const newPosts = data.map(normalizeBlogPost);
 
       setBlogPosts(prev => [...newPosts, ...prev]);
       return { success: data.length, failed: posts.length - data.length };
@@ -383,8 +368,8 @@ export const BlogDataProvider: React.FC<{ children: ReactNode }> = ({ children }
         try {
           const updatedComments = [...comments, newComment];
           localStorage.setItem('blog_comments', JSON.stringify(updatedComments));
-        } catch (e) {
-          console.error('Failed to save to localStorage:', e);
+        } catch (error) {
+          console.error('Failed to save to localStorage:', error);
         }
       } else {
         // Refresh comments from database

@@ -40,8 +40,9 @@ const RegisterUserPage: React.FC = () => {
             await register(formData.email, formData.password, { full_name: formData.full_name });
             toast.success('Đăng ký thành công!');
             // Redirection handled by useEffect
-        } catch (err: any) {
-            toast.error(err.message || 'Đăng ký thất bại.');
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Đăng ký thất bại.';
+            toast.error(message);
         } finally {
             setIsSubmitting(false);
         }

@@ -173,7 +173,7 @@ export async function createBusinessWithTrial(
 
     const { data: createdBusiness, error: businessError } = await supabase
       .from('businesses')
-      .insert(newBusiness as any) // Type assertion to bypass strict generated types
+      .insert(newBusiness as unknown as Record<string, unknown>) // Type assertion to bypass strict generated types
       .select()
       .single();
 
@@ -194,7 +194,7 @@ export async function createBusinessWithTrial(
     }
 
     // Type assertion needed because DB types don't match camelCase Business type
-    return createdBusiness as any as Business;
+    return createdBusiness as unknown as Business;
   } catch (error) {
     console.error('Exception creating business with trial:', error);
     return null;

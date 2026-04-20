@@ -25,7 +25,7 @@ interface PageRendererProps {
   pageData: PageData;
 }
 
-const componentMap: { [key: string]: React.ComponentType<any> } = {
+const componentMap: Record<string, React.ComponentType> = {
   // About Page sections
   'about-history': AboutHistory,
   'about-mission': AboutMission,

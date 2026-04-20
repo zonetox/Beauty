@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useAdminPlatform } from '../contexts/AdminPlatformContext.tsx';
 import ConfirmDialog from './ConfirmDialog.tsx';
+import { Announcement } from '../types.ts';
 
 const AdminAnnouncementsManager: React.FC = () => {
     const { announcements, addAnnouncement, deleteAnnouncement } = useAdminPlatform();
@@ -9,6 +10,7 @@ const AdminAnnouncementsManager: React.FC = () => {
     const [content, setContent] = useState('');
     const [type, setType] = useState<'info' | 'warning' | 'success'>('info');
     const [confirmDelete, setConfirmDelete] = useState<{ isOpen: boolean; announcementId: string | null }>({ isOpen: false, announcementId: null });
+    const announcementTypes: Announcement['type'][] = ['info', 'success', 'warning'];
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -52,12 +54,14 @@ const AdminAnnouncementsManager: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700">Type</label>
                         <select
                             value={type}
-                            onChange={e => setType(e.target.value as any)}
+                            onChange={e => setType(e.target.value as Announcement['type'])}
                             className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm"
                         >
-                            <option value="info">Info (Blue)</option>
-                            <option value="success">Success (Green)</option>
-                            <option value="warning">Warning (Yellow)</option>
+                            {announcementTypes.map(option => (
+                                <option key={option} value={option}>
+                                    {option === 'info' ? 'Info (Blue)' : option === 'success' ? 'Success (Green)' : 'Warning (Yellow)'}
+                                </option>
+                            ))}
                         </select>
                     </div>
                     <div className="text-right">

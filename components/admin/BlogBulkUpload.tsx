@@ -2,6 +2,21 @@ import React, { useState } from 'react';
 import { useBlogData } from '../../contexts/BlogDataContext.tsx';
 import toast from 'react-hot-toast';
 import ConfirmDialog from '../ConfirmDialog.tsx';
+import { BlogPost } from '../../types.ts';
+
+interface BlogCsvRow {
+    title: string;
+    content: string;
+    category: string;
+    excerpt?: string;
+    author?: string;
+    image_url?: string;
+    status?: 'Published' | 'Draft' | string;
+    is_featured?: string;
+    seoTitle?: string;
+    seoDescription?: string;
+    seoKeywords?: string;
+}
 
 // Helper to parse CSV manually to avoid dependencies
 const parseCSV = (text: string) => {
@@ -33,13 +48,13 @@ const parseCSV = (text: string) => {
         return headers.reduce((obj, header, index) => {
             obj[header] = values[index] || '';
             return obj;
-        }, {} as any);
+        }, {} as Record<string, string>) as unknown as BlogCsvRow;
     });
 };
 
 const BlogBulkUpload: React.FC = () => {
     const { blogCategories, addBlogCategory, bulkAddBlogPosts } = useBlogData();
-    const [previewData, setPreviewData] = useState<any[]>([]);
+    const [previewData, setPreviewData] = useState<BlogCsvRow[]>([]);
     const [isImporting, setIsImporting] = useState(false);
     const [fileKey, setFileKey] = useState(Date.now());
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -95,7 +110,7 @@ const BlogBulkUpload: React.FC = () => {
             }
 
             // 2. Prepare posts for bulk add
-            const postsToImport = previewData.map(row => ({
+            const postsToImport: Omit<BlogPost, 'id' | 'slug' | 'date' | 'view_count' | 'updated_at'>[] = previewData.map(row => ({
                 title: row.title,
                 excerpt: row.excerpt || row.title,
                 author: row.author || 'Admin',

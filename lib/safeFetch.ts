@@ -20,6 +20,10 @@ export interface SafeFetchResult<T> {
   fromCache?: boolean;
 }
 
+function toError(value: unknown): Error {
+  return value instanceof Error ? value : new Error(typeof value === 'string' ? value : 'Unknown error');
+}
+
 // Centralized AbortController registry for request cancellation
 const abortControllers = new Map<string, AbortController>();
 
@@ -120,7 +124,7 @@ export async function safeFetch<T>(
             console.error('[SafeFetch] Fatal error after retry:', retryError);
           }
         }
-        return { data: null, error: retryError as any };
+        return { data: null, error: toError(retryError) };
       }
     }
 
@@ -139,7 +143,7 @@ export async function safeFetch<T>(
       console.error('[SafeFetch] Fatal error:', error);
     }
 
-    return { data: null, error: error as any };
+    return { data: null, error: toError(error) };
   }
 }
 

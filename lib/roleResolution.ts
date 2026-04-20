@@ -35,6 +35,22 @@ export interface RoleResolutionResult {
   error?: string;
 }
 
+interface UserContextRpcResult {
+  role: UserRole;
+  profile: Profile & { id: string };
+  business_id: number | null;
+}
+
+interface ProfileVerificationResult {
+  data: { business_id: number | null } | null;
+  error: { message: string; code?: string } | null;
+}
+
+interface BusinessVerificationResult {
+  data: { id: number; owner_id: string } | null;
+  error: { message: string; code?: string } | null;
+}
+
 /**
  * Resolve user role from actual database
  * 
@@ -62,16 +78,16 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
   try {
     // INDUSTRIAL STANDARD: Use the unified context RPC
     // This single call replaces all fragmented table checks (profiles, admin, business, staff)
-    const { data, error } = await (supabase.rpc as any)('get_user_context', {
+    const { data, error } = await supabase.rpc('get_user_context', {
       p_user_id: user.id
-    });
+    }) as unknown as { data: UserContextRpcResult | null; error: { message: string } | null };
 
     if (error) {
       console.error('Unified Context Error:', error);
       throw error;
     }
 
-    const context = data as any;
+    const context = data;
 
     if (!context) {
       return {
@@ -87,7 +103,7 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
 
     // Map RPC response to RoleResolutionResult
     return {
-      role: context.role as any,
+      role: context.role,
       profileId: context.profile.id,
       business_id: context.business_id,
       isAdmin: context.role === 'admin',
@@ -181,7 +197,7 @@ export async function verifyBusinessLinked(userId: string): Promise<{ exists: bo
     const { data: profile, error: profileError } = await Promise.race([
       profileQuery,
       verificationTimeout
-    ]) as { data: { business_id: number | null } | null; error: any };
+    ]) as ProfileVerificationResult;
 
     if (profileError || !profile) {
       return {
@@ -210,7 +226,7 @@ export async function verifyBusinessLinked(userId: string): Promise<{ exists: bo
     const { data: business, error: businessError } = await Promise.race([
       businessQuery,
       verificationTimeout
-    ]) as { data: { id: number; owner_id: string } | null; error: any };
+    ]) as BusinessVerificationResult;
 
     if (businessError || !business) {
       return {
