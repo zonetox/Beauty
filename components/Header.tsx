@@ -242,23 +242,7 @@ const Header: React.FC = () => {
                             <span>Tài khoản của tôi</span>
                           </div>
                         </Link>
-                        {role === 'user' && !hasBusinessAccess && (
-                          <Link
-                            to="/register/business"
-                            className="block px-4 py-2 text-sm text-neutral-dark hover:bg-primary/10 transition-colors"
-                            onClick={() => {
-                              setIsMenuOpen(false);
-                              setIsDropdownOpen(false);
-                            }}
-                          >
-                            <div className="flex items-center gap-2">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                              </svg>
-                              <span>Đăng ký doanh nghiệp</span>
-                            </div>
-                          </Link>
-                        )}
+
                         <button
                           onClick={handleLogout}
                           className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
@@ -362,20 +346,7 @@ const Header: React.FC = () => {
                   <UserIcon className="w-6 h-6" />
                   <span>Tài khoản của tôi</span>
                 </NavLink>
-                {role === 'user' && !hasBusinessAccess && (
-                  <Link
-                    to="/register/business"
-                    className="block px-3 py-2 rounded-md text-base font-medium text-neutral-dark hover:bg-primary/10"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                      </svg>
-                      <span>Đăng ký doanh nghiệp</span>
-                    </div>
-                  </Link>
-                )}
+
                 <button onClick={handleLogout} className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50">
                   <div className="flex items-center gap-3">
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
