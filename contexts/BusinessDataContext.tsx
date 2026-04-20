@@ -19,7 +19,7 @@ import { cacheManager, CACHE_KEYS, CACHE_TTL } from '../lib/cache.ts';
 export interface PublicDataContextType {
   // Business Data
   businesses: Business[];
-  businessMarkers: { id: number, name: string, slug?: string, logo_url?: string, address?: string, rating?: number, review_count?: number, latitude: number, longitude: number, categories: string[], is_active: boolean }[];
+  businessMarkers: { id: number, name: string, slug?: string, logo_url?: string, image_url?: string, address?: string, rating?: number, review_count?: number, latitude: number, longitude: number, categories: string[], is_active: boolean }[];
   businessLoading: boolean;
   totalBusinesses: number;
   currentPage: number;
@@ -114,7 +114,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
 
   // --- STATES ---
   const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [businessMarkers, setBusinessMarkers] = useState<{ id: number, name: string, slug?: string, logo_url?: string, address?: string, rating?: number, review_count?: number, latitude: number, longitude: number, categories: string[], is_active: boolean }[]>(initialCache.markers);
+  const [businessMarkers, setBusinessMarkers] = useState<{ id: number, name: string, slug?: string, logo_url?: string, image_url?: string, address?: string, rating?: number, review_count?: number, latitude: number, longitude: number, categories: string[], is_active: boolean }[]>(initialCache.markers);
   // Start with loading false if we have cached data (page can render immediately)
   const [businessLoading, setBusinessLoading] = useState(!initialCache.hasCache);
   const [totalBusinesses, setTotalBusinesses] = useState(0);
@@ -389,7 +389,7 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       });
 
       const markerPromise = supabase.from('businesses')
-        .select('id, name, slug, logo_url, address, rating, review_count, latitude, longitude, categories, is_active')
+        .select('id, name, slug, logo_url, image_url, address, rating, review_count, latitude, longitude, categories, is_active')
         .eq('is_active', true)
         .not('latitude', 'is', null)
         .not('longitude', 'is', null)
