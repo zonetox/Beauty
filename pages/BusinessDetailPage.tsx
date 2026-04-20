@@ -29,14 +29,46 @@ import ReviewsSection from '../components/business-landing/ReviewsSection.tsx';
 import TrustIndicatorsSection from '../components/business-landing/TrustIndicatorsSection.tsx';
 import FloatingActionButtons from '../components/FloatingActionButtons.tsx';
 import { LandingPageConfig } from '../types.ts';
+import { useCMS } from '../contexts/CMSContext.tsx';
+import { useAuth } from '../providers/AuthProvider.tsx';
 
 const BusinessDetailPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
-    const { fetchBusinessBySlug, incrementBusinessview_count } = useBusinessData();
+    const { fetchBusinessBySlug, incrementBusinessview_count, updateBusiness } = useBusinessData();
     const [business, setBusiness] = useState<Business | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+    const { isEditing, setIsEditing, stagedChanges, clearChanges, saveChanges } = useCMS();
+    const { user } = useAuth();
+
+    // Check if user is business owner
+    const isOwner = user?.id === business?.owner_id;
+
+    const handleSaveLandingPage = async () => {
+        if (!business) return;
+
+        await saveChanges(async (changes) => {
+            const updatedBusiness = { ...business };
+
+            // Apply hero slide changes
+            if (updatedBusiness.hero_slides && updatedBusiness.hero_slides.length > 0) {
+                updatedBusiness.hero_slides = updatedBusiness.hero_slides.map((slide, index) => ({
+                    ...slide,
+                    title: changes[`landing_hero_title_${index}`] !== undefined ? changes[`landing_hero_title_${index}`] : slide.title,
+                    subtitle: changes[`landing_hero_subtitle_${index}`] !== undefined ? changes[`landing_hero_subtitle_${index}`] : slide.subtitle,
+                    image_url: changes[`landing_hero_image_${index}`] !== undefined ? changes[`landing_hero_image_${index}`] : slide.image_url,
+                }));
+            } else {
+                // Handle case where it uses business names as default
+                updatedBusiness.name = changes[`landing_hero_title_0`] !== undefined ? changes[`landing_hero_title_0`] : updatedBusiness.name;
+                updatedBusiness.slogan = changes[`landing_hero_subtitle_0`] !== undefined ? changes[`landing_hero_subtitle_0`] : updatedBusiness.slogan;
+            }
+
+            await updateBusiness(updatedBusiness);
+            setBusiness(updatedBusiness);
+        });
+    };
 
     useEffect(() => {
         let isMounted = true;
@@ -315,6 +347,45 @@ const BusinessDetailPage: React.FC = () => {
 
     return (
         <div className="bg-background min-h-screen">
+            {/* CMS Owner Toolbar */}
+            {isOwner && (
+                <div className="fixed top-24 right-4 z-50 flex flex-col gap-2">
+                    {!isEditing ? (
+                        <button
+                            onClick={() => setIsEditing(true)}
+                            className="bg-primary text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform flex items-center justify-center gap-2 group"
+                            title="Chỉnh sửa trang"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 font-bold whitespace-nowrap text-sm">Chỉnh sửa</span>
+                        </button>
+                    ) : (
+                        <div className="bg-white p-4 rounded-2xl shadow-premium border border-primary/20 flex flex-col gap-3 animate-slide-in-right max-w-[200px]">
+                            <div className="text-xs font-bold text-neutral-dark border-b pb-2 mb-1 flex items-center gap-2">
+                                <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+                                Chế độ thiết kế
+                            </div>
+                            <p className="text-[10px] text-gray-500 italic">Nhấp vào tiêu đề hoặc ảnh để thay đổi nội dung trang của bạn.</p>
+                            <div className="flex flex-col gap-2">
+                                <button
+                                    onClick={handleSaveLandingPage}
+                                    className="bg-primary text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-primary-dark shadow-lg"
+                                >
+                                    Lưu trang
+                                </button>
+                                <button
+                                    onClick={() => { clearChanges(); setIsEditing(false); }}
+                                    className="bg-gray-100 text-gray-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-200"
+                                >
+                                    Hủy bỏ
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
             <SEOHead
                 title={seoTitle}
                 description={seoDescription}

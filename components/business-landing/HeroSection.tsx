@@ -4,6 +4,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Business, ReviewStatus, HeroSlide } from '../../types.ts';
 import StarRating from '../StarRating.tsx';
 import { getOptimizedSupabaseUrl } from '../../lib/image.ts';
+import { useCMS } from '../../contexts/CMSContext.tsx';
+import Editable from '../Editable.tsx';
 
 interface HeroSectionProps {
     business: Business;
@@ -11,6 +13,7 @@ interface HeroSectionProps {
 }
 
 const HeroSection: React.FC<HeroSectionProps> = ({ business, onBookNowClick }) => {
+    const { isEditing } = useCMS();
 
     const slides: HeroSlide[] = useMemo(() => {
         if (business.hero_slides && business.hero_slides.length > 0) {
@@ -52,11 +55,23 @@ const HeroSection: React.FC<HeroSectionProps> = ({ business, onBookNowClick }) =
                 <div className="max-w-3xl">
                     <p className="text-sm font-semibold uppercase tracking-widest text-primary">{business.categories.join(' / ')}</p>
                     <h1 className="mt-2 text-4xl md:text-6xl font-bold font-serif drop-shadow-lg">
-                        {currentSlideData?.title}
+                        <Editable
+                            id={`landing_hero_title_${currentSlide}`}
+                            type="text"
+                            value={currentSlideData?.title || business.name}
+                        >
+                            {currentSlideData?.title}
+                        </Editable>
                     </h1>
-                    <p className="mt-4 text-lg md:text-xl max-w-2xl text-gray-200 drop-shadow">
-                        {currentSlideData?.subtitle}
-                    </p>
+                    <div className="mt-4 text-lg md:text-xl max-w-2xl text-gray-200 drop-shadow">
+                        <Editable
+                            id={`landing_hero_subtitle_${currentSlide}`}
+                            type="textarea"
+                            value={currentSlideData?.subtitle || ''}
+                        >
+                            <p>{currentSlideData?.subtitle}</p>
+                        </Editable>
+                    </div>
                     <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
                         <div className="flex items-center gap-2">
                             <StarRating rating={business.rating} />

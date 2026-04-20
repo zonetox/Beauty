@@ -15,6 +15,9 @@ import { CATEGORIES, CITIES, FEATURED_LOCATIONS } from '../constants.ts';
 import { HomepageSection, BlogPost, Deal } from '../types.ts';
 import { useBusinessData } from '../contexts/BusinessDataContext.tsx';
 import { useHomepageData } from '../contexts/HomepageDataContext.tsx';
+import { useCMS } from '../contexts/CMSContext.tsx';
+import { useAuth } from '../providers/AuthProvider.tsx';
+import Editable from '../components/Editable.tsx';
 import { getOptimizedSupabaseUrl } from '../lib/image.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import toast from 'react-hot-toast';
@@ -33,8 +36,37 @@ const SkeletonCard: React.FC = () => (
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { businesses, businessLoading } = useBusinessData();
-  const { homepageData } = useHomepageData();
+  const { homepageData, updateHomepageData } = useHomepageData();
   const { hero_slides, sections } = homepageData;
+  const { isEditing, setIsEditing, stagedChanges, clearChanges, saveChanges } = useCMS();
+  const { user } = useAuth();
+
+  // Check if user is admin
+  const isAdmin = user?.email?.includes('admin') || user?.user_metadata?.role === 'Admin';
+
+  const handleSaveContent = async () => {
+    await saveChanges(async (changes) => {
+      // Create a copy of existing data
+      const newData = JSON.parse(JSON.stringify(homepageData));
+
+      // Apply hero slide changes
+      newData.hero_slides = newData.hero_slides.map((slide: any, index: number) => ({
+        ...slide,
+        title: changes[`hero_title_${index}`] !== undefined ? changes[`hero_title_${index}`] : slide.title,
+        subtitle: changes[`hero_subtitle_${index}`] !== undefined ? changes[`hero_subtitle_${index}`] : slide.subtitle,
+        image_url: changes[`hero_image_${index}`] !== undefined ? changes[`hero_image_${index}`] : slide.image_url,
+      }));
+
+      // Apply section changes
+      newData.sections = newData.sections.map((section: any) => ({
+        ...section,
+        title: changes[`section_title_${section.id}`] !== undefined ? changes[`section_title_${section.id}`] : section.title,
+        subtitle: changes[`section_subtitle_${section.id}`] !== undefined ? changes[`section_subtitle_${section.id}`] : section.subtitle,
+      }));
+
+      await updateHomepageData(newData);
+    });
+  };
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const [hasRecentlyViewed, setHasRecentlyViewed] = useState(false);
@@ -253,8 +285,12 @@ const HomePage: React.FC = () => {
         return (
           <section key={section.id} className="py-16 bg-background">
             <div className="container mx-auto px-4">
-              <h2 className="text-3xl font-bold text-center font-serif text-neutral-dark mb-2">{section.title}</h2>
-              <p className="text-center text-gray-500 mb-8">{section.subtitle}</p>
+              <Editable id={`section_title_${section.id}`} type="text" value={section.title}>
+                <h2 className="text-3xl font-bold text-center font-serif text-neutral-dark mb-2">{section.title}</h2>
+              </Editable>
+              <Editable id={`section_subtitle_${section.id}`} type="textarea" value={section.subtitle}>
+                <p className="text-center text-gray-500 mb-8">{section.subtitle}</p>
+              </Editable>
               {businessLoading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                   {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
@@ -279,8 +315,12 @@ const HomePage: React.FC = () => {
           return (
             <section key={section.id} className="py-16 bg-white">
               <div className="container mx-auto px-4">
-                <h2 className="text-3xl font-bold text-center font-serif text-neutral-dark mb-2">{section.title}</h2>
-                <p className="text-center text-gray-500 mb-8">{section.subtitle}</p>
+                <Editable id={`section_title_${section.id}`} type="text" value={section.title}>
+                  <h2 className="text-3xl font-bold text-center font-serif text-neutral-dark mb-2">{section.title}</h2>
+                </Editable>
+                <Editable id={`section_subtitle_${section.id}`} type="textarea" value={section.subtitle}>
+                  <p className="text-center text-gray-500 mb-8">{section.subtitle}</p>
+                </Editable>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                   {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
                 </div>
@@ -413,6 +453,46 @@ const HomePage: React.FC = () => {
           },
         }}
       />
+      {/* CMS Admin Toolbar */}
+      {isAdmin && (
+        <div className="fixed top-20 right-4 z-50 flex flex-col gap-2">
+          {!isEditing ? (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="bg-primary text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform flex items-center justify-center gap-2 group"
+              title="Bật chế độ chỉnh sửa"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 font-bold whitespace-nowrap">Chế độ Sửa</span>
+            </button>
+          ) : (
+            <div className="bg-white p-4 rounded-2xl shadow-premium border border-primary/20 flex flex-col gap-3 animate-slide-in-right">
+              <div className="text-sm font-bold text-neutral-dark border-b pb-2 mb-1 flex items-center gap-2">
+                <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+                Đang trực quan hóa...
+              </div>
+              <p className="text-xs text-gray-500 italic">Nhấp trực tiếp vào chữ hoặc ảnh để sửa.</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSaveContent}
+                  className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-primary-dark shadow-lg flex-grow"
+                >
+                  Lưu lại
+                </button>
+                <button
+                  onClick={() => { clearChanges(); setIsEditing(false); }}
+                  className="bg-gray-100 text-gray-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-gray-200"
+                >
+                  Hủy
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <div>
         {/* Hero Section - Dynamic Slider with Left Alignment */}
         <section className="relative min-h-[700px] flex items-center overflow-hidden bg-neutral-dark">
@@ -444,7 +524,11 @@ const HomePage: React.FC = () => {
 
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold font-outfit text-white mb-6 leading-tight animate-fade-in-up delay-100">
                 {hero_slides.length > 0 ? (
-                  <>
+                  <Editable
+                    id={`hero_title_${currentSlide}`}
+                    type="text"
+                    value={hero_slides[currentSlide].title}
+                  >
                     {hero_slides[currentSlide].title.split(' ').map((word, i) => (
                       <React.Fragment key={i}>
                         {word === 'Nhan' || word === 'sắc' || word === 'Cảm' || word === 'xúc' ? (
@@ -455,7 +539,7 @@ const HomePage: React.FC = () => {
                         {i === 2 && <br className="hidden md:block" />}
                       </React.Fragment>
                     ))}
-                  </>
+                  </Editable>
                 ) : (
                   <>
                     Nâng tầm <span className="text-gradient">Nhan sắc</span> <br className="hidden md:block" />
@@ -464,9 +548,15 @@ const HomePage: React.FC = () => {
                 )}
               </h1>
 
-              <p className="text-base md:text-xl text-gray-200 mb-10 max-w-2xl mx-auto leading-relaxed animate-fade-in-up delay-200">
-                {hero_slides.length > 0 ? hero_slides[currentSlide].subtitle : 'Tìm kiếm hàng ngàn spa, salon và clinic uy tín gần bạn. Trải nghiệm dịch vụ làm đẹp đẳng cấp chỉ trong vài cú nhấp chuột.'}
-              </p>
+              <div className="text-base md:text-xl text-gray-200 mb-10 max-w-2xl mx-auto leading-relaxed animate-fade-in-up delay-200">
+                <Editable
+                  id={`hero_subtitle_${currentSlide}`}
+                  type="textarea"
+                  value={hero_slides.length > 0 ? hero_slides[currentSlide].subtitle : ''}
+                >
+                  <p>{hero_slides.length > 0 ? hero_slides[currentSlide].subtitle : 'Tìm kiếm hàng ngàn spa, salon và clinic uy tín gần bạn. Trải nghiệm dịch vụ làm đẹp đẳng cấp chỉ trong vài cú nhấp chuột.'}</p>
+                </Editable>
+              </div>
 
               <div className="glass-card p-2 md:p-5 rounded-2xl md:rounded-3xl shadow-premium animate-fade-in-up delay-300 max-w-4xl mx-auto">
                 <SearchBar onSearch={handleSearch} categories={CATEGORIES} locations={CITIES} />

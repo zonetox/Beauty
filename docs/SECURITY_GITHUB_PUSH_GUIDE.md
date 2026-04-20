@@ -53,7 +53,7 @@
 
 ### 2. Connection Strings
 **❌ KHÔNG BAO GIỜ ĐƯA LÊN:**
-- Database connection strings với passwords (`postgres://user:password@host...`)
+- Các chuỗi kết nối cơ sở dữ liệu có chứa thông tin đăng nhập (username/password)
 - Pooler URLs với credentials
 - Any URLs có chứa authentication tokens
 
