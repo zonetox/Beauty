@@ -1,7 +1,9 @@
 
 import { createContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import toast from 'react-hot-toast';
-import { Business, BlogPost, BlogComment, BlogCategory, MembershipPackage, Service, MediaItem, TeamMember, Deal, MediaType, Review } from '../types.ts';
+import { Business, BlogPost, BlogComment, BlogCategory, MembershipPackage, Service, MediaItem, TeamMember, Deal, MediaType, Review, HomepageData, HomepageSection, PageData, PageName } from '../types.ts';
+import { DEFAULT_HOMEPAGE_DATA } from '../constants.ts';
+import { DEFAULT_PAGE_CONTENT } from './PageContentContext.tsx';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { uploadFile } from '../lib/storage.ts';
 import { toSnakeCase } from '../lib/utils.ts';
@@ -68,6 +70,13 @@ export interface PublicDataContextType {
   addPackage: (newPackage: Omit<MembershipPackage, 'id'>) => Promise<void>;
   updatePackage: (package_id: string, updates: Partial<MembershipPackage>) => Promise<void>;
   deletePackage: (package_id: string) => Promise<void>;
+  // Homepage Data
+  homepageData: HomepageData;
+  updateHomepageData: (newData: HomepageData) => Promise<void>;
+  homepageLoading: boolean;
+  // Public Page Content
+  getPageContent: (page: 'about' | 'contact') => PageData | undefined;
+  pageContentLoading: boolean;
 }
 
 // Export context so hooks file can use it
@@ -130,6 +139,12 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
   const [comments, setComments] = useState<BlogComment[]>([]);
   const [blogCategories, setBlogCategories] = useState<BlogCategory[]>(initialCache.categories);
   const [packages, setPackages] = useState<MembershipPackage[]>(initialCache.packages);
+
+  // --- HOMEPAGE & PAGE CONTENT STATES ---
+  const [homepageData, setHomepageData] = useState<HomepageData>(DEFAULT_HOMEPAGE_DATA);
+  const [homepageLoading, setHomepageLoading] = useState(true);
+  const [pageContent, setPageContent] = useState<{ [key in 'about' | 'contact']?: PageData }>({});
+  const [pageContentLoading, setPageContentLoading] = useState(true);
 
   // Admin logging is optional - removed direct import to avoid circular dependency
   // Admin actions will be logged via AdminContext if available in the provider tree
@@ -567,6 +582,45 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       if (!backgroundRefresh) {
         setBlogLoading(false);
       }
+    }
+
+    // --- FETCH HOMEPAGE DATA ---
+    try {
+      setHomepageLoading(true);
+      const { data, error } = await supabase
+        .from('page_content')
+        .select('content_data')
+        .eq('page_name', 'homepage')
+        .single();
+
+      if (!error && data?.content_data) {
+        setHomepageData(data.content_data as HomepageData);
+      }
+    } catch (e) {
+      console.error('Error fetching homepage data:', e);
+    } finally {
+      setHomepageLoading(false);
+    }
+
+    // --- FETCH PAGE CONTENT ---
+    try {
+      setPageContentLoading(true);
+      const { data, error } = await supabase
+        .from('page_content')
+        .select('page_name, content_data')
+        .in('page_name', ['about', 'contact']);
+
+      if (!error && data) {
+        const contentMap: { [key in 'about' | 'contact']?: PageData } = {};
+        (data as { page_name: string; content_data: unknown }[]).forEach((row) => {
+          contentMap[row.page_name as 'about' | 'contact'] = row.content_data as PageData;
+        });
+        setPageContent({ ...DEFAULT_PAGE_CONTENT, ...contentMap });
+      }
+    } catch (e) {
+      console.error('Error fetching page content:', e);
+    } finally {
+      setPageContentLoading(false);
     }
   }, [fetchBusinesses]);
 
@@ -1043,10 +1097,10 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     toast.success('Team member updated successfully!');
   };
   /**
- * Deletes a team member
- * @param memberId - Team member ID to delete
- * @returns Promise that resolves when deletion completes
- */
+  * Deletes a team member
+  * @param memberId - Team member ID to delete
+  * @returns Promise that resolves when deletion completes
+  */
   const deleteTeamMember = async (memberId: string): Promise<void> => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot delete team member."); return; }
     const { error } = await supabase.from('team_members').delete().eq('id', memberId);
@@ -1470,6 +1524,23 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
   };
 
   // --- COMBINED VALUE ---
+  const updateHomepageData = async (newData: HomepageData) => {
+    setHomepageData(newData);
+    if (!isSupabaseConfigured) return;
+    try {
+      await supabase.from('page_content').upsert({
+        page_name: 'homepage',
+        content_data: newData as unknown as Record<string, unknown>,
+      }, { onConflict: 'page_name' });
+    } catch (e) {
+      console.error('Error updating homepage data:', e);
+    }
+  };
+
+  const getPageContent = (page: 'about' | 'contact'): PageData | undefined => {
+    return pageContent[page] || DEFAULT_PAGE_CONTENT[page as PageName];
+  };
+
   const value = {
     businesses, businessMarkers, businessLoading, totalBusinesses, currentPage, fetchBusinesses,
     addBusiness, updateBusiness, deleteBusiness, getBusinessBySlug, fetchBusinessBySlug, incrementBusinessview_count,
@@ -1480,6 +1551,8 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     blogPosts, blogLoading, addBlogPost, updateBlogPost, deleteBlogPost, getPostBySlug, incrementBlogview_count,
     comments, getCommentsBypost_id, addComment, blogCategories, addBlogCategory, updateBlogCategory, deleteBlogCategory,
     packages, addPackage, updatePackage, deletePackage,
+    homepageData, updateHomepageData, homepageLoading,
+    getPageContent, pageContentLoading
   };
 
   return (
@@ -1489,5 +1562,58 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// Re-export hooks from separate file to avoid initialization order issues
-export { useBusinessData, useBlogData, useMembershipPackageData } from './hooks/useBusinessDataHooks.ts';
+// Unified Hooks
+export const useBusinessData = () => {
+  const context = useContext(PublicDataContext);
+  if (!context) throw new Error('useBusinessData must be used within PublicDataProvider');
+  return context;
+};
+
+export const useBlogData = () => {
+  const context = useBusinessData();
+  return {
+    blogPosts: context.blogPosts,
+    loading: context.blogLoading,
+    addBlogPost: context.addBlogPost,
+    updateBlogPost: context.updateBlogPost,
+    deleteBlogPost: context.deleteBlogPost,
+    getPostBySlug: context.getPostBySlug,
+    incrementview_count: context.incrementBlogview_count,
+    comments: context.comments,
+    getCommentsBypost_id: context.getCommentsBypost_id,
+    addComment: context.addComment,
+    categories: context.blogCategories,
+    addCategory: context.addBlogCategory,
+    updateCategory: context.updateBlogCategory,
+    deleteCategory: context.deleteBlogCategory
+  };
+};
+
+export const useMembershipPackageData = () => {
+  const context = useBusinessData();
+  return {
+    packages: context.packages,
+    addPackage: context.addPackage,
+    updatePackage: context.updatePackage,
+    deletePackage: context.deletePackage
+  };
+};
+
+export const useHomepageData = () => {
+  const context = useContext(PublicDataContext);
+  if (!context) throw new Error('useHomepageData must be used within PublicDataProvider');
+  return {
+    homepageData: context.homepageData,
+    updateHomepageData: context.updateHomepageData,
+    loading: context.homepageLoading
+  };
+};
+
+export const usePublicPageContent = () => {
+  const context = useContext(PublicDataContext);
+  if (!context) throw new Error('usePublicPageContent must be used within PublicDataProvider');
+  return {
+    getPageContent: context.getPageContent,
+    loading: context.pageContentLoading
+  };
+};

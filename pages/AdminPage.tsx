@@ -1,26 +1,19 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { MembershipTier, Business, AdminUser, BlogPost, MembershipPackage, BusinessCategory, OrderStatus, BlogCategory, AdminPageTab } from '../types.ts';
+import { MembershipTier, Business, AdminUser, BlogPost, MembershipPackage, BusinessCategory, OrderStatus, ConfirmDialogState, AdminPageTab } from '../types.ts';
 import { useBusinessData, useBlogData, useMembershipPackageData } from '../contexts/BusinessDataContext.tsx';
-import { useAdminAuth } from '../contexts/AdminContext.tsx';
+import { useAdminAuth, useAdminPlatform } from '../contexts/AdminContext.tsx';
 import { useOrderData } from '../contexts/BusinessBlogDataContext.tsx';
-import { useAdminPlatform } from '../contexts/AdminPlatformContext.tsx';
 import ConfirmDialog from '../components/ConfirmDialog.tsx';
 
 // Reusable Components
-import BusinessManagementTable from '../components/BusinessManagementTable.tsx';
 import EditBusinessModal from '../components/EditBusinessModal.tsx';
-import UserManagementTable from '../components/UserManagementTable.tsx';
 import ForgotPasswordModal from '../components/ForgotPasswordModal.tsx';
-import RegistrationRequestsTable from '../components/RegistrationRequestsTable.tsx';
-import BlogManagementTable from '../components/BlogManagementTable.tsx';
 import EditBlogPostModal from '../components/EditBlogPostModal.tsx';
 import HomepageEditor from '../components/HomepageEditor.tsx';
 import EditAdminUserModal from '../components/EditAdminUserModal.tsx';
-import PackageManagementTable from '../components/PackageManagementTable.tsx';
 import EditPackageModal from '../components/EditPackageModal.tsx';
-import OrderManagementTable from '../components/OrderManagementTable.tsx';
 import PageContentEditor from '../components/PageContentEditor.tsx';
 import BusinessBulkImporter from '../components/admin/BusinessBulkImporter.tsx';
 import ApiHealthTool from '../components/ApiHealthTool.tsx';
@@ -37,111 +30,16 @@ import ThemeEditor from '../components/ThemeEditor.tsx';
 import AdminAbuseReports from '../components/AdminAbuseReports.tsx';
 import SystemSettings from '../components/SystemSettings.tsx';
 import AdminLandingPageModeration from '../components/AdminLandingPageModeration.tsx';
-import BlogBulkUpload from '../components/admin/BlogBulkUpload.tsx';
 
-// AI Blog Idea Generator - Wrapped in error boundary to prevent crashes
-const AIBlogIdeaGenerator: React.FC = () => {
-  const [topic, setTopic] = useState('');
-  const [ideas, setIdeas] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
+// Modular Tabs
+import AdminBlogTab from '../components/admin/AdminBlogTab.tsx';
+import AdminBusinessesTab from '../components/admin/AdminBusinessesTab.tsx';
+import AdminUserManagementTab from '../components/admin/AdminUserManagementTab.tsx';
+import AdminPackagesTab from '../components/admin/AdminPackagesTab.tsx';
+import AdminOrdersTab from '../components/admin/AdminOrdersTab.tsx';
+import AdminRegistrationsTab from '../components/admin/AdminRegistrationsTab.tsx';
 
-  // Check if Gemini is available on mount
-  React.useEffect(() => {
-    const checkAvailability = async () => {
-      try {
-        const geminiModule = await import('../lib/geminiService.ts');
-        setIsAvailable(geminiModule.isGeminiAvailable());
-      } catch (e) {
-        console.warn('Failed to load Gemini service:', e);
-        setIsAvailable(false);
-      }
-    };
-    checkAvailability();
-  }, []);
-
-  const generateIdeas = async () => {
-    if (!topic) {
-      setError('Vui lòng nhập chủ đề.');
-      return;
-    }
-    setLoading(true);
-    setError('');
-    setIdeas([]);
-    try {
-      // Dynamic import to avoid build errors
-      const geminiModule = await import('../lib/geminiService.ts');
-
-      if (!geminiModule.isGeminiAvailable()) {
-        setError("Gemini API key chưa được cấu hình. Vui lòng set VITE_GEMINI_API_KEY trong environment variables.");
-        return;
-      }
-
-      const prompt = `Tạo 5 tiêu đề bài viết blog hấp dẫn về chủ đề "${topic}" cho một nền tảng thư mục làm đẹp bằng tiếng Việt. Các tiêu đề nên thân thiện với SEO và thu hút độc giả quan tâm đến spa, salon và mẹo làm đẹp. Format: Danh sách đánh số.`;
-
-      const response = await geminiModule.generateWithGemini({ prompt });
-
-      if (!response) {
-        setError('Không nhận được phản hồi từ AI. Vui lòng thử lại.');
-        return;
-      }
-
-      const generatedIdeas = response
-        .split('\n')
-        .filter(line => line.match(/^\d+[.)]/))
-        .map(line => line.replace(/^\d+[.)]\s*/, '').trim())
-        .filter(line => line.length > 0);
-
-      if (generatedIdeas.length === 0) {
-        setError('Không thể phân tích phản hồi từ AI. Vui lòng thử lại.');
-        return;
-      }
-
-      setIdeas(generatedIdeas);
-    } catch (e) {
-      const errorMessage = e instanceof Error ? e.message : 'Không thể tạo ý tưởng. Vui lòng kiểm tra API key và thử lại.';
-      setError(errorMessage);
-      console.error('AI generation error:', e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Don't render if Gemini is not available
-  if (isAvailable === false) {
-    return null;
-  }
-
-  return (
-    <div className="bg-gray-50 p-4 rounded-lg border mt-6">
-      <h3 className="text-md font-semibold mb-3 text-neutral-dark">AI Blog Idea Generator</h3>
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={topic}
-          onChange={(e) => setTopic(e.target.value)}
-          placeholder="Enter a topic, e.g., 'skincare'"
-          className="flex-grow w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-sm"
-          onKeyPress={(e) => e.key === 'Enter' && !loading && generateIdeas()}
-        />
-        <button
-          onClick={generateIdeas}
-          disabled={loading || isAvailable === null}
-          className="bg-secondary text-white px-4 py-2 rounded-md font-semibold hover:bg-opacity-80 disabled:bg-gray-400 transition-colors text-sm"
-        >
-          {loading ? '...' : 'Generate'}
-        </button>
-      </div>
-      {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-      {ideas.length > 0 && (
-        <ul className="mt-4 list-disc list-inside space-y-2 text-gray-600 text-sm">
-          {ideas.map((idea, index) => <li key={index}>{idea}</li>)}
-        </ul>
-      )}
-    </div>
-  );
-};
+const NEW_BUSINESS_TEMPLATE: Business = { id: 0, slug: '', name: 'New Business Name', categories: [BusinessCategory.SPA], membership_tier: MembershipTier.FREE, address: '', phone: '', email: '', image_url: `https://picsum.photos/seed/new-business/400/300`, city: 'TP. Hồ Chí Minh', district: '', ward: '', tags: [], rating: 0, review_count: 0, view_count: 0, is_active: true, is_verified: false, joined_date: new Date().toISOString(), description: 'Please provide a detailed description.', services: [], gallery: [], team: [], reviews: [], working_hours: { 'Thứ 2 - Thứ 6': '9:00 - 20:00' }, socials: {}, staff: [], notification_settings: { review_alerts: true, booking_requests: false, platform_news: true } };
 
 const AccessDenied: React.FC<{ requiredRole: string }> = ({ requiredRole }) => (
   <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
@@ -149,125 +47,14 @@ const AccessDenied: React.FC<{ requiredRole: string }> = ({ requiredRole }) => (
   </div>
 );
 
-type ConfirmDialogType =
-  | 'deleteCategory'
-  | 'deletePost'
-  | 'duplicateBusiness'
-  | 'rejectRequest'
-  | 'deleteUser'
-  | 'deletePackage'
-  | null;
-
-interface ConfirmDialogData {
-  id?: string | number;
-  name?: string;
-  requestId?: string;
-  user_id?: number;
-  package_id?: string;
-}
-
-interface ConfirmDialogState {
-  isOpen: boolean;
-  type: ConfirmDialogType;
-  data?: ConfirmDialogData;
-}
-
-interface BlogCategoryManagerProps {
-  setConfirmDialog: (dialog: ConfirmDialogState) => void;
-  onCategoryDeleted?: () => void;
-}
-
-const BlogCategoryManager: React.FC<BlogCategoryManagerProps> = ({ setConfirmDialog }) => {
-  const { blogCategories, addBlogCategory, updateBlogCategory } = useBlogData();
-  const [newCategoryName, setNewCategoryName] = useState('');
-  const [editingCategory, setEditingCategory] = useState<BlogCategory | null>(null);
-  const [isAdding, setIsAdding] = useState(false);
-
-  const handleAdd = async () => {
-    const trimmedName = newCategoryName.trim();
-
-    // Client-side validation
-    if (!trimmedName) {
-      toast.error('Vui lòng nhập tên danh mục');
-      return;
-    }
-
-    // Check for duplicate (case-insensitive)
-    const isDuplicate = blogCategories.some(
-      cat => cat.name.toLowerCase().trim() === trimmedName.toLowerCase()
-    );
-
-    if (isDuplicate) {
-      toast.error(`Danh mục "${trimmedName}" đã tồn tại`);
-      return;
-    }
-
-    setIsAdding(true);
-    try {
-      await addBlogCategory(trimmedName);
-      setNewCategoryName('');
-    } catch (error) {
-      console.error('Error adding category:', error);
-    } finally {
-      setIsAdding(false);
-    }
-  };
-  const handleUpdate = async () => { if (editingCategory) { await updateBlogCategory(editingCategory.id, editingCategory.name); setEditingCategory(null); } };
-  const handleDelete = async (id: string) => {
-    setConfirmDialog({ isOpen: true, type: 'deleteCategory', data: { id } });
-  };
-
-  return (
-    <div className="mt-6">
-      <h3 className="text-md font-semibold mb-3 text-neutral-dark">Manage Blog Categories</h3>
-      <div className="flex gap-2 mb-4">
-        <input
-          type="text"
-          value={newCategoryName}
-          onChange={(e) => setNewCategoryName(e.target.value)}
-          onKeyPress={(e) => {
-            if (e.key === 'Enter' && !isAdding && newCategoryName.trim()) {
-              handleAdd();
-            }
-          }}
-          placeholder="Tên danh mục mới"
-          className="flex-grow w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-        />
-        <button
-          onClick={handleAdd}
-          disabled={isAdding || !newCategoryName.trim()}
-          className="bg-secondary text-white px-4 py-2 rounded-md font-semibold text-sm hover:bg-opacity-90 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-        >
-          {isAdding ? 'Đang thêm...' : '+ Thêm'}
-        </button>
-      </div>
-      <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
-        {blogCategories.map(cat => (
-          <div key={cat.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
-            {editingCategory?.id === cat.id ? (
-              <input type="text" value={editingCategory.name} onChange={(e) => setEditingCategory({ ...editingCategory, name: e.target.value })} className="flex-grow px-2 py-1 border border-primary rounded-md text-sm" autoFocus />
-            ) : (<p className="text-sm flex-grow">{cat.name}</p>)}
-            {editingCategory?.id === cat.id ? (
-              <button onClick={handleUpdate} className="text-green-600 font-semibold text-sm">Save</button>
-            ) : (<button onClick={() => setEditingCategory(cat)} className="text-blue-600 font-semibold text-sm">Edit</button>)}
-            <button onClick={() => handleDelete(cat.id)} className="text-red-600 font-semibold text-sm">Delete</button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-const NEW_BUSINESS_TEMPLATE: Business = { id: 0, slug: '', name: 'New Business Name', categories: [BusinessCategory.SPA], membership_tier: MembershipTier.FREE, address: '', phone: '', email: '', image_url: `https://picsum.photos/seed/new-business/400/300`, city: 'TP. Hồ Chí Minh', district: '', ward: '', tags: [], rating: 0, review_count: 0, view_count: 0, is_active: true, is_verified: false, joined_date: new Date().toISOString(), description: 'Please provide a detailed description.', services: [], gallery: [], team: [], reviews: [], working_hours: { 'Thứ 2 - Thứ 6': '9:00 - 20:00' }, socials: {}, staff: [], notification_settings: { review_alerts: true, booking_requests: false, platform_news: true } };
-
 const AdminPage: React.FC = () => {
   const navigate = useNavigate();
-  const { businesses, loading: businessesLoading, updateBusiness, addBusiness, deleteBusiness } = useBusinessData();
+  const { businesses, updateBusiness, addBusiness, deleteBusiness } = useBusinessData();
   const { adminUsers, addAdminUser, updateAdminUser, deleteAdminUser, currentUser, adminLogout, loading: authLoading } = useAdminAuth();
 
-  const { blogPosts, loading: blogLoading, addBlogPost, updateBlogPost, deleteBlogPost, deleteBlogCategory } = useBlogData();
-  const { packages, addPackage, updatePackage, deletePackage } = useMembershipPackageData();
-  const { orders, loading: ordersLoading, updateOrderStatus } = useOrderData();
+  const { addBlogPost, updateBlogPost, deleteBlogPost, deleteCategory: deleteBlogCategory } = useBlogData();
+  const { addPackage, updatePackage, deletePackage } = useMembershipPackageData();
+  const { orders, updateOrderStatus } = useOrderData();
   const { addNotification, registrationRequests, approveRegistrationRequest, rejectRegistrationRequest } = useAdminPlatform();
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -276,11 +63,11 @@ const AdminPage: React.FC = () => {
   React.useEffect(() => {
     setSearchParams({ tab: activeTab });
   }, [activeTab, setSearchParams]);
+
   const [editingBusiness, setEditingBusiness] = useState<Business | null>(null);
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [orderStatusFilter, setOrderStatusFilter] = useState<OrderStatus | 'all'>('all');
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
   const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
@@ -291,10 +78,16 @@ const AdminPage: React.FC = () => {
     data: undefined,
   });
 
-  const filteredBusinesses = useMemo(() => { const q = searchQuery.toLowerCase().trim(); if (!q) return businesses; return businesses.filter(b => b.name.toLowerCase().includes(q)); }, [businesses, searchQuery]);
-  const filteredOrders = useMemo(() => { if (orderStatusFilter === 'all') return orders; return orders.filter(o => o.status === orderStatusFilter); }, [orders, orderStatusFilter]);
+  const handleSaveBusiness = async (businessToSave: Business) => {
+    if (businessToSave.id === 0) {
+      const slug = businessToSave.name.toLowerCase().replace(/\s+/g, '-') + `-${Date.now()}`;
+      await addBusiness({ ...businessToSave, slug });
+    } else {
+      await updateBusiness(businessToSave);
+    }
+    setEditingBusiness(null);
+  };
 
-  const handleSaveBusiness = async (businessToSave: Business) => { if (businessToSave.id === 0) { const slug = businessToSave.name.toLowerCase().replace(/\s+/g, '-') + `-${Date.now()}`; await addBusiness({ ...businessToSave, slug }); } else { await updateBusiness(businessToSave); } setEditingBusiness(null); };
   const handleSavePost = async (postToSave: BlogPost) => {
     if (postToSave.id === 0) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -305,6 +98,7 @@ const AdminPage: React.FC = () => {
     }
     setEditingPost(null);
   };
+
   const handleDeletePost = async (post_id: number) => {
     setConfirmDialog({ isOpen: true, type: 'deletePost', data: { id: post_id } });
   };
@@ -316,19 +110,11 @@ const AdminPage: React.FC = () => {
     setConfirmDialog({ isOpen: false, type: null });
   };
 
-  // handleDeleteCategory removed - not used in current implementation
-
-  /**
-   * Confirms and executes category deletion
-   * Shows success/error toast notifications
-   * @returns Promise that resolves when deletion completes
-   */
   const confirmDeleteCategory = async (): Promise<void> => {
     if (confirmDialog.type !== 'deleteCategory' || !confirmDialog.data?.id) {
       setConfirmDialog({ isOpen: false, type: null });
       return;
     }
-
     try {
       await deleteBlogCategory(confirmDialog.data.id as string);
       toast.success('Blog category deleted successfully');
@@ -348,14 +134,12 @@ const AdminPage: React.FC = () => {
       setConfirmDialog({ isOpen: false, type: null });
       return;
     }
-
     const business_name = confirmDialog.data.name;
-    const businessToDuplicate = businesses.find(b => b.name === business_name);
+    const businessToDuplicate = businesses.find((b: Business) => b.name === business_name);
     if (!businessToDuplicate) {
       setConfirmDialog({ isOpen: false, type: null });
       return;
     }
-
     setConfirmDialog({ isOpen: false, type: null });
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id, slug, name, ...rest } = businessToDuplicate;
@@ -363,7 +147,7 @@ const AdminPage: React.FC = () => {
     const newSlug = newName.toLowerCase().replace(/\s+/g, '-') + `-${Date.now()}`;
     const duplicatedBusiness: Business = {
       ...rest,
-      id: 0, // Signal that this is a new business
+      id: 0,
       name: newName,
       slug: newSlug,
       joined_date: new Date().toISOString(),
@@ -382,9 +166,7 @@ const AdminPage: React.FC = () => {
       toast.error('Registration request not found.');
       return;
     }
-
     const approvalPromise = approveRegistrationRequest(requestId);
-
     toast.promise(approvalPromise, {
       loading: `Approving ${request.business_name}...`,
       success: `Approved registration for ${request.business_name}. An invitation email has been sent.`,
@@ -406,7 +188,6 @@ const AdminPage: React.FC = () => {
       setConfirmDialog({ isOpen: false, type: null });
       return;
     }
-
     const requestId = confirmDialog.data.requestId;
     const request = registrationRequests.find(r => r.id === requestId);
     if (!request) {
@@ -414,12 +195,10 @@ const AdminPage: React.FC = () => {
       setConfirmDialog({ isOpen: false, type: null });
       return;
     }
-
     setConfirmDialog({ isOpen: false, type: null });
     const rejectionPromise = rejectRegistrationRequest(requestId).then(() => {
       addNotification(request.email, 'Your Registration Update', `We regret to inform you that your registration for ${request.business_name} has been rejected at this time.`);
     });
-
     toast.promise(rejectionPromise, {
       loading: 'Rejecting request...',
       success: `Rejected registration for ${request.business_name}.`,
@@ -442,6 +221,7 @@ const AdminPage: React.FC = () => {
     }
     handleCloseUserModal();
   };
+
   const handleDeleteUser = (user_id: number) => {
     if (user_id === currentUser?.id) {
       toast.error("Cannot delete self.");
@@ -456,6 +236,7 @@ const AdminPage: React.FC = () => {
     }
     setConfirmDialog({ isOpen: false, type: null });
   };
+
   const handleOpenPackageModal = (pkg: MembershipPackage | null) => { setEditingPackage(pkg); setIsPackageModalOpen(true); };
   const handleClosePackageModal = () => { setEditingPackage(null); setIsPackageModalOpen(false); };
   const handleSavePackage = async (pkg: MembershipPackage) => { if (pkg.id) { await updatePackage(pkg.id, pkg); } else { await addPackage(pkg); } handleClosePackageModal(); };
@@ -469,30 +250,21 @@ const AdminPage: React.FC = () => {
     }
     setConfirmDialog({ isOpen: false, type: null });
   };
+
   const handleOpenAddNewBusiness = () => { setEditingBusiness(NEW_BUSINESS_TEMPLATE); };
   const handleOpenAddNewPost = () => { setEditingPost({ id: 0, title: 'New Blog Post', slug: '', date: '', author: currentUser?.admin_username || 'Editor', category: 'General', excerpt: '', image_url: `https://picsum.photos/seed/new-post-${Date.now()}/400/300`, content: '', view_count: 0, status: 'Published' }); };
-  const handleOpenAddNewPackage = () => { handleOpenPackageModal({ id: '', tier: MembershipTier.PREMIUM, name: '', price: 0, duration_months: 12, description: '', features: [''], permissions: { photo_limit: 10, video_limit: 2, featured_level: 1, custom_landing_page: true, private_blog: false, seo_support: false, monthly_post_limit: 5, featured_post_limit: 0, }, is_popular: false, is_active: true }); };
-
 
   const handleLogout = async () => {
     try {
-      // Clear state first to prevent flashing
       await adminLogout();
-      // Small delay to ensure state is cleared before redirect
       await new Promise(resolve => setTimeout(resolve, 100));
       navigate('/admin/login', { replace: true });
     } catch (error) {
       console.error('Logout error:', error);
-      // Still navigate even if logout fails
       navigate('/admin/login', { replace: true });
     }
   };
 
-  // Remove auto-redirect - AdminProtectedRoute already handles this
-  // This was causing redirect loops and flashing
-
-  // Don't show loading if app is still initializing (handled by AppInitializationScreen)
-  // Only show loading if auth is specifically loading (not initializing)
   if (authLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-100 flex-col gap-4">
@@ -502,87 +274,26 @@ const AdminPage: React.FC = () => {
     );
   }
 
-  if (!currentUser) { return null; } // Will redirect via AdminProtectedRoute
+  if (!currentUser) { return null; }
 
-  // Simple icons using Heroicons style paths to fix layout issues caused by empty SVGs
   const ICONS: Record<string, React.ReactNode> = {
-    dashboard: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-      </svg>
-    ),
-    businesses: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-      </svg>
-    ),
-    registrations: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-      </svg>
-    ),
-    orders: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-      </svg>
-    ),
-    blog: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-      </svg>
-    ),
-    users: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-      </svg>
-    ),
-    packages: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-      </svg>
-    ),
-    settings: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
-    tools: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-      </svg>
-    ),
-    analytics: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-      </svg>
-    ),
-    activity: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-    notifications: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-      </svg>
-    ),
-    announcements: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-      </svg>
-    ),
-    support: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-      </svg>
-    ),
-    'abuse-reports': (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-      </svg>
-    )
+    dashboard: (<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>),
+    businesses: (<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>),
+    registrations: (<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>),
+    orders: (<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>),
+    blog: (<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" /></svg>),
+    users: (<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>),
+    packages: (<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>),
+    settings: (<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>),
+    tools: (<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>),
+    analytics: (<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>),
+    activity: (<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>),
+    notifications: (<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>),
+    announcements: (<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" /></svg>),
+    support: (<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" /></svg>),
+    'abuse-reports': (<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>)
   };
+
   const NavLink = ({ tabId, label, icon, permission }: { tabId: AdminPageTab, label: string, icon: React.ReactNode, permission: boolean }) => {
     if (!permission) return null;
     return (
@@ -599,7 +310,6 @@ const AdminPage: React.FC = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard': return <AdminDashboardOverview businesses={businesses} orders={orders} registrationRequests={registrationRequests} onNavigate={(tab) => setActiveTab(tab as AdminPageTab)} />;
-      // D3.3 FIX: Use PermissionGuard instead of inline permission checks
       case 'analytics': return (
         <PermissionGuard permission="can_view_analytics">
           <AdminAnalyticsDashboard businesses={businesses} orders={orders} registrationRequests={registrationRequests} />
@@ -607,70 +317,48 @@ const AdminPage: React.FC = () => {
       );
       case 'businesses': return (
         <PermissionGuard permission="can_manage_businesses">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Business Management</h2>
-              <button onClick={handleOpenAddNewBusiness} className="bg-primary text-white px-4 py-2 rounded-md text-sm">+ Add New Business</button>
-            </div>
-            <input type="text" placeholder="Search by name..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full sm:w-1/3 px-3 py-2 border rounded-md mb-4" />
-            {businessesLoading ? <p>Loading businesses...</p> : <BusinessManagementTable businesses={filteredBusinesses} onEdit={setEditingBusiness} onUpdate={updateBusiness} onDelete={deleteBusiness} onDuplicate={handleDuplicateBusiness} />}
-          </div>
+          <AdminBusinessesTab
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            onEdit={setEditingBusiness}
+            onDelete={deleteBusiness}
+            onDuplicate={handleDuplicateBusiness}
+            onAddNew={handleOpenAddNewBusiness}
+          />
         </PermissionGuard>
       );
       case 'registrations': return (
         <PermissionGuard permission="can_manage_registrations">
-          <RegistrationRequestsTable requests={registrationRequests} onApprove={handleApproveRequest} onReject={handleRejectRequest} />
+          <AdminRegistrationsTab onApprove={handleApproveRequest} onReject={handleRejectRequest} />
         </PermissionGuard>
       );
       case 'orders': return (
         <PermissionGuard permission="can_manage_orders">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Order Management</h2>
-            <div className="flex items-center gap-4 mb-4">
-              <label>Filter:</label>
-              <select value={orderStatusFilter} onChange={e => setOrderStatusFilter(e.target.value as OrderStatus | 'all')} className="p-2 border rounded-md">
-                <option value="all">All</option>
-                {Object.values(OrderStatus).map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-            {ordersLoading ? <p>Loading orders...</p> : <OrderManagementTable orders={filteredOrders} onConfirm={handleConfirmPayment} onReject={handleRejectOrder} />}
-          </div>
+          <AdminOrdersTab onConfirm={handleConfirmPayment} onReject={handleRejectOrder} />
         </PermissionGuard>
       );
       case 'blog': return (
         <PermissionGuard permission="can_manage_platform_blog">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Blog Management</h2>
-              <button onClick={handleOpenAddNewPost} className="bg-primary text-white px-4 py-2 rounded-md text-sm">+ Add New Post</button>
-            </div>
-            {blogLoading ? <p>Loading posts...</p> : <BlogManagementTable posts={blogPosts} onEdit={setEditingPost} onDelete={handleDeletePost} onUpdate={updateBlogPost} />}
-            <AIBlogIdeaGenerator />
-            <BlogBulkUpload />
-            <BlogCategoryManager setConfirmDialog={setConfirmDialog} />
-          </div>
+          <AdminBlogTab
+            onAddNew={handleOpenAddNewPost}
+            onEdit={setEditingPost}
+            onDelete={handleDeletePost}
+            setConfirmDialog={setConfirmDialog}
+          />
         </PermissionGuard>
       );
       case 'users': return (
         <PermissionGuard permission="can_manage_users">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">User Management</h2>
-              <button onClick={() => handleOpenUserModal(null)} className="bg-primary text-white px-4 py-2 rounded-md text-sm">+ Add New User</button>
-            </div>
-            <UserManagementTable users={adminUsers} onUpdateUser={updateAdminUser} onEditUser={handleOpenUserModal} onDeleteUser={handleDeleteUser} />
-          </div>
+          <AdminUserManagementTab
+            currentUser={currentUser!}
+            onEdit={handleOpenUserModal}
+            onDelete={handleDeleteUser}
+          />
         </PermissionGuard>
       );
       case 'packages': return (
         <PermissionGuard permission="can_manage_packages">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Membership Packages</h2>
-              <button onClick={handleOpenAddNewPackage} className="bg-primary text-white px-4 py-2 rounded-md text-sm">+ Add New Package</button>
-            </div>
-            <PackageManagementTable packages={packages} onEdit={handleOpenPackageModal} onDelete={handleDeletePackage} onUpdate={updatePackage} />
-          </div>
+          <AdminPackagesTab onEdit={handleOpenPackageModal} onDelete={handleDeletePackage} />
         </PermissionGuard>
       );
       case 'settings': return (
@@ -703,125 +391,163 @@ const AdminPage: React.FC = () => {
     }
   };
 
-  const pageTitle = activeTab.charAt(0).toUpperCase() + activeTab.slice(1).replace('-', ' ');
+  const pageTitle = activeTab.charAt(0).toUpperCase() + activeTab.slice(1);
 
   return (
-    <div className="flex h-screen bg-gray-100 font-sans overflow-hidden">
-      {editingBusiness && <EditBusinessModal business={editingBusiness} onClose={() => setEditingBusiness(null)} onSave={handleSaveBusiness} />}
-      {editingPost && <EditBlogPostModal post={editingPost} onClose={() => setEditingPost(null)} onSave={handleSavePost} />}
-      {isUserModalOpen && <EditAdminUserModal isOpen={isUserModalOpen} onClose={handleCloseUserModal} onSave={handleSaveUser} userToEdit={editingUser} />}
-      {isPackageModalOpen && <EditPackageModal isOpen={isPackageModalOpen} onClose={handleClosePackageModal} onSave={handleSavePackage} packageToEdit={editingPackage} />}
-      <ForgotPasswordModal isOpen={isForgotPasswordOpen} onClose={() => setIsForgotPasswordOpen(false)} />
+    <div className="flex min-h-screen bg-gray-100">
+      {/* Left Sidebar */}
+      <aside className="w-64 bg-neutral-dark text-white flex flex-col fixed h-full overflow-y-auto z-30">
+        <div className="p-6">
+          <h1 className="text-2xl font-bold text-primary">Beauty Admin</h1>
+          <p className="text-xs text-gray-400 mt-1">Platform Control Center</p>
+        </div>
 
-      <aside className="w-64 bg-neutral-dark text-white flex-col p-4 space-y-1 h-full overflow-y-auto flex-shrink-0">
-        <div className="text-2xl font-bold font-serif text-primary mb-6 px-3 pt-2">BeautyDir Admin</div>
-        <nav>
+        <nav className="flex-grow px-4 space-y-1">
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-3">Overview</div>
           <NavLink tabId="dashboard" label="Dashboard" icon={ICONS.dashboard} permission={true} />
           <NavLink tabId="analytics" label="Analytics" icon={ICONS.analytics} permission={currentUser.permissions.can_view_analytics} />
-          <hr className="border-neutral-700 my-2" />
-          <p className="px-3 text-xs uppercase text-gray-400 font-semibold tracking-wider mt-4 mb-1">Management</p>
+
+          <div className="mt-8 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-3">Management</div>
           <NavLink tabId="businesses" label="Businesses" icon={ICONS.businesses} permission={currentUser.permissions.can_manage_businesses} />
           <NavLink tabId="registrations" label="Registrations" icon={ICONS.registrations} permission={currentUser.permissions.can_manage_registrations} />
           <NavLink tabId="orders" label="Orders" icon={ICONS.orders} permission={currentUser.permissions.can_manage_orders} />
           <NavLink tabId="blog" label="Platform Blog" icon={ICONS.blog} permission={currentUser.permissions.can_manage_platform_blog} />
-          <NavLink tabId="users" label="Users" icon={ICONS.users} permission={currentUser.permissions.can_manage_users} />
+          <NavLink tabId="users" label="Admin Users" icon={ICONS.users} permission={currentUser.permissions.can_manage_users} />
           <NavLink tabId="packages" label="Packages" icon={ICONS.packages} permission={currentUser.permissions.can_manage_packages} />
-          <hr className="border-neutral-700 my-2" />
-          <p className="px-3 text-xs uppercase text-gray-400 font-semibold tracking-wider mt-4 mb-1">Communication</p>
+
+          <div className="mt-8 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-3">System & Settings</div>
+          <NavLink tabId="tools" label="Admin Tools" icon={ICONS.tools} permission={currentUser.permissions.can_use_admin_tools} />
+          <NavLink tabId="content" label="Site Content" icon={ICONS.settings} permission={currentUser.permissions.can_manage_site_content} />
+          <NavLink tabId="homepage" label="Homepage Editor" icon={ICONS.settings} permission={true} />
+          <NavLink tabId="theme" label="Theme Editor" icon={ICONS.settings} permission={true} />
+          <NavLink tabId="settings" label="System Settings" icon={ICONS.settings} permission={currentUser.permissions.can_manage_system_settings} />
+
+          <div className="mt-8 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-3">Logs & Monitoring</div>
+          <NavLink tabId="activity" label="Activity Log" icon={ICONS.activity} permission={currentUser.permissions.can_view_activity_log} />
+          <NavLink tabId="notifications" label="Notification Log" icon={ICONS.notifications} permission={currentUser.permissions.can_view_email_log} />
           <NavLink tabId="announcements" label="Announcements" icon={ICONS.announcements} permission={currentUser.permissions.can_manage_announcements} />
           <NavLink tabId="support" label="Support Tickets" icon={ICONS.support} permission={currentUser.permissions.can_manage_support_tickets} />
-          <NavLink tabId="abuse-reports" label="Abuse Reports" icon={ICONS['abuse-reports']} permission={currentUser.permissions.can_manage_users} />
-          <hr className="border-neutral-700 my-2" />
-          <p className="px-3 text-xs uppercase text-gray-400 font-semibold tracking-wider mt-4 mb-1">Site Content</p>
-          <NavLink tabId="homepage" label="Homepage Editor" icon={ICONS.settings} permission={currentUser.permissions.can_manage_site_content} />
-          <NavLink tabId="content" label="Page Editor" icon={ICONS.settings} permission={currentUser.permissions.can_manage_site_content} />
-          <NavLink tabId="theme" label="Theme & Branding" icon={ICONS.settings} permission={currentUser.permissions.can_manage_system_settings} />
-          <hr className="border-neutral-700 my-2" />
-          <p className="px-3 text-xs uppercase text-gray-400 font-semibold tracking-wider mt-4 mb-1">System</p>
-          <NavLink tabId="settings" label="System Settings" icon={ICONS.settings} permission={currentUser.permissions.can_manage_system_settings} />
-          <NavLink tabId="tools" label="Admin Tools" icon={ICONS.tools} permission={currentUser.permissions.can_use_admin_tools} />
-          <NavLink tabId="activity" label="Activity Log" icon={ICONS.activity} permission={currentUser.permissions.can_view_activity_log} />
-          <NavLink tabId="notifications" label="Email Log" icon={ICONS.notifications} permission={currentUser.permissions.can_view_email_log} />
+          <NavLink tabId="abuse-reports" label="Abuse Reports" icon={ICONS.support} permission={currentUser.permissions.can_manage_users} />
+          <NavLink tabId="landing-page-moderation" label="LP Moderation" icon={ICONS.businesses} permission={currentUser.permissions.can_manage_businesses} />
         </nav>
-      </aside>
 
-      <main className="flex-1 h-full overflow-y-auto p-8">
-        <header className="mb-8 flex items-center justify-between gap-4">
-          <h1 className="text-3xl font-bold font-serif text-neutral-dark capitalize">{pageTitle}</h1>
-          <div className="flex items-center gap-4">
-            <AdminGlobalSearch businesses={businesses} orders={orders} adminUsers={adminUsers} onNavigate={(tab) => setActiveTab(tab as AdminPageTab)} />
-            <AdminNotifications orders={orders} registrationRequests={registrationRequests} onNavigate={(tab) => setActiveTab(tab as AdminPageTab)} />
-            <div className="bg-white p-2 rounded-lg shadow flex items-center gap-3">
-              <div>
-                <p className="text-sm font-semibold text-right">Logged in: <strong className="text-primary">{currentUser.admin_username}</strong></p>
-                <p className="text-xs text-gray-500 text-right">{currentUser.role}</p>
-              </div>
-              <button onClick={handleLogout} className="px-3 py-2 text-sm font-medium text-neutral-dark hover:bg-red-500 hover:text-white rounded-md transition-colors">
-                Logout
-              </button>
+        <div className="mt-auto p-4 border-t border-neutral-700 bg-neutral-900/50">
+          <div className="flex items-center gap-3 mb-4 px-2">
+            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+              {currentUser.admin_username.charAt(0).toUpperCase()}
+            </div>
+            <div className="overflow-hidden">
+              <p className="text-sm font-semibold truncate">{currentUser.admin_username}</p>
+              <p className="text-xs text-gray-400 capitalize">{currentUser.role}</p>
             </div>
           </div>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-400 hover:bg-neutral-800 rounded-lg transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+            <span>Đăng xuất</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <main className="flex-grow ml-64 min-h-screen">
+        {/* Header */}
+        <header className="bg-white border-b sticky top-0 z-20 flex items-center justify-between px-8 py-4">
+          <div className="flex items-center gap-4">
+            <h2 className="text-xl font-semibold text-neutral-dark">{pageTitle}</h2>
+            <AdminGlobalSearch
+              businesses={businesses}
+              orders={orders}
+              adminUsers={adminUsers}
+              onNavigate={(tab) => setActiveTab(tab as AdminPageTab)}
+            />
+          </div>
+          <div className="flex items-center gap-4">
+            <AdminNotifications
+              orders={orders}
+              registrationRequests={registrationRequests}
+              onNavigate={(tab) => setActiveTab(tab as AdminPageTab)}
+            />
+            <button className="bg-primary/10 text-primary p-2 rounded-full hover:bg-primary/20 transition-colors">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
+            </button>
+          </div>
         </header>
-        {renderContent()}
+
+        {/* Dashboard Content */}
+        <div className="p-8">
+          {renderContent()}
+        </div>
       </main>
-      <ConfirmDialog
-        isOpen={confirmDialog.isOpen && confirmDialog.type === 'deleteCategory'}
-        title="Delete Blog Category"
-        message="Are you sure? This will not delete posts in this category."
-        confirmText="Delete"
-        cancelText="Cancel"
-        variant="warning"
-        onConfirm={confirmDeleteCategory}
-        onCancel={() => setConfirmDialog({ isOpen: false, type: null })}
+
+      {/* Modals */}
+      {editingBusiness && (
+        <EditBusinessModal
+          business={editingBusiness}
+          onClose={() => setEditingBusiness(null)}
+          onSave={handleSaveBusiness}
+        />
+      )}
+      {editingPost && (
+        <EditBlogPostModal
+          post={editingPost}
+          onClose={() => setEditingPost(null)}
+          onSave={handleSavePost}
+        />
+      )}
+      {isUserModalOpen && (
+        <EditAdminUserModal
+          isOpen={isUserModalOpen}
+          userToEdit={editingUser}
+          onClose={handleCloseUserModal}
+          onSave={handleSaveUser}
+        />
+      )}
+      {isPackageModalOpen && (
+        <EditPackageModal
+          isOpen={isPackageModalOpen}
+          packageToEdit={editingPackage}
+          onClose={handleClosePackageModal}
+          onSave={handleSavePackage}
+        />
+      )}
+      <ForgotPasswordModal
+        isOpen={isForgotPasswordOpen}
+        onClose={() => setIsForgotPasswordOpen(false)}
       />
+
+      {/* Confirmation Dialogs */}
       <ConfirmDialog
-        isOpen={confirmDialog.isOpen && confirmDialog.type === 'deletePost'}
-        title="Delete Blog Post"
-        message="Are you sure you want to delete this post?"
-        confirmText="Delete"
-        cancelText="Cancel"
-        variant="danger"
-        onConfirm={confirmDeletePost}
-        onCancel={() => setConfirmDialog({ isOpen: false, type: null })}
-      />
-      <ConfirmDialog
-        isOpen={confirmDialog.isOpen && confirmDialog.type === 'duplicateBusiness'}
-        title="Duplicate Business"
-        message={confirmDialog.data?.name ? `Are you sure you want to duplicate "${confirmDialog.data.name}"?` : ''}
-        confirmText="Duplicate"
-        cancelText="Cancel"
-        variant="info"
-        onConfirm={confirmDuplicateBusiness}
-        onCancel={() => setConfirmDialog({ isOpen: false, type: null })}
-      />
-      <ConfirmDialog
-        isOpen={confirmDialog.isOpen && confirmDialog.type === 'rejectRequest'}
-        title="Reject Registration Request"
-        message="Are you sure you want to reject this request?"
-        confirmText="Reject"
-        cancelText="Cancel"
-        variant="warning"
-        onConfirm={confirmRejectRequest}
-        onCancel={() => setConfirmDialog({ isOpen: false, type: null })}
-      />
-      <ConfirmDialog
-        isOpen={confirmDialog.isOpen && confirmDialog.type === 'deleteUser'}
-        title="Delete Admin User"
-        message="Are you sure you want to delete this admin user?"
-        confirmText="Delete"
-        cancelText="Cancel"
-        variant="danger"
-        onConfirm={confirmDeleteUser}
-        onCancel={() => setConfirmDialog({ isOpen: false, type: null })}
-      />
-      <ConfirmDialog
-        isOpen={confirmDialog.isOpen && confirmDialog.type === 'deletePackage'}
-        title="Delete Package"
-        message="Are you sure you want to delete this package?"
-        confirmText="Delete"
-        cancelText="Cancel"
-        variant="danger"
-        onConfirm={confirmDeletePackage}
+        isOpen={confirmDialog.isOpen}
+        title={
+          confirmDialog.type === 'deleteCategory' ? 'Delete Category?' :
+            confirmDialog.type === 'deletePost' ? 'Delete Post?' :
+              confirmDialog.type === 'duplicateBusiness' ? 'Duplicate Business?' :
+                confirmDialog.type === 'rejectRequest' ? 'Reject Registration?' :
+                  confirmDialog.type === 'deleteUser' ? 'Delete User?' :
+                    confirmDialog.type === 'deletePackage' ? 'Delete Package?' :
+                      'Are you sure?'
+        }
+        message={
+          confirmDialog.type === 'deleteCategory' ? 'This will remove the category. Posts in this category will move to "General".' :
+            confirmDialog.type === 'deletePost' ? 'This action cannot be undone.' :
+              confirmDialog.type === 'duplicateBusiness' ? `Are you sure you want to duplicate "${confirmDialog.data?.name}"?` :
+                confirmDialog.type === 'rejectRequest' ? 'Are you sure you want to reject this registration request?' :
+                  confirmDialog.type === 'deleteUser' ? 'This will permanently remove the admin user access.' :
+                    confirmDialog.type === 'deletePackage' ? 'This will remove the membership package for new subscribers.' :
+                      'This action cannot be undone.'
+        }
+        onConfirm={
+          confirmDialog.type === 'deleteCategory' ? confirmDeleteCategory :
+            confirmDialog.type === 'deletePost' ? confirmDeletePost :
+              confirmDialog.type === 'duplicateBusiness' ? confirmDuplicateBusiness :
+                confirmDialog.type === 'rejectRequest' ? confirmRejectRequest :
+                  confirmDialog.type === 'deleteUser' ? confirmDeleteUser :
+                    confirmDialog.type === 'deletePackage' ? confirmDeletePackage :
+                      () => { }
+        }
         onCancel={() => setConfirmDialog({ isOpen: false, type: null })}
       />
     </div>

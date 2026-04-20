@@ -520,6 +520,30 @@ export interface Profile {
 
 export type AdminPageTab = 'dashboard' | 'analytics' | 'businesses' | 'registrations' | 'orders' | 'blog' | 'users' | 'packages' | 'content' | 'homepage' | 'settings' | 'tools' | 'activity' | 'notifications' | 'announcements' | 'support' | 'theme' | 'abuse-reports' | 'landing-page-moderation';
 
+export type ConfirmDialogType =
+  | 'deleteCategory'
+  | 'deletePost'
+  | 'duplicateBusiness'
+  | 'rejectRequest'
+  | 'deleteUser'
+  | 'deletePackage'
+  | null;
+
+export interface ConfirmDialogData {
+  id?: string | number;
+  name?: string;
+  requestId?: string;
+  user_id?: number;
+  package_id?: string;
+}
+
+export interface ConfirmDialogState {
+  isOpen: boolean;
+  type: ConfirmDialogType;
+  data?: ConfirmDialogData;
+}
+
+
 export interface HeroSlide {
   title: string;
   subtitle: string;

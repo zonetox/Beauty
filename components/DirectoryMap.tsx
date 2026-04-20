@@ -139,15 +139,20 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedbusi
             !isNaN(b.lngNum) &&
             b.latNum !== null &&
             b.lngNum !== null &&
-            // Basic sanity check for Vietnam coords (optional but safer)
-            b.latNum > 0 &&
-            b.lngNum > 0
+            b.latNum !== 0 &&
+            b.lngNum !== 0
         );
 
         console.warn(`DirectoryMap: processing ${businesses.length} raw -> ${validBusinesses.length} valid businesses`);
 
         validBusinesses.forEach(business => {
-            const popupContent = ReactDOMServer.renderToString(<MapBusinessCard business={business} />);
+            let popupContent = '';
+            try {
+                popupContent = ReactDOMServer.renderToString(<MapBusinessCard business={business} />);
+            } catch (err) {
+                console.error('Error rendering MapBusinessCard:', err);
+                popupContent = `<div><strong>${business.name}</strong><br/><p>Click to view details</p></div>`;
+            }
             const category = business?.categories?.[0] ?? BusinessCategory.SPA;
             const icon = getIcon(category, false);
 

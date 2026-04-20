@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useAdminPlatform } from '../contexts/AdminPlatformContext.tsx';
+import { useAdminPlatform } from '../contexts/AdminContext.tsx';
 import { SupportTicket, TicketStatus } from '../types.ts';
 
 const statusStyles: { [key in TicketStatus]: string } = {

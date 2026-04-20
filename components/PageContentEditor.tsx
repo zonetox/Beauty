@@ -1,7 +1,7 @@
 
 
 import React, { useState } from 'react';
-import { usePageContent } from '../contexts/AdminPlatformContext.tsx';
+import { usePageContent } from '../contexts/AdminContext.tsx';
 import LayoutEditor from './LayoutEditor.tsx';
 import { LayoutItem } from '../types.ts';
 

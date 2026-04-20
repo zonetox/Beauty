@@ -1,372 +1,498 @@
-import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
-import { AdminUser, AdminLogEntry, Notification, Announcement, SupportTicket, TicketReply, TicketStatus, AppSettings, RegistrationRequest, PageData, PageName } from '../types.ts';
+import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  AdminLogEntry, Notification, Announcement, SupportTicket, TicketReply,
+  TicketStatus, AppSettings, RegistrationRequest, PageData, PageName, AdminUser
+} from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
-import { User } from '@supabase/supabase-js';
-import toast from 'react-hot-toast';
-// snakeToCamel removed for True Sync
+import { DEFAULT_PAGE_CONTENT } from './PageContentContext.tsx';
+import { snakeToCamel } from '../lib/utils.ts';
 import { useErrorHandler } from '../lib/useErrorHandler.ts';
+import { keys } from '../lib/queryKeys.ts';
+import { User } from '@supabase/supabase-js';
 
-// Admin access is determined ONLY by querying the admin_users table
-// No fallback or dev users - if admin_users query fails or returns empty, treat user as non-admin
-// --- TYPE DEFINITIONS ---
 export interface AuthenticatedAdmin extends AdminUser { authUser: User; }
 
 interface AdminContextType {
-    // Auth
-    currentUser: AuthenticatedAdmin | null;
-    loading: boolean;
-    adminUsers: AdminUser[];
-    adminLogin: (email: string, pass: string) => Promise<void>;
-    adminLogout: () => Promise<void>;
-    addAdminUser: (newUser: Omit<AdminUser, 'id' | 'lastLogin' | 'is_locked'>) => Promise<void>;
-    updateAdminUser: (user_id: number, updates: Partial<AdminUser>) => Promise<void>;
-    deleteAdminUser: (user_id: number) => Promise<void>;
-    // Logs
-    logs: AdminLogEntry[];
-    logAdminAction: (admin_username: string, action: string, details: string) => void;
-    clearLogs: () => void;
-    // Notifications
-    notifications: Notification[];
-    addNotification: (recipient_email: string, subject: string, body: string) => void;
-    markNotificationAsRead: (notificationId: string) => void;
-    // Announcements
-    announcements: Announcement[];
-    addAnnouncement: (title: string, content: string, type: string) => Promise<void>;
-    deleteAnnouncement: (id: string) => Promise<void>;
-    getUnreadAnnouncements: (business_id: number) => Announcement[];
-    markAnnouncementAsRead: (business_id: number, announcementId: string) => void;
-    // Support Tickets
-    tickets: SupportTicket[];
-    getTicketsForBusiness: (business_id: number) => SupportTicket[];
-    addTicket: (ticketData: Omit<SupportTicket, 'id' | 'created_at' | 'last_reply_at' | 'status' | 'replies'>) => Promise<void>;
-    addReply: (ticketId: string, replyData: Omit<TicketReply, 'id' | 'created_at'>) => Promise<void>;
-    updateTicketStatus: (ticketId: string, status: TicketStatus) => Promise<void>;
-    // Registration Requests
-    registrationRequests: RegistrationRequest[];
-    approveRegistrationRequest: (requestId: string) => Promise<void>;
-    rejectRegistrationRequest: (requestId: string) => Promise<void>;
-    // Settings
-    settings: AppSettings | null;
-    updateSettings: (newSettings: AppSettings) => Promise<void>;
-    // Page Content
-    getPageContent: (page: PageName) => PageData | undefined;
-    updatePageContent: (page: PageName, newContent: PageData) => Promise<void>;
+  // Auth
+  currentUser: AuthenticatedAdmin | null;
+  authLoading: boolean;
+  adminUsers: AdminUser[];
+  adminLogin: (email: string, pass: string) => Promise<void>;
+  adminLogout: () => Promise<void>;
+  // Logs
+  logs: AdminLogEntry[];
+  logAdminAction: (admin_username: string, action: string, details: string) => Promise<void>;
+  clearLogs: () => Promise<void>;
+  // Notifications
+  notifications: Notification[];
+  addNotification: (recipient_email: string, subject: string, body: string) => Promise<void>;
+  markNotificationAsRead: (notificationId: string) => Promise<void>;
+  // Announcements
+  announcements: Announcement[];
+  addAnnouncement: (title: string, content: string, type: 'info' | 'warning' | 'success') => Promise<void>;
+  deleteAnnouncement: (id: string) => Promise<void>;
+  getUnreadAnnouncements: (business_id: number) => Announcement[];
+  markAnnouncementAsRead: (business_id: number, announcementId: string) => void;
+  // Support Tickets
+  tickets: SupportTicket[];
+  getTicketsForBusiness: (business_id: number) => SupportTicket[];
+  addTicket: (ticketData: Omit<SupportTicket, 'id' | 'created_at' | 'lastReplyAt' | 'status' | 'replies'>) => Promise<void>;
+  addReply: (ticketId: string, replyData: Omit<TicketReply, 'id' | 'created_at'>) => Promise<void>;
+  updateTicketStatus: (ticketId: string, status: TicketStatus) => Promise<void>;
+  // Registration Requests
+  registrationRequests: RegistrationRequest[];
+  approveRegistrationRequest: (requestId: string) => Promise<unknown>;
+  rejectRegistrationRequest: (requestId: string) => Promise<void>;
+  // Settings
+  settings: AppSettings | null;
+  updateSettings: (newSettings: AppSettings) => Promise<void>;
+  // Page Content
+  getPageContent: (page: PageName) => PageData | undefined;
+  updatePageContent: (page: PageName, newContent: PageData) => Promise<void>;
+  // User Management
+  addAdminUser: (userData: Partial<AdminUser> & { password?: string }) => Promise<void>;
+  updateAdminUser: (id: number, updates: Partial<AdminUser>) => Promise<void>;
+  deleteAdminUser: (id: number) => Promise<void>;
+  // Loading State
+  isLoading: boolean;
 }
 
-export const AdminContext = createContext<AdminContextType | undefined>(undefined);
+const AdminContext = createContext<AdminContextType | undefined>(undefined);
+
+const ANNOUNCEMENT_READ_KEY = 'read_announcements_by_business';
+
+type SupportTicketRow = {
+  id: string;
+  business_id: number;
+  business_name?: string;
+  subject: string;
+  message: string;
+  status: TicketStatus;
+  created_at: string;
+  last_reply_at?: string | null;
+  replies?: TicketReply[] | null;
+  businesses?: { name?: string | null } | null;
+};
+
+type PageContentRow = {
+  page_name: PageName;
+  content_data: PageData;
+};
 
 export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    // --- AUTH STATES ---
-    const [currentUser, setCurrentUser] = useState<AuthenticatedAdmin | null>(null);
-    const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
-    const [loading, setLoading] = useState(true);
-    const { handleEdgeFunctionError } = useErrorHandler();
+  const queryClient = useQueryClient();
+  const { handleEdgeFunctionError } = useErrorHandler();
 
-    // --- PLATFORM STATES ---
-    const [logs, setLogs] = useState<AdminLogEntry[]>([]);
-    const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-    const [tickets, setTickets] = useState<SupportTicket[]>([]);
-    const [registrationRequests, setRegistrationRequests] = useState<RegistrationRequest[]>([]);
-    const [settings, setSettings] = useState<AppSettings | null>(null);
-    const [pageContent, setPageContent] = useState<Record<PageName, PageData>>({} as Record<PageName, PageData>);
+  // --- AUTH STATES ---
+  const [currentUser, setCurrentUser] = useState<AuthenticatedAdmin | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
-    // --- AUTH LOGIC ---
-    const fetchAdminUsers = useCallback(async () => {
-        if (!isSupabaseConfigured) {
-            setAdminUsers([]);
-            return [];
+  // --- ADMIN USERS QUERY ---
+  const { data: adminUsers = [], refetch: refetchAdminUsers } = useQuery({
+    queryKey: ['admin-users'],
+    queryFn: async () => {
+      if (!isSupabaseConfigured) return [];
+      const { data, error } = await supabase.from('admin_users')
+        .select('*')
+        .order('id');
+      if (error) throw error;
+      return (data || []) as AdminUser[];
+    },
+    enabled: isSupabaseConfigured
+  });
+
+  // --- AUTH LOGIC ---
+  useEffect(() => {
+    let mounted = true;
+    const initialize = async () => {
+      if (!isSupabaseConfigured) {
+        setAuthLoading(false);
+        return;
+      }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user && mounted) {
+        const profile = adminUsers.find(au => au.email === session.user.email);
+        if (profile && !profile.is_locked) {
+          setCurrentUser({ ...profile, authUser: session.user });
         }
-        const { data, error } = await supabase.from('admin_users')
-            .select('id, username, email, role, permissions, is_locked, last_login')
-            .order('id');
-
-        if (error) {
-            console.warn("Could not fetch admin users from DB:", error.message);
-            setAdminUsers([]);
-            return [];
-        }
-
-        const results = (data || []) as unknown as AdminUser[];
-        setAdminUsers(results);
-        return results;
-    }, []);
-
-    useEffect(() => {
-        let mounted = true;
-        let hasAttemptedAuth = false;
-
-        const safetyTimeout = setTimeout(() => {
-            if (mounted && hasAttemptedAuth) {
-                setLoading(false);
-            }
-        }, 15000);
-
-        const handleAuthChange = async (allAdmins: AdminUser[], user: User | null) => {
-            if (!mounted) return;
-            if (user) {
-                const adminProfile = allAdmins.find(au => au.email === user.email);
-                if (adminProfile && !adminProfile.is_locked) {
-                    setCurrentUser({ ...adminProfile, authUser: user });
-                } else {
-                    setCurrentUser(null);
-                }
-            } else {
-                setCurrentUser(null);
-            }
-            setLoading(false);
-        };
-
-        const initialize = async () => {
-            try {
-                hasAttemptedAuth = true;
-                const allAdmins = await fetchAdminUsers();
-                if (isSupabaseConfigured) {
-                    const { data: { session } } = await supabase.auth.getSession();
-                    await handleAuthChange(allAdmins, session?.user ?? null);
-                } else {
-                    await handleAuthChange(allAdmins, null);
-                }
-            } catch (err) {
-                console.error("Critical error during Admin initialization:", err);
-                if (mounted) setLoading(false);
-            }
-        };
-
-        initialize();
-
-        let authListener: { subscription: { unsubscribe: () => void } } | null = null;
-        if (isSupabaseConfigured) {
-            const { data } = supabase.auth.onAuthStateChange(async (_event, session) => {
-                if (!mounted) return;
-                if (_event !== 'SIGNED_OUT') setLoading(true);
-                const allAdmins = await fetchAdminUsers();
-                await handleAuthChange(allAdmins, session?.user ?? null);
-            });
-            authListener = data;
-        }
-
-        return () => {
-            mounted = false;
-            clearTimeout(safetyTimeout);
-            authListener?.subscription.unsubscribe();
-        };
-    }, [fetchAdminUsers]);
-
-    const adminLogin = async (email: string, pass: string) => {
-        if (!isSupabaseConfigured) throw new Error("Preview Mode: Real login is disabled.");
-        const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
-        if (error) throw error;
+      }
+      setAuthLoading(false);
     };
 
-    const adminLogout = async () => {
+    if (adminUsers.length > 0 || !isSupabaseConfigured) {
+      initialize();
+    }
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!mounted) return;
+      if (session?.user) {
+        let currentAdmins = adminUsers;
+        if (currentAdmins.length === 0) {
+          const { data } = await refetchAdminUsers();
+          currentAdmins = (data as AdminUser[]) || [];
+        }
+        const profile = currentAdmins.find(au => au.email === session.user.email);
+        if (profile && !profile.is_locked) {
+          setCurrentUser({ ...profile, authUser: session.user });
+        } else {
+          setCurrentUser(null);
+        }
+      } else {
         setCurrentUser(null);
-        setLoading(false);
-        if (isSupabaseConfigured) {
-            supabase.auth.signOut().catch((error) => console.warn('SignOut error (ignored):', error));
+      }
+      setAuthLoading(false);
+    });
+
+    return () => {
+      mounted = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, [adminUsers, isSupabaseConfigured, refetchAdminUsers]);
+
+  const adminLogin = async (email: string, pass: string) => {
+    if (!isSupabaseConfigured) throw new Error("Supabase not configured");
+    const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+    if (error) throw error;
+  };
+
+  const adminLogout = async () => {
+    if (!isSupabaseConfigured) return;
+    await supabase.auth.signOut();
+    setCurrentUser(null);
+  };
+
+  const addAdminUser = async (userData: Partial<AdminUser> & { password?: string }) => {
+    if (!isSupabaseConfigured) return;
+    // Note: Creating via edge function or direct if policy allows. 
+    // Standard approach: trigger or edge function.
+    const { error } = await supabase.from('admin_users').insert([{
+      email: userData.email,
+      admin_username: userData.admin_username,
+      role: userData.role || 'editor',
+      is_locked: false
+    }]);
+    if (error) throw error;
+    queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+  };
+
+  const updateAdminUser = async (id: number, updates: Partial<AdminUser>) => {
+    if (!isSupabaseConfigured) return;
+    const { error } = await supabase.from('admin_users').update(updates).eq('id', id);
+    if (error) throw error;
+    queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+  };
+
+  const deleteAdminUser = async (id: number) => {
+    if (!isSupabaseConfigured) return;
+    const { error } = await supabase.from('admin_users').delete().eq('id', id);
+    if (error) throw error;
+    queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+  };
+
+  // --- QUERY FETCHERS ---
+
+  // 1. Logs
+  const { data: logs = [] } = useQuery({
+    queryKey: keys.admin.logs,
+    queryFn: async () => {
+      if (!isSupabaseConfigured) return [];
+      const { data, error } = await supabase.from('admin_activity_logs')
+        .select('id, timestamp, admin_username, action, details')
+        .order('timestamp', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return (data || []).map(log => ({
+        id: log.id,
+        timestamp: log.timestamp || new Date().toISOString(),
+        admin_username: log.admin_username,
+        action: log.action,
+        details: log.details || '',
+        created_at: log.timestamp || new Date().toISOString()
+      }));
+    },
+    enabled: isSupabaseConfigured,
+    refetchInterval: false
+  });
+
+  // 2. Notifications
+  const { data: notifications = [] } = useQuery({
+    queryKey: keys.admin.notifications,
+    queryFn: async () => {
+      if (!isSupabaseConfigured) return [];
+      const { data, error } = await supabase.from('email_notifications_log')
+        .select('*')
+        .order('sent_at', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return (data || []).map(notif => ({
+        id: notif.id,
+        recipient_email: notif.recipient_email,
+        subject: notif.subject,
+        body: notif.body,
+        sent_at: notif.sent_at || new Date().toISOString(),
+        read: notif.read || false
+      }));
+    },
+    enabled: isSupabaseConfigured,
+    refetchInterval: false
+  });
+
+  // 3. Announcements
+  const { data: announcements = [] } = useQuery({
+    queryKey: keys.admin.announcements,
+    queryFn: async () => {
+      if (!isSupabaseConfigured) return [];
+      const { data, error } = await supabase.from('announcements')
+        .select('id, title, content, type, created_at')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return snakeToCamel(data || []) as Announcement[];
+    },
+    enabled: isSupabaseConfigured
+  });
+
+  // 4. Tickets
+  const { data: tickets = [] } = useQuery({
+    queryKey: keys.admin.tickets,
+    queryFn: async () => {
+      if (!isSupabaseConfigured) return [];
+      const { data, error } = await supabase.from('support_tickets')
+        .select('id, business_id, subject, message, status, created_at, last_reply_at, replies, businesses!inner(name)')
+        .order('last_reply_at', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+
+      const mappedTickets = (data as SupportTicketRow[]).map(t => ({
+        ...(snakeToCamel(t) as Omit<SupportTicket, 'business_name'>),
+        business_name: t.businesses?.name || t.business_name || 'Unknown Business'
+      }));
+      return mappedTickets as SupportTicket[];
+    },
+    enabled: isSupabaseConfigured
+  });
+
+  // 5. Registration Requests
+  const { data: registrationRequests = [] } = useQuery({
+    queryKey: keys.admin.registrationRequests,
+    queryFn: async () => {
+      if (!isSupabaseConfigured) return [];
+      const { data, error } = await supabase.from('registration_requests')
+        .select('id, business_name, email, phone, address, category, tier, submitted_at, status')
+        .order('submitted_at', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return snakeToCamel(data || []) as RegistrationRequest[];
+    },
+    enabled: isSupabaseConfigured
+  });
+
+  // 6. Settings
+  const { data: settings = null } = useQuery({
+    queryKey: keys.admin.settings,
+    queryFn: async () => {
+      if (!isSupabaseConfigured) return null;
+      const { data, error } = await supabase.from('app_settings').select('settings_data').eq('id', 1).maybeSingle();
+      if (error) throw error;
+      return data?.settings_data as unknown as AppSettings || null;
+    },
+    enabled: isSupabaseConfigured
+  });
+
+  // 7. Page Content
+  const { data: pageContent = DEFAULT_PAGE_CONTENT as Record<PageName, PageData> } = useQuery({
+    queryKey: keys.admin.pageContent,
+    queryFn: async () => {
+      if (!isSupabaseConfigured) return DEFAULT_PAGE_CONTENT as Record<PageName, PageData>;
+      const { data, error } = await supabase.from('page_content').select('page_name, content_data');
+      if (error) throw error;
+
+      const dbContent = (data as PageContentRow[])?.reduce((acc, page) => {
+        acc[page.page_name as PageName] = page.content_data as PageData;
+        return acc;
+      }, {} as Record<PageName, PageData>) || {};
+
+      const finalContent = { ...(DEFAULT_PAGE_CONTENT as Record<PageName, PageData>) };
+      for (const pageName of Object.keys(finalContent)) {
+        const key = pageName as PageName;
+        const dbPage = dbContent[key];
+        if (dbPage) {
+          finalContent[key] = {
+            layout: dbPage.layout || finalContent[key].layout,
+            visibility: { ...finalContent[key].visibility, ...dbPage.visibility },
+          };
         }
-    };
+      }
+      return finalContent;
+    },
+    enabled: isSupabaseConfigured
+  });
 
-    const addAdminUser = async (newUser: Omit<AdminUser, 'id' | 'lastLogin' | 'is_locked'>) => {
-        if (!isSupabaseConfigured) {
-            toast.error("Cannot add admin user: Supabase is not configured.");
-            return;
-        }
-        const { error } = await supabase.functions.invoke('create-admin-user', { body: newUser });
-        if (error) {
-            handleEdgeFunctionError(error, 'addAdminUser');
-            throw new Error(`Failed to create admin user: ${error.message}`);
-        }
-        await fetchAdminUsers();
-    };
+  // --- ACTIONS (MUTATIONS) ---
 
-    const updateAdminUser = async (_user_id: number, _updates: Partial<AdminUser>) => {
-        toast.error("Update admin user not implemented in this context.");
-    };
+  const logAdminAction = async (admin_username: string, action: string, details: string) => {
+    if (!isSupabaseConfigured) return;
+    const { error } = await supabase.from('admin_activity_logs')
+      .insert({ admin_username: admin_username, action, details, timestamp: new Date().toISOString() });
+    if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.logs });
+  };
 
-    const deleteAdminUser = async (_user_id: number) => {
-        toast.error("Delete admin user not implemented in this context.");
-    };
+  const clearLogs = async () => {
+    if (!isSupabaseConfigured) return;
+    const { error } = await supabase.from('admin_activity_logs').delete().neq('id', '');
+    if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.logs });
+  };
 
-    // --- PLATFORM LOGIC ---
-    const fetchAllAdminData = useCallback(async () => {
-        if (!isSupabaseConfigured) {
-            setAnnouncements([]); setTickets([]); setRegistrationRequests([]); setSettings(null); setPageContent({} as Record<PageName, PageData>);
-            return;
-        }
-        try {
-            const [announcementsRes, ticketsRes, requestsRes, settingsRes, pageContentRes] = await Promise.all([
-                supabase.from('announcements').select('id, title, content, type, created_at').order('created_at', { ascending: false }),
-                supabase.from('support_tickets').select('id, business_id, subject, message, status, created_at, last_reply_at, replies').order('last_reply_at', { ascending: false, nullsFirst: false }),
-                supabase.from('registration_requests').select('id, business_name, email, phone, address, category, tier, submitted_at, status').order('submitted_at', { ascending: false }),
-                supabase.from('app_settings').select('settings_data').eq('id', 1).maybeSingle(),
-                supabase.from('page_content').select('page_name, content_data')
-            ]);
+  const addNotification = async (recipient_email: string, subject: string, body: string) => {
+    if (isSupabaseConfigured) {
+      const { error } = await supabase.functions.invoke('send-email', { body: { to: recipient_email, subject, html: body.replace(/\n/g, '<br>') } });
+      if (error) handleEdgeFunctionError(error, 'addNotification');
+      const { error: dbError } = await supabase.from('email_notifications_log')
+        .insert({ recipient_email: recipient_email, subject, body, sent_at: new Date().toISOString(), read: false });
+      if (!dbError) queryClient.invalidateQueries({ queryKey: keys.admin.notifications });
+    }
+  };
 
-            if (announcementsRes.data) setAnnouncements(announcementsRes.data as unknown as Announcement[]);
-            if (ticketsRes.data) {
-                const mappedTickets = (ticketsRes.data as unknown as (SupportTicket & { businesses?: { name: string }; business_name?: string })[]).map(t => ({
-                    ...(t as unknown as SupportTicket),
-                    business_name: t.businesses?.name || t.business_name || 'Unknown Business'
-                }));
-                setTickets(mappedTickets as SupportTicket[]);
-            }
-            if (requestsRes.data) setRegistrationRequests(requestsRes.data as unknown as RegistrationRequest[]);
-            if (settingsRes.data) setSettings(settingsRes.data.settings_data as unknown as AppSettings);
-            if (pageContentRes.data) {
-                const dbContent = (pageContentRes.data as { page_name: string; content_data: unknown }[]).reduce((acc, page) => {
-                    acc[page.page_name as PageName] = page.content_data as PageData;
-                    return acc;
-                }, {} as Record<PageName, PageData>);
-                setPageContent(dbContent);
-            }
-        } catch (error) {
-            console.error("Error in fetchAllAdminData:", error);
-        }
-    }, []);
+  const markNotificationAsRead = async (notificationId: string) => {
+    if (!isSupabaseConfigured) return;
+    const { error } = await supabase.from('email_notifications_log')
+      .update({ read: true, read_at: new Date().toISOString() })
+      .eq('id', notificationId);
+    if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.notifications });
+  };
 
-    useEffect(() => {
-        // Initial data load
-        fetchAllAdminData();
+  const addAnnouncement = async (title: string, content: string, type: 'info' | 'warning' | 'success') => {
+    if (!isSupabaseConfigured) return;
+    const { error } = await supabase.from('announcements')
+      .insert({ title, content, type })
+      .select().single();
+    if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.announcements });
+  };
 
-        // TEMPORARY FIX: Realtime subscription disabled to prevent infinite re-fetch loop
-        // TODO: Re-enable with proper debouncing after performance optimization
-        /*
-        if (isSupabaseConfigured) {
-            const channel = supabase.channel('public:registration_requests')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'registration_requests' }, () => fetchAllAdminData())
-                .subscribe();
-            return () => { supabase.removeChannel(channel); }
-        }
-        */
+  const deleteAnnouncement = async (id: string) => {
+    if (!isSupabaseConfigured) return;
+    const { error } = await supabase.from('announcements').delete().eq('id', id);
+    if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.announcements });
+  };
 
-        return () => { }; // Explicit destructor
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // Run only once on mount
+  const getUnreadAnnouncements = (business_id: number) => {
+    const readKey = `${ANNOUNCEMENT_READ_KEY}_${business_id}`;
+    const readIds: string[] = JSON.parse(localStorage.getItem(readKey) || '[]');
+    return announcements.filter(ann => !readIds.includes(ann.id));
+  };
 
-    const logAdminAction = (_admin_username: string, _action: string, _details: string) => {
-        // Placeholder for logging
-    };
+  const markAnnouncementAsRead = (business_id: number, announcementId: string) => {
+    const readKey = `${ANNOUNCEMENT_READ_KEY}_${business_id}`;
+    const readIds: string[] = JSON.parse(localStorage.getItem(readKey) || '[]');
+    if (!readIds.includes(announcementId)) localStorage.setItem(readKey, JSON.stringify([...readIds, announcementId]));
+  };
 
-    const clearLogs = () => setLogs([]);
+  const getTicketsForBusiness = (business_id: number) => tickets.filter(t => t.business_id === business_id);
 
-    const addNotification = async (recipient_email: string, subject: string, body: string) => {
-        if (!isSupabaseConfigured) {
-            toast.success(`(Preview) Email to: ${recipient_email} `);
-            return;
-        }
-        const { error } = await supabase.functions.invoke('send-email', { body: { to: recipient_email, subject, html: body } });
-        if (error) console.error('Error sending email:', error.message);
-        setNotifications(prev => [{ id: crypto.randomUUID(), recipient_email, subject, body, sent_at: new Date().toISOString(), read: false }, ...prev]);
-    };
+  const addTicket = async (ticketData: Omit<SupportTicket, 'id' | 'created_at' | 'lastReplyAt' | 'status' | 'replies'>) => {
+    if (!isSupabaseConfigured) return;
+    const { error } = await supabase.from('support_tickets')
+      .insert({
+        business_id: ticketData.business_id,
+        business_name: ticketData.business_name,
+        subject: ticketData.subject,
+        message: ticketData.message,
+        status: TicketStatus.OPEN,
+        replies: []
+      })
+      .select().single();
+    if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.tickets });
+  };
 
-    const markNotificationAsRead = (_notificationId: string) => {
-        // Placeholder
-    };
+  const addReply = async (ticketId: string, replyData: Omit<TicketReply, 'id' | 'created_at'>) => {
+    if (!isSupabaseConfigured) return;
+    const ticket = tickets.find(t => t.id === ticketId);
+    if (!ticket) return;
+    const updatedReplies = [...(ticket.replies || []), { ...replyData, id: crypto.randomUUID(), created_at: new Date().toISOString() }];
+    const { error } = await supabase.from('support_tickets')
+      .update({ replies: updatedReplies as unknown as Record<string, unknown>[], last_reply_at: new Date().toISOString() })
+      .eq('id', ticketId)
+      .select().single();
+    if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.tickets });
+  };
 
-    const addAnnouncement = async (_title: string, _content: string, _type: string) => {
-        toast.error("Add announcement not implemented.");
-    };
+  const updateTicketStatus = async (ticketId: string, status: TicketStatus) => {
+    if (!isSupabaseConfigured) return;
+    const { error } = await supabase.from('support_tickets')
+      .update({ status })
+      .eq('id', ticketId)
+      .select().single();
+    if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.tickets });
+  };
 
-    const deleteAnnouncement = async (_id: string) => {
-        toast.error("Delete announcement not implemented.");
-    };
+  const approveRegistrationRequest = async (requestId: string) => {
+    const { data, error } = await supabase.functions.invoke('approve-registration', { body: { requestId } });
+    if (error) { handleEdgeFunctionError(error, 'approveRegistrationRequest'); throw error; }
+    queryClient.invalidateQueries({ queryKey: keys.admin.registrationRequests });
+    queryClient.invalidateQueries({ queryKey: keys.admin.logs });
+    return data;
+  };
 
-    const getUnreadAnnouncements = (_business_id: number) => [];
+  const rejectRegistrationRequest = async (requestId: string): Promise<void> => {
+    const { error } = await supabase.from('registration_requests').update({ status: 'Rejected' }).eq('id', requestId);
+    if (error) throw error;
+    queryClient.invalidateQueries({ queryKey: keys.admin.registrationRequests });
+  };
 
-    const markAnnouncementAsRead = (_business_id: number, _announcementId: string) => {
-        // Placeholder
-    };
+  const updateSettings = async (newSettings: AppSettings) => {
+    if (!isSupabaseConfigured) return;
+    const { error } = await supabase.from('app_settings').update({ settings_data: newSettings as unknown as Record<string, unknown> }).eq('id', 1);
+    if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.settings });
+  };
 
-    const getTicketsForBusiness = (business_id: number) => tickets.filter(t => t.business_id === business_id);
+  const getPageContent = (page: PageName) => pageContent[page];
 
-    const addTicket = async (ticketData: Omit<SupportTicket, 'id' | 'created_at' | 'last_reply_at' | 'status' | 'replies'>) => {
-        if (!isSupabaseConfigured) return;
-        const { data, error } = await supabase.from('support_tickets').insert({
-            business_id: ticketData.business_id,
-            business_name: ticketData.business_name,
-            subject: ticketData.subject,
-            message: ticketData.message,
-            status: TicketStatus.OPEN,
-            replies: []
-        }).select().single();
-        if (!error && data) setTickets(prev => [data as unknown as SupportTicket, ...prev]);
-    };
+  const updatePageContent = async (page: PageName, newContent: PageData) => {
+    if (!isSupabaseConfigured) return;
+    const { error } = await supabase.from('page_content')
+      .upsert({ page_name: page, content_data: newContent as unknown as Record<string, unknown> }, { onConflict: 'page_name' });
+    if (!error) queryClient.invalidateQueries({ queryKey: keys.admin.pageContent });
+  };
 
-    const addReply = async (ticketId: string, replyData: Omit<TicketReply, 'id' | 'created_at'>) => {
-        if (!isSupabaseConfigured) return;
-        const ticket = tickets.find(t => t.id === ticketId);
-        if (!ticket) return;
-        const updatedReplies = [...(ticket.replies || []), { ...replyData, id: crypto.randomUUID(), created_at: new Date().toISOString() }];
-        const { data, error } = await supabase.from('support_tickets').update({
-            replies: updatedReplies as unknown as TicketReply[],
-            last_reply_at: new Date().toISOString()
-        }).eq('id', ticketId).select().single();
-        if (!error && data) setTickets(prev => prev.map(t => t.id === ticketId ? (data as unknown as SupportTicket) : t));
-    };
+  const value = {
+    currentUser, authLoading, adminUsers, adminLogin, adminLogout,
+    logs, logAdminAction, clearLogs,
+    notifications, addNotification, markNotificationAsRead,
+    announcements, addAnnouncement, deleteAnnouncement, getUnreadAnnouncements, markAnnouncementAsRead,
+    tickets, getTicketsForBusiness, addTicket, addReply, updateTicketStatus,
+    registrationRequests, approveRegistrationRequest, rejectRegistrationRequest,
+    settings, updateSettings,
+    getPageContent, updatePageContent,
+    addAdminUser, updateAdminUser, deleteAdminUser,
+    isLoading: false
+  };
 
-    const updateTicketStatus = async (ticketId: string, status: TicketStatus) => {
-        if (!isSupabaseConfigured) return;
-        const { data, error } = await supabase.from('support_tickets').update({ status }).eq('id', ticketId).select().single();
-        if (!error && data) setTickets(prev => prev.map(t => t.id === ticketId ? (data as unknown as SupportTicket) : t));
-    };
-
-    const approveRegistrationRequest = async (_requestId: string) => {
-        toast.error("Approve request not implemented.");
-    };
-
-    const rejectRegistrationRequest = async (_requestId: string) => {
-        toast.error("Reject request not implemented.");
-    };
-
-    const updateSettings = async (newSettings: AppSettings) => {
-        if (!isSupabaseConfigured) return;
-        const { data, error } = await supabase.from('app_settings').upsert({ id: 1, settings_data: newSettings as unknown as Record<string, unknown> }, { onConflict: 'id' }).select().single();
-        if (!error && data) setSettings(data.settings_data as unknown as AppSettings);
-    };
-
-    const getPageContent = (page: PageName) => pageContent[page];
-
-    const updatePageContent = async (_page: PageName, _newContent: PageData) => {
-        toast.error("Update page content not implemented.");
-    };
-
-    const value = {
-        currentUser, loading, adminUsers, adminLogin, adminLogout, addAdminUser, updateAdminUser, deleteAdminUser,
-        logs, logAdminAction, clearLogs,
-        notifications, addNotification, markNotificationAsRead,
-        announcements, addAnnouncement, deleteAnnouncement, getUnreadAnnouncements, markAnnouncementAsRead,
-        tickets, getTicketsForBusiness, addTicket, addReply, updateTicketStatus,
-        registrationRequests, approveRegistrationRequest, rejectRegistrationRequest,
-        settings, updateSettings,
-        getPageContent, updatePageContent
-    };
-
-    return <AdminContext.Provider value={value}>{children}</AdminContext.Provider>;
+  return <AdminContext.Provider value={value}>{children}</AdminContext.Provider>;
 };
 
 export const useAdmin = () => {
-    const context = useContext(AdminContext);
-    if (!context) throw new Error('useAdmin must be used within an AdminProvider');
-    return context;
+  const context = useContext(AdminContext);
+  if (!context) throw new Error('useAdmin must be used within an AdminPlatformProvider');
+  return context;
 };
 
 export const useAdminAuth = () => {
-    const { currentUser, loading, adminUsers, adminLogin, adminLogout, addAdminUser, updateAdminUser, deleteAdminUser } = useAdmin();
-    return { currentUser, loading, adminUsers, adminLogin, adminLogout, addAdminUser, updateAdminUser, deleteAdminUser };
+  const { currentUser, authLoading, adminUsers, adminLogin, adminLogout, addAdminUser, updateAdminUser, deleteAdminUser } = useAdmin();
+  return { currentUser, loading: authLoading, adminUsers, adminLogin, adminLogout, addAdminUser, updateAdminUser, deleteAdminUser };
 };
 
 export const useAdminPlatform = () => {
-    const { logs, logAdminAction, clearLogs, notifications, addNotification, markNotificationAsRead, announcements, addAnnouncement, deleteAnnouncement, getUnreadAnnouncements, markAnnouncementAsRead, tickets, getTicketsForBusiness, addTicket, addReply, updateTicketStatus, registrationRequests, approveRegistrationRequest, rejectRegistrationRequest } = useAdmin();
-    return { logs, logAdminAction, clearLogs, notifications, addNotification, markNotificationAsRead, announcements, addAnnouncement, deleteAnnouncement, getUnreadAnnouncements, markAnnouncementAsRead, tickets, getTicketsForBusiness, addTicket, addReply, updateTicketStatus, registrationRequests, approveRegistrationRequest, rejectRegistrationRequest };
+  const context = useAdmin();
+  return context;
 };
 
 export const useSettings = () => {
-    const { settings, updateSettings } = useAdmin();
-    return { settings, updateSettings };
+  const { settings, updateSettings } = useAdmin();
+  return { settings, updateSettings };
 };
 
 export const usePageContent = () => {
-    const { getPageContent, updatePageContent } = useAdmin();
-    return { getPageContent, updatePageContent };
+  const { getPageContent, updatePageContent } = useAdmin();
+  return { getPageContent, updatePageContent };
 };

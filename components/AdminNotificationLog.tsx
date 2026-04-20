@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useAdminPlatform } from '../contexts/AdminPlatformContext.tsx';
+import { useAdminPlatform } from '../contexts/AdminContext.tsx';
 
 const AdminNotificationLog: React.FC = () => {
     const { notifications, markNotificationAsRead } = useAdminPlatform();
@@ -7,7 +7,7 @@ const AdminNotificationLog: React.FC = () => {
     const [expandedId, setExpandedId] = useState<string | null>(null);
 
     const filteredNotifications = useMemo(() => {
-        return notifications.filter(n => 
+        return notifications.filter(n =>
             searchEmail.trim() === '' || n.recipient_email.toLowerCase().includes(searchEmail.toLowerCase())
         );
     }, [notifications, searchEmail]);
@@ -23,7 +23,7 @@ const AdminNotificationLog: React.FC = () => {
     return (
         <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-xl font-semibold text-neutral-dark mb-4">Email Log (Simulated)</h2>
-            
+
             <div className="mb-4">
                 <input
                     type="text"
@@ -37,7 +37,7 @@ const AdminNotificationLog: React.FC = () => {
             <div className="space-y-3">
                 {filteredNotifications.map(notification => (
                     <div key={notification.id} className="border rounded-lg overflow-hidden">
-                        <button 
+                        <button
                             onClick={() => handleToggleExpand(notification.id)}
                             className={`w-full text-left p-3 flex justify-between items-center ${notification.read ? 'bg-gray-50' : 'bg-blue-50 font-semibold'}`}
                         >
@@ -58,7 +58,7 @@ const AdminNotificationLog: React.FC = () => {
                         )}
                     </div>
                 ))}
-                 {filteredNotifications.length === 0 && (
+                {filteredNotifications.length === 0 && (
                     <p className="text-center text-gray-500 py-8">No notifications found.</p>
                 )}
             </div>
