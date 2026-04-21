@@ -16,56 +16,56 @@ interface DashboardOverviewProps {
 
 const StatCard: React.FC<{ title: string, value: string | number, icon: React.ReactNode, change?: string, onClick?: () => void, className?: string }> = ({ title, value, icon, change, onClick, className = '' }) => (
     <div
-        className={`glass-card p-6 rounded-2xl md:rounded-3xl flex flex-col justify-between shadow-premium transition-all duration-500 hover:-translate-y-2 group h-full ${onClick ? 'cursor-pointer' : ''} ${className}`}
+        className={`glass-card p-10 rounded-[2rem] flex flex-col justify-between shadow-premium transition-all duration-700 hover:-translate-y-3 group h-full border border-white/40 ${onClick ? 'cursor-pointer' : ''} ${className}`}
         onClick={onClick}
     >
-        <div className="flex items-center justify-between mb-4">
-            <div className="bg-primary/10 text-primary p-4 rounded-xl group-hover:bg-primary group-hover:text-white transition-all duration-500">{icon}</div>
+        <div className="flex items-center justify-between mb-8">
+            <div className="bg-primary/5 text-primary p-5 rounded-full group-hover:bg-primary group-hover:text-white transition-all duration-700 shadow-inner">{icon}</div>
             {change && (
-                <span className="text-xs font-bold bg-green-500/10 text-green-600 px-2 py-1 rounded-full">
+                <span className="text-[10px] font-bold tracking-widest bg-accent/5 text-accent border border-accent/10 px-3 py-1.5 rounded-full uppercase">
                     {change}
                 </span>
             )}
         </div>
         <div>
-            <p className="text-gray-500 text-sm font-medium mb-1">{title}</p>
-            <p className="text-3xl font-bold text-neutral-dark font-outfit">{value}</p>
+            <p className="text-neutral-400 text-xs font-bold uppercase tracking-[0.2em] mb-3">{title}</p>
+            <p className="text-5xl font-serif text-primary tracking-tight">{value}</p>
         </div>
     </div>
 );
 
 const BarChart: React.FC<{ data: AnalyticsDataPoint[]; dataKey: 'page_views'; title: string }> = ({ data, dataKey, title }) => {
     const values = data.map(d => d[dataKey]);
-    const maxValue = Math.max(...values, 1); // Avoid division by zero
+    const maxValue = Math.max(...values, 1);
 
     if (data.length === 0) {
         return (
-            <div className="glass-card p-4 rounded-3xl h-full flex items-center justify-center">
+            <div className="glass-card p-12 rounded-[2rem] h-full flex items-center justify-center border border-white/40">
                 <EmptyState
-                    title="Chưa có dữ liệu phân tích"
-                    message="Dữ liệu sẽ hiển thị khi khách hàng bắt đầu truy cập hồ sơ của bạn."
+                    title="Dữ liệu đang được tinh tuyển"
+                    message="Thống kê truy cập sẽ hiển thị khi khách hàng bắt đầu trải nghiệm hồ sơ của quý khách."
                 />
             </div>
         );
     }
 
     return (
-        <div className="glass-card p-6 rounded-3xl h-full flex flex-col shadow-premium">
-            <h3 className="font-bold text-neutral-dark font-outfit mb-6 text-lg">{title}</h3>
-            <div className="flex justify-around items-end h-48 space-x-4 flex-grow">
+        <div className="glass-card p-10 rounded-[2rem] h-full flex flex-col shadow-premium border border-white/40">
+            <h3 className="font-serif text-2xl text-primary mb-10 tracking-wide">{title}</h3>
+            <div className="flex justify-around items-end h-60 space-x-6 flex-grow">
                 {data.map((item) => (
                     <div key={item.date} className="flex flex-col items-center flex-1 h-full">
                         <div className="flex-grow flex items-end w-full">
                             <div
-                                className="w-full bg-primary/20 rounded-t-xl hover:bg-primary/50 transition-all duration-300 relative group"
-                                style={{ height: `${Math.max((item[dataKey] / maxValue) * 100, 8)}%`, minHeight: '8px' }}
+                                className="w-full bg-primary/10 rounded-full hover:bg-primary/30 transition-all duration-500 relative group"
+                                style={{ height: `${Math.max((item[dataKey] / maxValue) * 100, 10)}%`, minHeight: '12px' }}
                             >
-                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-neutral-dark text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-primary text-white text-[10px] font-bold py-2 px-3 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-xl tracking-widest">
                                     {item[dataKey]}
                                 </div>
                             </div>
                         </div>
-                        <p className="text-[10px] text-gray-400 mt-2 font-medium">{new Date(item.date).toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric' })}</p>
+                        <p className="text-[10px] text-neutral-400 mt-4 font-bold tracking-widest uppercase">{new Date(item.date).toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric' })}</p>
                     </div>
                 ))}
             </div>
@@ -245,45 +245,37 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
 
     const isVip = currentBusiness.membership_tier === MembershipTier.VIP;
 
-    const announcementTypeStyles = {
-        info: 'bg-blue-50/50 border-blue-400 text-blue-700',
-        success: 'bg-green-50/50 border-green-400 text-green-700',
-        warning: 'bg-yellow-50/50 border-yellow-400 text-yellow-700',
-    };
-
     return (
-        <div className="p-2 md:p-6 space-y-8 animate-fade-in-up">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-12 animate-fade-in-up">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h2 className="text-3xl font-bold font-outfit text-neutral-dark">Tổng quan hoạt động</h2>
-                    <p className="text-gray-400 text-sm mt-1">Quản lý hiệu quả kinh doanh của bạn tại đây</p>
+                    <h2 className="text-3xl font-serif text-primary tracking-wide">Tổng quan hoạt động</h2>
+                    <p className="text-neutral-400 text-sm font-light italic mt-2">Quản lý hành trình kiến tạo vẻ đẹp của quý khách</p>
                 </div>
-                <div className="flex items-center space-x-2 text-xs font-bold text-gray-400 bg-white/50 px-4 py-2 rounded-full border border-white/20 backdrop-blur-sm">
+                <div className="flex items-center space-x-3 text-[10px] font-bold text-neutral-400 bg-white/40 px-6 py-3 rounded-full border border-white/50 backdrop-blur-md shadow-premium uppercase tracking-[0.2em]">
                     <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
                     </span>
-                    <span>CẬP NHẬT THỜI GIAN THỰC</span>
+                    <span>Dữ liệu thời gian thực</span>
                 </div>
             </div>
 
             {/* Announcements */}
             {unreadAnnouncements.length > 0 && (
-                <div className="space-y-4">
+                <div className="space-y-6">
                     {unreadAnnouncements.map(ann => (
-                        <div key={ann.id} className={`p-4 border-l-4 rounded-2xl glass-card transition-all hover:scale-[1.01] ${announcementTypeStyles[ann.type]}`}>
-                            <div className="flex">
-                                <div className="flex-shrink-0">
+                        <div key={ann.id} className={`p-6 border-l-4 rounded-[1.5rem] glass-card border-accent/30 shadow-premium transition-all hover:scale-[1.01]`}>
+                            <div className="flex items-start">
+                                <div className="bg-accent/10 p-3 rounded-full text-accent shadow-inner mt-1">
                                     <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
                                 </div>
-                                <div className="ml-3 flex-1 md:flex md:justify-between">
+                                <div className="ml-5 flex-1 flex flex-col md:flex-row md:items-center justify-between gap-4">
                                     <div>
-                                        <p className="text-sm font-bold font-outfit">{ann.title}</p>
-                                        <p className="text-sm mt-1">{ann.content}</p>
+                                        <p className="text-lg font-serif text-primary tracking-wide">{ann.title}</p>
+                                        <p className="text-neutral-500 font-light italic text-sm mt-1">{ann.content}</p>
                                     </div>
-                                    <p className="mt-3 text-sm md:mt-0 md:ml-6">
-                                        <button onClick={() => handleDismissAnnouncement(ann.id)} className="whitespace-nowrap font-bold hover:underline">Đóng</button>
-                                    </p>
+                                    <button onClick={() => handleDismissAnnouncement(ann.id)} className="text-[10px] font-bold border border-neutral-200 px-4 py-2 rounded-full hover:bg-neutral-50 transition-colors uppercase tracking-[0.1em]">Đã hiểu</button>
                                 </div>
                             </div>
                         </div>
@@ -292,46 +284,26 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
             )}
 
             {/* Statistics Bento Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <StatCard
                     className="md:col-span-2"
-                    title="Lượt xem hồ sơ"
+                    title="Lượt chiêm ngưỡng hồ sơ"
                     value={stats.page_views.toLocaleString()}
-                    icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path d="M2.458 12C3.732 7.943 7.522 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.022 7-9.542 7-4.478 0-8.268-2.943-9.542-7z" /></svg>}
-                    change="+12%"
+                    icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M2.458 12C3.732 7.943 7.522 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.022 7-9.542 7-4.478 0-8.268-2.943-9.542-7z" /></svg>}
+                    change="+12.5%"
                     onClick={() => setActiveTab('stats')}
                 />
                 <StatCard
-                    title="Đánh giá"
+                    title="Đánh giá tinh hoa"
                     value={`${stats.averageRating.toFixed(1)} ⭐`}
-                    icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>}
+                    icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>}
                     onClick={() => setActiveTab('reviews')}
                 />
                 <StatCard
-                    title="Liên hệ"
+                    title="Tương tác khách hàng"
                     value={stats.contact_clicks.toLocaleString()}
-                    icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>}
+                    icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>}
                     onClick={() => setActiveTab('stats')}
-                />
-
-                <StatCard
-                    title="Dịch vụ"
-                    value={stats.servicesCount}
-                    icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>}
-                    onClick={() => setActiveTab('services')}
-                />
-                <StatCard
-                    title="Ưu đãi"
-                    value={stats.dealsCount}
-                    icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-                    onClick={() => setActiveTab('deals')}
-                />
-                <StatCard
-                    className="md:col-span-2"
-                    title="Lịch hẹn mới"
-                    value={stats.pendingAppointments}
-                    icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
-                    onClick={() => setActiveTab('bookings')}
                 />
             </div>
 

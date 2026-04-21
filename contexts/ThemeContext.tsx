@@ -7,16 +7,16 @@ const DEFAULT_THEME: ThemeSettings = {
   logo_url: '/logo.svg', // Logo with "1Beauty.Asia" text
   favicon_url: '/favicon.svg',
   colors: {
-    primary: '#BFA16A',
-    primary_dark: '#A98C5A',
-    secondary: '#4A4A4A',
-    accent: '#EAE0D1',
-    background: '#FDFCF9',
-    neutral_dark: '#2D2D2D',
+    primary: '#D4AF37',
+    primary_dark: '#B8860B',
+    secondary: '#1A1A1A',
+    accent: '#A65E5E',
+    background: '#F9F5F1',
+    neutral_dark: '#121212',
   },
   fonts: {
     sans: 'Inter',
-    serif: 'Playfair Display',
+    serif: 'Cormorant Garamond',
   },
 };
 
@@ -24,6 +24,7 @@ const DEFAULT_THEME: ThemeSettings = {
 const FONT_URL_MAP: { [key: string]: string } = {
   'Inter': 'Inter:wght@400;500;600;700',
   'Playfair Display': 'Playfair+Display:ital,wght@0,400;0,700;0,900;1,400',
+  'Cormorant Garamond': 'Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400',
   'Roboto': 'Roboto:wght@400;500;700',
   'Lato': 'Lato:wght@400;700',
   'Montserrat': 'Montserrat:wght@400;500;600;700',

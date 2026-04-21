@@ -95,9 +95,9 @@ const Header: React.FC = () => {
   }, [isDropdownOpen]);
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${isActive
-      ? 'bg-primary/10 text-primary shadow-[0_0_20px_rgba(212,175,55,0.1)]'
-      : 'text-neutral-500 hover:text-neutral-dark hover:bg-white/50'
+    `px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 tracking-wide ${isActive
+      ? 'bg-primary/5 text-primary'
+      : 'text-neutral-600 hover:text-primary hover:bg-white/40'
     }`;
 
   const mobileNavLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -143,7 +143,7 @@ const Header: React.FC = () => {
                   }}
                 />
               ) : (
-                <span className="text-2xl font-bold font-outfit text-gradient transition-all duration-300 group-hover:scale-105 inline-block">
+                <span className="text-2xl font-bold font-serif tracking-widest text-primary uppercase">
                   1Beauty.asia
                 </span>
               )}
@@ -245,7 +245,7 @@ const Header: React.FC = () => {
                   Đăng nhập
                 </NavLink>
                 {role === 'anonymous' && (
-                  <Link to="/register" className="ml-4 px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark transition-transform transform hover:scale-105">
+                  <Link to="/register" className="ml-4 px-6 py-2.5 rounded-full shadow-sm text-sm font-medium text-white bg-accent hover:opacity-90 transition-all transform hover:scale-105 tracking-wide">
                     Đăng ký đối tác
                   </Link>
                 )}
@@ -332,7 +332,7 @@ const Header: React.FC = () => {
                   <Link
                     to="/register"
                     onClick={() => setIsMenuOpen(false)}
-                    className="block w-full text-center px-4 py-3 border border-transparent rounded-md shadow-sm font-medium text-white bg-primary hover:bg-primary-dark mt-2"
+                    className="block w-full text-center px-4 py-3 rounded-full shadow-sm font-medium text-white bg-accent hover:opacity-90 mt-4 tracking-wide"
                   >
                     Đăng ký đối tác
                   </Link>

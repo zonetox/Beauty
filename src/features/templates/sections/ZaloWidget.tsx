@@ -8,41 +8,29 @@ interface ZaloWidgetProps {
 
 const ZaloWidget: React.FC<ZaloWidgetProps> = ({
     phone,
-    message = "Chào bạn, tôi cần tư vấn dịch vụ!",
     position = 'right'
 }) => {
     if (!phone) return null;
 
-    // Normalize phone for URL (remove spaces, dots, etc.)
     const cleanPhone = phone.replace(/\D/g, '');
 
     return (
-        <div className={`fixed bottom-8 ${position === 'right' ? 'right-8' : 'left-8'} z-[5000] group`}>
-            <div className="absolute -top-12 right-0 bg-white px-4 py-2 rounded-lg shadow-xl text-sm font-semibold text-neutral-dark opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-primary/20">
-                Chat với chúng tôi qua Zalo
+        <div className={`fixed bottom-10 ${position === 'right' ? 'right-10' : 'left-10'} z-[5000] group`}>
+            <div className="absolute -top-16 right-0 bg-[#1A1A1A] px-6 py-3 rounded-none border border-white/10 shadow-2xl text-[10px] font-serif text-white/80 uppercase tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-all duration-700 whitespace-nowrap translate-y-2 group-hover:translate-y-0">
+                Tư vấn chuyên gia
             </div>
             <a
                 href={`https://zalo.me/${cleanPhone}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-14 h-14 bg-[#0068FF] rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform duration-300 animate-bounce-slow"
+                className="w-14 h-14 bg-[#1A1A1A] border border-white/10 rounded-full flex items-center justify-center hover:border-white/30 transition-all duration-500 shadow-premium"
             >
                 <img
                     src="https://upload.wikimedia.org/wikipedia/commons/9/91/Icon_of_Zalo.svg"
                     alt="Zalo Chat"
-                    className="w-8 h-8 invert brightness-0"
+                    className="w-6 h-6 opacity-70 hover:opacity-100 transition-opacity"
                 />
             </a>
-
-            <style>{`
-        @keyframes bounce-slow {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
-        }
-        .animate-bounce-slow {
-          animation: bounce-slow 3s infinite ease-in-out;
-        }
-      `}</style>
         </div>
     );
 };

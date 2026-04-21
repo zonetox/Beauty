@@ -5,7 +5,6 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate, Link } from 'react-router-dom';
-import { BusinessCategory } from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { useAuth } from '../providers/AuthProvider.tsx';
 import { useUserRole } from '../hooks/useUserRole.ts';
@@ -17,15 +16,10 @@ const RegisterPage: React.FC = () => {
   const { register, refreshAuth, user, state } = useAuth();
   const { role, is_business_owner, isBusinessStaff, isLoading: roleLoading } = useUserRole();
   const [formData, setFormData] = useState({
-    full_name: '',
     business_name: '',
     email: '',
-    phone: '',
     password: '',
     confirmPassword: '',
-    // Business-specific fields
-    category: BusinessCategory.SPA,
-    address: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -84,8 +78,8 @@ const RegisterPage: React.FC = () => {
       toast.error(errorMsg);
       return;
     }
-    if (!formData.full_name.trim()) {
-      const errorMsg = 'Vui lòng nhập họ và tên.';
+    if (!formData.business_name.trim()) {
+      const errorMsg = 'Vui lòng nhập tên doanh nghiệp.';
       setError(errorMsg);
       toast.error(errorMsg);
       return;
@@ -103,11 +97,9 @@ const RegisterPage: React.FC = () => {
     // ALWAYS register as business and pass business intentions in metadata
     try {
       await register(formData.email, formData.password, {
-        full_name: formData.full_name,
-        phone: formData.phone,
+        full_name: formData.business_name,
         user_type: 'business',
-        business_name: formData.business_name || `Cửa hàng của ${formData.full_name}`,
-        address: formData.address || 'Chưa cập nhật'
+        business_name: formData.business_name,
       });
 
       // Get the newly created user from auth state
@@ -146,7 +138,7 @@ const RegisterPage: React.FC = () => {
       }
       await refreshAuth();
 
-      // 4. Redirection to Business Profile Dashboard
+      // 4. Redirection to Business Dashboard
       toast.success('Đăng ký thành công! Chào mừng đối tác đến với 1Beauty.asia.');
       navigate('/business-profile', { replace: true });
     } catch (err: unknown) {
@@ -182,51 +174,72 @@ const RegisterPage: React.FC = () => {
 
 
           {/* Registration Form */}
-          <div className="max-w-xl mx-auto bg-white p-8 rounded-lg shadow-md">
-            <h2 className="text-2xl font-bold mb-6 font-serif text-neutral-dark">
-              Đăng ký tài khoản Doanh nghiệp
+          <div className="max-w-xl mx-auto glass-card p-12 rounded-[2.5rem] shadow-premium border border-white/40 animate-fade-in-up">
+            <h2 className="text-3xl font-serif text-primary mb-10 tracking-tight">
+              Đăng ký đối tác mới
             </h2>
-            {error && <p className="text-red-500 text-center bg-red-100 p-3 rounded-md mb-4">{error}</p>}
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
+
+            {error && (
+              <div className="bg-red-50 text-red-500 text-xs font-bold uppercase tracking-widest p-4 rounded-xl mb-8 border border-red-100 animate-shake">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-8">
+              <div className="space-y-6">
                 <div>
-                  <label htmlFor="business_name" className="block text-sm font-medium text-gray-700">Tên doanh nghiệp <span className="text-red-500">*</span></label>
-                  <input id="business_name" type="text" name="business_name" value={formData.business_name} onChange={handleChange} required placeholder="Ví dụ: Luxury Spa Quận 1" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                  <label htmlFor="business_name" className="block text-[10px] uppercase font-bold tracking-[0.2em] text-neutral-400 mb-2 ml-1">Tên doanh nghiệp</label>
+                  <input id="business_name" type="text" name="business_name" value={formData.business_name} onChange={handleChange} required placeholder="Ví dụ: Luxury Spa Quận 1" className="w-full px-6 py-4 bg-white/50 border border-white/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-neutral-300 italic font-light" />
                 </div>
+
                 <div>
-                  <label htmlFor="full_name" className="block text-sm font-medium text-gray-700">Chủ sở hữu <span className="text-red-500">*</span></label>
-                  <input id="full_name" type="text" name="full_name" value={formData.full_name} onChange={handleChange} required placeholder="Nhập họ và tên chủ doanh nghiệp" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                  <label htmlFor="user-email" className="block text-[10px] uppercase font-bold tracking-[0.2em] text-neutral-400 mb-2 ml-1">Email đăng nhập</label>
+                  <input id="user-email" type="email" name="email" value={formData.email} onChange={handleChange} required placeholder="đối-tác@beauty.asia" className="w-full px-6 py-4 bg-white/50 border border-white/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-neutral-300 italic font-light" />
                 </div>
-                <div>
-                  <label htmlFor="address" className="block text-sm font-medium text-gray-700">Địa chỉ <span className="text-red-500">*</span></label>
-                  <input id="address" type="text" name="address" value={formData.address} onChange={handleChange} required placeholder="Số nhà, tên đường, phường, quận..." className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
-                </div>
-                <div>
-                  <label htmlFor="user-email" className="block text-sm font-medium text-gray-700">Email đăng nhập <span className="text-red-500">*</span></label>
-                  <input id="user-email" type="email" name="email" value={formData.email} onChange={handleChange} required placeholder="email@example.com" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
-                </div>
-                <div>
-                  <label htmlFor="user-phone" className="block text-sm font-medium text-gray-700">Số điện thoại liên hệ</label>
-                  <input id="user-phone" type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="0987654321" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
-                </div>
-                <div>
-                  <label htmlFor="user-password" className="block text-sm font-medium text-gray-700">Mật khẩu <span className="text-red-500">*</span></label>
-                  <input id="user-password" type="password" name="password" value={formData.password} onChange={handleChange} required placeholder="Tối thiểu 6 ký tự" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
-                </div>
-                <div>
-                  <label htmlFor="user-confirm-password" className="block text-sm font-medium text-gray-700">Xác nhận mật khẩu <span className="text-red-500">*</span></label>
-                  <input id="user-confirm-password" type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required placeholder="Nhập lại mật khẩu" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label htmlFor="user-password" className="block text-[10px] uppercase font-bold tracking-[0.2em] text-neutral-400 mb-2 ml-1">Mật khẩu</label>
+                    <input id="user-password" type="password" name="password" value={formData.password} onChange={handleChange} required placeholder="••••••••" className="w-full px-6 py-4 bg-white/50 border border-white/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-neutral-300" />
+                  </div>
+                  <div>
+                    <label htmlFor="user-confirm-password" className="block text-[10px] uppercase font-bold tracking-[0.2em] text-neutral-400 mb-2 ml-1">Xác nhận</label>
+                    <input id="user-confirm-password" type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required placeholder="••••••••" className="w-full px-6 py-4 bg-white/50 border border-white/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-neutral-300" />
+                  </div>
                 </div>
               </div>
-              <button type="submit" disabled={isSubmitting} className="mt-6 w-full bg-primary text-white py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium hover:bg-primary-dark disabled:bg-primary/50 disabled:cursor-not-allowed">
-                {isSubmitting ? 'Đang đăng ký...' : 'Đăng ký'}
-              </button>
-              <p className="text-sm text-center text-gray-600 mt-4">
-                Đã có tài khoản?{' '}
-                <Link to="/login" className="font-medium text-primary hover:text-primary-dark">
-                  Đăng nhập tại đây
-                </Link>
+
+              <div className="pt-4">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-primary text-white py-5 px-8 rounded-full font-bold uppercase tracking-[0.2em] text-xs hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed group"
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                      Đang khởi tạo...
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center">
+                      Bắt đầu hành trình <span className="ml-2 text-lg group-hover:translate-x-1 transition-transform">&rarr;</span>
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              <p className="text-center text-neutral-400 text-xs font-light italic">
+                Bằng cách đăng ký, bạn đồng ý với các Điều khoản & Chính sách thượng lưu của chúng tôi
               </p>
+
+              <div className="pt-8 border-t border-primary/5 text-center">
+                <p className="text-sm font-light text-neutral-500">
+                  Đã là đối tác?{' '}
+                  <Link to="/login" className="font-bold text-primary hover:text-accent transition-colors underline underline-offset-4">
+                    Đăng nhập tại đây
+                  </Link>
+                </p>
+              </div>
             </form>
           </div>
         </div>

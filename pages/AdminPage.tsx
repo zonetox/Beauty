@@ -300,7 +300,7 @@ const AdminPage: React.FC = () => {
       <button
         type="button"
         onClick={() => setActiveTab(tabId)}
-        className={`flex items-center gap-3 w-full px-3 py-3 text-left rounded-lg transition-colors ${activeTab === tabId ? 'bg-primary/90 text-white' : 'hover:bg-neutral-700 text-gray-300'}`}
+        className={`flex items-center gap-4 w-full px-4 py-4 text-left rounded-xl transition-all duration-500 text-[10px] uppercase font-bold tracking-[0.2em] ${activeTab === tabId ? 'bg-primary text-white shadow-xl shadow-primary/20 scale-[1.02]' : 'hover:bg-white/5 text-neutral-400 hover:text-primary hover:translate-x-2'}`}
       >
         {icon}<span>{label}</span>
       </button>
@@ -394,69 +394,69 @@ const AdminPage: React.FC = () => {
   const pageTitle = activeTab.charAt(0).toUpperCase() + activeTab.slice(1);
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-background">
       {/* Left Sidebar */}
-      <aside className="w-64 bg-neutral-dark text-white flex flex-col fixed h-full overflow-y-auto z-30">
-        <div className="p-6">
-          <h1 className="text-2xl font-bold text-primary">Beauty Admin</h1>
-          <p className="text-xs text-gray-400 mt-1">Platform Control Center</p>
+      <aside className="w-72 bg-[#1A1A1A] text-white flex flex-col fixed h-full overflow-y-auto z-30 border-r border-white/5 shadow-2xl">
+        <div className="p-10">
+          <h1 className="text-3xl font-serif text-gold tracking-widest uppercase">Admin</h1>
+          <p className="text-[10px] text-white/30 mt-2 font-bold uppercase tracking-[0.3em]">Hệ thống quản trị 1Beauty</p>
         </div>
 
-        <nav className="flex-grow px-4 space-y-1">
-          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-3">Overview</div>
-          <NavLink tabId="dashboard" label="Dashboard" icon={ICONS.dashboard} permission={true} />
-          <NavLink tabId="analytics" label="Analytics" icon={ICONS.analytics} permission={currentUser.permissions.can_view_analytics} />
+        <nav className="flex-grow px-6 space-y-2 pb-10">
+          <div className="text-[9px] font-bold text-white/20 uppercase tracking-[0.3em] mb-4 px-4">Tổng quan hệ thống</div>
+          <NavLink tabId="dashboard" label="Bảng điều khiển" icon={ICONS.dashboard} permission={true} />
+          <NavLink tabId="analytics" label="Phân tích dữ liệu" icon={ICONS.analytics} permission={currentUser.permissions.can_view_analytics} />
 
-          <div className="mt-8 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-3">Management</div>
-          <NavLink tabId="businesses" label="Businesses" icon={ICONS.businesses} permission={currentUser.permissions.can_manage_businesses} />
-          <NavLink tabId="registrations" label="Registrations" icon={ICONS.registrations} permission={currentUser.permissions.can_manage_registrations} />
-          <NavLink tabId="orders" label="Orders" icon={ICONS.orders} permission={currentUser.permissions.can_manage_orders} />
-          <NavLink tabId="blog" label="Platform Blog" icon={ICONS.blog} permission={currentUser.permissions.can_manage_platform_blog} />
-          <NavLink tabId="users" label="Admin Users" icon={ICONS.users} permission={currentUser.permissions.can_manage_users} />
-          <NavLink tabId="packages" label="Packages" icon={ICONS.packages} permission={currentUser.permissions.can_manage_packages} />
+          <div className="mt-12 text-[9px] font-bold text-white/20 uppercase tracking-[0.3em] mb-4 px-4">Quản lý đối tác</div>
+          <NavLink tabId="businesses" label="Doanh nghiệp" icon={ICONS.businesses} permission={currentUser.permissions.can_manage_businesses} />
+          <NavLink tabId="registrations" label="Đang chờ duyệt" icon={ICONS.registrations} permission={currentUser.permissions.can_manage_registrations} />
+          <NavLink tabId="orders" label="Gói thành viên" icon={ICONS.orders} permission={currentUser.permissions.can_manage_orders} />
+          <NavLink tabId="blog" label="Tạp chí Beauty" icon={ICONS.blog} permission={currentUser.permissions.can_manage_platform_blog} />
+          <NavLink tabId="users" label="Quản trị viên" icon={ICONS.users} permission={currentUser.permissions.can_manage_users} />
+          <NavLink tabId="packages" label="Cấu hình gói" icon={ICONS.packages} permission={currentUser.permissions.can_manage_packages} />
 
-          <div className="mt-8 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-3">System & Settings</div>
-          <NavLink tabId="tools" label="Admin Tools" icon={ICONS.tools} permission={currentUser.permissions.can_use_admin_tools} />
-          <NavLink tabId="content" label="Site Content" icon={ICONS.settings} permission={currentUser.permissions.can_manage_site_content} />
-          <NavLink tabId="homepage" label="Homepage Editor" icon={ICONS.settings} permission={true} />
-          <NavLink tabId="theme" label="Theme Editor" icon={ICONS.settings} permission={true} />
-          <NavLink tabId="settings" label="System Settings" icon={ICONS.settings} permission={currentUser.permissions.can_manage_system_settings} />
+          <div className="mt-12 text-[9px] font-bold text-white/20 uppercase tracking-[0.3em] mb-4 px-4">Hệ thống & Cài đặt</div>
+          <NavLink tabId="tools" label="Công cụ Admin" icon={ICONS.tools} permission={currentUser.permissions.can_use_admin_tools} />
+          <NavLink tabId="content" label="Nội dung trang" icon={ICONS.settings} permission={currentUser.permissions.can_manage_site_content} />
+          <NavLink tabId="homepage" label="Biên tập Home" icon={ICONS.settings} permission={true} />
+          <NavLink tabId="theme" label="Giao diện (Theme)" icon={ICONS.settings} permission={true} />
+          <NavLink tabId="settings" label="Cài đặt hệ thống" icon={ICONS.settings} permission={currentUser.permissions.can_manage_system_settings} />
 
-          <div className="mt-8 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-3">Logs & Monitoring</div>
-          <NavLink tabId="activity" label="Activity Log" icon={ICONS.activity} permission={currentUser.permissions.can_view_activity_log} />
-          <NavLink tabId="notifications" label="Notification Log" icon={ICONS.notifications} permission={currentUser.permissions.can_view_email_log} />
-          <NavLink tabId="announcements" label="Announcements" icon={ICONS.announcements} permission={currentUser.permissions.can_manage_announcements} />
-          <NavLink tabId="support" label="Support Tickets" icon={ICONS.support} permission={currentUser.permissions.can_manage_support_tickets} />
-          <NavLink tabId="abuse-reports" label="Abuse Reports" icon={ICONS.support} permission={currentUser.permissions.can_manage_users} />
-          <NavLink tabId="landing-page-moderation" label="LP Moderation" icon={ICONS.businesses} permission={currentUser.permissions.can_manage_businesses} />
+          <div className="mt-12 text-[9px] font-bold text-white/20 uppercase tracking-[0.3em] mb-4 px-4">Nhật ký & Giám sát</div>
+          <NavLink tabId="activity" label="Nhật ký hoạt động" icon={ICONS.activity} permission={currentUser.permissions.can_view_activity_log} />
+          <NavLink tabId="notifications" label="Lịch sử thông báo" icon={ICONS.notifications} permission={currentUser.permissions.can_view_email_log} />
+          <NavLink tabId="announcements" label="Thông báo hệ thống" icon={ICONS.announcements} permission={currentUser.permissions.can_manage_announcements} />
+          <NavLink tabId="support" label="Hỗ trợ & Ticket" icon={ICONS.support} permission={currentUser.permissions.can_manage_support_tickets} />
+          <NavLink tabId="abuse-reports" label="Báo cáo vi phạm" icon={ICONS.support} permission={currentUser.permissions.can_manage_users} />
+          <NavLink tabId="landing-page-moderation" label="Kiểm duyệt LP" icon={ICONS.businesses} permission={currentUser.permissions.can_manage_businesses} />
         </nav>
 
-        <div className="mt-auto p-4 border-t border-neutral-700 bg-neutral-900/50">
-          <div className="flex items-center gap-3 mb-4 px-2">
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+        <div className="p-8 border-t border-white/5 bg-black/20">
+          <div className="flex items-center gap-4 mb-8 px-2">
+            <div className="w-12 h-12 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center text-gold font-serif text-xl shadow-inner">
               {currentUser.admin_username.charAt(0).toUpperCase()}
             </div>
             <div className="overflow-hidden">
-              <p className="text-sm font-semibold truncate">{currentUser.admin_username}</p>
-              <p className="text-xs text-gray-400 capitalize">{currentUser.role}</p>
+              <p className="text-sm font-serif text-white tracking-wide truncate">{currentUser.admin_username}</p>
+              <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest mt-1">{currentUser.role}</p>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-400 hover:bg-neutral-800 rounded-lg transition-colors"
+            className="flex items-center justify-center gap-3 w-full px-4 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-accent/70 hover:text-accent bg-accent/5 hover:bg-accent/10 border border-accent/10 rounded-full transition-all duration-500"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
             <span>Đăng xuất</span>
           </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-grow ml-64 min-h-screen">
+      <main className="flex-grow ml-72 min-h-screen">
         {/* Header */}
-        <header className="bg-white border-b sticky top-0 z-20 flex items-center justify-between px-8 py-4">
-          <div className="flex items-center gap-4">
-            <h2 className="text-xl font-semibold text-neutral-dark">{pageTitle}</h2>
+        <header className="bg-background/80 backdrop-blur-xl border-b border-primary/5 sticky top-0 z-20 flex items-center justify-between px-10 py-6">
+          <div className="flex items-center gap-8">
+            <h2 className="text-3xl font-serif text-primary tracking-tight">{pageTitle}</h2>
             <AdminGlobalSearch
               businesses={businesses}
               orders={orders}
@@ -464,14 +464,14 @@ const AdminPage: React.FC = () => {
               onNavigate={(tab) => setActiveTab(tab as AdminPageTab)}
             />
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
             <AdminNotifications
               orders={orders}
               registrationRequests={registrationRequests}
               onNavigate={(tab) => setActiveTab(tab as AdminPageTab)}
             />
-            <button className="bg-primary/10 text-primary p-2 rounded-full hover:bg-primary/20 transition-colors">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
+            <button className="bg-gold/5 text-gold p-3 rounded-full border border-gold/10 hover:bg-gold/10 transition-all shadow-inner">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
             </button>
           </div>
         </header>

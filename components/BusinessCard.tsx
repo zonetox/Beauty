@@ -13,9 +13,9 @@ interface BusinessCardProps {
 }
 
 const tierStyles = {
-  [MembershipTier.VIP]: 'border-2 border-accent shadow-lg ring-2 ring-accent/20',
-  [MembershipTier.PREMIUM]: 'border border-primary shadow-md',
-  [MembershipTier.FREE]: 'border border-gray-200',
+  [MembershipTier.VIP]: 'border border-primary shadow-xl ring-1 ring-primary/20',
+  [MembershipTier.PREMIUM]: 'border border-primary/50 shadow-md',
+  [MembershipTier.FREE]: 'border border-luxury-border shadow-sm',
 };
 
 const tierBadge: Record<MembershipTier, { text: string; bg: string; text_color: string }> = {
@@ -45,7 +45,7 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, highlighted = fal
   return (
     <div
       id={`business-card-${business.id}`}
-      className={`business-card bg-white rounded-lg overflow-hidden transition-all duration-200 transform hover:-translate-y-1 cursor-pointer ${tierStyles[membership_tier]} ${highlightClass}`}
+      className={`business-card bg-white rounded-2xl overflow-hidden transition-all duration-500 transform hover:-translate-y-2 cursor-pointer ${tierStyles[membership_tier]} ${highlightClass}`}
       onClick={() => window.location.href = `/business/${slug}`}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -60,21 +60,21 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, highlighted = fal
       <div className="relative">
         <img className="w-full h-48 object-cover" src={getOptimizedSupabaseUrl(image_url, { width: 400, quality: 75 })} alt={name} loading="lazy" />
         {tierBadge[membership_tier] && (
-          <span className={`absolute top-2 right-2 px-2 py-1 text-xs font-bold rounded ${tierBadge[membership_tier].bg} ${tierBadge[membership_tier].text_color}`}>
+          <span className={`absolute top-3 right-3 px-3 py-1 text-[10px] uppercase tracking-widest font-bold rounded-full ${tierBadge[membership_tier].bg} ${tierBadge[membership_tier].text_color} bg-opacity-90 backdrop-blur-sm shadow-sm`}>
             {tierBadge[membership_tier].text}
           </span>
         )}
       </div>
       <div className="p-4 flex flex-col flex-grow">
-        <p className="text-sm text-primary font-medium">{categories[0]}</p>
+        <p className="text-[10px] text-primary font-bold uppercase tracking-widest mb-1">{categories[0]}</p>
         <div className="flex items-center gap-2 mt-1">
-          <h3 className="text-lg font-bold font-serif text-neutral-dark truncate">{name}</h3>
+          <h3 className="text-xl font-bold font-serif text-neutral-dark truncate tracking-wide">{name}</h3>
           {is_verified && <VerifiedBadge />}
         </div>
         {slogan && (
-          <p className="text-sm text-gray-500 mt-1 italic truncate">&quot;{slogan}&quot;</p>
+          <p className="text-xs text-neutral-400 mt-2 italic truncate font-light tracking-wide">&quot;{slogan}&quot;</p>
         )}
-        <div className="mt-2 space-y-1 text-sm text-gray-600 flex-grow">
+        <div className="mt-4 space-y-2 text-xs text-neutral-500 flex-grow font-light tracking-wide">
           <div className="flex items-start">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mt-0.5 mr-2 text-gray-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />

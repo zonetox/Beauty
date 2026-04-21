@@ -233,10 +233,10 @@ const HomePage: React.FC = () => {
           <section key={section.id} className="py-16 bg-background">
             <div className="container mx-auto px-4">
               <Editable id={`section_title_${section.id}`} type="text" value={section.title}>
-                <h2 className="text-3xl font-bold text-center font-serif text-neutral-dark mb-2">{section.title}</h2>
+                <h2 className="text-4xl font-bold text-center font-serif text-primary mb-4 tracking-wide">{section.title}</h2>
               </Editable>
               <Editable id={`section_subtitle_${section.id}`} type="textarea" value={section.subtitle}>
-                <p className="text-center text-gray-500 mb-8">{section.subtitle}</p>
+                <p className="text-center text-neutral-500 mb-12 font-light tracking-wide max-w-2xl mx-auto">{section.subtitle}</p>
               </Editable>
               {businessLoading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -322,9 +322,9 @@ const HomePage: React.FC = () => {
           <section key={section.id} className="py-24 bg-background">
             <div className="container mx-auto px-4">
               <div className="text-center mb-16">
-                <h2 className="text-4xl font-bold font-outfit text-neutral-dark mb-4">{section.title}</h2>
-                <div className="w-20 h-1 bg-primary mx-auto rounded-full mb-4"></div>
-                <p className="text-gray-500 max-w-2xl mx-auto">{section.subtitle}</p>
+                <h2 className="text-4xl md:text-5xl font-bold font-serif text-primary mb-4 tracking-wide">Khám phá theo địa điểm</h2>
+                <div className="w-24 h-0.5 bg-primary/30 mx-auto mb-6"></div>
+                <p className="text-neutral-500 max-w-2xl mx-auto font-light tracking-wide">{section.subtitle}</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-6 h-auto md:h-[600px]">
@@ -469,7 +469,7 @@ const HomePage: React.FC = () => {
                 <span>Khám phá vẻ đẹp đích thực</span>
               </div>
 
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold font-outfit text-white mb-6 leading-tight animate-fade-in-up delay-100">
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold font-serif text-white mb-8 tracking-tight animate-fade-in-up delay-100 uppercase">
                 {hero_slides.length > 0 ? (
                   <Editable
                     id={`hero_title_${currentSlide}`}
@@ -501,11 +501,11 @@ const HomePage: React.FC = () => {
                   type="textarea"
                   value={hero_slides.length > 0 ? hero_slides[currentSlide].subtitle : ''}
                 >
-                  <p>{hero_slides.length > 0 ? hero_slides[currentSlide].subtitle : 'Tìm kiếm hàng ngàn spa, salon và clinic uy tín gần bạn. Trải nghiệm dịch vụ làm đẹp đẳng cấp chỉ trong vài cú nhấp chuột.'}</p>
+                  <p className="font-light tracking-widest uppercase opacity-90">{hero_slides.length > 0 ? hero_slides[currentSlide].subtitle : 'Trải nghiệm dịch vụ làm đẹp đẳng cấp và tinh tế'}</p>
                 </Editable>
               </div>
 
-              <div className="glass-card p-2 md:p-5 rounded-2xl md:rounded-3xl shadow-premium animate-fade-in-up delay-300 max-w-4xl mx-auto">
+              <div className="bg-white/95 backdrop-blur-xl p-3 md:p-6 rounded-full shadow-2xl animate-fade-in-up delay-300 max-w-5xl mx-auto border border-white/20">
                 <SearchBar onSearch={handleSearch} categories={CATEGORIES} locations={CITIES} />
               </div>
 
@@ -567,7 +567,7 @@ const HomePage: React.FC = () => {
             </p>
             <Link
               to="/for-business"
-              className="mt-8 inline-block bg-primary text-white px-10 py-4 rounded-md font-semibold text-lg hover:bg-primary-dark transition-transform transform hover:scale-105 shadow-lg"
+              className="mt-10 inline-block bg-accent text-white px-12 py-4 rounded-full font-medium text-lg hover:opacity-90 transition-all transform hover:scale-105 shadow-xl tracking-wide"
             >
               Đăng ký cho Doanh nghiệp
             </Link>
@@ -599,17 +599,17 @@ const HomePage: React.FC = () => {
                       setNewsletterEmail(e.target.value);
                       if (newsletterError) setNewsletterError('');
                     }}
-                    placeholder="Địa chỉ email của bạn"
+                    placeholder="Email của bạn"
                     required
                     aria-label="Email for newsletter"
                     disabled={isSubmittingNewsletter}
-                    className={`flex-grow w-full px-4 py-3 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary text-neutral-dark ${newsletterError ? 'border-red-500' : 'border-gray-300'
+                    className={`flex-grow w-full px-6 py-3 bg-white border rounded-full shadow-sm focus:outline-none focus:ring-1 focus:ring-accent text-neutral-dark tracking-wide ${newsletterError ? 'border-red-500' : 'border-gray-200'
                       } disabled:opacity-50 disabled:cursor-not-allowed`}
                   />
                   <button
                     type="submit"
                     disabled={isSubmittingNewsletter}
-                    className="px-6 py-3 bg-primary text-white font-semibold rounded-md hover:bg-primary-dark transition-colors flex-shrink-0 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="px-8 py-3 bg-accent text-white font-medium rounded-full hover:opacity-90 transition-all flex-shrink-0 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 tracking-wide"
                   >
                     {isSubmittingNewsletter ? (
                       <>
@@ -617,7 +617,7 @@ const HomePage: React.FC = () => {
                         Đang gửi...
                       </>
                     ) : (
-                      'Đăng ký'
+                      'Đăng ký ngay'
                     )}
                   </button>
                 </form>

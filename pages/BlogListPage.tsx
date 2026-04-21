@@ -65,11 +65,9 @@ const BlogListPage: React.FC = () => {
     const params = new URLSearchParams(location.search);
     const category = params.get('category') || '';
     const page = parseInt(params.get('page') || '1', 10);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedCategory(category);
-
     setCurrentPage(page);
-  }, [location.search, setSelectedCategory, setCurrentPage]);
+  }, [location.search]);
 
   const allPosts = useMemo((): UnifiedPost[] => {
     // 1. Process platform posts
@@ -107,7 +105,7 @@ const BlogListPage: React.FC = () => {
           rawDate: new Date(post.published_date!),
         };
       })
-      .filter(post => !post.url.includes('/business/undefined/')); // Filter out posts whose business was not found
+      .filter(post => !post.url.includes('/business/undefined/'));
 
     // 3. Combine and sort
     return [...processedPlatformPosts, ...featuredBusinessPosts]
@@ -122,11 +120,9 @@ const BlogListPage: React.FC = () => {
 
   const filteredPosts = useMemo(() => {
     let results = allPosts;
-
     if (selectedCategory && selectedCategory !== 'Tất cả bài viết') {
       results = results.filter(post => post.category.toLowerCase() === selectedCategory.toLowerCase());
     }
-
     const lowercasedQuery = searchQuery.toLowerCase().trim();
     if (lowercasedQuery) {
       results = results.filter(post =>
@@ -138,11 +134,9 @@ const BlogListPage: React.FC = () => {
     return results;
   }, [searchQuery, allPosts, selectedCategory]);
 
-  // Reset to page 1 when search or category changes
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentPage(1);
-  }, [searchQuery, selectedCategory, setCurrentPage]);
+  }, [searchQuery, selectedCategory]);
 
   // Pagination logic
   const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
@@ -196,25 +190,26 @@ const BlogListPage: React.FC = () => {
       />
       <div className="bg-background">
         <div className="container mx-auto px-4 py-12">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold font-serif text-neutral-dark">Blog Làm Đẹp</h1>
-            <p className="mt-2 text-lg text-gray-500">Kiến thức, xu hướng và cảm hứng cho vẻ đẹp của bạn.</p>
+          <div className="text-center mb-16">
+            <h1 className="text-5xl md:text-6xl font-bold font-serif text-primary tracking-tight">Blog Làm Đẹp</h1>
+            <div className="w-24 h-0.5 bg-accent/30 mx-auto my-8"></div>
+            <p className="mt-4 text-neutral-500 font-light tracking-wide italic max-w-2xl mx-auto">Kiến thức, xu hướng và cảm hứng tinh tế cho vẻ đẹp đích thực của quý khách.</p>
           </div>
 
           {/* Search Bar */}
-          <div className="mb-12 max-w-2xl mx-auto">
-            <div className="relative">
+          <div className="mb-16 max-w-2xl mx-auto">
+            <div className="relative group">
               <input
                 type="search"
-                placeholder="Tìm kiếm theo tiêu đề, nội dung hoặc tác giả..."
+                placeholder="Tìm kiếm cảm hứng làm đẹp..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-5 py-3 text-base border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                className="w-full px-8 py-4 bg-white border border-luxury-border rounded-full shadow-sm focus:outline-none focus:ring-1 focus:ring-accent/30 text-neutral-dark placeholder:text-neutral-300 font-light tracking-wide transition-all"
                 aria-label="Search blog posts"
               />
-              <div className="absolute top-0 right-0 mt-3 mr-4 text-gray-400 pointer-events-none">
+              <div className="absolute top-0 right-0 mt-4 mr-6 text-neutral-300 pointer-events-none group-focus-within:text-accent transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
             </div>
@@ -223,16 +218,16 @@ const BlogListPage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Sidebar */}
             <aside className="lg:col-span-1">
-              <div className="sticky top-24 bg-white p-6 rounded-lg shadow-md">
-                <h3 className="text-xl font-bold font-serif text-neutral-dark mb-4">Chuyên mục</h3>
-                <ul className="space-y-2">
+              <div className="sticky top-24 bg-white/50 backdrop-blur-md p-8 rounded-2xl border border-luxury-border shadow-soft">
+                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-neutral-400 mb-8 pb-4 border-b border-luxury-border">Chuyên mục</h3>
+                <ul className="space-y-4">
                   {categories.map(cat => (
                     <li key={cat}>
                       <button
                         onClick={() => handleCategoryClick(cat)}
-                        className={`w-full text-left font-semibold transition-colors rounded-md px-3 py-2 ${(selectedCategory === cat || (!selectedCategory && cat === 'Tất cả bài viết'))
-                          ? 'bg-primary/10 text-primary'
-                          : 'text-gray-600 hover:text-primary'
+                        className={`w-full text-left text-sm font-medium tracking-wide transition-all rounded-full px-4 py-2 ${(selectedCategory === cat || (!selectedCategory && cat === 'Tất cả bài viết'))
+                          ? 'bg-accent text-white shadow-md'
+                          : 'text-neutral-500 hover:text-accent hover:bg-accent/5'
                           }`}
                       >
                         {cat}
@@ -247,8 +242,8 @@ const BlogListPage: React.FC = () => {
             <main className="lg:col-span-3">
               {filteredPosts.length > 0 ? (
                 <>
-                  <div className="mb-4 text-sm text-gray-600">
-                    Tìm thấy <strong className="text-primary">{filteredPosts.length}</strong> bài viết
+                  <div className="mb-8 text-xs uppercase tracking-widest font-bold text-neutral-400">
+                    Tìm thấy <span className="text-accent">{filteredPosts.length}</span> bài viết
                     {searchQuery && ` cho "${searchQuery}"`}
                     {selectedCategory && selectedCategory !== 'Tất cả bài viết' && ` trong "${selectedCategory}"`}
                   </div>

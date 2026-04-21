@@ -31,11 +31,11 @@ const timeSince = (date: Date): string => {
 };
 
 const ActivityItem: React.FC<{ icon: React.ReactNode, text: React.ReactNode, time: string, onClick?: () => void }> = ({ icon, text, time, onClick }) => (
-    <div onClick={onClick} className={`flex items-start gap-4 p-3 rounded-md ${onClick ? 'hover:bg-gray-50 cursor-pointer' : ''}`}>
-        <div className="bg-gray-100 p-2 rounded-full text-gray-500 flex-shrink-0">{icon}</div>
+    <div onClick={onClick} className={`flex items-start gap-6 p-6 rounded-[1.5rem] transition-all duration-500 ${onClick ? 'hover:bg-primary/5 cursor-pointer hover:translate-x-2' : ''}`}>
+        <div className="bg-primary/5 p-4 rounded-full text-primary flex-shrink-0 shadow-inner group-hover:bg-primary group-hover:text-white transition-all">{icon}</div>
         <div>
-            <p className="text-sm text-neutral-dark">{text}</p>
-            <p className="text-xs text-gray-400">{time}</p>
+            <p className="text-sm text-primary font-light leading-relaxed">{text}</p>
+            <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest mt-2">{time}</p>
         </div>
     </div>
 );
@@ -43,16 +43,22 @@ const ActivityItem: React.FC<{ icon: React.ReactNode, text: React.ReactNode, tim
 const Chart: React.FC<{ data: { label: string, value: number }[] }> = ({ data }) => {
     const maxValue = Math.max(...data.map(d => d.value), 1);
     return (
-        <div className="bg-white p-6 rounded-lg shadow h-full flex flex-col">
-            <h3 className="text-lg font-semibold text-neutral-dark mb-4">New Businesses (Last 7 Days)</h3>
-            <div className="flex-grow flex items-end justify-around gap-2 pt-4">
+        <div className="glass-card p-10 rounded-[2rem] h-full flex flex-col shadow-premium border border-white/40">
+            <h3 className="text-2xl font-serif text-primary mb-10 tracking-wide">Nhà đối tác doanh nghiệp mới</h3>
+            <div className="flex-grow flex items-end justify-around h-60 gap-4 pt-10">
                 {data.map(item => (
-                    <div key={item.label} className="flex flex-col items-center flex-1 h-full text-center group">
-                        <span className="text-xs font-bold text-neutral-dark opacity-0 group-hover:opacity-100 transition-opacity -mb-1">{item.value}</span>
+                    <div key={item.label} className="flex flex-col items-center flex-1 h-full group">
                         <div className="flex-grow flex items-end w-full">
-                            <div className="w-full bg-primary/20 hover:bg-primary/40 rounded-t" /* Dynamic height based on data - CSS inline necessary for dynamic calculations */ style={{ height: `${Math.max((item.value / maxValue) * 100, 5)}%`, minHeight: '5px' }} title={`${item.value} new businesses`}></div>
+                            <div
+                                className="w-full bg-gold/10 rounded-full hover:bg-gold/30 transition-all duration-500 relative group cursor-pointer"
+                                style={{ height: `${Math.max((item.value / maxValue) * 100, 10)}%`, minHeight: '12px' }}
+                            >
+                                <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-primary text-white text-[10px] font-bold py-2 px-3 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-xl tracking-widest z-10">
+                                    {item.value} đối tác
+                                </div>
+                            </div>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">{item.label}</p>
+                        <p className="text-[10px] text-neutral-400 mt-4 font-bold tracking-widest uppercase">{item.label}</p>
                     </div>
                 ))}
             </div>
@@ -127,33 +133,37 @@ const AdminDashboardOverview: React.FC<DashboardOverviewProps> = ({ businesses, 
 
 
     return (
-        <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <AdminStatCard title="Revenue This Month" value={new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(stats.revenueThisMonth)} icon={<RevenueIcon />} />
-                <AdminStatCard title="Pending Orders" value={stats.pendingOrders} icon={<OrderIcon />} />
-                <AdminStatCard title="Pending Registrations" value={stats.pendingRegistrations} icon={<UserIcon />} />
-                <AdminStatCard title="Active Businesses" value={stats.activeBusinesses} icon={<BusinessIcon />} />
+        <div className="space-y-12 animate-fade-in-up">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <AdminStatCard title="Doanh thu tháng này" value={new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(stats.revenueThisMonth)} icon={<RevenueIcon />} />
+                <AdminStatCard title="Đơn hàng chờ duyệt" value={stats.pendingOrders} icon={<OrderIcon />} />
+                <AdminStatCard title="Đăng ký mới" value={stats.pendingRegistrations} icon={<UserIcon />} />
+                <AdminStatCard title="Đối tác đang hoạt động" value={stats.activeBusinesses} icon={<BusinessIcon />} />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
                 <div className="lg:col-span-2">
                     <Chart data={chartData} />
                 </div>
-                <div className="lg:col-span-1 bg-white p-6 rounded-lg shadow">
-                    <h3 className="text-lg font-semibold text-neutral-dark mb-4">Recent Activity</h3>
-                    <div className="space-y-2">
+                <div className="lg:col-span-1 glass-card p-10 rounded-[2rem] shadow-premium border border-white/40">
+                    <h3 className="text-2xl font-serif text-primary mb-8 tracking-wide">Cập nhật hệ thống</h3>
+                    <div className="space-y-2 -mx-4">
                         {recentActivities.map(activity => {
                             if (activity.type === 'order') {
                                 const order = activity.data as Order;
-                                return <ActivityItem key={activity.id} icon={<OrderIcon />} text={<>New order from <strong>{order.business_name}</strong>.</>} time={timeSince(activity.date)} onClick={() => onNavigate('orders')} />
+                                return <ActivityItem key={activity.id} icon={<OrderIcon />} text={<>Đơn hàng mới từ đối tác <strong className="text-primary font-bold">{order.business_name}</strong>.</>} time={timeSince(activity.date)} onClick={() => onNavigate('orders')} />
                             }
                             if (activity.type === 'registration') {
                                 const req = activity.data as RegistrationRequest;
-                                return <ActivityItem key={activity.id} icon={<UserIcon />} text={<>New registration request from <strong>{req.business_name}</strong>.</>} time={timeSince(activity.date)} onClick={() => onNavigate('registrations')} />
+                                return <ActivityItem key={activity.id} icon={<UserIcon />} text={<>Yêu cầu đăng ký mới từ <strong className="text-primary font-bold">{req.business_name}</strong>.</>} time={timeSince(activity.date)} onClick={() => onNavigate('registrations')} />
                             }
                             return null;
                         })}
-                        {recentActivities.length === 0 && <p className="text-sm text-center text-gray-500 py-8">No recent activity.</p>}
+                        {recentActivities.length === 0 && (
+                            <div className="py-20 text-center">
+                                <p className="text-sm font-light italic text-neutral-400">Chưa có hoạt động mới trong hệ thống.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

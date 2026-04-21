@@ -18,26 +18,26 @@ const StarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-
 const FilterButton: React.FC<{ label: string; value: TimeRange; active: boolean; onClick: () => void }> = ({ label, active, onClick }) => (
     <button
         onClick={onClick}
-        className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${active ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+        className={`px-6 py-2.5 text-[10px] uppercase font-bold tracking-[0.2em] rounded-full transition-all duration-500 border ${active ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' : 'bg-white/40 text-neutral-400 border-white/50 hover:bg-white/60 hover:text-primary'}`}
     >
         {label}
     </button>
 );
 
 const Leaderboard: React.FC<{ title: string; data: { name: string; value: string | number }[], icon: React.ReactNode }> = ({ title, data, icon }) => (
-    <div className="bg-white p-6 rounded-lg shadow h-full">
-        <h3 className="text-lg font-semibold text-neutral-dark mb-4 flex items-center gap-2">{icon}{title}</h3>
+    <div className="glass-card p-10 rounded-[2rem] shadow-premium border border-white/40 h-full">
+        <h3 className="text-2xl font-serif text-primary mb-8 flex items-center gap-4">{icon}{title}</h3>
         {data.length > 0 ? (
-            <ol className="space-y-3">
+            <ol className="space-y-4">
                 {data.map((item, index) => (
-                    <li key={index} className="flex items-center gap-4 text-sm p-2 rounded-md hover:bg-gray-50">
-                        <span className={`font-bold w-6 text-center text-lg ${index < 3 ? 'text-primary' : 'text-gray-500'}`}>{index + 1}.</span>
-                        <span className="flex-grow font-medium text-neutral-dark truncate" title={item.name}>{item.name}</span>
-                        <span className="font-semibold text-gray-600 flex-shrink-0">{item.value}</span>
+                    <li key={index} className="flex items-center gap-6 p-4 rounded-2xl hover:bg-primary/5 transition-all duration-500 group">
+                        <span className={`font-serif text-2xl w-8 text-center ${index < 3 ? 'text-gold' : 'text-neutral-300'}`}>{index + 1}</span>
+                        <span className="flex-grow text-sm font-light text-primary truncate" title={item.name}>{item.name}</span>
+                        <span className="text-[10px] font-bold text-neutral-400-widest group-hover:text-gold transition-colors">{item.value}</span>
                     </li>
                 ))}
             </ol>
-        ) : <p className="text-sm text-gray-500 text-center py-8">No data available.</p>}
+        ) : <p className="text-sm font-light italic text-neutral-400 text-center py-12">Dữ liệu đang được tinh tuyển...</p>}
     </div>
 );
 
@@ -80,14 +80,14 @@ const ConversionFunnel: React.FC<{ requests: RegistrationRequest[], orders: Orde
     const completedPayments = ensureArray(orders).filter(o => o?.status === OrderStatus.COMPLETED).length;
 
     const stages: FunnelStageData[] = [
-        { label: 'Submitted Requests', value: totalRequests, color: 'bg-indigo-500' },
-        { label: 'Approved Requests', value: approvedRequests, color: 'bg-blue-500' },
-        { label: 'Completed Payments', value: completedPayments, color: 'bg-green-500' },
+        { label: 'Yêu cầu đăng ký', value: totalRequests, color: 'bg-primary/80' },
+        { label: 'Được chấp thuận', value: approvedRequests, color: 'bg-primary/60' },
+        { label: 'Hoàn tất thanh toán', value: completedPayments, color: 'bg-gold/60' },
     ];
 
     return (
-        <div className="bg-white p-6 rounded-lg shadow h-full">
-            <h3 className="text-lg font-semibold text-neutral-dark mb-4">Conversion Funnel</h3>
+        <div className="glass-card p-10 rounded-[2rem] shadow-premium border border-white/40 h-full">
+            <h3 className="text-2xl font-serif text-primary mb-8 tracking-wide">Phễu chuyển đổi</h3>
             <div className="space-y-0">
                 {stages[0] && <FunnelStage stage={stages[0]} baseValue={totalRequests} />}
                 {stages[0] && stages[1] && <ConversionRate from={stages[0].value} to={stages[1].value} />}
@@ -269,56 +269,51 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
     };
 
     return (
-        <div className="space-y-8">
-            <div className="flex items-center gap-2">
-                <FilterButton label="Last 7 Days" value="7d" active={timeRange === '7d'} onClick={() => setTimeRange('7d')} />
-                <FilterButton label="Last 30 Days" value="30d" active={timeRange === '30d'} onClick={() => setTimeRange('30d')} />
-                <FilterButton label="This Month" value="month" active={timeRange === 'month'} onClick={() => setTimeRange('month')} />
+        <div className="space-y-12 animate-fade-in-up">
+            <div className="flex items-center gap-3">
+                <FilterButton label="7 Ngày qua" value="7d" active={timeRange === '7d'} onClick={() => setTimeRange('7d')} />
+                <FilterButton label="30 Ngày qua" value="30d" active={timeRange === '30d'} onClick={() => setTimeRange('30d')} />
+                <FilterButton label="Tháng này" value="month" active={timeRange === 'month'} onClick={() => setTimeRange('month')} />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <AdminStatCard title="Total Revenue" value={new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(stats.revenue)} icon={<RevenueIcon />} />
-                <AdminStatCard title="New Orders" value={stats.newOrders} icon={<OrderIcon />} />
-                <AdminStatCard title="New Businesses" value={stats.newBusinesses} icon={<BusinessIcon />} />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <AdminStatCard title="Tổng doanh thu" value={new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(stats.revenue)} icon={<RevenueIcon />} />
+                <AdminStatCard title="Đơn hàng mới" value={stats.newOrders} icon={<OrderIcon />} />
+                <AdminStatCard title="Đối tác mới" value={stats.newBusinesses} icon={<BusinessIcon />} />
             </div>
 
             {/* Traffic Analytics Section */}
-            <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold text-neutral-dark mb-4">Traffic Analytics</h3>
+            <div className="glass-card p-10 rounded-[2rem] shadow-premium border border-white/40">
+                <h3 className="text-2xl font-serif text-primary mb-10 tracking-wide">Phân tích lưu lượng truy cập</h3>
                 {loadingPageViews ? (
-                    <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-                        <p className="text-sm text-gray-500">Loading traffic data...</p>
+                    <div className="text-center py-20">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-6"></div>
+                        <p className="text-sm font-light italic text-neutral-400">Đang đồng bộ dữ liệu truy cập...</p>
                     </div>
                 ) : (
                     <>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                            <AdminStatCard title="Total Page Views" value={stats.totalPageViews.toLocaleString()} icon={<EyeIcon />} />
-                            <AdminStatCard title="Unique Sessions" value={stats.uniqueSessions.toLocaleString()} icon={<BusinessIcon />} />
-                            <AdminStatCard title="Avg. Views/Day" value={Math.round(stats.totalPageViews / Math.max(1, Math.ceil((end_date.getTime() - start_date.getTime()) / (1000 * 60 * 60 * 24)))).toLocaleString()} icon={<EyeIcon />} />
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                            <AdminStatCard title="Tổng lượt xem" value={stats.totalPageViews.toLocaleString()} icon={<EyeIcon />} />
+                            <AdminStatCard title="Phiên truy cập duy nhất" value={stats.uniqueSessions.toLocaleString()} icon={<BusinessIcon />} />
+                            <AdminStatCard title="Trung bình lượt xem/ngày" value={Math.round(stats.totalPageViews / Math.max(1, Math.ceil((end_date.getTime() - start_date.getTime()) / (1000 * 60 * 60 * 24)))).toLocaleString()} icon={<EyeIcon />} />
                         </div>
 
-                        <div className="mb-6">
-                            <AnalyticsChart data={pageViewsChartData} title="Page Views Over Time" />
+                        <div className="mb-12">
+                            <AnalyticsChart data={pageViewsChartData} title="Biến động lượt xem trang" />
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <p className="text-sm text-gray-600 mb-1">Homepage</p>
-                                <p className="text-2xl font-bold text-neutral-dark">{stats.pageViewsByType.homepage || 0}</p>
-                            </div>
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <p className="text-sm text-gray-600 mb-1">Business Pages</p>
-                                <p className="text-2xl font-bold text-neutral-dark">{stats.pageViewsByType.business || 0}</p>
-                            </div>
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <p className="text-sm text-gray-600 mb-1">Blog</p>
-                                <p className="text-2xl font-bold text-neutral-dark">{stats.pageViewsByType.blog || 0}</p>
-                            </div>
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <p className="text-sm text-gray-600 mb-1">Directory</p>
-                                <p className="text-2xl font-bold text-neutral-dark">{stats.pageViewsByType.directory || 0}</p>
-                            </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                            {[
+                                { label: 'Trang chủ', value: stats.pageViewsByType.homepage || 0 },
+                                { label: 'Trang doanh nghiệp', value: stats.pageViewsByType.business || 0 },
+                                { label: 'Tạp chí Beauty', value: stats.pageViewsByType.blog || 0 },
+                                { label: 'Danh bạ', value: stats.pageViewsByType.directory || 0 }
+                            ].map((item, idx) => (
+                                <div key={idx} className="bg-primary/5 p-6 rounded-2xl border border-primary/5 hover:bg-primary/10 transition-all duration-500 shadow-inner">
+                                    <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-2">{item.label}</p>
+                                    <p className="text-3xl font-serif text-primary">{item.value.toLocaleString()}</p>
+                                </div>
+                            ))}
                         </div>
                     </>
                 )}
@@ -338,34 +333,38 @@ const AdminAnalyticsDashboard: React.FC<{ businesses: Business[], orders: Order[
                 <Leaderboard title="Top Rated Businesses" data={topRated} icon={<StarIcon />} />
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-neutral-dark">Completed Orders in Period</h3>
-                    <button onClick={handleExport} className="text-sm font-semibold bg-secondary text-white px-3 py-1.5 rounded-md hover:opacity-90">Export CSV</button>
+            <div className="glass-card p-10 rounded-[2rem] shadow-premium border border-white/40">
+                <div className="flex justify-between items-center mb-10">
+                    <h3 className="text-2xl font-serif text-primary tracking-wide">Đơn hàng hoàn tất</h3>
+                    <button onClick={handleExport} className="text-[10px] uppercase font-bold tracking-[0.2em] bg-gold text-white px-6 py-3 rounded-full hover:scale-105 transition-all shadow-lg shadow-gold/20">Xuất báo cáo CSV</button>
                 </div>
-                <div className="overflow-x-auto max-h-96">
+                <div className="overflow-x-auto max-h-[500px]">
                     <table className="w-full text-sm text-left">
-                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0">
+                        <thead className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest border-b border-primary/5 sticky top-0 bg-background/95 backdrop-blur-md">
                             <tr>
-                                <th className="px-4 py-3">Business</th>
-                                <th className="px-4 py-3">Package</th>
-                                <th className="px-4 py-3">Amount</th>
-                                <th className="px-4 py-3">Confirmation Date</th>
+                                <th className="px-6 py-5">Đối tác</th>
+                                <th className="px-6 py-5">Gói thành viên</th>
+                                <th className="px-6 py-5">Giá trị</th>
+                                <th className="px-6 py-5">Ngày xác nhận</th>
                             </tr>
                         </thead>
                         <tbody className="text-gray-600">
                             {filteredData.orders.filter(o => o.status === OrderStatus.COMPLETED).map(order => (
-                                <tr key={order.id} className="border-b hover:bg-gray-50">
-                                    <td className="px-4 py-3 font-medium text-neutral-dark">{order.business_name}</td>
-                                    <td className="px-4 py-3">{order.package_name}</td>
-                                    <td className="px-4 py-3 font-semibold">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.amount)}</td>
-                                    <td className="px-4 py-3">{new Date(order.confirmed_at!).toLocaleDateString('vi-VN')}</td>
+                                <tr key={order.id} className="border-b border-primary/5 hover:bg-primary/5 transition-colors">
+                                    <td className="px-6 py-5 font-serif text-lg text-primary">{order.business_name}</td>
+                                    <td className="px-6 py-5">
+                                        <span className="text-[10px] font-bold px-3 py-1 bg-primary/5 text-primary border border-primary/10 rounded-full uppercase tracking-widest">{order.package_name}</span>
+                                    </td>
+                                    <td className="px-6 py-5 font-serif text-lg text-gold">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.amount)}</td>
+                                    <td className="px-6 py-5 font-light italic">{new Date(order.confirmed_at!).toLocaleDateString('vi-VN')}</td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                     {filteredData.orders.filter(o => o.status === OrderStatus.COMPLETED).length === 0 && (
-                        <p className="text-center text-gray-500 py-8">No completed orders in this period.</p>
+                        <div className="py-20 text-center">
+                            <p className="text-sm font-light italic text-neutral-400">Không có dữ liệu đơn hàng trong giai đoạn này.</p>
+                        </div>
                     )}
                 </div>
             </div>

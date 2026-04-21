@@ -18,7 +18,7 @@ const Footer: React.FC = () => {
   };
 
   return (
-    <footer className="bg-neutral-dark text-white border-t border-white/5">
+    <footer className="bg-background border-t border-luxury-border/50 text-neutral-800">
       <div className="container mx-auto py-16 px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
           {/* Column 1: Info */}
@@ -32,10 +32,10 @@ const Footer: React.FC = () => {
                   onError={() => setLogoError(true)}
                 />
               ) : (
-                <h3 className="text-2xl font-bold font-outfit text-gradient">1Beauty.asia</h3>
+                <h3 className="text-2xl font-bold font-serif tracking-widest text-primary uppercase">1Beauty.asia</h3>
               )}
             </Link>
-            <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
+            <p className="text-neutral-500 text-sm leading-relaxed max-w-xs font-light">
               Nền tảng danh bạ làm đẹp hàng đầu Châu Á, nơi kết nối sự tinh tế và vẻ đẹp đích thực.
             </p>
             <div className="mt-8 flex space-x-5">
@@ -59,7 +59,7 @@ const Footer: React.FC = () => {
 
           {/* Column 2: Explore */}
           <div className="md:col-span-2">
-            <h4 className="font-outfit font-semibold text-lg mb-6">Khám phá</h4>
+            <h4 className="font-serif font-bold text-lg mb-6 tracking-wide text-primary">Khám phá</h4>
             <ul className="space-y-4 text-sm">
               <li><Link to="/directory" className="text-gray-400 hover:text-primary transition-colors">Danh bạ Spa</Link></li>
               <li><Link to="/directory" className="text-gray-400 hover:text-primary transition-colors">Danh bạ Salon</Link></li>
@@ -70,7 +70,7 @@ const Footer: React.FC = () => {
 
           {/* Column 3: Policy */}
           <div className="md:col-span-3">
-            <h4 className="font-outfit font-semibold text-lg mb-6">Chính sách</h4>
+            <h4 className="font-serif font-bold text-lg mb-6 tracking-wide text-primary">Chính sách</h4>
             <ul className="space-y-4 text-sm">
               <li><Link to="/about" className="text-gray-400 hover:text-primary transition-colors">Về chúng tôi</Link></li>
               <li><Link to="/contact" className="text-gray-400 hover:text-primary transition-colors">Liên hệ</Link></li>
@@ -81,13 +81,13 @@ const Footer: React.FC = () => {
 
           {/* Column 4: Join Us */}
           <div className="md:col-span-3">
-            <h4 className="font-outfit font-semibold text-lg mb-6">Dành cho đối tác</h4>
+            <h4 className="font-serif font-bold text-lg mb-6 tracking-wide text-primary">Dành cho đối tác</h4>
             <p className="text-gray-400 text-sm mb-6">
               Bạn là chủ doanh nghiệp làm đẹp? Hãy đồng hành cùng chúng tôi.
             </p>
             <Link
               to="/for-business"
-              className="inline-block px-6 py-3 rounded-xl bg-primary text-secondary font-bold text-sm transition-all duration-300 hover:bg-white hover:scale-105"
+              className="inline-block px-8 py-3 rounded-full bg-accent text-white font-medium text-sm transition-all duration-300 hover:opacity-90 hover:scale-105 tracking-wide shadow-sm"
             >
               Đăng ký ngay
             </Link>

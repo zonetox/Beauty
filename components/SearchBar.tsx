@@ -58,7 +58,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, categories, locations, 
   // Effect to update available districts when city (location) changes
   useEffect(() => {
     if (filters.location && locationsHierarchy) {
-       
+
       setDistricts(locationsHierarchy[filters.location] || []);
     } else {
       setDistricts([]);
@@ -72,7 +72,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, categories, locations, 
 
   // Effect to sync component state with URL when it changes (e.g., back/forward buttons)
   useEffect(() => {
-     
+
     setFilters(getFiltersFromUrl());
   }, [getFiltersFromUrl]);
 
@@ -131,8 +131,8 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, categories, locations, 
 
   return (
     <div className="w-full">
-      {showTitle && <h2 className="text-3xl md:text-4xl font-bold font-serif text-center mb-6">Tìm kiếm cơ sở làm đẹp uy tín</h2>}
-      <form onSubmit={handleSubmit} className="bg-white p-4 rounded-lg shadow-lg grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-center">
+      {showTitle && <h2 className="text-4xl md:text-5xl font-bold font-serif text-center mb-10 text-primary tracking-wide">Tìm kiếm cơ sở làm đẹp uy tín</h2>}
+      <form onSubmit={handleSubmit} className="bg-transparent grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-center">
         <div className="lg:col-span-2 relative">
           <input
             type="text"
@@ -142,7 +142,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, categories, locations, 
             onChange={handleInputChange}
             onFocus={() => { if (!filters.keyword) setShowSuggestions(true); }}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 150)} // Delay to allow click on suggestions
-            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-neutral-dark"
+            className="w-full px-6 py-4 bg-white border border-gray-200 rounded-full focus:outline-none focus:ring-1 focus:ring-primary/30 text-neutral-dark shadow-sm tracking-wide"
             autoComplete="off"
           />
           {showSuggestions && filters.keyword === '' && (
@@ -169,7 +169,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, categories, locations, 
             name="category"
             value={filters.category}
             onChange={handleInputChange}
-            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-neutral-dark"
+            className="w-full px-6 py-4 bg-white border border-gray-200 rounded-full focus:outline-none focus:ring-1 focus:ring-primary/30 text-neutral-dark shadow-sm tracking-wide appearance-none"
           >
             <option value="">Tất cả lĩnh vực</option>
             {categories.map((cat) => (
@@ -182,7 +182,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, categories, locations, 
             name="location"
             value={filters.location}
             onChange={handleInputChange}
-            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-neutral-dark"
+            className="w-full px-6 py-4 bg-white border border-gray-200 rounded-full focus:outline-none focus:ring-1 focus:ring-primary/30 text-neutral-dark shadow-sm tracking-wide appearance-none"
           >
             <option value="">Toàn quốc</option>
             {locations.map((loc) => (
@@ -194,7 +194,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, categories, locations, 
             value={filters.district}
             onChange={handleInputChange}
             disabled={!filters.location || districts.length === 0}
-            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-neutral-dark disabled:bg-gray-100 disabled:cursor-not-allowed"
+            className="w-full px-6 py-4 bg-white border border-gray-200 rounded-full focus:outline-none focus:ring-1 focus:ring-primary/30 text-neutral-dark disabled:bg-gray-50 disabled:cursor-not-allowed shadow-sm tracking-wide appearance-none"
           >
             <option value="">Quận/Huyện</option>
             {districts.map((dist) => (
@@ -205,7 +205,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, categories, locations, 
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full md:col-span-2 lg:col-span-4 bg-primary text-white px-8 py-3 rounded-md font-semibold hover:bg-primary-dark transition-colors flex items-center justify-center disabled:bg-primary/50 disabled:cursor-not-allowed"
+          className="w-full md:col-span-2 lg:col-span-4 bg-accent text-white px-10 py-4 rounded-full font-medium hover:opacity-90 transition-all flex items-center justify-center shadow-lg disabled:opacity-50 disabled:cursor-not-allowed tracking-widest uppercase text-sm"
         >
           {isLoading ? (
             <>
@@ -216,7 +216,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, categories, locations, 
               Đang tìm...
             </>
           ) : (
-            'Tìm kiếm'
+            'Tìm kiếm ngay'
           )}
         </button>
       </form>

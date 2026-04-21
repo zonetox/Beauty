@@ -21,24 +21,24 @@ export const TEMPLATE_PRESETS: Record<string, TemplatePreset> = {
             logo_url: '/logo.svg',
             favicon_url: '/favicon.svg',
             colors: {
-                primary: '#BFA16A', // Gold
-                primary_dark: '#A98C5A',
-                secondary: '#4A4A4A',
-                accent: '#EAE0D1',
-                background: '#FDFCF9', // Bone/Cream
-                neutral_dark: '#2D2D2D',
+                primary: '#D4AF37', // Metallic Gold
+                primary_dark: '#B8972F',
+                secondary: '#2D2D2D',
+                accent: '#A65E5E', // Luxury Rose
+                background: '#F9F5F1', // Airy Cream
+                neutral_dark: '#1A1A1A',
             },
             fonts: {
                 sans: 'Inter',
-                serif: 'Playfair Display',
+                serif: 'Cormorant Garamond',
             },
         },
         styles: {
-            heroOverlay: 'rgba(253, 252, 249, 0.4)',
-            cardStyle: 'flat',
-            mapFilter: 'grayscale(100%) opacity(0.8)',
+            heroOverlay: 'rgba(249, 245, 241, 0.4)',
+            cardStyle: 'glass',
+            mapFilter: 'grayscale(100%) contrast(110%) opacity(0.8)',
             galleryLayout: 'masonry',
-            buttonStyle: 'sharp'
+            buttonStyle: 'pill'
         }
     },
     'korean-clinic': {
@@ -129,16 +129,16 @@ export const TEMPLATE_PRESETS: Record<string, TemplatePreset> = {
             logo_url: '/logo.svg',
             favicon_url: '/favicon.svg',
             colors: {
-                primary: '#FF007A', // Vibrant Pink
-                primary_dark: '#CC0062',
-                secondary: '#333333',
-                accent: '#FFEBEE',
-                background: '#FFFFFF', // Pure White
+                primary: '#A65E5E', // Luxury Rose
+                primary_dark: '#8C4D4D',
+                secondary: '#1A1A1A',
+                accent: '#D4AF37', // Gold
+                background: '#FFFFFF',
                 neutral_dark: '#1A1A1A',
             },
             fonts: {
-                sans: 'Montserrat',
-                serif: 'Inter',
+                sans: 'Inter',
+                serif: 'Cormorant Garamond',
             },
         },
         styles: {
