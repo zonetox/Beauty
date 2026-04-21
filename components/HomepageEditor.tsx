@@ -1,8 +1,8 @@
 
 
 import React, { useState } from 'react';
-// FIX: Import the correct `useHomepageData` hook from the dedicated HomepageDataContext.
-import { useHomepageData } from '../contexts/HomepageDataContext.tsx';
+// ⚡ TỐI ƯU: Import useHomepageData từ HomepageProvider chuyên dụng.
+import { useHomepageData } from '../src/features/home/components/HomepageProvider';
 import { HomepageData, HeroSlide } from '../types.ts';
 import toast from 'react-hot-toast';
 
@@ -31,7 +31,7 @@ const HomepageEditor: React.FC = () => {
         );
         setData(prev => ({ ...prev, sections: newSections }));
     };
-    
+
     const handleSave = () => {
         updateHomepageData(data);
         toast.success('Homepage content saved!');
@@ -64,9 +64,9 @@ const HomepageEditor: React.FC = () => {
                 </div>
                 <button onClick={handleAddSlide} className="mt-4 bg-secondary text-white px-3 py-1 rounded-md text-sm font-semibold">+ Add Slide</button>
             </div>
-            
+
             {/* Sections Editor */}
-             <div>
+            <div>
                 <h3 className="text-lg font-semibold mb-4 text-neutral-dark">Homepage Sections</h3>
                 <p className="text-sm text-gray-500 mb-4">Toggle visibility of sections on the homepage. Reordering is not available in this version.</p>
                 <div className="space-y-3">
