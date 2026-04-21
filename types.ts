@@ -311,6 +311,7 @@ export interface LandingPageConfig {
     reviews: LandingPageSectionConfig;
     cta: LandingPageSectionConfig;
     contact: LandingPageSectionConfig;
+    products: LandingPageSectionConfig;
   };
 }
 
@@ -368,6 +369,12 @@ export interface Business {
   trust_indicators?: TrustIndicator[];
   landing_page_status?: 'Pending' | 'Approved' | 'Rejected' | 'Needs Review';
   owner_id?: string;
+  template_id?: string;
+  zalo_phone?: string;
+  hero_type?: 'slider' | 'video';
+  location_map_url?: string;
+  map_style?: { theme: string;[key: string]: any };
+  products_packages?: any[];
 
   // --- RELATIONAL DATA ---
   services?: Service[];

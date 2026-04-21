@@ -5,32 +5,26 @@
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../providers/AuthProvider.tsx';
-import { useUserRole } from '../hooks/useUserRole.ts';
 
 const AuthRedirectHandler: React.FC = () => {
-    const { user, state } = useAuth();
-    const { role, is_business_owner, isBusinessStaff, isLoading } = useUserRole();
+    const { user, state, role, isDataLoaded } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
     useEffect(() => {
-        // Only redirect if:
-        // 1. Auth state is resolved (not loading)
-        // 2. User is logged in
-        // 3. Role is resolved (not loading)
-        // 4. User has business access (owner OR staff)
-        // 5. User is on homepage (/)
-        // 6. Not already on account page (avoid redirect loop)
-        if (
-            state !== 'loading' &&
-            !isLoading &&
-            user &&
-            (is_business_owner || isBusinessStaff) &&
-            location.pathname === '/'
-        ) {
+        // Redirect logic:
+        // 1. Auth is fully resolved
+        if (!isDataLoaded || state === 'loading' || !user) return;
+
+        // 2. Determine if user should be redirected from homepage
+        const isBusinessUser = role === 'business_owner' || role === 'business_staff';
+        const isHomepage = location.pathname === '/';
+
+        if (isBusinessUser && isHomepage) {
+            console.log('[AuthRedirectHandler] Neutralizing homepage for business user, redirecting to dashboard');
             navigate('/business-profile', { replace: true });
         }
-    }, [user, state, role, is_business_owner, isBusinessStaff, isLoading, location.pathname, navigate]);
+    }, [user, state, role, isDataLoaded, location.pathname, navigate]);
 
     // This component doesn't render anything
     return null;

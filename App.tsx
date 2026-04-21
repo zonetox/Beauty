@@ -18,12 +18,15 @@ import ErrorBoundary from './components/ErrorBoundary.tsx';
 import { AuthProvider, useAuth } from './providers/AuthProvider.tsx';
 import { AdminProvider } from './contexts/AdminContext.tsx';
 import { PublicDataProvider } from './contexts/BusinessDataContext.tsx';
+import { PublicPageContentProvider } from './contexts/PublicPageContentContext.tsx';
 import { ThemeProvider } from './contexts/ThemeContext.tsx';
 import { BusinessDashboardProvider } from './contexts/BusinessBlogDataContext.tsx';
 import { ErrorLoggerProvider } from './contexts/ErrorLoggerContext.tsx';
 import { StaffProvider } from './contexts/StaffContext.tsx';
 import { CMSProvider } from './contexts/CMSContext.tsx';
-import { HomepageDataProvider } from './contexts/HomepageDataContext.tsx';
+import { HomepageProvider } from './src/features/home';
+import { DirectoryProvider } from './src/features/directory';
+import { HomepageDataProvider as LegacyHomepageDataProvider } from './contexts/HomepageDataContext.tsx';
 import AppInitializationScreen from './components/AppInitializationScreen.tsx';
 import { queryClient } from './lib/queryClient.ts';
 import AdminProtectedRoute from './components/AdminProtectedRoute.tsx';
@@ -55,6 +58,7 @@ const NotFoundPage = safeLazy(() => import('./pages/NotFoundPage.tsx'));
 const LoginPage = safeLazy(() => import('./pages/LoginPage.tsx'));
 const ResetPasswordPage = safeLazy(() => import('./pages/ResetPasswordPage.tsx'));
 const ConnectionTestPage = safeLazy(() => import('./pages/ConnectionTestPage.tsx'));
+const OnboardingPage = safeLazy(() => import('./pages/OnboardingPage.tsx'));
 
 // Unified loading component using the initialization screen
 const LoadingSpinner: React.FC = () => <AppInitializationScreen message="Đang tải thành phần..." />;
@@ -114,72 +118,75 @@ const AppContent: React.FC = () => {
 
     return (
         <ErrorLoggerProvider>
-            <PublicDataProvider>
-                <BusinessProvider>
-                    <HomepageDataProvider>
-                        <CMSProvider>
-                            <ThemeProvider>
-                                <AdminProvider>
-                                    <StaffProvider>
-                                        <Suspense fallback={<LoadingSpinner />}>
-                                            <Routes>
-                                                <Route element={<AppLayout />}>
-                                                    <Route element={<PublicDataLayout />}>
-                                                        <Route index element={<HomePage />} />
-                                                        <Route path="directory" element={<DirectoryPage />} />
-                                                        <Route path="blog" element={<BlogListPage />} />
-                                                        <Route path="blog/:slug" element={<BlogPostPage />} />
-                                                        <Route path="account" element={
-                                                            <ProtectedRoute>
-                                                                <UserAccountPage />
-                                                            </ProtectedRoute>
-                                                        } />
-                                                        <Route path="business-profile" element={
-                                                            <ProtectedRoute>
-                                                                <BusinessDashboardProvider>
-                                                                    <UserBusinessDashboardPage />
-                                                                </BusinessDashboardProvider>
-                                                            </ProtectedRoute>
-                                                        } />
-                                                    </Route>
+            <PublicPageContentProvider>
+                <DirectoryProvider>
+                    <HomepageProvider>
+                        <PublicDataProvider>
+                            <BusinessProvider>
+                                <LegacyHomepageDataProvider>
+                                    <CMSProvider>
+                                        <ThemeProvider>
+                                            <AdminProvider>
+                                                <StaffProvider>
+                                                    <Suspense fallback={<LoadingSpinner />}>
+                                                        <Routes>
+                                                            <Route element={<AppLayout />}>
+                                                                <Route element={<PublicDataLayout />}>
+                                                                    <Route index element={<HomePage />} />
+                                                                    <Route path="directory" element={<DirectoryPage />} />
+                                                                    <Route path="blog" element={<BlogListPage />} />
+                                                                    <Route path="blog/:slug" element={<BlogPostPage />} />
+                                                                    <Route path="account" element={
+                                                                        <ProtectedRoute>
+                                                                            <UserAccountPage />
+                                                                        </ProtectedRoute>
+                                                                    } />
+                                                                    <Route path="business-profile" element={
+                                                                        <ProtectedRoute>
+                                                                            <UserBusinessDashboardPage />
+                                                                        </ProtectedRoute>
+                                                                    } />
+                                                                </Route>
 
-                                                    <Route path="about" element={<AboutPage />} />
-                                                    <Route path="contact" element={<ContactPage />} />
-                                                    <Route path="for-business" element={<ForBusinessPage />} />
-                                                    <Route path="register" element={<RegisterPage />} />
+                                                                <Route path="about" element={<AboutPage />} />
+                                                                <Route path="contact" element={<ContactPage />} />
+                                                                <Route path="for-business" element={<ForBusinessPage />} />
+                                                                <Route path="register" element={<RegisterPage />} />
 
-                                                    <Route path="account/business/setup" element={
-                                                        <ProtectedRoute>
-                                                            <BusinessSetupPage />
-                                                        </ProtectedRoute>
-                                                    } />
-                                                    <Route path="/partner-registration" element={<PartnerRegistrationPage />} />
-                                                    <Route path="login" element={<LoginPage />} />
-                                                    <Route path="reset-password" element={<ResetPasswordPage />} />
-                                                </Route>
+                                                                <Route path="account/business/setup" element={
+                                                                    <ProtectedRoute>
+                                                                        <BusinessSetupPage />
+                                                                    </ProtectedRoute>
+                                                                } />
+                                                                <Route path="/partner-registration" element={<PartnerRegistrationPage />} />
+                                                                <Route path="login" element={<LoginPage />} />
+                                                                <Route path="reset-password" element={<ResetPasswordPage />} />
+                                                            </Route>
 
-                                                <Route path="/admin" element={
-                                                    <AdminProtectedRoute>
-                                                        <BusinessDashboardProvider>
-                                                            <AdminPage />
-                                                        </BusinessDashboardProvider>
-                                                    </AdminProtectedRoute>
-                                                } />
-                                                <Route path="/admin/login" element={<AdminLoginPage />} />
-                                                <Route path="business/:slug" element={<BusinessDetailPage />} />
-                                                <Route path="business/:businessSlug/post/:postSlug" element={<BusinessPostPage />} />
-                                                <Route path="/connection-test" element={<ConnectionTestPage />} />
+                                                            <Route path="/admin" element={
+                                                                <AdminProtectedRoute>
+                                                                    <AdminPage />
+                                                                </AdminProtectedRoute>
+                                                            } />
+                                                            <Route path="/admin/login" element={<AdminLoginPage />} />
+                                                            <Route path="/business/:slug" element={<BusinessDetailPage />} />
+                                                            <Route path="/onboarding/:token" element={<OnboardingPage />} />
+                                                            <Route path="business/:businessSlug/post/:postSlug" element={<BusinessPostPage />} />
+                                                            <Route path="/connection-test" element={<ConnectionTestPage />} />
 
-                                                <Route path="*" element={<NotFoundPage />} />
-                                            </Routes>
-                                        </Suspense>
-                                    </StaffProvider>
-                                </AdminProvider>
-                            </ThemeProvider>
-                        </CMSProvider>
-                    </HomepageDataProvider>
-                </BusinessProvider>
-            </PublicDataProvider>
+                                                            <Route path="*" element={<NotFoundPage />} />
+                                                        </Routes>
+                                                    </Suspense>
+                                                </StaffProvider>
+                                            </AdminProvider>
+                                        </ThemeProvider>
+                                    </CMSProvider>
+                                </LegacyHomepageDataProvider>
+                            </BusinessProvider>
+                        </PublicDataProvider>
+                    </HomepageProvider>
+                </DirectoryProvider>
+            </PublicPageContentProvider>
         </ErrorLoggerProvider>
     );
 };

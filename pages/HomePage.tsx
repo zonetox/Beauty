@@ -14,7 +14,7 @@ import EmptyState from '../components/EmptyState.tsx';
 import { CATEGORIES, CITIES, FEATURED_LOCATIONS } from '../constants.ts';
 import { HomepageSection, Deal } from '../types.ts';
 import { useBusinessData, useBlogData } from '../contexts/BusinessDataContext.tsx';
-import { useHomepageData } from '../contexts/HomepageDataContext.tsx';
+import { useHomepageData } from '../src/features/home';
 import { useCMS } from '../contexts/CMSContext.tsx';
 import { useAuth } from '../providers/AuthProvider.tsx';
 import Editable from '../components/Editable.tsx';
@@ -38,7 +38,7 @@ const HomePage: React.FC = () => {
   const { businesses, businessLoading } = useBusinessData();
   const { blogPosts: featuredBlogPosts, loading: blogLoading } = useBlogData();
   const { homepageData, updateHomepageData } = useHomepageData();
-  const { hero_slides, sections } = homepageData;
+  const { hero_slides = [], sections = [] } = homepageData || {};
   const { isEditing, setIsEditing, clearChanges, saveChanges } = useCMS();
   const { user } = useAuth();
 
@@ -219,7 +219,7 @@ const HomePage: React.FC = () => {
 
   // OPTIMIZED: Filter featured blog posts (limit 3)
   const featuredPosts = useMemo(() => {
-    return featuredBlogPosts.slice(0, 3);
+    return (featuredBlogPosts || []).slice(0, 3);
   }, [featuredBlogPosts]);
 
   // Do NOT block rendering - use skeletons for loading states instead

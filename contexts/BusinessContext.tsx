@@ -3,7 +3,7 @@
 import { createContext, useState, useEffect, useContext, ReactNode, useCallback, useRef } from 'react';
 import { Business, BusinessBlogPost, Review, ReviewStatus, BusinessAnalytics, Appointment, Order, OrderStatus, AppointmentStatus, Profile, Deal, AnalyticsDataPoint, TrafficSource } from '../types.ts';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
-import { useAuth } from '../providers/AuthProvider.tsx';
+import { useAuth } from '../src/features/auth/hooks/useAuth';
 import { PublicDataContext } from './BusinessDataContext.tsx';
 // Removed useAdmin import to avoid circular dependency - admin notifications handled at higher level
 import { activateBusinessFromOrder } from '../lib/businessUtils.ts';
@@ -56,8 +56,8 @@ const BusinessContext = createContext<BusinessContextType | undefined>(undefined
 
 export function BusinessProvider({ children }: { children: ReactNode }) {
   // --- PARENT CONTEXTS ---
-  const { profile, state } = useAuth();
-  const profileLoading = state === 'loading';
+  const { profile, isDataLoaded: authLoaded } = useAuth();
+  const profileLoading = !authLoaded;
   // Use useContext directly instead of hooks to avoid initialization order issues
   const publicDataContext = useContext(PublicDataContext);
   const businesses = publicDataContext?.businesses || [];

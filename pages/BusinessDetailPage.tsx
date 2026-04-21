@@ -11,24 +11,8 @@ import LoadingState from '../components/LoadingState.tsx';
 import SEOHead from '../components/SEOHead.tsx';
 import { getOptimizedSupabaseUrl } from '../lib/image.ts';
 
-// Import new Landing Page Section Components
-import BusinessHeader from '../components/business-landing/BusinessHeader.tsx';
-import HeroSection from '../components/business-landing/HeroSection.tsx';
-import AboutSection from '../components/business-landing/AboutSection.tsx';
-import ServicesSection from '../components/business-landing/ServicesSection.tsx';
-import GallerySection from '../components/business-landing/GallerySection.tsx';
-import TeamSection from '../components/business-landing/TeamSection.tsx';
-import VideoSection from '../components/business-landing/VideoSection.tsx';
-import DealsSection from '../components/business-landing/DealsSection.tsx';
-import BookingCtaSection from '../components/business-landing/BookingCtaSection.tsx';
-import LocationSection from '../components/business-landing/LocationSection.tsx';
-import BusinessFooter from '../components/business-landing/BusinessFooter.tsx';
-import BusinessBlogSection from '../components/business-landing/BusinessBlogSection.tsx';
+import TemplateEngine from '../src/features/templates/TemplateEngine.tsx';
 import BookingModal from '../components/business-landing/BookingModal.tsx';
-import ReviewsSection from '../components/business-landing/ReviewsSection.tsx';
-import TrustIndicatorsSection from '../components/business-landing/TrustIndicatorsSection.tsx';
-import FloatingActionButtons from '../components/FloatingActionButtons.tsx';
-import { LandingPageConfig } from '../types.ts';
 import { useCMS } from '../contexts/CMSContext.tsx';
 import { useAuth } from '../providers/AuthProvider.tsx';
 
@@ -39,7 +23,7 @@ const BusinessDetailPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-    const { isEditing, setIsEditing, stagedChanges, clearChanges, saveChanges } = useCMS();
+    const { isEditing, setIsEditing, clearChanges, saveChanges } = useCMS();
     const { user } = useAuth();
 
     // Check if user is business owner
@@ -189,164 +173,17 @@ const BusinessDetailPage: React.FC = () => {
         ? `${window.location.origin}/business/${business.slug}`
         : '';
 
-    // Calculate average rating
-    const visibleReviews = business.reviews?.filter(r => r.status === 'Visible') || [];
-    const averageRating = visibleReviews.length > 0
-        ? visibleReviews.reduce((sum, r) => sum + r.rating, 0) / visibleReviews.length
-        : 0;
-
-    // Enhanced Schema.org for LocalBusiness
-    const businessSchema = {
-        name: business.name,
-        image: business.hero_slides && business.hero_slides.length > 0
-            ? business.hero_slides.map(slide => getOptimizedSupabaseUrl(slide.image_url, { width: 1200, quality: 85 }))
-            : business.hero_image_url || business.image_url
-                ? [getOptimizedSupabaseUrl(business.hero_image_url || business.image_url || '', { width: 1200, quality: 85 })]
-                : [seoImage],
-        address: {
-            streetAddress: business.address,
-            addressLocality: business.city,
-            addressRegion: business.district,
-            addressCountry: 'VN',
-        },
-        geo: business.latitude && business.longitude ? {
-            latitude: business.latitude,
-            longitude: business.longitude,
-        } : undefined,
-        telephone: business.phone,
-        aggregateRating: visibleReviews.length > 0 ? {
-            ratingValue: averageRating,
-            review_count: visibleReviews.length,
-        } : undefined,
-        openingHoursSpecification: business.working_hours ? Object.entries(business.working_hours)
-            .filter(([_, hours]) => {
-                // Handle both old string format and new object format
-                if (typeof hours === 'string') {
-                    return hours && !hours.toLowerCase().includes('closed');
-                }
-                // New format: {open, close, isOpen}
-                if (typeof hours === 'object' && hours !== null) {
-                    return hours.isOpen !== false && hours.open && hours.close;
-                }
-                return false;
-            })
-            .map(([day, hours]) => {
-                const dayMap: { [key: string]: string[] } = {
-                    'Chủ Nhật': ['Sunday'],
-                    'CN': ['Sunday'],
-                    'Sunday': ['Sunday'],
-                    'Thứ 2': ['Monday'],
-                    'T2': ['Monday'],
-                    'Monday': ['Monday'],
-                    'Thứ 3': ['Tuesday'],
-                    'T3': ['Tuesday'],
-                    'Tuesday': ['Tuesday'],
-                    'Thứ 4': ['Wednesday'],
-                    'T4': ['Wednesday'],
-                    'Wednesday': ['Wednesday'],
-                    'Thứ 5': ['Thursday'],
-                    'T5': ['Thursday'],
-                    'Thursday': ['Thursday'],
-                    'Thứ 6': ['Friday'],
-                    'T6': ['Friday'],
-                    'Friday': ['Friday'],
-                    'Thứ 7': ['Saturday'],
-                    'T7': ['Saturday'],
-                    'Saturday': ['Saturday'],
-                };
-                const dayOfWeek = dayMap[day] || [];
-
-                // Handle both formats
-                let opens: string, closes: string;
-                if (typeof hours === 'string') {
-                    if (!hours.includes('-')) return null;
-                    [opens, closes] = hours.split(' - ').map(s => s.trim());
-                } else if (typeof hours === 'object' && hours !== null && 'open' in hours && 'close' in hours) {
-                    opens = hours.open;
-                    closes = hours.close;
-                } else {
-                    return null;
-                }
-
-                if (dayOfWeek.length === 0) return null;
-                return {
-                    dayOfWeek,
-                    opens,
-                    closes,
-                };
-            })
-            .filter((oh): oh is { dayOfWeek: string[]; opens: string; closes: string } => oh !== null) : undefined,
-    };
-
-    // Get landing_page_configuration or use default
-    const landing_page_config: LandingPageConfig = business.landing_page_config || {
-        sections: {
-            hero: { enabled: true, order: 1 },
-            trust: { enabled: false, order: 2 },
-            services: { enabled: true, order: 3 },
-            gallery: { enabled: true, order: 4 },
-            team: { enabled: false, order: 5 },
-            reviews: { enabled: true, order: 6 },
-            cta: { enabled: true, order: 7 },
-            contact: { enabled: true, order: 8 },
-        },
-    };
-
-    // Get enabled sections sorted by order
-    const enabledSections = Object.entries(landing_page_config.sections)
-        .filter(([_, section]) => section.enabled)
-        .map(([key, section]) => ({
-            key: key as keyof LandingPageConfig['sections'],
-            order: section.order,
-        }))
-        .sort((a, b) => a.order - b.order);
-
-    // Map section keys to components
-    const renderSection = (sectionKey: keyof LandingPageConfig['sections']) => {
-        switch (sectionKey) {
-            case 'hero':
-                return <HeroSection key="hero" business={business} onBookNowClick={() => setIsBookingModalOpen(true)} />;
-            case 'services':
-                return (
-                    <div key="services" className="container mx-auto px-4 sm:px-6 lg:px-8">
-                        <ServicesSection business={business} />
-                    </div>
-                );
-            case 'gallery':
-                return (
-                    <div key="gallery" className="container mx-auto px-4 sm:px-6 lg:px-8">
-                        <GallerySection business={business} />
-                    </div>
-                );
-            case 'team':
-                return (
-                    <div key="team" className="container mx-auto px-4 sm:px-6 lg:px-8">
-                        <TeamSection business={business} />
-                    </div>
-                );
-            case 'reviews':
-                return (
-                    <div key="reviews" className="container mx-auto px-4 sm:px-6 lg:px-8">
-                        <ReviewsSection business={business} />
-                    </div>
-                );
-            case 'cta':
-                return <BookingCtaSection key="cta" onBookNowClick={() => setIsBookingModalOpen(true)} business_id={business.id} />;
-            case 'contact':
-                return (
-                    <div key="contact" className="container mx-auto px-4 sm:px-6 lg:px-8">
-                        <LocationSection business={business} />
-                    </div>
-                );
-            case 'trust':
-                return <TrustIndicatorsSection key="trust" business={business} />;
-            default:
-                return null;
-        }
-    };
-
     return (
         <div className="bg-background min-h-screen">
+            <SEOHead
+                title={seoTitle}
+                description={seoDescription}
+                keywords={seoKeywords}
+                image={seoImage}
+                url={seoUrl}
+                type="business"
+            />
+
             {/* CMS Owner Toolbar */}
             {isOwner && (
                 <div className="fixed top-24 right-4 z-50 flex flex-col gap-2">
@@ -386,70 +223,8 @@ const BusinessDetailPage: React.FC = () => {
                     )}
                 </div>
             )}
-            <SEOHead
-                title={seoTitle}
-                description={seoDescription}
-                keywords={seoKeywords}
-                image={seoImage}
-                url={seoUrl}
-                type="business"
-                businessSchema={businessSchema}
-            />
 
-            <BusinessHeader business={business} onBookNowClick={() => setIsBookingModalOpen(true)} />
-
-            <main className="pb-24">
-                {/* Render sections based on config */}
-                {enabledSections.map(({ key }) => {
-                    // Hero is rendered full-width
-                    if (key === 'hero') {
-                        return <div key="hero" className="animate-fade-in">{renderSection(key)}</div>;
-                    }
-                    return null;
-                })}
-
-                <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-24 md:space-y-32">
-                    {/* About section - The Soul of the Business */}
-                    <section className="animate-fade-in-up">
-                        <AboutSection business={business} />
-                    </section>
-
-                    {/* Render other enabled sections in a Bento-like or spaced flow */}
-                    {enabledSections
-                        .filter(s => s.key !== 'hero')
-                        .map(({ key }) => (
-                            <section key={key} className="animate-fade-in-up">
-                                {renderSection(key)}
-                            </section>
-                        ))}
-
-                    {/* Optional Dynamic Sections */}
-                    {business.youtube_url && (
-                        <section className="animate-fade-in-up">
-                            <VideoSection business={business} />
-                        </section>
-                    )}
-
-                    {business.business_blog_posts && business.business_blog_posts.length > 0 && (
-                        <section className="animate-fade-in-up">
-                            <BusinessBlogSection business={business} />
-                        </section>
-                    )}
-
-                    {business.deals && business.deals.length > 0 && (
-                        <section className="animate-fade-in-up">
-                            <DealsSection business={business} />
-                        </section>
-                    )}
-                </div>
-            </main>
-
-            <BusinessFooter business={business} />
-
-            <FloatingActionButtons
-                business={business}
-                onBookNowClick={() => setIsBookingModalOpen(true)}
-            />
+            <TemplateEngine business={business} />
 
             {isBookingModalOpen && (
                 <BookingModal

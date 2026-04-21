@@ -43,23 +43,22 @@ const UserBusinessDashboardPage: React.FC = () => {
         }
     }, [currentBusiness?.id]);
 
-    // If logged in but no business => Redirect to Registration
+    // Guard: Only business_owner and business_staff should access this page
     const { isDataLoaded, role } = useAuth();
     const isBusinessUser = role === 'business_owner' || role === 'business_staff';
 
     useEffect(() => {
-        // ONLY redirect regular users to registration
-        // If they are a business user but currentBusiness is null, they should STAY HERE
-        // and wait for the data context to sync.
-        if (isDataLoaded && !currentBusiness && role === 'user') {
-            // Give context and then redirect
-            const timer = setTimeout(() => {
-                navigate('/register/business', { replace: true });
-            }, 100);
-            return () => clearTimeout(timer);
+        if (!isDataLoaded) return; // Wait until auth is resolved
+
+        if (!isBusinessUser) {
+            // Regular users, admins, or anonymous → redirect away immediately
+            navigate('/account', { replace: true });
+            return;
         }
-        return undefined;
-    }, [currentBusiness, isDataLoaded, role, navigate]);
+
+        // Business user but no business data yet → wait for context to sync
+        // (spinner is shown below — this is expected during initial load)
+    }, [isBusinessUser, isDataLoaded, navigate]);
 
     // DEBUG: Log current state
     console.warn('[UserBusinessDashboardPage] State:', {

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import React, { createContext, useContext, ReactNode, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   AdminLogEntry, Notification, Announcement, SupportTicket, TicketReply,
@@ -10,6 +10,7 @@ import { snakeToCamel } from '../lib/utils.ts';
 import { useErrorHandler } from '../lib/useErrorHandler.ts';
 import { keys } from '../lib/queryKeys.ts';
 import { User } from '@supabase/supabase-js';
+import { useAuth } from '../src/features/auth/hooks/useAuth';
 
 export interface AuthenticatedAdmin extends AdminUser { authUser: User; }
 
@@ -83,13 +84,10 @@ type PageContentRow = {
 export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const queryClient = useQueryClient();
   const { handleEdgeFunctionError } = useErrorHandler();
-
-  // --- AUTH STATES ---
-  const [currentUser, setCurrentUser] = useState<AuthenticatedAdmin | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const { user, role, isDataLoaded, login: featureLogin, logout: featureLogout } = useAuth();
 
   // --- ADMIN USERS QUERY ---
-  const { data: adminUsers = [], refetch: refetchAdminUsers } = useQuery({
+  const { data: adminUsers = [] } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
       if (!isSupabaseConfigured) return [];
@@ -99,68 +97,24 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       if (error) throw error;
       return (data || []) as AdminUser[];
     },
-    enabled: isSupabaseConfigured
+    enabled: isSupabaseConfigured && role === 'admin'
   });
 
-  // --- AUTH LOGIC ---
-  useEffect(() => {
-    let mounted = true;
-    const initialize = async () => {
-      if (!isSupabaseConfigured) {
-        setAuthLoading(false);
-        return;
+  // --- AUTH LOGIC REPLACED BY useAuth ---
+  const currentUser = React.useMemo(() => {
+    if (role === 'admin' && user && adminUsers.length > 0) {
+      const adminProfile = adminUsers.find(au => au.email === user.email);
+      if (adminProfile && !adminProfile.is_locked) {
+        return { ...adminProfile, authUser: user } as AuthenticatedAdmin;
       }
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user && mounted) {
-        const profile = adminUsers.find(au => au.email === session.user.email);
-        if (profile && !profile.is_locked) {
-          setCurrentUser({ ...profile, authUser: session.user });
-        }
-      }
-      setAuthLoading(false);
-    };
-
-    if (adminUsers.length > 0 || !isSupabaseConfigured) {
-      initialize();
     }
+    return null;
+  }, [role, user, adminUsers]);
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (!mounted) return;
-      if (session?.user) {
-        let currentAdmins = adminUsers;
-        if (currentAdmins.length === 0) {
-          const { data } = await refetchAdminUsers();
-          currentAdmins = (data as AdminUser[]) || [];
-        }
-        const profile = currentAdmins.find(au => au.email === session.user.email);
-        if (profile && !profile.is_locked) {
-          setCurrentUser({ ...profile, authUser: session.user });
-        } else {
-          setCurrentUser(null);
-        }
-      } else {
-        setCurrentUser(null);
-      }
-      setAuthLoading(false);
-    });
+  const authLoading = !isDataLoaded;
 
-    return () => {
-      mounted = false;
-      authListener.subscription.unsubscribe();
-    };
-  }, [adminUsers, isSupabaseConfigured, refetchAdminUsers]);
-
-  const adminLogin = async (email: string, pass: string) => {
-    if (!isSupabaseConfigured) throw new Error("Supabase not configured");
-    const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
-    if (error) throw error;
-  };
-
-  const adminLogout = async () => {
-    if (!isSupabaseConfigured) return;
-    await supabase.auth.signOut();
-    setCurrentUser(null);
-  };
+  const adminLogin = featureLogin;
+  const adminLogout = featureLogout;
 
   const addAdminUser = async (userData: Partial<AdminUser> & { password?: string }) => {
     if (!isSupabaseConfigured) return;

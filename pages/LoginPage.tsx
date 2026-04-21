@@ -14,17 +14,17 @@ const LoginPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
 
-    const { login, state, profile, isDataLoaded } = useAuth();
+    // Use `role` (not profile.user_type) for correct redirect logic
+    const { login, state, role, isDataLoaded } = useAuth();
 
-    // Redirection useEffect
+    // Redirect already-authenticated users away from login page
     useEffect(() => {
-        if (state === 'authenticated' && isDataLoaded && profile) {
-            const target = (profile.user_type === 'business' || profile.business_id)
-                ? '/business-profile'
-                : '/account';
+        if (state === 'authenticated' && isDataLoaded && role && role !== 'anonymous') {
+            const isBusinessRole = role === 'business_owner' || role === 'business_staff';
+            const target = isBusinessRole ? '/business-profile' : '/account';
             navigate(target, { replace: true });
         }
-    }, [state, isDataLoaded, profile, navigate]);
+    }, [state, isDataLoaded, role, navigate]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -33,16 +33,23 @@ const LoginPage: React.FC = () => {
 
         try {
             await login(email, password);
-            // Handle redirection after fresh login
+            // Handle redirection after fresh login — use role from DB context
             const authUser = (await supabase.auth.getUser()).data.user;
             const { data } = await supabase.rpc('get_user_context', { p_user_id: authUser?.id });
-            const isPendingBusiness = authUser?.user_metadata?.user_type === 'business' && !data?.business_id;
+            const dbRole = data?.role as string | undefined;
             let target = '/account';
-            if (isPendingBusiness) { target = '/account/business/setup'; }
-            else if (data?.role === 'business_owner' || data?.role === 'business_staff') { target = '/business-profile'; }
+            if (dbRole === 'business_owner' || dbRole === 'business_staff') {
+                target = '/business-profile';
+            } else if (
+                authUser?.user_metadata?.user_type === 'business' &&
+                !data?.business_id
+            ) {
+                // Business signup but no business linked yet → setup step
+                target = '/account/business/setup';
+            }
             navigate(target, { replace: true });
-        } catch (error: unknown) {
-            const message = error instanceof Error ? error.message : 'Đăng nhập thất bại.';
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Đăng nhập thất bại.';
             setError(message);
             setIsLoading(false);
         }
@@ -74,4 +81,3 @@ const LoginPage: React.FC = () => {
 };
 
 export default LoginPage;
-
