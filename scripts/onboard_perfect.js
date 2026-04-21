@@ -109,7 +109,7 @@ async function onboardPerfect() {
             // 2. Create Business (100% Fields)
             const heroImages = data.hero_image_urls.split('|');
             const heroSlides = heroImages.map((url, idx) => ({
-                title: idx === 0 ? data.business_name : `Dịch vụ đẳng cấp ${idx}`,
+                title: idx === 0 ? data.business_name : `Dịch vụ đẳng cấp ${idx + 1}`,
                 subtitle: idx === 0 ? data.slogan : "Công nghệ tiên tiến từ Hàn Quốc",
                 image_url: url.trim()
             }));
@@ -137,16 +137,42 @@ async function onboardPerfect() {
                 onboarding_token: null,
                 is_active: true,
                 is_verified: true,
+                is_featured: data.is_featured === 'TRUE',
                 membership_tier: data.membership_tier || 'VIP',
                 membership_expiry_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+                latitude: parseFloat(data.latitude) || null,
+                longitude: parseFloat(data.longitude) || null,
+                seo: {
+                    title: data.seo_title,
+                    description: data.seo_description,
+                    keywords: data.seo_keywords
+                },
+                socials: {
+                    facebook: data.social_facebook,
+                    instagram: data.social_instagram,
+                    tiktok: data.social_tiktok,
+                    zalo: data.social_zalo
+                },
                 working_hours: {
                     "monday": { "open": "08:00", "close": "20:00" },
                     "tuesday": { "open": "08:00", "close": "20:00" },
                     "wednesday": { "open": "08:00", "close": "20:00" },
                     "thursday": { "open": "08:00", "close": "20:00" },
                     "friday": { "open": "08:00", "close": "20:00" },
-                    "saturday": { "open": "09:00", "close": "18:00" },
-                    "sunday": { "open": "09:00", "close": "18:00" }
+                    "saturday": { "open": "08:00", "close": "20:00" },
+                    "sunday": { "open": "08:00", "close": "20:00" }
+                },
+                landing_page_config: {
+                    sections: {
+                        hero: { enabled: true, order: 0 },
+                        trust: { enabled: true, order: 1 },
+                        services: { enabled: true, order: 2 },
+                        gallery: { enabled: true, order: 3 },
+                        team: { enabled: true, order: 4 },
+                        reviews: { enabled: true, order: 5 },
+                        cta: { enabled: true, order: 6 },
+                        contact: { enabled: true, order: 7 }
+                    }
                 },
                 joined_date: new Date().toISOString()
             }).select().single();
