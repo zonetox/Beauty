@@ -18,13 +18,14 @@ CREATE OR REPLACE FUNCTION public.get_user_email() RETURNS TEXT AS $$ BEGIN RETU
       SELECT email
       FROM auth.users
       WHERE id = auth.uid()
-    ) -- Fallback for non-JWT contexts
+    )
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
--- Function: Check if user is an admin (Bypass RLS by using SECURITY DEFINER and search_path)
-CREATE OR REPLACE FUNCTION public.is_admin(user_email TEXT) RETURNS BOOLEAN AS $$ BEGIN -- Use direct table access. If this function is SECURITY DEFINER, 
-  -- it will bypass RLS on admin_users assuming the owner (postgres) has bypass rights.
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public STABLE;
+-- Function: Check if user is an admin
+CREATE OR REPLACE FUNCTION public.is_admin(user_email TEXT) RETURNS BOOLEAN AS $$ BEGIN -- We use search_path = public and SECURITY DEFINER to bypass RLS on admin_users table
+  -- This allows checking admin status even when RLS is active on that table.
   RETURN EXISTS (
     SELECT 1
     FROM public.admin_users
@@ -35,6 +36,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public STABLE;
 -- Function: Check if user is a business owner
+-- This is used to gate access to business-specific data (services, deals, etc.)
 CREATE OR REPLACE FUNCTION public.is_business_owner(user_id UUID, business_id_param BIGINT) RETURNS BOOLEAN AS $$ BEGIN RETURN EXISTS (
     SELECT 1
     FROM public.businesses

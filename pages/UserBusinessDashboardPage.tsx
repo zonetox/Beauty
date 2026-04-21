@@ -17,9 +17,8 @@ import AnalyticsDashboard from '../components/AnalyticsDashboard.tsx';
 import AccountSettings from '../components/AccountSettings.tsx';
 import BookingsManager from '../components/BookingsManager.tsx';
 import BusinessSupportCenter from '../components/BusinessSupportCenter.tsx';
-import StaffManagement from '../components/StaffManagement.tsx';
 
-export type ActiveTab = 'dashboard' | 'profile' | 'services' | 'billing' | 'blog' | 'gallery' | 'reviews' | 'stats' | 'settings' | 'bookings' | 'support' | 'deals' | 'staff';
+export type ActiveTab = 'dashboard' | 'profile' | 'services' | 'billing' | 'blog' | 'gallery' | 'reviews' | 'stats' | 'settings' | 'bookings' | 'support' | 'deals';
 
 import { useNavigate } from 'react-router-dom';
 // import BusinessOnboardingWizard from '../components/BusinessOnboardingWizard.tsx'; // Removed - Deprecated
@@ -121,8 +120,8 @@ const UserBusinessDashboardPage: React.FC = () => {
                 return <AccountSettings />;
             case 'support':
                 return <BusinessSupportCenter />;
-            case 'staff':
-                return <StaffManagement />;
+            // case 'staff':
+            //     return <StaffManagement />;
             default:
                 return <DashboardOverview setActiveTab={setActiveTab} />;
         }

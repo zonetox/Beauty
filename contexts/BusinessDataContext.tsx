@@ -716,13 +716,47 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await supabase.from('businesses').update(toSnakeCase(businessToUpdate) as any).eq('id', id);
+
     if (error) {
       console.error('Error updating business:', error.message);
       toast.error('Lỗi khi lưu thông tin: ' + error.message);
       throw error;
-    } else {
-      await refetchAllPublicData();
     }
+
+    // --- Sync Team Members (Marketing Profiles) ---
+    if (updatedBusiness.team) {
+      try {
+        // 1. Get current IDs in DB
+        const { data: currentTeam } = await supabase
+          .from('team_members')
+          .select('id')
+          .eq('business_id', id);
+
+        const currentIds = (currentTeam || []).map(m => m.id);
+        const newIds = updatedBusiness.team.filter(m => m.id).map(m => m.id);
+
+        // 2. Delete members removed from the list
+        const toDelete = currentIds.filter(cid => !newIds.includes(cid));
+        if (toDelete.length > 0) {
+          await supabase.from('team_members').delete().in('id', toDelete);
+        }
+
+        // 3. Upsert current members
+        if (updatedBusiness.team.length > 0) {
+          const teamToUpsert = updatedBusiness.team.map(m => ({
+            ...toSnakeCase(m),
+            business_id: id // Ensure business_id is correct
+          }));
+          await supabase.from('team_members').upsert(teamToUpsert);
+        }
+      } catch (teamError) {
+        console.error('Error syncing team members:', teamError);
+        // We don't throw here to avoid failing the whole business update 
+        // if just the team sync fails, but we log it.
+      }
+    }
+
+    await refetchAllPublicData();
   };
 
   /**

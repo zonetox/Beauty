@@ -1,9 +1,9 @@
 import React from 'react';
-import { useBusinessAuth } from '../contexts/BusinessContext.tsx';
-import { useAuth } from '../providers/AuthProvider.tsx';
-import { StaffMemberRole } from '../types.ts';
+/* import { useBusinessAuth } from '../contexts/BusinessContext.tsx';
+import { useAuth } from '../providers/AuthProvider.tsx'; */
+// import { StaffMemberRole } from '../types.ts';
 
-type ActiveTab = 'dashboard' | 'profile' | 'services' | 'billing' | 'blog' | 'gallery' | 'reviews' | 'stats' | 'settings' | 'bookings' | 'support' | 'deals' | 'staff';
+type ActiveTab = 'dashboard' | 'profile' | 'services' | 'billing' | 'blog' | 'gallery' | 'reviews' | 'stats' | 'settings' | 'bookings' | 'support' | 'deals';
 
 interface SidebarProps {
   activeTab: ActiveTab;
@@ -21,13 +21,17 @@ const NavLink: React.FC<{ active: boolean; onClick: () => void; children: React.
 );
 
 const BusinessDashboardSidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
-  const { currentBusiness } = useBusinessAuth();
-  const { user: currentUser } = useAuth();
+  /*
+    const { currentBusiness } = useBusinessAuth();
+    const { user: currentUser } = useAuth();
+    */
 
-  // Only show staff management to business owners (not staff members)
-  const is_business_owner = currentBusiness && currentUser &&
-    (currentBusiness.owner_id === currentUser.id ||
-      currentBusiness.staff?.some(s => s.id === currentUser.id && s.role === StaffMemberRole.ADMIN));
+  /* 
+    // Only show staff management to business owners (not staff members)
+    const is_business_owner = currentBusiness && currentUser &&
+      (currentBusiness.owner_id === currentUser.id ||
+        currentBusiness.staff?.some(s => s.id === currentUser.id && s.role === StaffMemberRole.ADMIN));
+    */
 
   return (
     <nav className="bg-white p-4 rounded-lg shadow-md space-y-2">
@@ -79,12 +83,12 @@ const BusinessDashboardSidebar: React.FC<SidebarProps> = ({ activeTab, setActive
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>
         <span>Settings</span>
       </NavLink>
-      {is_business_owner && (
+      {/* {is_business_owner && (
         <NavLink active={activeTab === 'staff'} onClick={() => setActiveTab('staff')}>
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" /></svg>
           <span>Staff Management</span>
         </NavLink>
-      )}
+      )} */}
     </nav>
   );
 };

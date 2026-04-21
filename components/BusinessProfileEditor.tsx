@@ -89,7 +89,7 @@ const BusinessProfileEditor: React.FC = () => {
 
     const [formData, setFormData] = useState<Business | null>(null);
     const [isSaving, setIsSaving] = useState(false);
-    const [activeTab, setActiveTab] = useState<'info' | 'media' | 'hours' | 'social' | 'landing'>('info');
+    const [activeTab, setActiveTab] = useState<'info' | 'media' | 'hours' | 'social' | 'landing' | 'team'>('info');
     const [errors, setErrors] = useState<FormErrors>({});
     const [isUploadingLogo, setIsUploadingLogo] = useState(false);
     const [isUploadingCover, setIsUploadingCover] = useState(false);
@@ -421,6 +421,7 @@ const BusinessProfileEditor: React.FC = () => {
                     <TabButton active={activeTab === 'info'} onClick={() => setActiveTab('info')}>Basic Info</TabButton>
                     <TabButton active={activeTab === 'media'} onClick={() => setActiveTab('media')}>Media & Content</TabButton>
                     <TabButton active={activeTab === 'landing'} onClick={() => setActiveTab('landing')}>Landing Page</TabButton>
+                    <TabButton active={activeTab === 'team'} onClick={() => setActiveTab('team')}>Team Members</TabButton>
                     <TabButton active={activeTab === 'hours'} onClick={() => setActiveTab('hours')}>Working Hours</TabButton>
                     <TabButton active={activeTab === 'social'} onClick={() => setActiveTab('social')}>Social & SEO</TabButton>
                 </nav>
@@ -742,6 +743,116 @@ const BusinessProfileEditor: React.FC = () => {
                                     onChange={handleSeoChange}
                                 />
                             </div>
+                        </div>
+                    </section>
+                )}
+
+                {activeTab === 'team' && (
+                    <section>
+                        <div className="mb-6">
+                            <h3 className="text-lg font-semibold text-neutral-dark">Team Members</h3>
+                            <p className="text-sm text-gray-600 mt-1">
+                                Add your team members to showcase them on your landing page.
+                                This is purely for marketing and does not grant them dashboard access.
+                            </p>
+                        </div>
+
+                        <div className="space-y-6">
+                            {(formData.team || []).map((member, index) => (
+                                <div key={member.id || index} className="p-4 border border-gray-200 rounded-lg bg-gray-50 relative group">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const updated = (formData.team || []).filter((_, i) => i !== index);
+                                            setFormData(prev => prev ? { ...prev, team: updated } : null);
+                                        }}
+                                        className="absolute top-2 right-2 text-gray-400 hover:text-red-600 transition-colors"
+                                        title="Remove member"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+
+                                    <div className="flex flex-col md:flex-row gap-6">
+                                        <div className="flex flex-col items-center gap-3">
+                                            <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-white shadow-sm bg-gray-200">
+                                                <img
+                                                    src={member.image_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + index}
+                                                    alt={member.name}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                            <label className="cursor-pointer text-xs font-semibold text-secondary hover:underline">
+                                                Change Photo
+                                                <input
+                                                    type="file"
+                                                    className="hidden"
+                                                    accept="image/*"
+                                                    onChange={async (e) => {
+                                                        if (!e.target.files?.[0]) return;
+                                                        const file = e.target.files[0];
+                                                        try {
+                                                            const url = await uploadFile('business-gallery', file, `business/${currentBusiness.id}/team`);
+                                                            const updated = [...(formData.team || [])];
+                                                            updated[index] = { ...updated[index], image_url: url };
+                                                            setFormData(prev => prev ? { ...prev, team: updated } : null);
+                                                            toast.success('Photo updated');
+                                                        } catch (err) {
+                                                            toast.error('Upload failed');
+                                                        }
+                                                    }}
+                                                />
+                                            </label>
+                                        </div>
+
+                                        <div className="flex-1 space-y-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <InputField
+                                                    label="Full Name"
+                                                    value={member.name || ''}
+                                                    onChange={(e) => {
+                                                        const updated = [...(formData.team || [])];
+                                                        updated[index] = { ...updated[index], name: e.target.value };
+                                                        setFormData(prev => prev ? { ...prev, team: updated } : null);
+                                                    }}
+                                                    placeholder="Member Name"
+                                                />
+                                                <InputField
+                                                    label="Role"
+                                                    value={member.role || ''}
+                                                    onChange={(e) => {
+                                                        const updated = [...(formData.team || [])];
+                                                        updated[index] = { ...updated[index], role: e.target.value };
+                                                        setFormData(prev => prev ? { ...prev, team: updated } : null);
+                                                    }}
+                                                    placeholder="e.g. Senior Stylist"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const newMember = {
+                                        id: crypto.randomUUID(),
+                                        business_id: currentBusiness.id,
+                                        name: '',
+                                        role: '',
+                                        image_url: ''
+                                    };
+                                    setFormData(prev => prev ? { ...prev, team: [...(prev.team || []), newMember] } : null);
+                                }}
+                                className="w-full py-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-primary hover:text-primary transition-all flex items-center justify-center gap-2 font-medium"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                Add Team Member
+                            </button>
                         </div>
                     </section>
                 )}
