@@ -87,21 +87,7 @@ const RegisterPage: React.FC = () => {
       toast.error(errorMsg);
       return;
     }
-    if (user_type === 'business') {
-      if (!formData.business_name.trim()) {
-        const errorMsg = 'Vui lòng nhập tên doanh nghiệp.';
-        setError(errorMsg);
-        toast.error(errorMsg);
-        return;
-      }
-      if (!formData.address.trim()) {
-        const errorMsg = 'Vui lòng nhập địa chỉ doanh nghiệp.';
-        setError(errorMsg);
-        toast.error(errorMsg);
-        return;
-      }
-    }
-    if (user_type === 'user' && !formData.full_name.trim()) {
+    if (!formData.full_name.trim()) {
       const errorMsg = 'Vui lòng nhập họ và tên.';
       setError(errorMsg);
       toast.error(errorMsg);
