@@ -105,7 +105,7 @@ const BusinessProfileEditor: React.FC = () => {
             if (!businessData.hero_slides || businessData.hero_slides.length === 0) {
                 businessData.hero_slides = [{
                     title: currentBusiness.name,
-                    subtitle: currentBusiness.slogan || currentBusiness.categories.join(', '),
+                    subtitle: currentBusiness.slogan || (currentBusiness.categories || []).join(', '),
                     image_url: currentBusiness.hero_image_url || currentBusiness.image_url,
                 }];
             }
@@ -362,7 +362,7 @@ const BusinessProfileEditor: React.FC = () => {
                 toast.error('At least one hero slide is required.');
                 return;
             }
-            const invalidSlides = formData.hero_slides.filter((slide: HeroSlide) =>
+            const invalidSlides = (formData.hero_slides || []).filter((slide: HeroSlide) =>
                 !slide.title || slide.title.trim().length === 0 ||
                 !slide.subtitle || slide.subtitle.trim().length === 0 ||
                 !slide.image_url || slide.image_url.trim().length === 0

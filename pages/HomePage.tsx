@@ -474,9 +474,9 @@ const HomePage: React.FC = () => {
                   <Editable
                     id={`hero_title_${currentSlide}`}
                     type="text"
-                    value={hero_slides[currentSlide].title}
+                    value={hero_slides[currentSlide]?.title || ''}
                   >
-                    {hero_slides[currentSlide].title.split(' ').map((word, i) => (
+                    {(hero_slides[currentSlide]?.title || '').split(' ').map((word: string, i: number) => (
                       <React.Fragment key={i}>
                         {word === 'Nhan' || word === 'sắc' || word === 'Cảm' || word === 'xúc' ? (
                           <span className="text-gradient">{word} </span>

@@ -39,14 +39,14 @@ const BusinessDetailPage: React.FC = () => {
             if (updatedBusiness.hero_slides && updatedBusiness.hero_slides.length > 0) {
                 updatedBusiness.hero_slides = updatedBusiness.hero_slides.map((slide, index) => ({
                     ...slide,
-                    title: changes[`landing_hero_title_${index}`] !== undefined ? changes[`landing_hero_title_${index}`] : slide.title,
-                    subtitle: changes[`landing_hero_subtitle_${index}`] !== undefined ? changes[`landing_hero_subtitle_${index}`] : slide.subtitle,
-                    image_url: changes[`landing_hero_image_${index}`] !== undefined ? changes[`landing_hero_image_${index}`] : slide.image_url,
+                    title: changes[`landing_hero_title_${index}`] !== undefined ? changes[`landing_hero_title_${index}`] : (slide.title || ''),
+                    subtitle: changes[`landing_hero_subtitle_${index}`] !== undefined ? changes[`landing_hero_subtitle_${index}`] : (slide.subtitle || ''),
+                    image_url: changes[`landing_hero_image_${index}`] !== undefined ? changes[`landing_hero_image_${index}`] : (slide.image_url || ''),
                 }));
             } else {
                 // Handle case where it uses business names as default
-                updatedBusiness.name = changes[`landing_hero_title_0`] !== undefined ? changes[`landing_hero_title_0`] : updatedBusiness.name;
-                updatedBusiness.slogan = changes[`landing_hero_subtitle_0`] !== undefined ? changes[`landing_hero_subtitle_0`] : updatedBusiness.slogan;
+                updatedBusiness.name = changes[`landing_hero_title_0`] !== undefined ? changes[`landing_hero_title_0`] : (updatedBusiness.name || '');
+                updatedBusiness.slogan = changes[`landing_hero_subtitle_0`] !== undefined ? changes[`landing_hero_subtitle_0`] : (updatedBusiness.slogan || '');
             }
 
             await updateBusiness(updatedBusiness);
@@ -161,11 +161,11 @@ const BusinessDetailPage: React.FC = () => {
     const seoTitle = business.seo?.title || `${business.name} | 1Beauty.asia`;
     const seoDescription = business.seo?.description ||
         business.description?.substring(0, 160) ||
-        `${business.name} - ${business.categories.join(', ')} tại ${business.city || 'Việt Nam'}`;
+        `${business.name} - ${(business.categories || []).join(', ')} tại ${business.city || 'Việt Nam'}`;
     const seoKeywords = business.seo?.keywords ||
-        `${business.name}, ${business.categories.join(', ')}, ${business.city || ''}`;
+        `${business.name}, ${(business.categories || []).join(', ')}, ${business.city || ''}`;
     const seoImage = business.hero_slides && business.hero_slides.length > 0
-        ? getOptimizedSupabaseUrl(business.hero_slides[0].image_url, { width: 1200, quality: 85 })
+        ? getOptimizedSupabaseUrl(business.hero_slides[0].image_url || '', { width: 1200, quality: 85 })
         : business.hero_image_url || business.image_url
             ? getOptimizedSupabaseUrl(business.hero_image_url || business.image_url || '', { width: 1200, quality: 85 })
             : 'https://picsum.photos/seed/beauty/1200/630';
