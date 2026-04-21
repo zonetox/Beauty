@@ -112,10 +112,10 @@ const AppContent: React.FC = () => {
     return (
         <ErrorLoggerProvider>
             <ThemeProvider>
-                <PublicPageContentProvider>
-                    <PublicDataProvider>
-                        <DirectoryProvider>
-                            <HomepageProvider>
+                <HomepageProvider>
+                    <PublicPageContentProvider>
+                        <PublicDataProvider>
+                            <DirectoryProvider>
                                 <CMSProvider>
                                     <AdminProvider>
                                         <BusinessProvider>
@@ -166,10 +166,10 @@ const AppContent: React.FC = () => {
                                         </BusinessProvider>
                                     </AdminProvider>
                                 </CMSProvider>
-                            </HomepageProvider>
-                        </DirectoryProvider>
-                    </PublicDataProvider>
-                </PublicPageContentProvider>
+                            </DirectoryProvider>
+                        </PublicDataProvider>
+                    </PublicPageContentProvider>
+                </HomepageProvider>
             </ThemeProvider>
         </ErrorLoggerProvider>
     );
