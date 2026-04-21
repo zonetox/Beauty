@@ -104,7 +104,7 @@ const RegisterPage: React.FC = () => {
 
     try {
       // 1. Create Supabase Auth user using AuthProvider
-      // Pass user_type into metadata so the system knows what this user intends to be
+      // Pass user_type into metadata so the trigger creates the business record automatically
       await register(formData.email, formData.password, {
         full_name: formData.full_name,
         phone: formData.phone,
@@ -128,12 +128,32 @@ const RegisterPage: React.FC = () => {
         throw new Error(profileResult.error || 'Khởi tạo tài khoản thất bại. Vui lòng thử lại.');
       }
 
+      // 3. For business accounts, wait for the DB trigger to create the business record
+      if (user_type === 'business') {
+        // Poll the profiles table to check if business_id has been set by the trigger
+        let businessLinked = false;
+        const maxWaitMs = 5000;
+        const startTime = Date.now();
+        while (!businessLinked && (Date.now() - startTime) < maxWaitMs) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('business_id')
+            .eq('id', newUser.id)
+            .single();
+          if (profileData?.business_id) {
+            businessLinked = true;
+            break;
+          }
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+
       await refreshAuth();
 
-      // 3. Redirection based on user_type
+      // 4. Redirection based on user_type
       if (user_type === 'business') {
-        toast.success('Đăng ký thành công! Vui lòng điền thông tin doanh nghiệp của bạn.');
-        navigate('/account/business/setup', { replace: true });
+        toast.success('Đăng ký thành công! Chào mừng bạn đến với 1Beauty.asia.');
+        navigate('/business-profile', { replace: true });
       } else {
         toast.success('Đăng ký thành công! Chào mừng bạn đến với 1Beauty.asia.');
         navigate('/', { replace: true });

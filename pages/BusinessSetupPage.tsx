@@ -1,23 +1,30 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-// import { useAuth } from '../providers/AuthProvider.tsx';
+import { useAuth } from '../providers/AuthProvider.tsx';
 
 /**
  * Legacy Business Setup Page
  * 
  * This page is deprecated in favor of the single-step registration flow.
- * It now serves as a redirector to ensure legacy links don't break.
+ * It now serves as a redirector: business owners go to /business-profile,
+ * regular users go to /account.
  */
 const BusinessSetupPage: React.FC = () => {
     const navigate = useNavigate();
-    // const { profile } = useAuth();
+    const { role, state, isDataLoaded } = useAuth();
 
     useEffect(() => {
-        // Always redirect to account dashboard
-        // If user has business, they see dashboard.
-        // If not, they see user dashboard (and can verify or register specifically via correct flows)
-        navigate('/account', { replace: true });
-    }, [navigate]);
+        // Wait for auth to be fully resolved before redirecting
+        if (state === 'loading' || !isDataLoaded) return;
+
+        const isBusinessUser = role === 'business_owner' || role === 'business_staff';
+        if (isBusinessUser) {
+            navigate('/business-profile', { replace: true });
+        } else {
+            // Regular users or new registrants go to account page
+            navigate('/account', { replace: true });
+        }
+    }, [navigate, role, state, isDataLoaded]);
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-50">

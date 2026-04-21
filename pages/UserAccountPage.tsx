@@ -10,6 +10,7 @@ import BusinessCard from '../components/BusinessCard.tsx';
 import EmptyState from '../components/EmptyState.tsx';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabaseClient.ts';
+import { useUserRole } from '../hooks/useUserRole.ts';
 
 type AccountTab = 'profile' | 'favorites' | 'inbox';
 
@@ -23,6 +24,7 @@ interface InboxMessage {
 
 const UserAccountPage: React.FC = () => {
     const { user: currentUser, profile, state } = useAuth();
+    const { is_business_owner, isBusinessStaff, isLoading: roleLoading } = useUserRole();
     const loading = state === 'loading';
     const isFavorite = (business_id: number) => profile?.favorites?.includes(business_id) ?? false;
     const { businesses } = useBusinessData();
@@ -37,6 +39,15 @@ const UserAccountPage: React.FC = () => {
     // Profile Settings
     const [settingName, setSettingName] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+
+    // Redirect business owners/staff to their dashboard
+    useEffect(() => {
+        if (!loading && !roleLoading && currentUser) {
+            if (is_business_owner || isBusinessStaff) {
+                navigate('/business-profile', { replace: true });
+            }
+        }
+    }, [loading, roleLoading, currentUser, is_business_owner, isBusinessStaff, navigate]);
 
     // Sync settings state when profile/user data is ready
     useEffect(() => {
