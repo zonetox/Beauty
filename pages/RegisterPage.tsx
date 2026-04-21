@@ -12,13 +12,10 @@ import { useUserRole } from '../hooks/useUserRole.ts';
 import SEOHead from '../components/SEOHead.tsx';
 import { initializeUserProfile } from '../lib/postSignupInitialization';
 
-type user_type = 'user' | 'business';
-
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const { register, refreshAuth, user, state } = useAuth();
   const { role, is_business_owner, isBusinessStaff, isLoading: roleLoading } = useUserRole();
-  const [user_type, setuser_type] = useState<user_type>('user');
   const [formData, setFormData] = useState({
     full_name: '',
     business_name: '',
@@ -102,13 +99,15 @@ const RegisterPage: React.FC = () => {
       return;
     }
 
+    // 1. Create Supabase Auth user using AuthProvider
+    // ALWAYS register as business and pass business intentions in metadata
     try {
-      // 1. Create Supabase Auth user using AuthProvider
-      // Pass user_type into metadata so the trigger creates the business record automatically
       await register(formData.email, formData.password, {
         full_name: formData.full_name,
         phone: formData.phone,
-        user_type: user_type
+        user_type: 'business',
+        business_name: formData.business_name || `Cửa hàng của ${formData.full_name}`,
+        address: formData.address || 'Chưa cập nhật'
       });
 
       // Get the newly created user from auth state
@@ -129,36 +128,27 @@ const RegisterPage: React.FC = () => {
       }
 
       // 3. For business accounts, wait for the DB trigger to create the business record
-      if (user_type === 'business') {
-        // Poll the profiles table to check if business_id has been set by the trigger
-        let businessLinked = false;
-        const maxWaitMs = 5000;
-        const startTime = Date.now();
-        while (!businessLinked && (Date.now() - startTime) < maxWaitMs) {
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('business_id')
-            .eq('id', newUser.id)
-            .single();
-          if (profileData?.business_id) {
-            businessLinked = true;
-            break;
-          }
-          await new Promise(resolve => setTimeout(resolve, 500));
+      // polling the profiles table to check if business_id has been set by the trigger
+      let businessLinked = false;
+      const maxWaitMs = 5000;
+      const startTime = Date.now();
+      while (!businessLinked && (Date.now() - startTime) < maxWaitMs) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('business_id')
+          .eq('id', newUser.id)
+          .single();
+        if (profileData?.business_id) {
+          businessLinked = true;
+          break;
         }
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
-
       await refreshAuth();
 
-      // 4. Redirection based on user_type
-      if (user_type === 'business') {
-        toast.success('Đăng ký thành công! Chào mừng bạn đến với 1Beauty.asia.');
-        navigate('/business-profile', { replace: true });
-      } else {
-        toast.success('Đăng ký thành công! Chào mừng bạn đến với 1Beauty.asia.');
-        navigate('/', { replace: true });
-      }
-
+      // 4. Redirection to Business Profile Dashboard
+      toast.success('Đăng ký thành công! Chào mừng đối tác đến với 1Beauty.asia.');
+      navigate('/business-profile', { replace: true });
     } catch (err: unknown) {
       const error = err as Record<string, unknown>;
       const errorMessage = (error.message as string) || 'An unexpected error occurred during registration.';
@@ -171,10 +161,8 @@ const RegisterPage: React.FC = () => {
   };
 
   // SEO metadata
-  const seoTitle = 'Đăng ký | 1Beauty.asia';
-  const seoDescription = user_type === 'business'
-    ? 'Đăng ký tài khoản doanh nghiệp trên 1Beauty.asia để quảng bá dịch vụ và kết nối với khách hàng.'
-    : 'Đăng ký tài khoản người dùng trên 1Beauty.asia để khám phá và đặt lịch với các doanh nghiệp làm đẹp.';
+  const seoTitle = 'Đăng ký đối tác | 1Beauty.asia';
+  const seoDescription = 'Đăng ký tài khoản doanh nghiệp trên 1Beauty.asia để quảng bá dịch vụ và kết nối với khách hàng.';
   const seoUrl = typeof window !== 'undefined' ? `${window.location.origin}/register` : '';
 
   return (
@@ -182,91 +170,53 @@ const RegisterPage: React.FC = () => {
       <SEOHead
         title={seoTitle}
         description={seoDescription}
-        keywords={user_type === 'business'
-          ? "đăng ký, register, tạo tài khoản doanh nghiệp, business registration"
-          : "đăng ký, register, tạo tài khoản người dùng, user registration"}
+        keywords="đăng ký đối tác, register, tạo tài khoản doanh nghiệp, business registration"
         url={seoUrl}
         type="website"
       />
       <div className="bg-background">
         <div className="container mx-auto px-4 py-16">
           <h1 className="text-4xl font-bold font-serif text-center text-neutral-dark mb-10">
-            {user_type === 'business' ? 'Trở thành đối tác của BeautyDir' : 'Đăng ký tài khoản'}
+            Trở thành đối tác của BeautyDir
           </h1>
 
-          {/* User Type Selection */}
-          <div className="max-w-xl mx-auto mb-6">
-            <div className="bg-white p-4 rounded-lg shadow-md">
-              <label className="block text-sm font-medium text-gray-700 mb-3">Bạn muốn đăng ký với tư cách:</label>
-              <div className="flex gap-4">
-                <label className="flex-1 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="user_type"
-                    value="user"
-                    checked={user_type === 'user'}
-                    onChange={(e) => setuser_type(e.target.value as user_type)}
-                    className="sr-only"
-                  />
-                  <div className={`p-4 border-2 rounded-lg text-center transition-all ${user_type === 'user'
-                    ? 'border-primary bg-primary/5'
-                    : 'border-gray-200 hover:border-gray-300'
-                    }`}>
-                    <div className="font-semibold text-lg mb-1">Người dùng</div>
-                    <div className="text-sm text-gray-600">Xem doanh nghiệp, đặt lịch, đánh giá</div>
-                  </div>
-                </label>
-                <label className="flex-1 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="user_type"
-                    value="business"
-                    checked={user_type === 'business'}
-                    onChange={(e) => setuser_type(e.target.value as user_type)}
-                    className="sr-only"
-                  />
-                  <div className={`p-4 border-2 rounded-lg text-center transition-all ${user_type === 'business'
-                    ? 'border-primary bg-primary/5'
-                    : 'border-gray-200 hover:border-gray-300'
-                    }`}>
-                    <div className="font-semibold text-lg mb-1">Doanh nghiệp</div>
-                    <div className="text-sm text-gray-600">Quảng bá dịch vụ, quản lý đặt lịch</div>
-                  </div>
-                </label>
-              </div>
-            </div>
-          </div>
 
           {/* Registration Form */}
           <div className="max-w-xl mx-auto bg-white p-8 rounded-lg shadow-md">
             <h2 className="text-2xl font-bold mb-6 font-serif text-neutral-dark">
-              {user_type === 'business' ? 'Tạo tài khoản Doanh nghiệp' : 'Tạo tài khoản Người dùng'}
+              Đăng ký tài khoản Doanh nghiệp
             </h2>
             {error && <p className="text-red-500 text-center bg-red-100 p-3 rounded-md mb-4">{error}</p>}
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
-                <>
-                  <div>
-                    <label htmlFor="full_name" className="block text-sm font-medium text-gray-700">Họ và tên <span className="text-red-500">*</span></label>
-                    <input id="full_name" type="text" name="full_name" value={formData.full_name} onChange={handleChange} required title="Họ và tên" placeholder="Nhập họ và tên" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
-                  </div>
-                  <div>
-                    <label htmlFor="user-email" className="block text-sm font-medium text-gray-700">Email <span className="text-red-500">*</span></label>
-                    <input id="user-email" type="email" name="email" value={formData.email} onChange={handleChange} required title="Email" placeholder="Nhập email" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
-                  </div>
-                  <div>
-                    <label htmlFor="user-phone" className="block text-sm font-medium text-gray-700">Số điện thoại</label>
-                    <input id="user-phone" type="tel" name="phone" value={formData.phone} onChange={handleChange} title="Số điện thoại" placeholder="0987654321" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
-                  </div>
-                  <div>
-                    <label htmlFor="user-password" className="block text-sm font-medium text-gray-700">Mật khẩu <span className="text-red-500">*</span></label>
-                    <input id="user-password" type="password" name="password" value={formData.password} onChange={handleChange} required title="Mật khẩu (tối thiểu 6 ký tự)" placeholder="Nhập mật khẩu" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
-                  </div>
-                  <div>
-                    <label htmlFor="user-confirm-password" className="block text-sm font-medium text-gray-700">Xác nhận mật khẩu <span className="text-red-500">*</span></label>
-                    <input id="user-confirm-password" type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required title="Xác nhận mật khẩu" placeholder="Nhập lại mật khẩu" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
-                  </div>
-                </>
+                <div>
+                  <label htmlFor="business_name" className="block text-sm font-medium text-gray-700">Tên doanh nghiệp <span className="text-red-500">*</span></label>
+                  <input id="business_name" type="text" name="business_name" value={formData.business_name} onChange={handleChange} required placeholder="Ví dụ: Luxury Spa Quận 1" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                </div>
+                <div>
+                  <label htmlFor="full_name" className="block text-sm font-medium text-gray-700">Chủ sở hữu <span className="text-red-500">*</span></label>
+                  <input id="full_name" type="text" name="full_name" value={formData.full_name} onChange={handleChange} required placeholder="Nhập họ và tên chủ doanh nghiệp" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                </div>
+                <div>
+                  <label htmlFor="address" className="block text-sm font-medium text-gray-700">Địa chỉ <span className="text-red-500">*</span></label>
+                  <input id="address" type="text" name="address" value={formData.address} onChange={handleChange} required placeholder="Số nhà, tên đường, phường, quận..." className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                </div>
+                <div>
+                  <label htmlFor="user-email" className="block text-sm font-medium text-gray-700">Email đăng nhập <span className="text-red-500">*</span></label>
+                  <input id="user-email" type="email" name="email" value={formData.email} onChange={handleChange} required placeholder="email@example.com" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                </div>
+                <div>
+                  <label htmlFor="user-phone" className="block text-sm font-medium text-gray-700">Số điện thoại liên hệ</label>
+                  <input id="user-phone" type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="0987654321" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                </div>
+                <div>
+                  <label htmlFor="user-password" className="block text-sm font-medium text-gray-700">Mật khẩu <span className="text-red-500">*</span></label>
+                  <input id="user-password" type="password" name="password" value={formData.password} onChange={handleChange} required placeholder="Tối thiểu 6 ký tự" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                </div>
+                <div>
+                  <label htmlFor="user-confirm-password" className="block text-sm font-medium text-gray-700">Xác nhận mật khẩu <span className="text-red-500">*</span></label>
+                  <input id="user-confirm-password" type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required placeholder="Nhập lại mật khẩu" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" />
+                </div>
               </div>
               <button type="submit" disabled={isSubmitting} className="mt-6 w-full bg-primary text-white py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium hover:bg-primary-dark disabled:bg-primary/50 disabled:cursor-not-allowed">
                 {isSubmitting ? 'Đang đăng ký...' : 'Đăng ký'}

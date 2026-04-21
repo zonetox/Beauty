@@ -20,7 +20,6 @@ import { AdminProvider } from './contexts/AdminContext.tsx';
 import { PublicDataProvider } from './contexts/BusinessDataContext.tsx';
 import { PublicPageContentProvider } from './contexts/PublicPageContentContext.tsx';
 import { ThemeProvider } from './contexts/ThemeContext.tsx';
-import { BusinessDashboardProvider } from './contexts/BusinessBlogDataContext.tsx';
 import { ErrorLoggerProvider } from './contexts/ErrorLoggerContext.tsx';
 import { StaffProvider } from './contexts/StaffContext.tsx';
 import { CMSProvider } from './contexts/CMSContext.tsx';
@@ -53,7 +52,6 @@ const AdminPage = safeLazy(() => import('./pages/AdminPage.tsx'));
 const AdminLoginPage = safeLazy(() => import('./pages/AdminLoginPage.tsx'));
 const PartnerRegistrationPage = safeLazy(() => import('./pages/PartnerRegistrationPage.tsx'));
 const UserBusinessDashboardPage = safeLazy(() => import('./pages/UserBusinessDashboardPage.tsx'));
-const UserAccountPage = safeLazy(() => import('./pages/UserAccountPage.tsx'));
 const NotFoundPage = safeLazy(() => import('./pages/NotFoundPage.tsx'));
 const LoginPage = safeLazy(() => import('./pages/LoginPage.tsx'));
 const ResetPasswordPage = safeLazy(() => import('./pages/ResetPasswordPage.tsx'));
@@ -136,11 +134,6 @@ const AppContent: React.FC = () => {
                                                                     <Route path="directory" element={<DirectoryPage />} />
                                                                     <Route path="blog" element={<BlogListPage />} />
                                                                     <Route path="blog/:slug" element={<BlogPostPage />} />
-                                                                    <Route path="account" element={
-                                                                        <ProtectedRoute>
-                                                                            <UserAccountPage />
-                                                                        </ProtectedRoute>
-                                                                    } />
                                                                     <Route path="business-profile" element={
                                                                         <ProtectedRoute>
                                                                             <UserBusinessDashboardPage />

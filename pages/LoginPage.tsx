@@ -21,7 +21,7 @@ const LoginPage: React.FC = () => {
     useEffect(() => {
         if (state === 'authenticated' && isDataLoaded && role && role !== 'anonymous') {
             const isBusinessRole = role === 'business_owner' || role === 'business_staff';
-            const target = isBusinessRole ? '/business-profile' : '/account';
+            const target = isBusinessRole ? '/business-profile' : '/business-profile';
             navigate(target, { replace: true });
         }
     }, [state, isDataLoaded, role, navigate]);
@@ -37,7 +37,7 @@ const LoginPage: React.FC = () => {
             const authUser = (await supabase.auth.getUser()).data.user;
             const { data } = await supabase.rpc('get_user_context', { p_user_id: authUser?.id });
             const dbRole = data?.role as string | undefined;
-            let target = '/account';
+            let target = '/business-profile';
             if (dbRole === 'business_owner' || dbRole === 'business_staff') {
                 target = '/business-profile';
             } else if (

@@ -6,11 +6,6 @@ import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { useTheme } from '../contexts/ThemeContext.tsx';
 import { useUserRole } from '../hooks/useUserRole.ts';
 
-const UserIcon: React.FC<{ className?: string }> = ({ className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
-    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-  </svg>
-);
 
 const HamburgerIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -63,10 +58,8 @@ const Header: React.FC = () => {
   const [logoError, setLogoError] = useState(false);
 
   // Get user role from role resolution (based on actual database state)
-  const { role, isAdmin, is_business_owner, isBusinessStaff, isLoading: roleLoading } = useUserRole();
+  const { role, isAdmin, isLoading: roleLoading } = useUserRole();
 
-  // Determine if user has business access (owner OR staff)
-  const hasBusinessAccess = is_business_owner || isBusinessStaff;
 
   const handleLogout = async () => {
     try {
@@ -214,23 +207,8 @@ const Header: React.FC = () => {
                           </p>
                           <p className="text-xs text-gray-500 truncate">{user.email}</p>
                         </div>
-                        {hasBusinessAccess ? (
-                          <Link
-                            to="/business-profile"
-                            className="block px-4 py-2 text-sm text-neutral-dark hover:bg-primary/10 transition-colors"
-                            onClick={() => {
-                              setIsMenuOpen(false);
-                              setIsDropdownOpen(false);
-                            }}
-                          >
-                            <div className="flex items-center gap-2">
-                              <UserIcon className="w-4 h-4" />
-                              <span>Dashboard doanh nghiệp</span>
-                            </div>
-                          </Link>
-                        ) : null}
                         <Link
-                          to="/account"
+                          to="/business-profile"
                           className="block px-4 py-2 text-sm text-neutral-dark hover:bg-primary/10 transition-colors"
                           onClick={() => {
                             setIsMenuOpen(false);
@@ -238,8 +216,10 @@ const Header: React.FC = () => {
                           }}
                         >
                           <div className="flex items-center gap-2">
-                            <UserIcon className="w-4 h-4" />
-                            <span>Tài khoản của tôi</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
+                            <span>Dashboard quản trị</span>
                           </div>
                         </Link>
 
@@ -265,11 +245,8 @@ const Header: React.FC = () => {
                   Đăng nhập
                 </NavLink>
                 {role === 'anonymous' && (
-                  <Link
-                    to="/for-business"
-                    className="ml-4 px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark transition-transform transform hover:scale-105"
-                  >
-                    Dành cho doanh nghiệp
+                  <Link to="/register" className="ml-4 px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark transition-transform transform hover:scale-105">
+                    Đăng ký đối tác
                   </Link>
                 )}
               </>
@@ -328,23 +305,15 @@ const Header: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                {hasBusinessAccess && (
-                  <NavLink
-                    to="/business-profile"
-                    className={({ isActive }) => `${mobileNavLinkClass({ isActive })} flex items-center gap-3`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <UserIcon className="w-6 h-6" />
-                    <span>Dashboard doanh nghiệp</span>
-                  </NavLink>
-                )}
                 <NavLink
-                  to="/account"
+                  to="/business-profile"
                   className={({ isActive }) => `${mobileNavLinkClass({ isActive })} flex items-center gap-3`}
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <UserIcon className="w-6 h-6" />
-                  <span>Tài khoản của tôi</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  </svg>
+                  <span>Dashboard quản trị</span>
                 </NavLink>
 
                 <button onClick={handleLogout} className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50">
@@ -361,11 +330,11 @@ const Header: React.FC = () => {
                 <NavLink to="/login" className={mobileNavLinkClass} onClick={() => setIsMenuOpen(false)}>Đăng nhập</NavLink>
                 {role === 'anonymous' && (
                   <Link
-                    to="/for-business"
+                    to="/register"
                     onClick={() => setIsMenuOpen(false)}
                     className="block w-full text-center px-4 py-3 border border-transparent rounded-md shadow-sm font-medium text-white bg-primary hover:bg-primary-dark mt-2"
                   >
-                    Dành cho doanh nghiệp
+                    Đăng ký đối tác
                   </Link>
                 )}
               </div>

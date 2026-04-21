@@ -16,8 +16,8 @@ const AuthRedirectHandler: React.FC = () => {
         // 1. Auth is fully resolved
         if (!isDataLoaded || state === 'loading' || !user) return;
 
-        // 2. Determine if user should be redirected from homepage
-        const isBusinessUser = role === 'business_owner' || role === 'business_staff';
+        // 2. Determine if user should be redirected from homepage (all authenticated non-admins)
+        const isBusinessUser = role !== 'admin';
         const isHomepage = location.pathname === '/';
 
         if (isBusinessUser && isHomepage) {
