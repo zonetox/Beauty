@@ -23,6 +23,7 @@ import { BusinessDashboardProvider } from './contexts/BusinessBlogDataContext.ts
 import { ErrorLoggerProvider } from './contexts/ErrorLoggerContext.tsx';
 import { StaffProvider } from './contexts/StaffContext.tsx';
 import { CMSProvider } from './contexts/CMSContext.tsx';
+import { HomepageDataProvider } from './contexts/HomepageDataContext.tsx';
 import AppInitializationScreen from './components/AppInitializationScreen.tsx';
 import { queryClient } from './lib/queryClient.ts';
 import AdminProtectedRoute from './components/AdminProtectedRoute.tsx';
@@ -115,66 +116,68 @@ const AppContent: React.FC = () => {
         <ErrorLoggerProvider>
             <PublicDataProvider>
                 <BusinessProvider>
-                    <CMSProvider>
-                        <ThemeProvider>
-                            <AdminProvider>
-                                <StaffProvider>
-                                    <Suspense fallback={<LoadingSpinner />}>
-                                        <Routes>
-                                            <Route element={<AppLayout />}>
-                                                <Route element={<PublicDataLayout />}>
-                                                    <Route index element={<HomePage />} />
-                                                    <Route path="directory" element={<DirectoryPage />} />
-                                                    <Route path="blog" element={<BlogListPage />} />
-                                                    <Route path="blog/:slug" element={<BlogPostPage />} />
-                                                    <Route path="account" element={
+                    <HomepageDataProvider>
+                        <CMSProvider>
+                            <ThemeProvider>
+                                <AdminProvider>
+                                    <StaffProvider>
+                                        <Suspense fallback={<LoadingSpinner />}>
+                                            <Routes>
+                                                <Route element={<AppLayout />}>
+                                                    <Route element={<PublicDataLayout />}>
+                                                        <Route index element={<HomePage />} />
+                                                        <Route path="directory" element={<DirectoryPage />} />
+                                                        <Route path="blog" element={<BlogListPage />} />
+                                                        <Route path="blog/:slug" element={<BlogPostPage />} />
+                                                        <Route path="account" element={
+                                                            <ProtectedRoute>
+                                                                <UserAccountPage />
+                                                            </ProtectedRoute>
+                                                        } />
+                                                        <Route path="business-profile" element={
+                                                            <ProtectedRoute>
+                                                                <BusinessDashboardProvider>
+                                                                    <UserBusinessDashboardPage />
+                                                                </BusinessDashboardProvider>
+                                                            </ProtectedRoute>
+                                                        } />
+                                                    </Route>
+
+                                                    <Route path="about" element={<AboutPage />} />
+                                                    <Route path="contact" element={<ContactPage />} />
+                                                    <Route path="for-business" element={<ForBusinessPage />} />
+                                                    <Route path="register" element={<RegisterPage />} />
+
+                                                    <Route path="account/business/setup" element={
                                                         <ProtectedRoute>
-                                                            <UserAccountPage />
+                                                            <BusinessSetupPage />
                                                         </ProtectedRoute>
                                                     } />
-                                                    <Route path="business-profile" element={
-                                                        <ProtectedRoute>
-                                                            <BusinessDashboardProvider>
-                                                                <UserBusinessDashboardPage />
-                                                            </BusinessDashboardProvider>
-                                                        </ProtectedRoute>
-                                                    } />
+                                                    <Route path="/partner-registration" element={<PartnerRegistrationPage />} />
+                                                    <Route path="login" element={<LoginPage />} />
+                                                    <Route path="reset-password" element={<ResetPasswordPage />} />
                                                 </Route>
 
-                                                <Route path="about" element={<AboutPage />} />
-                                                <Route path="contact" element={<ContactPage />} />
-                                                <Route path="for-business" element={<ForBusinessPage />} />
-                                                <Route path="register" element={<RegisterPage />} />
-
-                                                <Route path="account/business/setup" element={
-                                                    <ProtectedRoute>
-                                                        <BusinessSetupPage />
-                                                    </ProtectedRoute>
+                                                <Route path="/admin" element={
+                                                    <AdminProtectedRoute>
+                                                        <BusinessDashboardProvider>
+                                                            <AdminPage />
+                                                        </BusinessDashboardProvider>
+                                                    </AdminProtectedRoute>
                                                 } />
-                                                <Route path="/partner-registration" element={<PartnerRegistrationPage />} />
-                                                <Route path="login" element={<LoginPage />} />
-                                                <Route path="reset-password" element={<ResetPasswordPage />} />
-                                            </Route>
+                                                <Route path="/admin/login" element={<AdminLoginPage />} />
+                                                <Route path="business/:slug" element={<BusinessDetailPage />} />
+                                                <Route path="business/:businessSlug/post/:postSlug" element={<BusinessPostPage />} />
+                                                <Route path="/connection-test" element={<ConnectionTestPage />} />
 
-                                            <Route path="/admin" element={
-                                                <AdminProtectedRoute>
-                                                    <BusinessDashboardProvider>
-                                                        <AdminPage />
-                                                    </BusinessDashboardProvider>
-                                                </AdminProtectedRoute>
-                                            } />
-                                            <Route path="/admin/login" element={<AdminLoginPage />} />
-                                            <Route path="business/:slug" element={<BusinessDetailPage />} />
-                                            <Route path="business/:businessSlug/post/:postSlug" element={<BusinessPostPage />} />
-                                            <Route path="/connection-test" element={<ConnectionTestPage />} />
-
-                                            <Route path="*" element={<NotFoundPage />} />
-                                        </Routes>
-                                    </Suspense>
-                                </StaffProvider>
-                            </AdminProvider>
-                        </ThemeProvider>
-                    </CMSProvider>
+                                                <Route path="*" element={<NotFoundPage />} />
+                                            </Routes>
+                                        </Suspense>
+                                    </StaffProvider>
+                                </AdminProvider>
+                            </ThemeProvider>
+                        </CMSProvider>
+                    </HomepageDataProvider>
                 </BusinessProvider>
             </PublicDataProvider>
         </ErrorLoggerProvider>
