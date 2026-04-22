@@ -16,6 +16,7 @@ import EmptyState from './EmptyState.tsx';
 
 import LandingPageSectionEditor from './LandingPageSectionEditor.tsx';
 import LandingPagePreview from './LandingPagePreview.tsx';
+import TemplateSelector from './TemplateSelector.tsx';
 
 // Helper to convert blob to base64 (for team member images)
 // const blobToBase64 = (blob: Blob): Promise<string> => {
@@ -687,6 +688,25 @@ const BusinessProfileEditor: React.FC = () => {
                                 placeholder="https://www.youtube.com/watch?v=..."
                             />
                             <p className="text-xs text-gray-500 mt-1">This video will be featured on your landing page.</p>
+                        </div>
+                    </section>
+                )}
+
+                {activeTab === 'landing' && (
+                    <section className="space-y-8">
+                        {/* Template Chooser */}
+                        <TemplateSelector
+                            currentTemplateId={formData.template_id || 'luxury-minimal'}
+                            onChange={(id) => setFormData(prev => prev ? { ...prev, template_id: id } as any : null)}
+                        />
+                        <div className="border-t pt-8">
+                            <h3 className="text-lg font-semibold text-neutral-dark mb-4">Cấu hình các section</h3>
+                            {formData.landing_page_config && (
+                                <LandingPageSectionEditor
+                                    config={formData.landing_page_config}
+                                    onChange={handlelanding_page_configChange}
+                                />
+                            )}
                         </div>
                     </section>
                 )}

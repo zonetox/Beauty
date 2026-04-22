@@ -148,6 +148,60 @@ export const TEMPLATE_PRESETS: Record<string, TemplatePreset> = {
             galleryLayout: 'grid',
             buttonStyle: 'pill'
         }
+    },
+    'luna-spa': {
+        id: 'luna-spa',
+        name: 'Luna Spa — Thiên Nhiên',
+        theme: {
+            logo_url: '/logo.svg',
+            favicon_url: '/favicon.svg',
+            colors: {
+                primary: '#6B8C6B',    // Natural Forest Green
+                primary_dark: '#4E6B4E',
+                secondary: '#3B4A3B',
+                accent: '#C8A97E',     // Warm Sand
+                background: '#F7F4EF', // Warm Cream
+                neutral_dark: '#2C3A2C',
+            },
+            fonts: {
+                sans: 'Lato',
+                serif: 'Playfair Display',
+            },
+        },
+        styles: {
+            heroOverlay: 'rgba(107, 140, 107, 0.18)',
+            cardStyle: 'elevated',
+            mapFilter: 'hue-rotate(30deg) saturate(0.8) brightness(0.95)',
+            galleryLayout: 'masonry',
+            buttonStyle: 'pill'
+        }
+    },
+    'pink-nail': {
+        id: 'pink-nail',
+        name: 'Pink Nail — Tinh Tế',
+        theme: {
+            logo_url: '/logo.svg',
+            favicon_url: '/favicon.svg',
+            colors: {
+                primary: '#D4748C',    // Soft Blush Pink
+                primary_dark: '#B85872',
+                secondary: '#7A4955',
+                accent: '#F5C2CE',     // Light Pink
+                background: '#FFF8F9', // Blush White
+                neutral_dark: '#3D2B30',
+            },
+            fonts: {
+                sans: 'Inter',
+                serif: 'Cormorant Garamond',
+            },
+        },
+        styles: {
+            heroOverlay: 'rgba(212, 116, 140, 0.12)',
+            cardStyle: 'glass',
+            mapFilter: 'sepia(15%) saturate(1.1)',
+            galleryLayout: 'grid',
+            buttonStyle: 'pill'
+        }
     }
 };
 
