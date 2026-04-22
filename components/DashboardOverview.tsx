@@ -4,11 +4,16 @@
 
 import React, { useMemo, useEffect, useState } from 'react';
 import { useBusiness, useAnalyticsData } from '../contexts/BusinessContext.tsx';
-import { MembershipTier, Announcement, AnalyticsDataPoint, AppointmentStatus, OrderStatus } from '../types.ts';
+import { Business, MembershipTier, Announcement, AnalyticsDataPoint, AppointmentStatus, OrderStatus, LandingPageConfig } from '../types.ts';
 import { ActiveTab } from '../pages/BusinessDashboardPage.tsx';
+import { useBusinessData } from '../contexts/BusinessDataContext.tsx';
+import { useAuth } from '../providers/AuthProvider.tsx';
 import { useAdmin } from '../contexts/AdminContext.tsx';
+import { supabase } from '../lib/supabaseClient.ts';
+import { DEMO_CONTENT } from '../src/features/templates/presets.ts';
 import LoadingState from './LoadingState.tsx';
 import EmptyState from './EmptyState.tsx';
+import toast from 'react-hot-toast';
 
 interface DashboardOverviewProps {
     setActiveTab: React.Dispatch<React.SetStateAction<ActiveTab>>;
@@ -84,6 +89,8 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
     } = useBusiness();
     const { getAnalyticsBybusiness_id } = useAnalyticsData();
     const { addNotification, getUnreadAnnouncements, markAnnouncementAsRead } = useAdmin();
+    const { user } = useAuth();
+    const { addBusiness } = useBusinessData();
 
     const [unreadAnnouncements, setUnreadAnnouncements] = useState<Announcement[]>(() =>
         currentBusiness ? getUnreadAnnouncements(currentBusiness.id) : []
@@ -241,27 +248,113 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
 
     const isVip = currentBusiness ? currentBusiness.membership_tier === MembershipTier.VIP : false;
 
+    const handleCreateDemo = async (presetId: string) => {
+        const demo = DEMO_CONTENT[presetId];
+        if (!demo || !user) return;
+
+        const loadingToast = toast.loading(`Đang khởi tạo mẫu ${demo.name}...`);
+
+        try {
+            const slug = `${demo.name?.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${Math.random().toString(36).substring(2, 7)}`;
+
+            const defaultLandingConfig: LandingPageConfig = {
+                sections: {
+                    hero: { enabled: true, order: 1 },
+                    trust: { enabled: true, order: 2 },
+                    services: { enabled: true, order: 3 },
+                    gallery: { enabled: true, order: 4 },
+                    team: { enabled: true, order: 5 },
+                    reviews: { enabled: true, order: 6 },
+                    products: { enabled: true, order: 7 },
+                    cta: { enabled: true, order: 8 },
+                    contact: { enabled: true, order: 9 },
+                }
+            };
+
+            const demoData = {
+                ...demo,
+                slug,
+                owner_id: user.id,
+                is_active: true,
+                is_verified: false,
+                membership_tier: MembershipTier.FREE,
+                landing_page_config: defaultLandingConfig,
+                template_id: presetId,
+                joined_date: new Date().toISOString(),
+                notification_settings: {
+                    review_alerts: true,
+                    booking_requests: true,
+                    platform_news: true
+                }
+            } as Business;
+
+            const newBusiness = await addBusiness(demoData);
+
+            if (newBusiness && user.id) {
+                await supabase.from('profiles').update({ business_id: newBusiness.id }).eq('id', user.id);
+                toast.success(`Đã tạo hồ sơ bản nháp cho ${demo.name}!`, { id: loadingToast });
+                // Trigger reload to update BusinessContext
+                window.location.reload();
+            }
+        } catch (error) {
+            console.error('Demo creation error:', error);
+            toast.error('Khởi tạo mẫu thất bại. Vui lòng thử lại.', { id: loadingToast });
+        }
+    };
+
     // If no business profile yet, show welcome screen
     if (!currentBusiness) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[500px] text-center space-y-8 animate-fade-in-up">
-                <div className="bg-primary/5 p-8 rounded-full">
-                    <svg className="w-20 h-20 text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex flex-col items-center justify-center min-h-[500px] text-center space-y-12 animate-fade-in-up">
+                <div className="bg-primary/5 p-8 rounded-full border border-primary/10 shadow-inner">
+                    <svg className="w-16 h-16 text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                 </div>
-                <div>
-                    <h2 className="text-4xl font-serif text-primary tracking-wide mb-4">Chào mừng đến với 1Beauty.asia</h2>
-                    <p className="text-neutral-400 font-light italic text-lg max-w-md mx-auto leading-relaxed">
-                        Tài khoản của bạn đã sẵn sàng. Hãy thiết lập hồ sơ doanh nghiệp để bắt đầu hành trình.
+
+                <div className="max-w-2xl">
+                    <h2 className="text-4xl font-serif text-primary tracking-wide mb-6">Bắt đầu hành trình của bạn</h2>
+                    <p className="text-neutral-500 font-light text-lg mb-10 leading-relaxed italic">
+                        "Tiết kiệm thời gian nhập liệu bằng cách chọn một bản nháp chuẩn.
+                        Chúng tôi sẽ điền sẵn hình ảnh và nội dung demo cho bạn."
                     </p>
                 </div>
-                <button
-                    onClick={() => setActiveTab('profile')}
-                    className="bg-primary text-white px-10 py-5 rounded-full font-bold uppercase tracking-[0.2em] text-xs hover:scale-105 transition-all shadow-xl shadow-primary/20"
-                >
-                    Thiết lập hồ sơ ngay →
-                </button>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl px-4">
+                    {/* Luna Spa Option */}
+                    <div className="group relative bg-white border border-gray-100 p-8 rounded-[2.5rem] shadow-premium hover:shadow-2xl transition-all duration-500 cursor-pointer overflow-hidden"
+                        onClick={() => handleCreateDemo('luna-spa')}>
+                        <div className="absolute top-0 left-0 w-full h-2 bg-[#6B8C6B]"></div>
+                        <div className="text-3xl mb-4 group-hover:scale-110 transition-transform">🌿</div>
+                        <h3 className="text-xl font-serif text-gray-800 mb-2">Mẫu Luna Spa</h3>
+                        <p className="text-xs text-gray-400 mb-6 uppercase tracking-widest">Phong cách Thiên Nhiên</p>
+                        <button className="w-full py-3 bg-[#6B8C6B]/10 text-[#6B8C6B] text-[10px] font-bold uppercase tracking-widest rounded-full group-hover:bg-[#6B8C6B] group-hover:text-white transition-colors">
+                            Khởi tạo nhanh →
+                        </button>
+                    </div>
+
+                    {/* Nailora Option */}
+                    <div className="group relative bg-white border border-gray-100 p-8 rounded-[2.5rem] shadow-premium hover:shadow-2xl transition-all duration-500 cursor-pointer overflow-hidden"
+                        onClick={() => handleCreateDemo('pink-nail')}>
+                        <div className="absolute top-0 left-0 w-full h-2 bg-[#D4748C]"></div>
+                        <div className="text-3xl mb-4 group-hover:scale-110 transition-transform">💅</div>
+                        <h3 className="text-xl font-serif text-gray-800 mb-2">Mẫu Nailora</h3>
+                        <p className="text-xs text-gray-400 mb-6 uppercase tracking-widest">Phong cách Tinh Tế</p>
+                        <button className="w-full py-3 bg-[#D4748C]/10 text-[#D4748C] text-[10px] font-bold uppercase tracking-widest rounded-full group-hover:bg-[#D4748C] group-hover:text-white transition-colors">
+                            Khởi tạo nhanh →
+                        </button>
+                    </div>
+                </div>
+
+                <div className="flex flex-col items-center gap-4 pt-8">
+                    <p className="text-xs text-gray-400 uppercase tracking-widest">Hoặc bạn muốn tự mình nhập liệu?</p>
+                    <button
+                        onClick={() => setActiveTab('profile')}
+                        className="text-primary text-xs font-bold uppercase tracking-[0.2em] hover:underline transition-all"
+                    >
+                        Tự thiết lập từ đầu →
+                    </button>
+                </div>
             </div>
         );
     }

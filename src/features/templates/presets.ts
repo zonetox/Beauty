@@ -1,4 +1,4 @@
-import { ThemeSettings } from '../../../types.ts';
+import { ThemeSettings, Business, BusinessCategory } from '../../../types.ts';
 
 export interface TemplatePreset {
     id: string;
@@ -201,6 +201,67 @@ export const TEMPLATE_PRESETS: Record<string, TemplatePreset> = {
             mapFilter: 'sepia(15%) saturate(1.1)',
             galleryLayout: 'grid',
             buttonStyle: 'pill'
+        }
+    }
+};
+
+export const DEMO_CONTENT: Record<string, Partial<Business>> = {
+    'luna-spa': {
+        name: 'Luna Spa & Massage',
+        slogan: 'Tinh hoa trị liệu - Cân bằng Thân - Tâm - Trí',
+        description: 'Luna Spa mang đến những liệu pháp chăm sóc sức khỏe và tinh thần thuần túy, giúp bạn cân bằng cuộc sống và tỏa sáng mỗi ngày. Với hơn 10 năm kinh nghiệm, chúng tôi tự hào mang đến không gian thư giãn đẳng cấp cùng đội ngũ kỹ thuật viên chuyên nghiệp hàng đầu.',
+        address: '123 Đường Hoa Hồng, P.2, Q.3, TP.HCM',
+        city: 'Hồ Chí Minh',
+        district: 'Quận 3',
+        ward: 'Phường 2',
+        phone: '0123 456 789',
+        email: 'lunaspa@gmail.com',
+        website: 'https://lunaspa.vn',
+        categories: [BusinessCategory.SPA],
+        image_url: 'https://images.unsplash.com/photo-1544161515-4af6b1d462c2?q=80&w=2070', // Spa treatment
+        logo_url: 'https://api.dicebear.com/7.x/initials/svg?seed=LS&backgroundColor=6B8C6B',
+        hero_slides: [
+            {
+                title: 'Tinh hoa trị liệu',
+                subtitle: 'Cân bằng thân - tâm - trí trong không gian thuần khiết',
+                image_url: 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?q=80&w=2070'
+            }
+        ],
+        working_hours: {
+            'Thứ 2 - Thứ 6': '09:00 - 21:00',
+            'Thứ 7 - CN': '08:30 - 22:00'
+        },
+        socials: {
+            facebook: 'https://facebook.com/lunaspa',
+            instagram: 'https://instagram.com/lunaspa'
+        }
+    },
+    'pink-nail': {
+        name: 'Nailora Beauty & Care',
+        slogan: 'Tinh tế trong từng chi tiết nhỏ',
+        description: 'Nailora mang đến cho bạn những bộ móng tinh tế, thời thượng cùng trải nghiệm thư giãn tuyệt vời. Chúng tôi sử dụng các dòng sơn cao cấp, an toàn cho sức khỏe và quy trình vệ sinh chuẩn y khoa.',
+        address: '456 Đường Lavender, P.Thảo Điền, TP.Thủ Đức',
+        city: 'Hồ Chí Minh',
+        district: 'Thủ Đức',
+        ward: 'Thảo Điền',
+        phone: '0988 777 666',
+        email: 'nailora@beauty.vn',
+        categories: [BusinessCategory.NAIL, BusinessCategory.SALON],
+        image_url: 'https://images.unsplash.com/photo-1604654894610-df490668711d?q=80&w=1974', // Nails
+        logo_url: 'https://api.dicebear.com/7.x/initials/svg?seed=NB&backgroundColor=D4748C',
+        hero_slides: [
+            {
+                title: 'Nghệ thuật trên đôi tay',
+                subtitle: 'Khám phá bộ sưu tập màu sơn độc bản mùa lễ hội',
+                image_url: 'https://images.unsplash.com/photo-1632345031435-07ca6838876f?q=80&w=2070'
+            }
+        ],
+        working_hours: {
+            'Hàng ngày': '10:00 - 20:30'
+        },
+        socials: {
+            instagram: 'https://instagram.com/nailora.beauty',
+            tiktok: 'https://tiktok.com/@nailora'
         }
     }
 };

@@ -17,6 +17,7 @@ import EmptyState from './EmptyState.tsx';
 import LandingPageSectionEditor from './LandingPageSectionEditor.tsx';
 import LandingPagePreview from './LandingPagePreview.tsx';
 import TemplateSelector from './TemplateSelector.tsx';
+import { TEMPLATE_PRESETS, DEMO_CONTENT } from '../src/features/templates/presets.ts';
 
 // Helper to convert blob to base64 (for team member images)
 // const blobToBase64 = (blob: Blob): Promise<string> => {
@@ -97,6 +98,47 @@ const BusinessProfileEditor: React.FC = () => {
     const [isUploadingLogo, setIsUploadingLogo] = useState(false);
     const [isUploadingCover, setIsUploadingCover] = useState(false);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+    const handleApplyDemo = (presetId: string) => {
+        const demo = DEMO_CONTENT[presetId];
+        if (!demo) return;
+
+        const defaultLandingConfig: LandingPageConfig = {
+            sections: {
+                hero: { enabled: true, order: 1 },
+                trust: { enabled: true, order: 2 },
+                services: { enabled: true, order: 3 },
+                gallery: { enabled: true, order: 4 },
+                team: { enabled: true, order: 5 },
+                reviews: { enabled: true, order: 6 },
+                products: { enabled: true, order: 7 },
+                cta: { enabled: true, order: 8 },
+                contact: { enabled: true, order: 9 },
+            }
+        };
+
+        const newBusinessData: Partial<Business> = {
+            ...demo,
+            template_id: presetId,
+            landing_page_config: defaultLandingConfig,
+            is_active: true,
+            is_verified: false,
+            membership_tier: currentBusiness?.membership_tier || 'Free' as any,
+        };
+
+        setFormData(prev => ({
+            ...prev,
+            ...newBusinessData
+        } as Business));
+
+        // Sync working hours list
+        if (demo.working_hours) {
+            const list = Object.entries(demo.working_hours).map(([day, time]) => ({ day, time: time as string }));
+            setworking_hoursList(list);
+        }
+
+        toast.success(`Đã áp dụng mẫu ${demo.name}! Đừng quên nhấn Lưu thay đổi.`);
+    };
 
     const [working_hoursList, setworking_hoursList] = useState<Array<{ day: string; time: string }>>([]);
 
@@ -458,6 +500,34 @@ const BusinessProfileEditor: React.FC = () => {
                     </button>
                 </div>
             </div>
+
+            {/* Quick Start Banners */}
+            {!currentBusiness?.id && (
+                <div className="px-6 py-4 bg-gradient-to-r from-primary/10 to-accent/10 border-b border-primary/20">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div>
+                            <h4 className="text-sm font-bold text-primary flex items-center gap-2">
+                                <span className="text-lg">⚡</span> TIẾT KIỆM THỜI GIAN NHẬP LIỆU
+                            </h4>
+                            <p className="text-xs text-gray-600">Chọn một mẫu chuẩn để tự động điền toàn bộ thông tin mô tả, dịch vụ và hình ảnh demo.</p>
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => handleApplyDemo('luna-spa')}
+                                className="px-4 py-2 bg-white border border-primary/30 text-primary text-xs font-bold rounded-lg hover:bg-primary hover:text-white transition-all shadow-sm"
+                            >
+                                Dùng mẫu Luna Spa (Xanh)
+                            </button>
+                            <button
+                                onClick={() => handleApplyDemo('pink-nail')}
+                                className="px-4 py-2 bg-white border border-accent/40 text-secondary text-xs font-bold rounded-lg hover:bg-accent hover:text-white transition-all shadow-sm"
+                            >
+                                Dùng mẫu Nailora (Hồng)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="border-b border-gray-200 overflow-x-auto">
                 <nav className="flex space-x-2 px-6">
