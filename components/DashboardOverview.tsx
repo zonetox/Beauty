@@ -320,30 +320,27 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl px-4">
-                    {/* Luna Spa Option */}
-                    <div className="group relative bg-white border border-gray-100 p-8 rounded-[2.5rem] shadow-premium hover:shadow-2xl transition-all duration-500 cursor-pointer overflow-hidden"
-                        onClick={() => handleCreateDemo('luna-spa')}>
-                        <div className="absolute top-0 left-0 w-full h-2 bg-[#6B8C6B]"></div>
-                        <div className="text-3xl mb-4 group-hover:scale-110 transition-transform">🌿</div>
-                        <h3 className="text-xl font-serif text-gray-800 mb-2">Mẫu Luna Spa</h3>
-                        <p className="text-xs text-gray-400 mb-6 uppercase tracking-widest">Phong cách Thiên Nhiên</p>
-                        <button className="w-full py-3 bg-[#6B8C6B]/10 text-[#6B8C6B] text-[10px] font-bold uppercase tracking-widest rounded-full group-hover:bg-[#6B8C6B] group-hover:text-white transition-colors">
-                            Khởi tạo nhanh →
-                        </button>
-                    </div>
-
-                    {/* Nailora Option */}
-                    <div className="group relative bg-white border border-gray-100 p-8 rounded-[2.5rem] shadow-premium hover:shadow-2xl transition-all duration-500 cursor-pointer overflow-hidden"
-                        onClick={() => handleCreateDemo('pink-nail')}>
-                        <div className="absolute top-0 left-0 w-full h-2 bg-[#D4748C]"></div>
-                        <div className="text-3xl mb-4 group-hover:scale-110 transition-transform">💅</div>
-                        <h3 className="text-xl font-serif text-gray-800 mb-2">Mẫu Nailora</h3>
-                        <p className="text-xs text-gray-400 mb-6 uppercase tracking-widest">Phong cách Tinh Tế</p>
-                        <button className="w-full py-3 bg-[#D4748C]/10 text-[#D4748C] text-[10px] font-bold uppercase tracking-widest rounded-full group-hover:bg-[#D4748C] group-hover:text-white transition-colors">
-                            Khởi tạo nhanh →
-                        </button>
-                    </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl px-4">
+                    {[
+                        { id: 'luna-spa', name: 'Mẫu Luna Spa', emoji: '🌿', color: '#6B8C6B', style: 'Thiên Nhiên' },
+                        { id: 'pink-nail', name: 'Mẫu Nailora', emoji: '💅', color: '#D4748C', style: 'Tinh Tế' },
+                        { id: 'golden-ratio', name: 'Golden Ratio', emoji: '📐', color: '#B2A59B', style: 'Tỷ Lệ Vàng' },
+                        { id: 'luxury-hair', name: 'Luxury Hair', emoji: '💇‍♀️', color: '#8D4949', style: 'Salon Tóc' },
+                        { id: 'q-clinic', name: 'Q Clinic', emoji: '🏥', color: '#B01B4D', style: 'Phòng Khám' }
+                    ].map((option) => (
+                        <div key={option.id}
+                            className="group relative bg-white border border-gray-100 p-6 rounded-[2rem] shadow-premium hover:shadow-2xl transition-all duration-500 cursor-pointer overflow-hidden border-t-4"
+                            style={{ borderTopColor: option.color }}
+                            onClick={() => handleCreateDemo(option.id)}>
+                            <div className="text-3xl mb-4 group-hover:scale-110 transition-transform">{option.emoji}</div>
+                            <h3 className="text-lg font-serif text-gray-800 mb-1">{option.name}</h3>
+                            <p className="text-[10px] text-gray-400 mb-6 uppercase tracking-widest leading-none">{option.style}</p>
+                            <button className="w-full py-2 bg-gray-50 text-gray-500 text-[10px] font-bold uppercase tracking-widest rounded-full group-hover:bg-primary group-hover:text-white transition-colors"
+                                style={{ '--hover-bg': option.color } as any}>
+                                Khởi tạo nhanh →
+                            </button>
+                        </div>
+                    ))}
                 </div>
 
                 <div className="flex flex-col items-center gap-4 pt-8">

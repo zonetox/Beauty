@@ -511,19 +511,26 @@ const BusinessProfileEditor: React.FC = () => {
                             </h4>
                             <p className="text-xs text-gray-600">Chọn một mẫu chuẩn để tự động điền toàn bộ thông tin mô tả, dịch vụ và hình ảnh demo.</p>
                         </div>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => handleApplyDemo('luna-spa')}
-                                className="px-4 py-2 bg-white border border-primary/30 text-primary text-xs font-bold rounded-lg hover:bg-primary hover:text-white transition-all shadow-sm"
-                            >
-                                Dùng mẫu Luna Spa (Xanh)
-                            </button>
-                            <button
-                                onClick={() => handleApplyDemo('pink-nail')}
-                                className="px-4 py-2 bg-white border border-accent/40 text-secondary text-xs font-bold rounded-lg hover:bg-accent hover:text-white transition-all shadow-sm"
-                            >
-                                Dùng mẫu Nailora (Hồng)
-                            </button>
+                        <div className="flex flex-wrap gap-2">
+                            {[
+                                { id: 'luna-spa', name: 'Luna Spa', color: '#6B8C6B', emoji: '🌿' },
+                                { id: 'pink-nail', name: 'Nailora', color: '#D4748C', emoji: '💅' },
+                                { id: 'golden-ratio', name: 'Golden Ratio', color: '#B2A59B', emoji: '📐' },
+                                { id: 'luxury-hair', name: 'Luxury Hair', color: '#8D4949', emoji: '💇‍♀️' },
+                                { id: 'q-clinic', name: 'Q Clinic', color: '#B01B4D', emoji: '🏥' }
+                            ].map(opt => (
+                                <button
+                                    key={opt.id}
+                                    type="button"
+                                    onClick={() => handleApplyDemo(opt.id)}
+                                    className="px-3 py-1.5 bg-white border text-[10px] font-bold rounded-full hover:text-white transition-all shadow-sm flex items-center gap-1.5"
+                                    style={{ borderColor: `${opt.color}40`, color: opt.color, backgroundColor: 'white' }}
+                                    onMouseOver={(e) => { e.currentTarget.style.backgroundColor = opt.color; e.currentTarget.style.color = 'white'; }}
+                                    onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'white'; e.currentTarget.style.color = opt.color; }}
+                                >
+                                    <span>{opt.emoji}</span> {opt.name}
+                                </button>
+                            ))}
                         </div>
                     </div>
                 </div>

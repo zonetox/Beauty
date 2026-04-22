@@ -202,6 +202,87 @@ export const TEMPLATE_PRESETS: Record<string, TemplatePreset> = {
             galleryLayout: 'grid',
             buttonStyle: 'pill'
         }
+    },
+    'golden-ratio': {
+        id: 'golden-ratio',
+        name: 'The Golden Ratio',
+        theme: {
+            logo_url: '/logo.svg',
+            favicon_url: '/favicon.svg',
+            colors: {
+                primary: '#B2A59B',    // Earthy Taupe
+                primary_dark: '#968A7D',
+                secondary: '#4A4540',  // Deep Espresso
+                accent: '#D4AF37',     // Classical Gold
+                background: '#F5F2F0', // Marble White
+                neutral_dark: '#2D2D2A',
+            },
+            fonts: {
+                sans: 'Inter',
+                serif: 'Playfair Display',
+            },
+        },
+        styles: {
+            heroOverlay: 'rgba(178, 165, 155, 0.1)',
+            cardStyle: 'flat',
+            mapFilter: 'contrast(1.05) brightness(1.02)',
+            galleryLayout: 'masonry',
+            buttonStyle: 'sharp'
+        }
+    },
+    'luxury-hair': {
+        id: 'luxury-hair',
+        name: 'Luxury Hair Salon',
+        theme: {
+            logo_url: '/logo.svg',
+            favicon_url: '/favicon.svg',
+            colors: {
+                primary: '#8D4949',    // Rich Sienna
+                primary_dark: '#6E3838',
+                secondary: '#422E2E',
+                accent: '#C5A059',     // Antique Brass
+                background: '#FAF7F2', // Creamy Linen
+                neutral_dark: '#1E1E1E',
+            },
+            fonts: {
+                sans: 'Inter',
+                serif: 'Cormorant Garamond',
+            },
+        },
+        styles: {
+            heroOverlay: 'rgba(141, 73, 73, 0.15)',
+            cardStyle: 'elevated',
+            mapFilter: 'saturate(1.2) contrast(1.1)',
+            galleryLayout: 'grid',
+            buttonStyle: 'pill'
+        }
+    },
+    'q-clinic': {
+        id: 'q-clinic',
+        name: 'Q Clinic — Modern',
+        theme: {
+            logo_url: '/logo.svg',
+            favicon_url: '/favicon.svg',
+            colors: {
+                primary: '#B01B4D',    // Deep Raspberry
+                primary_dark: '#880E4F',
+                secondary: '#4A148C',  // Medical Purple
+                accent: '#AD1457',     // Magenta
+                background: '#FFF5F8', // Clinic White/Pink
+                neutral_dark: '#263238',
+            },
+            fonts: {
+                sans: 'Outfit',
+                serif: 'Lora',
+            },
+        },
+        styles: {
+            heroOverlay: 'rgba(176, 27, 77, 0.08)',
+            cardStyle: 'glass',
+            mapFilter: 'brightness(1.05) contrast(0.95)',
+            galleryLayout: 'grid',
+            buttonStyle: 'pill'
+        }
     }
 };
 
@@ -262,6 +343,80 @@ export const DEMO_CONTENT: Record<string, Partial<Business>> = {
         socials: {
             instagram: 'https://instagram.com/nailora.beauty',
             tiktok: 'https://tiktok.com/@nailora'
+        }
+    },
+    'golden-ratio': {
+        name: 'Ratio Aesthetics Clinic',
+        slogan: 'The Golden Balance of Beauty',
+        description: 'Tại Ratio, chúng tôi tin vào tỷ lệ vàng của vẻ đẹp. Phương pháp của chúng tôi kết hợp khoa học tiên tiến với sự hài hòa về thẩm mỹ để phục hồi, tái tạo và làm trẻ hóa làn da của bạn.',
+        address: '789 Đường Tôn Dật Tiên, Phú Mỹ Hưng, Quận 7',
+        city: 'Hồ Chí Minh',
+        district: 'Quận 7',
+        ward: 'Tân Phong',
+        phone: '0900 111 222',
+        email: 'contact@ratio.vn',
+        categories: [BusinessCategory.CLINIC, BusinessCategory.SPA],
+        image_url: 'https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?q=80&w=2070', // Modern clinic interior
+        logo_url: 'https://api.dicebear.com/7.x/initials/svg?seed=RA&backgroundColor=B2A59B',
+        hero_slides: [
+            {
+                title: 'The Golden Balance',
+                subtitle: 'Vẻ đẹp khởi nguồn từ sự hài hòa hoàn hảo',
+                image_url: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=2070' // Professional beauty shot
+            }
+        ],
+        working_hours: {
+            'Thứ 2 - Thứ 7': '08:00 - 20:00',
+            'Chủ Nhật': '09:00 - 18:00'
+        }
+    },
+    'luxury-hair': {
+        name: 'The Hair Masters',
+        slogan: 'Luxurious Hair For You',
+        description: 'Đăng ký trực tuyến để trải nghiệm dịch vụ chăm sóc tóc chuyên nghiệp. Tại salon của chúng tôi, những bậc thầy làm tóc hàng đầu thế giới sẽ mang đến cho bạn mái tóc hoàn mỹ trong không gian sang trọng và âm nhạc tinh tế.',
+        address: '101 Đường Lê Lợi, Quận 1',
+        city: 'Hồ Chí Minh',
+        district: 'Quận 1',
+        ward: 'Bến Nghé',
+        phone: '0911 222 333',
+        email: 'salon@hairmasters.vn',
+        categories: [BusinessCategory.SALON],
+        image_url: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=2074', // Luxury salon
+        logo_url: 'https://api.dicebear.com/7.x/initials/svg?seed=HM&backgroundColor=8D4949',
+        hero_slides: [
+            {
+                title: 'LUXURIOUS HAIR FOR YOU',
+                subtitle: 'Khám phá bí mật đằng sau mái tóc rạng ngời',
+                image_url: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?q=80&w=2069' // Model with luxury hair
+            }
+        ],
+        working_hours: {
+            'Hàng ngày': '09:00 - 21:00'
+        }
+    },
+    'q-clinic': {
+        name: 'Q Clinic & Beauty',
+        slogan: 'Trust your beauty to professionals',
+        description: 'Chúng tôi sử dụng những công nghệ hiện đại và an toàn nhất trong ngành thẩm mỹ y khoa. Hãy để đội ngũ bác sĩ chuyên gia của Q Clinic chăm sóc và nâng tầm vẻ đẹp tự nhiên của bạn.',
+        address: '202 Đường Nguyễn Văn Linh, Quận 7',
+        city: 'Hồ Chí Minh',
+        district: 'Quận 7',
+        ward: 'Tân Phong',
+        phone: '0922 333 444',
+        email: 'info@qclinic.vn',
+        categories: [BusinessCategory.CLINIC],
+        image_url: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?q=80&w=2053', // Clinic operation
+        logo_url: 'https://api.dicebear.com/7.x/initials/svg?seed=QC&backgroundColor=B01B4D',
+        hero_slides: [
+            {
+                title: 'Trust your beauty to professionals',
+                subtitle: 'Sắc đẹp của bạn là sứ mệnh của chúng tôi',
+                image_url: 'https://images.unsplash.com/photo-1576091160550-2173bdb999ef?q=80&w=2070' // Healthcare professional
+            }
+        ],
+        working_hours: {
+            'Thứ 2 - Thứ 6': '08:30 - 19:30',
+            'Thứ 7 - CN': '09:00 - 17:30'
         }
     }
 };

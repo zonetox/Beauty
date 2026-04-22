@@ -18,6 +18,9 @@ const TEMPLATE_ICONS: Record<string, string> = {
     'modern-beauty': '💄',
     'luna-spa': '🪷',
     'pink-nail': '💅',
+    'golden-ratio': '⚜️',
+    'luxury-hair': '💇‍♀️',
+    'q-clinic': '🏥',
 };
 
 const TemplateSelector: React.FC<TemplateSelectorProps> = ({
@@ -48,8 +51,8 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                             disabled={disabled}
                             onClick={() => onChange(preset.id)}
                             className={`relative text-left border-2 rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-lg ${isSelected
-                                    ? 'border-primary shadow-lg shadow-primary/20 scale-[1.02]'
-                                    : 'border-gray-200 hover:border-gray-300'
+                                ? 'border-primary shadow-lg shadow-primary/20 scale-[1.02]'
+                                : 'border-gray-200 hover:border-gray-300'
                                 } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                         >
                             {/* Preview color bar */}
