@@ -64,16 +64,11 @@ const RoleBasedRedirect: React.FC<RoleBasedRedirectProps> = ({
         }
 
         // Auto-redirect based on role
-        if (roleResult.role === 'business_owner' && roleResult.business_id) {
-          navigate('/account', { replace: true });
+        if (roleResult.role === 'business' && roleResult.business_id) {
+          navigate('/dashboard', { replace: true });
         } else if (roleResult.role === 'admin') {
           // Admin can access admin panel
           navigate('/admin', { replace: true });
-        } else if (roleResult.role === 'user') {
-          // Regular user stays on current page or goes to homepage
-          if (location.pathname === '/login' || location.pathname === '/register') {
-            navigate('/', { replace: true });
-          }
         }
       } catch (err: unknown) {
         console.error('Error resolving user role:', err);

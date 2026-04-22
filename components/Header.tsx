@@ -208,7 +208,7 @@ const Header: React.FC = () => {
                           <p className="text-xs text-gray-500 truncate">{user.email}</p>
                         </div>
                         <Link
-                          to="/business-profile"
+                          to="/dashboard"
                           className="block px-4 py-2 text-sm text-neutral-dark hover:bg-primary/10 transition-colors"
                           onClick={() => {
                             setIsMenuOpen(false);
@@ -306,7 +306,7 @@ const Header: React.FC = () => {
                   </div>
                 </div>
                 <NavLink
-                  to="/business-profile"
+                  to="/dashboard"
                   className={({ isActive }) => `${mobileNavLinkClass({ isActive })} flex items-center gap-3`}
                   onClick={() => setIsMenuOpen(false)}
                 >

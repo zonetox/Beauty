@@ -11,7 +11,7 @@ import EmptyState from './EmptyState.tsx';
 type LandingPageStatus = 'Pending' | 'Approved' | 'Rejected' | 'Needs Review';
 
 const AdminLandingPageModeration: React.FC = () => {
-    const { businesses, loading } = useBusinessData();
+    const { businesses, businessLoading: loading } = useBusinessData();
     const [statusFilter, setStatusFilter] = useState<LandingPageStatus | 'all'>('all');
     const [searchQuery, setSearchQuery] = useState('');
 

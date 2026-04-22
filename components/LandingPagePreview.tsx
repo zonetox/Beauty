@@ -91,7 +91,7 @@ const LandingPagePreview: React.FC<LandingPagePreviewProps> = ({ business, confi
               {enabledSections
                 .filter(s => s.key !== 'hero') // Hero is rendered separately
                 .map(({ key }) => {
-                  const Component = SECTION_COMPONENTS[key] as React.ComponentType<{ business: Business }>;
+                  const Component = SECTION_COMPONENTS[key as keyof typeof SECTION_COMPONENTS] as React.ComponentType<{ business: Business }>;
                   if (!Component) return null;
 
                   // Special handling for sections that need different props

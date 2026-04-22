@@ -45,7 +45,7 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedbusi
         const fillColor = isFilled ? 'currentColor' : 'none';
         const strokeWidth = isFilled ? '0' : '2';
 
-        const iconColor = isHighlighted ? '#4A4A4A' : '#BFA16A'; // secondary vs primary
+        const iconColor = isHighlighted ? '#111827' : '#BFA16A'; // deep charcoal vs primary gold
         const size = isHighlighted ? 40 : 32;
         const animationClass = isHighlighted ? 'animate-bounce' : '';
 
@@ -87,8 +87,8 @@ const DirectoryMap: React.FC<DirectoryMapProps> = ({ businesses, highlightedbusi
                 zoom: 12, // City-level zoom
                 scrollWheelZoom: true,
             });
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
             }).addTo(mapRef.current);
 
             mapRef.current.on('moveend', () => {

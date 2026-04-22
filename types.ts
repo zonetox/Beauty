@@ -50,10 +50,6 @@ export enum ReviewStatus {
   HIDDEN = 'Hidden',
 }
 
-export enum StaffMemberRole {
-  ADMIN = 'Admin',
-  EDITOR = 'Editor',
-}
 
 export enum AppointmentStatus {
   PENDING = 'Pending',
@@ -220,42 +216,6 @@ export type WorkingHours = {
   [day: string]: WorkingHour;
 };
 
-// Staff permissions shared type for hooks/components
-export interface StaffPermissions {
-  can_edit_landing_page?: boolean;
-  can_edit_blog?: boolean;
-  can_manage_media?: boolean;
-  can_manage_services?: boolean;
-  is_staff_member?: boolean;
-  is_business_owner?: boolean;
-  is_owner?: boolean; // alias
-  has_access?: boolean;
-}
-
-export interface StaffMember {
-  id: string;
-  name: string;
-  email: string;
-  role: StaffMemberRole;
-}
-
-// Business Staff (Sub-user system)
-export interface BusinessStaff {
-  id: string;
-  business_id: number;
-  user_id: string;
-  role: StaffMemberRole;
-  permissions: {
-    can_edit_landing_page?: boolean;
-    can_edit_blog?: boolean;
-    can_manage_media?: boolean;
-    can_manage_services?: boolean;
-  };
-  created_at: string;
-  updated_at: string;
-  user_email?: string;
-  user_name?: string;
-}
 
 export interface PackagePermissions {
   photo_limit?: number;
@@ -361,7 +321,6 @@ export interface Business {
   working_hours?: WorkingHours | null;
   socials?: Socials;
   seo?: SEO;
-  staff: StaffMember[];
   notification_settings: NotificationSettings;
   hero_slides?: HeroSlide[];
   hero_image_url?: string;

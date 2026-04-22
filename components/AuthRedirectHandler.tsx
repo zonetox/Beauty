@@ -16,13 +16,13 @@ const AuthRedirectHandler: React.FC = () => {
         // 1. Auth is fully resolved
         if (!isDataLoaded || state === 'loading' || !user) return;
 
-        // 2. Determine if user should be redirected from homepage (all authenticated non-admins)
-        const isBusinessUser = role !== 'admin';
+        // 2. Determine redirect destination from homepage
         const isHomepage = location.pathname === '/';
-
-        if (isBusinessUser && isHomepage) {
-            console.log('[AuthRedirectHandler] Neutralizing homepage for business user, redirecting to dashboard');
-            navigate('/business-profile', { replace: true });
+        if (isHomepage) {
+            if (role === 'business') {
+                console.log('[AuthRedirectHandler] Redirecting business owner to dashboard');
+                navigate('/dashboard', { replace: true });
+            }
         }
     }, [user, state, role, isDataLoaded, location.pathname, navigate]);
 

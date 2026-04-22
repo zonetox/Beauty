@@ -5,7 +5,7 @@
  * Uses roleResolution logic to determine role from database.
  * 
  * Returns:
- * - role: Current user role (anonymous, user, business_owner, business_staff, admin)
+ * - role: Current user role (anonymous, business, admin)
  * - isLoading: Whether role is being resolved
  * - error: Any error during role resolution
  */
@@ -18,8 +18,7 @@ export interface UseUserRoleResult {
   isLoading: boolean;
   error: string | null;
   isAdmin: boolean;
-  is_business_owner: boolean;
-  isBusinessStaff: boolean;
+  is_business: boolean;
   business_id: number | null;
 }
 
@@ -31,8 +30,7 @@ export function useUserRole(): UseUserRoleResult {
     isLoading: authState === 'loading' || !isDataLoaded,
     error: error,
     isAdmin: role === 'admin',
-    is_business_owner: role === 'business_owner',
-    isBusinessStaff: role === 'business_staff',
+    is_business: role === 'business',
     business_id: business_id
   };
 }

@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useBusiness } from '../contexts/BusinessContext.tsx';
-import { StaffMember, NotificationSettings, StaffMemberRole, Business } from '../types.ts';
+import { NotificationSettings, Business } from '../types.ts';
 import LoadingState from './LoadingState.tsx';
 import EmptyState from './EmptyState.tsx';
 
@@ -73,7 +73,6 @@ const AccountSettings: React.FC = () => {
         name?: string;
         email?: string;
         phone?: string;
-        staff?: { [index: number]: { name?: string; email?: string } };
     }>({});
 
     useEffect(() => {
@@ -126,27 +125,6 @@ const AccountSettings: React.FC = () => {
             }
         }
 
-        // Validate staff members
-        if (formData.staff && formData.staff.length > 0) {
-            const staffErrors: { [index: number]: { name?: string; email?: string } } = {};
-            formData.staff.forEach((member, index) => {
-                if (member.name && member.name.trim().length < 2) {
-                    if (!staffErrors[index]) staffErrors[index] = {};
-                    staffErrors[index].name = 'Name must be at least 2 characters';
-                }
-                if (member.email) {
-                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                    if (!emailRegex.test(member.email)) {
-                        if (!staffErrors[index]) staffErrors[index] = {};
-                        staffErrors[index].email = 'Please enter a valid email address';
-                    }
-                }
-            });
-            if (Object.keys(staffErrors).length > 0) {
-                newErrors.staff = staffErrors;
-            }
-        }
-
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -176,44 +154,6 @@ const AccountSettings: React.FC = () => {
                 }
             };
         });
-    };
-
-    const handleAddStaff = () => {
-        const newStaff: StaffMember = {
-            id: crypto.randomUUID(),
-            name: '',
-            email: '',
-            role: StaffMemberRole.EDITOR,
-        };
-        setFormData(prev => prev ? { ...prev, staff: [...(prev.staff || []), newStaff] } : null);
-    };
-
-    const handleStaffChange = (index: number, field: keyof Omit<StaffMember, 'id'>, value: string) => {
-        setFormData(prev => {
-            if (!prev) return null;
-            const updatedStaff = [...(prev.staff || [])];
-            if (updatedStaff[index]) {
-                updatedStaff[index] = { ...updatedStaff[index], [field]: value as unknown as string };
-            }
-            return { ...prev, staff: updatedStaff };
-        });
-        // Clear error when user types
-        if (errors.staff && errors.staff[index]) {
-            setErrors(prev => ({
-                ...prev,
-                staff: {
-                    ...prev.staff,
-                    [index]: {
-                        ...prev.staff![index],
-                        [field]: undefined
-                    }
-                }
-            }));
-        }
-    };
-
-    const handleRemoveStaff = (id: string) => {
-        setFormData(prev => prev ? { ...prev, staff: (prev.staff || []).filter(s => s.id !== id) } : null);
     };
 
     const handleSave = async (e: React.FormEvent) => {
@@ -280,77 +220,6 @@ const AccountSettings: React.FC = () => {
                     className="px-4 py-2 bg-gray-300 text-gray-600 rounded-md opacity-50 cursor-not-allowed"
                 >
                     Update Password (Not Available Here)
-                </button>
-            </SectionCard>
-
-            <SectionCard title="Staff Management">
-                <p className="text-sm text-gray-600 mb-4">
-                    Add staff members who can help manage your business profile. They will receive notifications
-                    based on their role.
-                </p>
-                <div className="space-y-3">
-                    {(formData.staff || []).map((member, index) => (
-                        <div
-                            key={member.id}
-                            className="grid grid-cols-1 md:grid-cols-4 gap-3 items-start p-3 bg-gray-50 rounded-md border border-gray-200"
-                        >
-                            <div className="md:col-span-1">
-                                <input
-                                    value={member.name}
-                                    onChange={e => handleStaffChange(index, 'name', e.target.value)}
-                                    placeholder="Name"
-                                    className={`block w-full px-3 py-2 border rounded-md ${errors.staff?.[index]?.name ? 'border-red-500' : 'border-gray-300'
-                                        }`}
-                                />
-                                {errors.staff?.[index]?.name && (
-                                    <p className="mt-1 text-xs text-red-500">{errors.staff[index].name}</p>
-                                )}
-                            </div>
-                            <div className="md:col-span-1">
-                                <input
-                                    type="email"
-                                    value={member.email}
-                                    onChange={e => handleStaffChange(index, 'email', e.target.value)}
-                                    placeholder="Email"
-                                    className={`block w-full px-3 py-2 border rounded-md ${errors.staff?.[index]?.email ? 'border-red-500' : 'border-gray-300'
-                                        }`}
-                                />
-                                {errors.staff?.[index]?.email && (
-                                    <p className="mt-1 text-xs text-red-500">{errors.staff[index].email}</p>
-                                )}
-                            </div>
-                            <div className="md:col-span-1">
-                                <select
-                                    id={`staff-role-${index}`}
-                                    value={member.role}
-                                    onChange={e => handleStaffChange(index, 'role', e.target.value)}
-                                    title="Chọn vai trò nhân viên"
-                                    className="block w-full px-3 py-2 border border-gray-300 rounded-md"
-                                >
-                                    {Object.values(StaffMemberRole).map(role => (
-                                        <option key={role} value={role}>{role}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => handleRemoveStaff(member.id)}
-                                className="text-red-500 font-semibold text-sm hover:underline justify-self-end"
-                            >
-                                Remove
-                            </button>
-                        </div>
-                    ))}
-                    {(!formData.staff || formData.staff.length === 0) && (
-                        <p className="text-sm text-gray-500 italic">No staff members added yet.</p>
-                    )}
-                </div>
-                <button
-                    type="button"
-                    onClick={handleAddStaff}
-                    className="text-secondary font-semibold text-sm hover:underline mt-2"
-                >
-                    + Add Staff Member
                 </button>
             </SectionCard>
 

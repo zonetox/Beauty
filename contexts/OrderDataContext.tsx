@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
 import { Order, OrderStatus } from '../types.ts';
 import { supabase } from '../lib/supabaseClient.ts';
-import { useAdminPlatform } from './AdminPlatformContext.tsx';
+import { useAdminPlatform } from './AdminContext.tsx';
 import { useAdminAuth } from './AuthContext.tsx';
 
 

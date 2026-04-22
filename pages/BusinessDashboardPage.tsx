@@ -19,7 +19,7 @@ import { useNavigate } from 'react-router-dom';
 
 export type ActiveTab = 'dashboard' | 'profile' | 'services' | 'billing' | 'blog' | 'gallery' | 'reviews' | 'stats' | 'settings' | 'bookings' | 'support' | 'deals';
 
-const UserBusinessDashboardPage: React.FC = () => {
+const BusinessDashboardPage: React.FC = () => {
     const { currentBusiness } = useBusinessAuth();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
@@ -35,15 +35,15 @@ const UserBusinessDashboardPage: React.FC = () => {
     }, [currentBusiness?.id]);
 
     const { isDataLoaded, role } = useAuth();
-    const isBusinessUser = role === 'business_owner' || role === 'business_staff';
+    const isBusiness = role === 'business';
 
     useEffect(() => {
         if (!isDataLoaded) return;
-        if (!isBusinessUser) {
-            navigate('/account', { replace: true });
+        if (!isBusiness) {
+            navigate('/login', { replace: true });
             return;
         }
-    }, [isBusinessUser, isDataLoaded, navigate]);
+    }, [isBusiness, isDataLoaded, navigate]);
 
     if (!isDataLoaded) {
         return (
@@ -54,20 +54,17 @@ const UserBusinessDashboardPage: React.FC = () => {
         );
     }
 
-    if (!currentBusiness) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-background">
-                <div className="w-16 h-16 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
-                <div className="text-center mt-8">
-                    <p className="text-xl font-serif text-primary italic">
-                        {isBusinessUser ? 'Đang đồng bộ dữ liệu tinh hoa của quý khách...' : 'Đang chuyển hướng...'}
-                    </p>
+    // Non-blocking skeleton or simplified loading state if business record is still arriving
+    const renderDashboardContent = () => {
+        if (!currentBusiness) {
+            return (
+                <div className="flex flex-col items-center justify-center min-h-[400px]">
+                    <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
+                    <p className="mt-6 text-lg font-serif italic text-primary">Đang khởi tạo không gian làm việc...</p>
                 </div>
-            </div>
-        );
-    }
+            );
+        }
 
-    const renderContent = () => {
         switch (activeTab) {
             case 'dashboard': return <DashboardOverview setActiveTab={setActiveTab} />;
             case 'profile': return <BusinessProfileEditor />;
@@ -92,12 +89,12 @@ const UserBusinessDashboardPage: React.FC = () => {
                     <div>
                         <h1 className="text-6xl md:text-7xl font-serif text-primary tracking-tight mb-4">Bảng điều khiển</h1>
                         <p className="text-neutral-500 font-light italic text-xl">
-                            Hân hạnh chào mừng <strong className="text-accent font-bold">{currentBusiness.name}</strong> trở lại 1Beauty.asia
+                            Hân hạnh chào mừng <strong className="text-accent font-bold">{currentBusiness?.name || 'Đối tác'}</strong> trở lại 1Beauty.asia
                         </p>
                     </div>
                 </div>
 
-                {!currentBusiness.is_active && (
+                {currentBusiness && !currentBusiness.is_active && (
                     <div className="p-10 glass-card border-l-4 border-accent shadow-premium mb-20 animate-fade-in-up delay-100 rounded-[2.5rem]">
                         <div className="flex items-start space-x-8">
                             <div className="bg-accent/10 p-4 rounded-full text-accent shadow-inner">
@@ -125,7 +122,7 @@ const UserBusinessDashboardPage: React.FC = () => {
                     </aside>
                     <main className="md:col-span-9 glass-card rounded-[2.5rem] shadow-premium min-h-[900px] overflow-hidden animate-fade-in-up delay-300 border border-white/40">
                         <div className="p-6 md:p-12">
-                            {renderContent()}
+                            {renderDashboardContent()}
                         </div>
                     </main>
                 </div>
@@ -134,4 +131,4 @@ const UserBusinessDashboardPage: React.FC = () => {
     );
 };
 
-export default UserBusinessDashboardPage;
+export default BusinessDashboardPage;

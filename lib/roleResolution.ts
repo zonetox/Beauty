@@ -22,21 +22,20 @@ import { supabase } from './supabaseClient.ts';
 import { User } from '@supabase/supabase-js';
 import { Profile } from '../types.ts';
 
-export type UserRole = 'anonymous' | 'user' | 'business_owner' | 'business_staff' | 'admin';
+export type UserRole = 'anonymous' | 'business' | 'admin';
 
 export interface RoleResolutionResult {
   role: UserRole;
   profileId: string | null;
   business_id: number | null;
   isAdmin: boolean;
-  is_business_owner: boolean;
-  isBusinessStaff: boolean;
+  is_business: boolean;
   profile?: Profile | null; // Add dynamic profile data
   error?: string;
 }
 
 interface UserContextRpcResult {
-  role: UserRole;
+  role: 'anonymous' | 'user' | 'business_owner' | 'business_staff' | 'admin';
   profile: Profile & { id: string };
   business_id: number | null;
 }
@@ -70,8 +69,7 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
       profileId: null,
       business_id: null,
       isAdmin: false,
-      is_business_owner: false,
-      isBusinessStaff: false
+      is_business: false
     };
   }
 
@@ -95,20 +93,24 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
         profileId: null,
         business_id: null,
         isAdmin: false,
-        is_business_owner: false,
-        isBusinessStaff: false,
+        is_business: false,
         error: `Context not found for user ${user.id}`
       };
     }
 
+    // Force map deprecated roles to business_owner
+    let resolvedRole = context.role as UserRole;
+    if (context.role === 'user' || context.role === 'business_staff' || context.role === 'business_owner') {
+      resolvedRole = 'business';
+    }
+
     // Map RPC response to RoleResolutionResult
     return {
-      role: context.role,
+      role: resolvedRole,
       profileId: context.profile?.id || null,
       business_id: context.business_id,
-      isAdmin: context.role === 'admin',
-      is_business_owner: context.role === 'business_owner',
-      isBusinessStaff: context.role === 'business_staff',
+      isAdmin: resolvedRole === 'admin',
+      is_business: resolvedRole === 'business',
       profile: context.profile || null
     };
 
@@ -120,8 +122,7 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
       profileId: null,
       business_id: null,
       isAdmin: false,
-      is_business_owner: false,
-      isBusinessStaff: false,
+      is_business: false,
       error: `Role resolution failed: ${errorMessage}`
     };
   }

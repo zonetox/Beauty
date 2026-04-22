@@ -10,14 +10,13 @@ import RichTextEditor from './RichTextEditor.tsx';
 import LoadingState from './LoadingState.tsx';
 import EmptyState from './EmptyState.tsx';
 import { uploadFile, deleteFileByUrl } from '../lib/storage.ts';
-import { useStaffPermissions } from '../hooks/useStaffPermissions.ts';
-import ForbiddenState from './ForbiddenState.tsx';
+
+
 import ConfirmDialog from './ConfirmDialog.tsx';
 
 const BlogManager: React.FC = () => {
     const { currentBusiness } = useBusinessAuth();
     const { posts, loading, addPost, updatePost, deletePost } = useBusinessBlogData();
-    const staffPermissions = useStaffPermissions();
 
     const [editingPost, setEditingPost] = useState<Partial<BusinessBlogPost> | null>(null);
     const [isSaving, setIsSaving] = useState(false);
@@ -39,18 +38,6 @@ const BlogManager: React.FC = () => {
                 <EmptyState
                     title="No business found"
                     message="Please select a business to manage blog posts."
-                />
-            </div>
-        );
-    }
-
-    // Check staff permissions: must be business owner or staff with can_edit_blog permission
-    if (!staffPermissions.is_business_owner && !staffPermissions.can_edit_blog) {
-        return (
-            <div className="p-8">
-                <ForbiddenState
-                    title="Access Denied"
-                    message="You don't have permission to manage blog posts. Only business owners and staff members with blog editing permissions can access this section."
                 />
             </div>
         );
@@ -201,7 +188,7 @@ const BlogManager: React.FC = () => {
             toast.error(message);
         }
     };
-    
+
     const handleDelete = (post: BusinessBlogPost) => {
         setConfirmDelete({ isOpen: true, post });
     };
@@ -336,9 +323,8 @@ const BlogManager: React.FC = () => {
                                 value={editingPost.title || ''}
                                 onChange={e => handleFieldChange('title', e.target.value)}
                                 maxLength={200}
-                                className={`w-full p-3 border rounded-md focus:outline-none focus:ring-primary focus:border-primary ${
-                                    errors.title ? 'border-red-500' : 'border-gray-300'
-                                }`}
+                                className={`w-full p-3 border rounded-md focus:outline-none focus:ring-primary focus:border-primary ${errors.title ? 'border-red-500' : 'border-gray-300'
+                                    }`}
                                 placeholder="Enter post title"
                                 disabled={isSaving}
                             />
@@ -356,9 +342,8 @@ const BlogManager: React.FC = () => {
                                 onChange={e => handleFieldChange('excerpt', e.target.value)}
                                 rows={3}
                                 maxLength={300}
-                                className={`w-full p-3 border rounded-md focus:outline-none focus:ring-primary focus:border-primary ${
-                                    errors.excerpt ? 'border-red-500' : 'border-gray-300'
-                                }`}
+                                className={`w-full p-3 border rounded-md focus:outline-none focus:ring-primary focus:border-primary ${errors.excerpt ? 'border-red-500' : 'border-gray-300'
+                                    }`}
                                 placeholder="Enter a short summary of your post"
                                 disabled={isSaving}
                             />
@@ -371,7 +356,7 @@ const BlogManager: React.FC = () => {
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Featured Image <span className="text-red-500">*</span>
                             </label>
-                            
+
                             {/* Image Upload */}
                             <div className="mb-2">
                                 <input
@@ -384,9 +369,8 @@ const BlogManager: React.FC = () => {
                                 />
                                 <label
                                     htmlFor="image-upload"
-                                    className={`inline-block px-4 py-2 bg-gray-100 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-200 ${
-                                        isUploadingImage || isSaving ? 'opacity-50 cursor-not-allowed' : ''
-                                    }`}
+                                    className={`inline-block px-4 py-2 bg-gray-100 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-200 ${isUploadingImage || isSaving ? 'opacity-50 cursor-not-allowed' : ''
+                                        }`}
                                 >
                                     {isUploadingImage ? 'Uploading...' : 'Upload Image'}
                                 </label>
@@ -398,9 +382,8 @@ const BlogManager: React.FC = () => {
                                 type="text"
                                 value={editingPost.image_url || ''}
                                 onChange={e => handleFieldChange('image_url', e.target.value)}
-                                className={`w-full p-3 border rounded-md focus:outline-none focus:ring-primary focus:border-primary ${
-                                    errors.image_url ? 'border-red-500' : 'border-gray-300'
-                                }`}
+                                className={`w-full p-3 border rounded-md focus:outline-none focus:ring-primary focus:border-primary ${errors.image_url ? 'border-red-500' : 'border-gray-300'
+                                    }`}
                                 placeholder="Enter image URL (e.g., https://...) or upload image above"
                                 disabled={isSaving || isUploadingImage}
                             />
@@ -491,9 +474,8 @@ const BlogManager: React.FC = () => {
                                             value={editingPost.seo?.title || ''}
                                             onChange={e => handleSEOChange('title', e.target.value)}
                                             maxLength={60}
-                                            className={`w-full p-3 border rounded-md focus:outline-none focus:ring-primary focus:border-primary ${
-                                                errors.seoTitle ? 'border-red-500' : 'border-gray-300'
-                                            }`}
+                                            className={`w-full p-3 border rounded-md focus:outline-none focus:ring-primary focus:border-primary ${errors.seoTitle ? 'border-red-500' : 'border-gray-300'
+                                                }`}
                                             placeholder="SEO title (max 60 characters)"
                                             disabled={isSaving}
                                         />
@@ -509,9 +491,8 @@ const BlogManager: React.FC = () => {
                                             onChange={e => handleSEOChange('description', e.target.value)}
                                             rows={2}
                                             maxLength={160}
-                                            className={`w-full p-3 border rounded-md focus:outline-none focus:ring-primary focus:border-primary ${
-                                                errors.seoDescription ? 'border-red-500' : 'border-gray-300'
-                                            }`}
+                                            className={`w-full p-3 border rounded-md focus:outline-none focus:ring-primary focus:border-primary ${errors.seoDescription ? 'border-red-500' : 'border-gray-300'
+                                                }`}
                                             placeholder="SEO description (max 160 characters)"
                                             disabled={isSaving}
                                         />
@@ -527,9 +508,8 @@ const BlogManager: React.FC = () => {
                                             value={editingPost.seo?.keywords || ''}
                                             onChange={e => handleSEOChange('keywords', e.target.value)}
                                             maxLength={200}
-                                            className={`w-full p-3 border rounded-md focus:outline-none focus:ring-primary focus:border-primary ${
-                                                errors.seoKeywords ? 'border-red-500' : 'border-gray-300'
-                                            }`}
+                                            className={`w-full p-3 border rounded-md focus:outline-none focus:ring-primary focus:border-primary ${errors.seoKeywords ? 'border-red-500' : 'border-gray-300'
+                                                }`}
                                             placeholder="SEO keywords (comma-separated, max 200 characters)"
                                             disabled={isSaving}
                                         />
@@ -627,11 +607,10 @@ const BlogManager: React.FC = () => {
                                             <p className="text-sm text-gray-500 line-clamp-2 mb-2">{post.excerpt}</p>
                                             <div className="flex items-center gap-3 flex-wrap">
                                                 <span
-                                                    className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                                                        post.status === BusinessBlogPostStatus.PUBLISHED
-                                                            ? 'bg-green-100 text-green-800'
-                                                            : 'bg-gray-200 text-gray-700'
-                                                    }`}
+                                                    className={`text-xs font-semibold px-2 py-0.5 rounded-full ${post.status === BusinessBlogPostStatus.PUBLISHED
+                                                        ? 'bg-green-100 text-green-800'
+                                                        : 'bg-gray-200 text-gray-700'
+                                                        }`}
                                                 >
                                                     {post.status}
                                                 </span>
@@ -653,9 +632,8 @@ const BlogManager: React.FC = () => {
                                             </button>
                                             <button
                                                 onClick={() => handlePublishToggle(post)}
-                                                className={`font-semibold text-sm hover:underline text-left ${
-                                                    post.status === BusinessBlogPostStatus.DRAFT ? 'text-green-600' : 'text-yellow-600'
-                                                }`}
+                                                className={`font-semibold text-sm hover:underline text-left ${post.status === BusinessBlogPostStatus.DRAFT ? 'text-green-600' : 'text-yellow-600'
+                                                    }`}
                                                 disabled={isDeleting !== null}
                                             >
                                                 {post.status === BusinessBlogPostStatus.DRAFT ? 'Publish' : 'Unpublish'}

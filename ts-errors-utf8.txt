@@ -1,0 +1,32 @@
+﻿
+> 1beauty-asia@0.0.0 type-check
+> tsc --noEmit
+
+components/admin/AdminBusinessesTab.tsx(23,25): error TS2339: Property 'loading' does not exist on type 'PublicDataContextType'.
+components/admin/AdminOrdersTab.tsx(2,23): error TS6133: 'Order' is declared but its value is never read.
+components/admin/AdminUserManagementTab.tsx(5,1): error TS6133: 'toast' is declared but its value is never read.
+components/admin/AdminUserManagementTab.tsx(14,5): error TS6133: 'currentUser' is declared but its value is never read.
+components/AdminLandingPageModeration.tsx(14,25): error TS2339: Property 'loading' does not exist on type 'PublicDataContextType'.
+components/BlogManager.tsx(13,37): error TS2307: Cannot find module '../hooks/useStaffPermissions.ts' or its corresponding type declarations.
+components/business-landing/HeroSection.tsx(16,11): error TS6133: 'isEditing' is declared but its value is never read.
+components/BusinessProfileEditor.tsx(14,37): error TS2307: Cannot find module '../hooks/useStaffPermissions.ts' or its corresponding type declarations.
+components/LandingPagePreview.tsx(94,37): error TS7053: Element implicitly has an 'any' type because expression of type '"contact" | "services" | "gallery" | "team" | "reviews" | "hero" | "trust" | "cta" | "products"' can't be used to index type '{ readonly hero: FC<HeroSectionProps>; readonly trust: () => null; readonly services: FC<{ business: Business; }>; readonly gallery: FC<GallerySectionProps>; readonly team: FC<...>; readonly reviews: FC<...>; readonly cta: FC<...>; readonly contact: FC<...>; }'.
+  Property 'products' does not exist on type '{ readonly hero: FC<HeroSectionProps>; readonly trust: () => null; readonly services: FC<{ business: Business; }>; readonly gallery: FC<GallerySectionProps>; readonly team: FC<...>; readonly reviews: FC<...>; readonly cta: FC<...>; readonly contact: FC<...>; }'.
+components/RoleBasedRedirect.tsx(72,20): error TS2367: This comparison appears to be unintentional because the types '"anonymous" | "business_owner"' and '"user"' have no overlap.
+components/StaffInviteModal.tsx(6,10): error TS2305: Module '"../types.ts"' has no exported member 'StaffMemberRole'.
+components/StaffInviteModal.tsx(7,10): error TS2305: Module '"../types.ts"' has no exported member 'BusinessStaff'.
+components/StaffManagement.tsx(5,10): error TS2305: Module '"../types.ts"' has no exported member 'BusinessStaff'.
+components/StaffManagement.tsx(5,25): error TS2305: Module '"../types.ts"' has no exported member 'StaffMemberRole'.
+contexts/AdminContext.tsx(1,55): error TS6133: 'useMemo' is declared but its value is never read.
+contexts/AuthContext.tsx(4,34): error TS2307: Cannot find module './AdminPlatformContext.tsx' or its corresponding type declarations.
+contexts/OrderDataContext.tsx(4,34): error TS2307: Cannot find module './AdminPlatformContext.tsx' or its corresponding type declarations.
+contexts/StaffContext.tsx(3,10): error TS2305: Module '"../types.ts"' has no exported member 'BusinessStaff'.
+contexts/StaffContext.tsx(3,25): error TS2305: Module '"../types.ts"' has no exported member 'StaffMemberRole'.
+pages/AdminPage.tsx(42,606): error TS2353: Object literal may only specify known properties, and 'staff' does not exist in type 'Business'.
+pages/BusinessSetupPage.tsx(20,61): error TS2367: This comparison appears to be unintentional because the types '"admin" | "anonymous"' and '"business_staff"' have no overlap.
+pages/ForBusinessPage.tsx(18,32): error TS2339: Property 'isBusinessStaff' does not exist on type 'UseUserRoleResult'.
+pages/RegisterPage.tsx(17,36): error TS2339: Property 'isBusinessStaff' does not exist on type 'UseUserRoleResult'.
+pages/UserBusinessDashboardPage.tsx(38,57): error TS2367: This comparison appears to be unintentional because the types '"admin" | "anonymous"' and '"business_staff"' have no overlap.
+providers/AuthProvider.tsx(8,1): error TS6133: 'React' is declared but its value is never read.
+src/features/directory/types.ts(1,1): error TS6133: 'Business' is declared but its value is never read.
+src/features/templates/sections/HeroSection.tsx(16,15): error TS7030: Not all code paths return a value.

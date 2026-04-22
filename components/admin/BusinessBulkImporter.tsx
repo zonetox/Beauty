@@ -230,7 +230,7 @@ const BusinessBulkImporter: React.FC = () => {
                         email,
                         password,
                         email_confirm: true,
-                        user_metadata: { full_name: name, role: 'business_owner' }
+                        user_metadata: { full_name: name, role: 'business' }
                     });
                     if (createError) throw createError;
                     user_id = userData.user.id;

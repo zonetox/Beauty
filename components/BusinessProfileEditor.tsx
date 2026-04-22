@@ -11,7 +11,7 @@ import { Business, BusinessCategory, LandingPageConfig, HeroSlide, TrustIndicato
 import { uploadFile } from '../lib/storage.ts';
 import LoadingState from './LoadingState.tsx';
 // import EmptyState from './EmptyState.tsx';
-import { useStaffPermissions } from '../hooks/useStaffPermissions.ts';
+
 import LandingPageSectionEditor from './LandingPageSectionEditor.tsx';
 import LandingPagePreview from './LandingPagePreview.tsx';
 
@@ -85,7 +85,6 @@ const BusinessProfileEditor: React.FC = () => {
     const { currentBusiness } = useBusinessAuth();
     const { updateBusiness } = useBusinessData();
     const navigate = useNavigate();
-    const staffPermissions = useStaffPermissions();
 
     const [formData, setFormData] = useState<Business | null>(null);
     const [isSaving, setIsSaving] = useState(false);
@@ -874,7 +873,7 @@ const BusinessProfileEditor: React.FC = () => {
                             <LandingPageSectionEditor
                                 config={formData.landing_page_config}
                                 onChange={handlelanding_page_configChange}
-                                disabled={!staffPermissions.is_owner && !staffPermissions.can_edit_landing_page}
+                                disabled={false}
                             />
                         ) : (
                             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">

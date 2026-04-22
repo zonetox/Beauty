@@ -16,11 +16,11 @@ const MapBusinessCard: React.FC<MapBusinessCardProps> = ({ business }) => {
     const reviewCount = business.review_count || 0;
 
     return (
-        <div style={{ width: '220px', fontFamily: 'Inter, sans-serif' }}>
+        <div style={{ width: '220px', fontFamily: 'Inter, sans-serif', backgroundColor: 'white', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 4px 15px -3px rgba(0, 0, 0, 0.1), 0 2px 6px -2px rgba(0, 0, 0, 0.05)' }}>
             <a href={`/business/${slug}`} target="_blank" rel="noopener noreferrer">
-                <img src={imageUrl} alt={name} style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '4px' }} />
+                <img src={imageUrl} alt={name} style={{ width: '100%', height: '120px', objectFit: 'cover' }} />
             </a>
-            <div style={{ padding: '8px 0 0' }}>
+            <div style={{ padding: '12px' }}>
                 <h4 style={{ fontWeight: 700, fontSize: '1rem', margin: '0 0 4px', color: '#2D2D2D', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     <a href={`/business/${slug}`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
                         {name}

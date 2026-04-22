@@ -19,7 +19,7 @@ const LoginPage: React.FC = () => {
     // Redirect already-authenticated users away from login page
     useEffect(() => {
         if (state === 'authenticated' && isDataLoaded && role && role !== 'anonymous') {
-            navigate('/business-profile', { replace: true });
+            navigate('/dashboard', { replace: true });
         }
     }, [state, isDataLoaded, role, navigate]);
 
@@ -30,7 +30,7 @@ const LoginPage: React.FC = () => {
 
         try {
             await login(email, password);
-            navigate('/business-profile', { replace: true });
+            navigate('/dashboard', { replace: true });
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Đăng nhập thất bại.';
             setError(message);

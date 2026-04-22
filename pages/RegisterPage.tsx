@@ -14,7 +14,7 @@ import { initializeUserProfile } from '../lib/postSignupInitialization';
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const { register, refreshAuth, user, state } = useAuth();
-  const { role, is_business_owner, isBusinessStaff, isLoading: roleLoading } = useUserRole();
+  const { role, is_business, isLoading: roleLoading } = useUserRole();
   const [formData, setFormData] = useState({
     business_name: '',
     email: '',
@@ -24,20 +24,20 @@ const RegisterPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  // BLOCK ACCESS: Business owners, staff, and admins should not see registration form
-  // Only anonymous users and regular users (without business access) can register
+  // BLOCK ACCESS: Business owners and admins should not see registration form
+  // Only anonymous users can register
   useEffect(() => {
     if (state !== 'loading' && !roleLoading && user) {
-      if (is_business_owner || isBusinessStaff) {
+      if (is_business) {
         toast.success('Bạn đã có quyền truy cập doanh nghiệp. Đang chuyển đến dashboard...');
-        navigate('/account', { replace: true });
+        navigate('/dashboard', { replace: true });
       } else if (role === 'admin') {
         // Admins should use admin panel to create businesses, not registration form
         toast.success('Quản trị viên không thể sử dụng form đăng ký. Vui lòng sử dụng admin panel.');
         navigate('/admin', { replace: true });
       }
     }
-  }, [user, state, roleLoading, role, is_business_owner, isBusinessStaff, navigate]);
+  }, [user, state, roleLoading, role, is_business, navigate]);
 
   // Show loading state while checking access
   if (state === 'loading' || roleLoading) {
@@ -52,7 +52,7 @@ const RegisterPage: React.FC = () => {
   }
 
   // Block access if user already has business access or is admin
-  if (user && (is_business_owner || isBusinessStaff || role === 'admin')) {
+  if (user && (is_business || role === 'admin')) {
     return null; // Will redirect via useEffect
   }
 
@@ -119,28 +119,11 @@ const RegisterPage: React.FC = () => {
         throw new Error(profileResult.error || 'Khởi tạo tài khoản thất bại. Vui lòng thử lại.');
       }
 
-      // 3. For business accounts, wait for the DB trigger to create the business record
-      // polling the profiles table to check if business_id has been set by the trigger
-      let businessLinked = false;
-      const maxWaitMs = 5000;
-      const startTime = Date.now();
-      while (!businessLinked && (Date.now() - startTime) < maxWaitMs) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('business_id')
-          .eq('id', newUser.id)
-          .single();
-        if (profileData?.business_id) {
-          businessLinked = true;
-          break;
-        }
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
+      // 3. Redirection to Business Dashboard
+      // Removed polling loop for business_id as Dashboard now handles asynchronous linking gracefully.
       await refreshAuth();
-
-      // 4. Redirection to Business Dashboard
       toast.success('Đăng ký thành công! Chào mừng đối tác đến với 1Beauty.asia.');
-      navigate('/business-profile', { replace: true });
+      navigate('/dashboard', { replace: true });
     } catch (err: unknown) {
       const error = err as Record<string, unknown>;
       const errorMessage = (error.message as string) || 'An unexpected error occurred during registration.';

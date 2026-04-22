@@ -3,11 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../providers/AuthProvider.tsx';
 
 /**
- * Legacy Business Setup Page
  * 
  * This page is deprecated in favor of the single-step registration flow.
- * It now serves as a redirector: business owners go to /business-profile,
- * regular users go to /account.
+ * It now serves as a redirector.
  */
 const BusinessSetupPage: React.FC = () => {
     const navigate = useNavigate();
@@ -17,12 +15,12 @@ const BusinessSetupPage: React.FC = () => {
         // Wait for auth to be fully resolved before redirecting
         if (state === 'loading' || !isDataLoaded) return;
 
-        const isBusinessUser = role === 'business_owner' || role === 'business_staff';
-        if (isBusinessUser) {
-            navigate('/business-profile', { replace: true });
+        const isBusiness = role === 'business';
+        if (isBusiness) {
+            navigate('/dashboard', { replace: true });
         } else {
-            // Regular users or new registrants go to account page
-            navigate('/account', { replace: true });
+            // Admins or other roles
+            navigate('/', { replace: true });
         }
     }, [navigate, role, state, isDataLoaded]);
 

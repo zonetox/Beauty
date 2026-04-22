@@ -15,17 +15,17 @@ import { useEffect } from 'react';
 
 const ForBusinessPage: React.FC = () => {
     const { user, state } = useAuth();
-    const { is_business_owner, isBusinessStaff, isLoading } = useUserRole();
+    const { is_business, isLoading } = useUserRole();
     const navigate = useNavigate();
 
-    // BLOCK ACCESS: Redirect business owners and staff
+    // BLOCK ACCESS: Redirect business owners
     useEffect(() => {
         if (state !== 'loading' && !isLoading && user) {
-            if (is_business_owner || isBusinessStaff) {
-                navigate('/business-profile', { replace: true });
+            if (is_business) {
+                navigate('/dashboard', { replace: true });
             }
         }
-    }, [user, state, isLoading, is_business_owner, isBusinessStaff, navigate]);
+    }, [user, state, isLoading, is_business, navigate]);
 
     // Show loading while checking
     if (state === 'loading' || isLoading) {
@@ -40,7 +40,7 @@ const ForBusinessPage: React.FC = () => {
     }
 
     // Block if user has business access
-    if (user && (is_business_owner || isBusinessStaff)) {
+    if (user && is_business) {
         return null; // Will redirect via useEffect
     }
 

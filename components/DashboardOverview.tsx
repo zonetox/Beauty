@@ -5,7 +5,7 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { useBusiness, useAnalyticsData } from '../contexts/BusinessContext.tsx';
 import { MembershipTier, Announcement, AnalyticsDataPoint, AppointmentStatus, OrderStatus } from '../types.ts';
-import { ActiveTab } from '../pages/UserBusinessDashboardPage';
+import { ActiveTab } from '../pages/BusinessDashboardPage.tsx';
 import { useAdmin } from '../contexts/AdminContext.tsx';
 import LoadingState from './LoadingState.tsx';
 import EmptyState from './EmptyState.tsx';
