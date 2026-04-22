@@ -131,8 +131,13 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
     delete businessData.team;
     delete businessData.deals;
     delete businessData.reviews;
+    delete businessData.business_blog_posts;
+    delete (businessData as any).businessBlogPosts; // Just in case
     const { data, error } = await supabase.from('businesses').insert(toSnakeCase(businessData) as any).select().single();
-    if (error) { console.error('Error adding business:', error.message); return null; }
+    if (error) {
+      console.error('Error adding business:', error.message);
+      throw error;
+    }
     if (data) {
       await refetchAllPublicData();
       return data as Business;

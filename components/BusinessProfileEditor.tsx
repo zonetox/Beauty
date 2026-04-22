@@ -188,8 +188,24 @@ const BusinessProfileEditor: React.FC = () => {
                 district: '',
                 ward: '',
                 phone: '',
+                image_url: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=2074', // Default placeholder
                 categories: [],
+                tags: [],
+                rating: 5,
+                review_count: 0,
+                view_count: 0,
+                joined_date: new Date().toISOString(),
                 is_active: false,
+                is_verified: false,
+                membership_tier: 'Free',
+                template_id: 'luxury-minimal',
+                socials: {},
+                seo: {},
+                notification_settings: {
+                    review_alerts: true,
+                    booking_requests: true,
+                    platform_news: true
+                },
                 landing_page_config: {
                     sections: {
                         hero: { enabled: true, order: 1 },
@@ -200,9 +216,10 @@ const BusinessProfileEditor: React.FC = () => {
                         reviews: { enabled: true, order: 6 },
                         cta: { enabled: true, order: 7 },
                         contact: { enabled: true, order: 8 },
+                        products: { enabled: false, order: 9 },
                     },
                 }
-            } as Business);
+            } as any as Business);
             setworking_hoursList([{ day: '', time: '' }]);
         }
     }, [currentBusiness]);
@@ -455,14 +472,31 @@ const BusinessProfileEditor: React.FC = () => {
                 await updateBusiness(formData);
                 toast.success('Profile saved successfully!');
             } else {
-                const newBusinessData = { ...formData };
+                // For new business, ensure owner_id and slug are set
+                if (!user?.id) {
+                    toast.error('Bạn cần đăng nhập để thực hiện thao tác này.');
+                    return;
+                }
+
+                const name = formData.name || 'Cửa hàng của tôi';
+                const slug = `${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${Math.random().toString(36).substring(2, 7)}`;
+
+                const newBusinessData = {
+                    ...formData,
+                    name,
+                    slug,
+                    owner_id: user.id,
+                    is_active: true,
+                    membership_tier: formData.membership_tier || 'Free'
+                } as Business;
+
                 const newBusiness = await addBusiness(newBusinessData);
-                if (newBusiness && user?.id) {
+                if (newBusiness) {
                     await supabase.from('profiles').update({ business_id: newBusiness.id }).eq('id', user.id);
                     toast.success('Hồ sơ doanh nghiệp đã được khởi tạo thành công!');
                     window.location.reload(); // Reload to pick up context correctly
                 } else {
-                    toast.error('Tạo doanh nghiệp thất bại.');
+                    toast.error('Tạo doanh nghiệp thất bại. Vui lòng kiểm tra lại thông tin.');
                 }
             }
         } catch (error: unknown) {
