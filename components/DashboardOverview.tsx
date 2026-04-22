@@ -239,11 +239,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
         return <div className="p-8"><LoadingState message="Đang tải dữ liệu..." /></div>;
     }
 
-    if (!currentBusiness) {
-        return <div className="p-8"><EmptyState title="Không tìm thấy doanh nghiệp" message="Vui lòng hoàn tất quy trình đăng ký." /></div>;
-    }
-
-    const isVip = currentBusiness.membership_tier === MembershipTier.VIP;
+    const isVip = currentBusiness ? currentBusiness.membership_tier === MembershipTier.VIP : false;
 
     return (
         <div className="space-y-12 animate-fade-in-up">

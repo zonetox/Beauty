@@ -56,14 +56,6 @@ const BusinessDashboardPage: React.FC = () => {
 
     // Non-blocking skeleton or simplified loading state if business record is still arriving
     const renderDashboardContent = () => {
-        if (!currentBusiness) {
-            return (
-                <div className="flex flex-col items-center justify-center min-h-[400px]">
-                    <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
-                    <p className="mt-6 text-lg font-serif italic text-primary">Đang khởi tạo không gian làm việc...</p>
-                </div>
-            );
-        }
 
         switch (activeTab) {
             case 'dashboard': return <DashboardOverview setActiveTab={setActiveTab} />;
