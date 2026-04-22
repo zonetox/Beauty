@@ -89,7 +89,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
         currentBusiness ? getUnreadAnnouncements(currentBusiness.id) : []
     );
 
-    const isLoading = !currentBusiness || ordersLoading || reviewsLoading;
+    const isLoading = (currentBusiness && (ordersLoading || reviewsLoading)) || false;
 
     const handleDismissAnnouncement = (id: string) => {
         if (currentBusiness) {
@@ -240,6 +240,32 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({ setActiveTab }) =
     }
 
     const isVip = currentBusiness ? currentBusiness.membership_tier === MembershipTier.VIP : false;
+
+    // If no business profile yet, show welcome screen
+    if (!currentBusiness) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[500px] text-center space-y-8 animate-fade-in-up">
+                <div className="bg-primary/5 p-8 rounded-full">
+                    <svg className="w-20 h-20 text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                </div>
+                <div>
+                    <h2 className="text-4xl font-serif text-primary tracking-wide mb-4">Chào mừng đến với 1Beauty.asia</h2>
+                    <p className="text-neutral-400 font-light italic text-lg max-w-md mx-auto leading-relaxed">
+                        Tài khoản của bạn đã sẵn sàng. Hãy thiết lập hồ sơ doanh nghiệp để bắt đầu hành trình.
+                    </p>
+                </div>
+                <button
+                    onClick={() => setActiveTab('profile')}
+                    className="bg-primary text-white px-10 py-5 rounded-full font-bold uppercase tracking-[0.2em] text-xs hover:scale-105 transition-all shadow-xl shadow-primary/20"
+                >
+                    Thiết lập hồ sơ ngay →
+                </button>
+            </div>
+        );
+    }
+
 
     return (
         <div className="space-y-12 animate-fade-in-up">

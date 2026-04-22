@@ -7,10 +7,12 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useBusinessAuth } from '../contexts/BusinessContext.tsx';
 import { useBusinessData } from '../contexts/BusinessDataContext.tsx';
+import { useAuth } from '../providers/AuthProvider.tsx';
+import { supabase } from '../lib/supabaseClient.ts';
 import { Business, BusinessCategory, LandingPageConfig, HeroSlide, TrustIndicator } from '../types.ts';
 import { uploadFile } from '../lib/storage.ts';
 import LoadingState from './LoadingState.tsx';
-// import EmptyState from './EmptyState.tsx';
+import EmptyState from './EmptyState.tsx';
 
 import LandingPageSectionEditor from './LandingPageSectionEditor.tsx';
 import LandingPagePreview from './LandingPagePreview.tsx';
@@ -83,7 +85,8 @@ interface FormErrors {
 
 const BusinessProfileEditor: React.FC = () => {
     const { currentBusiness } = useBusinessAuth();
-    const { updateBusiness } = useBusinessData();
+    const { updateBusiness, addBusiness } = useBusinessData();
+    const { user } = useAuth();
     const navigate = useNavigate();
 
     const [formData, setFormData] = useState<Business | null>(null);
@@ -132,6 +135,32 @@ const BusinessProfileEditor: React.FC = () => {
                     },
                 };
             }
+        } else {
+            // New empty form if no business yet
+            setFormData({
+                name: '',
+                description: '',
+                address: '',
+                city: '',
+                district: '',
+                ward: '',
+                phone: '',
+                categories: [],
+                is_active: false,
+                landing_page_config: {
+                    sections: {
+                        hero: { enabled: true, order: 1 },
+                        trust: { enabled: false, order: 2 },
+                        services: { enabled: true, order: 3 },
+                        gallery: { enabled: true, order: 4 },
+                        team: { enabled: false, order: 5 },
+                        reviews: { enabled: true, order: 6 },
+                        cta: { enabled: true, order: 7 },
+                        contact: { enabled: true, order: 8 },
+                    },
+                }
+            } as Business);
+            setworking_hoursList([{ day: '', time: '' }]);
         }
     }, [currentBusiness]);
 
@@ -159,7 +188,7 @@ const BusinessProfileEditor: React.FC = () => {
     }, [working_hoursList]);
 
     // Loading state
-    if (!currentBusiness || !formData) {
+    if (!formData) {
         return (
             <div className="p-8">
                 <LoadingState message="Loading business profile..." />
@@ -263,7 +292,7 @@ const BusinessProfileEditor: React.FC = () => {
         try {
             // Use business-logos bucket with path: business/{business_id}/logo.{ext}
 
-            const folder = `business/${currentBusiness.id}`;
+            const folder = `business/${currentBusiness?.id || 'new'}`;
             const publicUrl = await uploadFile('business-logos', file, folder);
             setFormData((prev) => {
                 if (!prev) return null;
@@ -292,7 +321,7 @@ const BusinessProfileEditor: React.FC = () => {
         setIsUploadingCover(true);
         try {
             // Use business-gallery bucket with path: business/{business_id}/cover.{ext}
-            const folder = `business/${currentBusiness.id}`;
+            const folder = `business/${currentBusiness?.id || 'new'}`;
             const publicUrl = await uploadFile('business-gallery', file, folder);
             setFormData((prev) => {
                 if (!prev) return null;
@@ -379,8 +408,20 @@ const BusinessProfileEditor: React.FC = () => {
 
         setIsSaving(true);
         try {
-            await updateBusiness(formData);
-            toast.success('Profile saved successfully!');
+            if (currentBusiness && currentBusiness.id) {
+                await updateBusiness(formData);
+                toast.success('Profile saved successfully!');
+            } else {
+                const newBusinessData = { ...formData };
+                const newBusiness = await addBusiness(newBusinessData);
+                if (newBusiness && user?.id) {
+                    await supabase.from('profiles').update({ business_id: newBusiness.id }).eq('id', user.id);
+                    toast.success('Hồ sơ doanh nghiệp đã được khởi tạo thành công!');
+                    window.location.reload(); // Reload to pick up context correctly
+                } else {
+                    toast.error('Tạo doanh nghiệp thất bại.');
+                }
+            }
         } catch (error: unknown) {
             const err = error as Record<string, unknown>;
             console.error('Save error:', error);
@@ -395,13 +436,15 @@ const BusinessProfileEditor: React.FC = () => {
             <div className="p-6 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                 <h2 className="text-2xl font-bold font-serif text-neutral-dark">Business Profile Editor</h2>
                 <div className="flex items-center gap-3">
-                    <button
-                        type="button"
-                        onClick={() => navigate(`/business/${currentBusiness.slug}`)}
-                        className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100"
-                    >
-                        Preview Page
-                    </button>
+                    {currentBusiness?.slug && (
+                        <button
+                            type="button"
+                            onClick={() => navigate(`/business/${currentBusiness.slug}`)}
+                            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100"
+                        >
+                            Preview Page
+                        </button>
+                    )}
                     <button
                         type="submit"
                         disabled={isSaving || isUploadingLogo || isUploadingCover}
@@ -792,7 +835,7 @@ const BusinessProfileEditor: React.FC = () => {
                                                         if (!e.target.files?.[0]) return;
                                                         const file = e.target.files[0];
                                                         try {
-                                                            const url = await uploadFile('business-gallery', file, `business/${currentBusiness.id}/team`);
+                                                            const url = await uploadFile('business-gallery', file, `business/${currentBusiness?.id || 'new'}/team`);
                                                             const updated = [...(formData.team || [])];
                                                             updated[index] = { ...updated[index], image_url: url };
                                                             setFormData(prev => prev ? { ...prev, team: updated } : null);
