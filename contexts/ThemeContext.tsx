@@ -5,6 +5,7 @@ import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 // Default theme settings that match the initial index.html
 const DEFAULT_THEME: ThemeSettings = {
   logo_url: '/logo.svg', // Logo with "1Beauty.Asia" text
+  logo_height: 64,
   favicon_url: '/favicon.svg',
   colors: {
     primary: '#D4AF37',
@@ -18,6 +19,7 @@ const DEFAULT_THEME: ThemeSettings = {
     sans: 'Inter',
     serif: 'Cormorant Garamond',
   },
+  footer_logo_invert: true,
 };
 
 // Map font names to their Google Fonts URL part

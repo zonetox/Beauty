@@ -37,7 +37,16 @@ const ThemeEditor: React.FC = () => {
     };
 
     const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
+        const { name, value, type, checked } = e.target;
+        if (type === 'checkbox') {
+            setFormData(prev => ({ ...prev, [name]: checked }));
+            return;
+        }
+        if (type === 'range' || (type === 'text' && name === 'logo_height')) {
+            const numValue = parseInt(value) || 0;
+            setFormData(prev => ({ ...prev, [name]: numValue }));
+            return;
+        }
         setFormData(prev => ({ ...prev, [name]: value }));
         if (name === 'logo_url') setLogoPreview(value || null);
         if (name === 'favicon_url') setFaviconPreview(value || null);
@@ -125,12 +134,14 @@ const ThemeEditor: React.FC = () => {
         setShowResetConfirm(false);
         const defaultTheme: ThemeSettings = {
             logo_url: '/logo.svg',
+            logo_height: 64,
             favicon_url: '/favicon.svg',
             colors: {
                 primary: '#BFA16A', primary_dark: '#A98C5A', secondary: '#4A4A4A',
                 accent: '#EAE0D1', background: '#FDFCF9', neutral_dark: '#2D2D2D',
             },
             fonts: { sans: 'Inter', serif: 'Playfair Display' },
+            footer_logo_invert: true,
         };
         setFormData(defaultTheme);
         updateTheme(defaultTheme);
@@ -187,9 +198,45 @@ const ThemeEditor: React.FC = () => {
                     {logoPreview && (
                         <div className="mt-2">
                             <p className="text-xs text-gray-500 mb-1">Preview:</p>
-                            <img src={logoPreview} alt="Logo preview" className="max-h-20 border rounded p-1" />
+                            <img src={logoPreview} alt="Logo preview" style={{ height: `${formData.logo_height || 48}px` }} className="border rounded p-1 object-contain w-auto max-w-full" />
                         </div>
                     )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                    {/* Logo Height */}
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">Logo Height: <span className="text-primary font-bold">{formData.logo_height || 48}px</span></label>
+                        <input
+                            type="range"
+                            name="logo_height"
+                            min="24"
+                            max="120"
+                            step="4"
+                            value={formData.logo_height || 48}
+                            onChange={handleUrlChange}
+                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
+                        />
+                        <div className="flex justify-between text-[10px] text-gray-400">
+                            <span>24px</span>
+                            <span>120px</span>
+                        </div>
+                    </div>
+
+                    {/* Footer Logo Option */}
+                    <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-lg self-center">
+                        <input
+                            type="checkbox"
+                            id="footer_logo_invert"
+                            name="footer_logo_invert"
+                            checked={formData.footer_logo_invert || false}
+                            onChange={handleUrlChange}
+                            className="w-5 h-5 rounded text-primary focus:ring-primary border-gray-300"
+                        />
+                        <label htmlFor="footer_logo_invert" className="text-sm font-medium text-gray-700 cursor-pointer">
+                            Đảo màu logo ở Footer (Sử dụng nếu Footer màu tối)
+                        </label>
+                    </div>
                 </div>
 
                 {/* Favicon Upload */}

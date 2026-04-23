@@ -138,7 +138,8 @@ const Header: React.FC = () => {
                 <img
                   src={theme.logo_url}
                   alt="1Beauty Asia Logo"
-                  className="h-12 w-auto"
+                  style={{ height: `${theme.logo_height || 48}px` }}
+                  className="w-auto object-contain"
                   onError={() => {
                     console.warn("Branding logo failed to load, falling back to text.");
                     setLogoError(true);

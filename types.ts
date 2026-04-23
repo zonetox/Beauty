@@ -628,6 +628,7 @@ export interface PageData {
 
 export interface ThemeSettings {
   logo_url: string;
+  logo_height?: number; // Height in pixels
   favicon_url: string;
   colors: {
     primary: string;
@@ -641,4 +642,5 @@ export interface ThemeSettings {
     sans: string;
     serif: string;
   };
+  footer_logo_invert?: boolean; // Toggles brightness-0 invert in footer
 }

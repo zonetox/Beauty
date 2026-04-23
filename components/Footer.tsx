@@ -28,7 +28,8 @@ const Footer: React.FC = () => {
                 <img
                   src={theme.logo_url}
                   alt="1Beauty Asia Logo"
-                  className="h-12 w-auto brightness-0 invert"
+                  style={{ height: `${theme.logo_height || 48}px` }}
+                  className={`w-auto object-contain ${theme.footer_logo_invert ? 'brightness-0 invert' : ''}`}
                   onError={() => setLogoError(true)}
                 />
               ) : (
