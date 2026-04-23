@@ -6,17 +6,19 @@ import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAdminAuth } from '../contexts/AdminContext.tsx';
 import SEOHead from '../components/SEOHead.tsx';
+import ForgotPasswordModal from '../components/ForgotPasswordModal.tsx';
 
 const AdminLoginPage: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
     const navigate = useNavigate();
-    
+
     // Get admin auth - must be called unconditionally (React Hook rules)
     const { adminLogin, currentUser, loading: authLoading } = useAdminAuth();
-    
+
     // Show loading state while auth is initializing
     if (authLoading) {
         return (
@@ -38,12 +40,12 @@ const AdminLoginPage: React.FC = () => {
         e.preventDefault();
         setError('');
         setLoading(true);
-        
+
         try {
             if (!adminLogin) {
                 throw new Error('Admin authentication is not available. Please refresh the page.');
             }
-            
+
             await adminLogin(email, password);
             // The onAuthStateChange listener in the context will handle redirection
             // but we can navigate optimistically.
@@ -68,12 +70,13 @@ const AdminLoginPage: React.FC = () => {
 
     return (
         <>
-            <SEOHead 
+            <SEOHead
                 title={seoTitle}
                 description={seoDescription}
                 url={seoUrl}
                 type="website"
             />
+            <ForgotPasswordModal isOpen={isForgotPasswordOpen} onClose={() => setIsForgotPasswordOpen(false)} />
             <div className="flex items-center justify-center min-h-screen bg-gray-100">
                 <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
                     <h1 className="text-2xl font-bold text-center text-neutral-dark font-serif">Admin Panel Login</h1>
@@ -84,41 +87,52 @@ const AdminLoginPage: React.FC = () => {
                         </div>
                     )}
                     <form onSubmit={handleSubmit} className="space-y-6">
-                    <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-                        <input
-                            id="email"
-                            type="email"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                        />
-                    </div>
-                    <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-                        <input
-                            id="password"
-                            type="password"
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                        />
-                    </div>
-                    <div>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark disabled:bg-primary/50"
-                        >
-                            {loading ? 'Logging in...' : 'Login'}
-                        </button>
-                    </div>
-                </form>
+                        <div>
+                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+                            <input
+                                id="email"
+                                type="email"
+                                required
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+                            <input
+                                id="password"
+                                type="password"
+                                required
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                            />
+                        </div>
 
+                        <div className="flex items-center justify-end">
+                            <button
+                                type="button"
+                                onClick={() => setIsForgotPasswordOpen(true)}
+                                className="text-sm font-medium text-primary hover:text-primary-dark transition-colors"
+                            >
+                                Quên mật khẩu?
+                            </button>
+                        </div>
+
+                        <div>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark disabled:bg-primary/50"
+                            >
+                                {loading ? 'Logging in...' : 'Login'}
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
             </div>
-        </div>
         </>
     );
 };
