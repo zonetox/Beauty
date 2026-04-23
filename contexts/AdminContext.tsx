@@ -90,12 +90,14 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const { data: adminUsers = [] } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
-      if (!isSupabaseConfigured) return [];
       const { data, error } = await supabase.from('admin_users')
         .select('*')
         .order('id');
       if (error) throw error;
-      return (data || []) as AdminUser[];
+      return (data || []).map((user: any) => ({
+        ...user,
+        admin_username: user.admin_username || user.username
+      })) as AdminUser[];
     },
     enabled: isSupabaseConfigured && role === 'admin'
   });
