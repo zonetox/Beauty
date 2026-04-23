@@ -178,7 +178,7 @@ const AccountSettings: React.FC = () => {
 
     return (
         <form onSubmit={handleSave} className="p-8 bg-gray-50/50 space-y-8 animate-fade-in-up">
-            <h2 className="text-3xl font-serif text-primary tracking-wide">Thiết lập tài khoản</h2>
+            <h2 className="text-3xl font-serif text-primary tracking-wide">Tài khoản doanh nghiệp</h2>
             <p className="text-neutral-400 text-sm font-light italic -mt-6">Quản lý thông tin định danh và bảo mật cho doanh nghiệp của quý khách</p>
 
             <SectionCard title="Ảnh đại diện">
