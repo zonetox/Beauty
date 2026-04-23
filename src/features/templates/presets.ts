@@ -16,7 +16,7 @@ export interface TemplatePreset {
 export const TEMPLATE_PRESETS: Record<string, TemplatePreset> = {
     'luxury-minimal': {
         id: 'luxury-minimal',
-        name: 'Luxury Minimal',
+        name: 'Luxury Minimal — Sang Trọng',
         theme: {
             logo_url: '/logo.svg',
             favicon_url: '/favicon.svg',
@@ -43,7 +43,7 @@ export const TEMPLATE_PRESETS: Record<string, TemplatePreset> = {
     },
     'korean-clinic': {
         id: 'korean-clinic',
-        name: 'Korean Clinic',
+        name: 'Korean Clinic — Chuẩn Hàn',
         theme: {
             logo_url: '/logo.svg',
             favicon_url: '/favicon.svg',
@@ -70,7 +70,7 @@ export const TEMPLATE_PRESETS: Record<string, TemplatePreset> = {
     },
     'nature-spa': {
         id: 'nature-spa',
-        name: 'Nature Spa',
+        name: 'Nature Spa — Thuần Khiết',
         theme: {
             logo_url: '/logo.svg',
             favicon_url: '/favicon.svg',
@@ -97,7 +97,7 @@ export const TEMPLATE_PRESETS: Record<string, TemplatePreset> = {
     },
     'dark-premium': {
         id: 'dark-premium',
-        name: 'Dark Premium',
+        name: 'Dark Premium — Huyền Bí',
         theme: {
             logo_url: '/logo.svg',
             favicon_url: '/favicon.svg',
@@ -124,7 +124,7 @@ export const TEMPLATE_PRESETS: Record<string, TemplatePreset> = {
     },
     'modern-beauty': {
         id: 'modern-beauty',
-        name: 'Modern Beauty',
+        name: 'Modern Beauty — Hiện Đại',
         theme: {
             logo_url: '/logo.svg',
             favicon_url: '/favicon.svg',
@@ -205,7 +205,7 @@ export const TEMPLATE_PRESETS: Record<string, TemplatePreset> = {
     },
     'golden-ratio': {
         id: 'golden-ratio',
-        name: 'The Golden Ratio',
+        name: 'The Golden Ratio — Tỷ Lệ Vàng',
         theme: {
             logo_url: '/logo.svg',
             favicon_url: '/favicon.svg',
@@ -232,7 +232,7 @@ export const TEMPLATE_PRESETS: Record<string, TemplatePreset> = {
     },
     'luxury-hair': {
         id: 'luxury-hair',
-        name: 'Luxury Hair Salon',
+        name: 'Luxury Hair — Đẳng Cấp',
         theme: {
             logo_url: '/logo.svg',
             favicon_url: '/favicon.svg',
