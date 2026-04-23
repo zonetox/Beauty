@@ -49,7 +49,20 @@ const BusinessSetupPage = safeLazy(() => import('./pages/BusinessSetupPage.tsx')
 const AdminPage = safeLazy(() => import('./pages/AdminPage.tsx'));
 const AdminLoginPage = safeLazy(() => import('./pages/AdminLoginPage.tsx'));
 const PartnerRegistrationPage = safeLazy(() => import('./pages/PartnerRegistrationPage.tsx'));
-const BusinessDashboardPage = safeLazy(() => import('./pages/BusinessDashboardPage.tsx'));
+const BusinessDashboardLayout = safeLazy(() => import('./components/BusinessDashboardLayout.tsx'));
+const DashboardOverview = safeLazy(() => import('./components/DashboardOverview.tsx'));
+const BusinessProfileEditor = safeLazy(() => import('./components/BusinessProfileEditor.tsx'));
+const ServicesManager = safeLazy(() => import('./components/ServicesManager.tsx'));
+const DealsManager = safeLazy(() => import('./components/DealsManager.tsx'));
+const BookingsManager = safeLazy(() => import('./components/BookingsManager.tsx'));
+const MembershipAndBilling = safeLazy(() => import('./components/MembershipAndBilling.tsx'));
+const MediaLibrary = safeLazy(() => import('./components/MediaLibrary.tsx'));
+const BlogManager = safeLazy(() => import('./components/BlogManager.tsx'));
+const ReviewsManager = safeLazy(() => import('./components/ReviewsManager.tsx'));
+const AnalyticsDashboard = safeLazy(() => import('./components/AnalyticsDashboard.tsx'));
+const AccountSettings = safeLazy(() => import('./components/AccountSettings.tsx'));
+const BusinessSupportCenter = safeLazy(() => import('./components/BusinessSupportCenter.tsx'));
+
 const NotFoundPage = safeLazy(() => import('./pages/NotFoundPage.tsx'));
 const LoginPage = safeLazy(() => import('./pages/LoginPage.tsx'));
 const ResetPasswordPage = safeLazy(() => import('./pages/ResetPasswordPage.tsx'));
@@ -127,9 +140,23 @@ const AppContent: React.FC = () => {
                                                         <Route path="blog/:slug" element={<BlogPostPage />} />
                                                         <Route path="dashboard" element={
                                                             <ProtectedRoute>
-                                                                <BusinessDashboardPage />
+                                                                <BusinessDashboardLayout />
                                                             </ProtectedRoute>
-                                                        } />
+                                                        }>
+                                                            <Route index element={<DashboardOverview />} />
+                                                            <Route path="profile" element={<BusinessProfileEditor initialTab="info" />} />
+                                                            <Route path="landing" element={<BusinessProfileEditor initialTab="landing" />} />
+                                                            <Route path="services" element={<ServicesManager />} />
+                                                            <Route path="deals" element={<DealsManager />} />
+                                                            <Route path="bookings" element={<BookingsManager />} />
+                                                            <Route path="billing" element={<MembershipAndBilling />} />
+                                                            <Route path="gallery" element={<MediaLibrary />} />
+                                                            <Route path="blog" element={<BlogManager />} />
+                                                            <Route path="reviews" element={<ReviewsManager />} />
+                                                            <Route path="stats" element={<AnalyticsDashboard />} />
+                                                            <Route path="settings" element={<AccountSettings />} />
+                                                            <Route path="support" element={<BusinessSupportCenter />} />
+                                                        </Route>
 
                                                         <Route path="about" element={<AboutPage />} />
                                                         <Route path="contact" element={<ContactPage />} />

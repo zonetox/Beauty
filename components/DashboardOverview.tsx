@@ -1,7 +1,7 @@
 // C3.1 - Business Dashboard Overview (Consolidated Mode)
 import React, { useMemo, useEffect, useState } from 'react';
 import { useBusiness, useAnalyticsData } from '../contexts/BusinessContext.tsx';
-import { ActiveTab } from '../pages/BusinessDashboardPage.tsx';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../providers/AuthProvider.tsx';
 import { useAdmin } from '../contexts/AdminContext.tsx';
 import { supabase } from '../lib/supabaseClient.ts';
@@ -28,7 +28,8 @@ const StatCard: React.FC<{ title: string, value: string | number, icon: React.Re
     </div>
 );
 
-const DashboardOverview: React.FC<{ setActiveTab: (tab: ActiveTab) => void }> = ({ setActiveTab }) => {
+const DashboardOverview: React.FC = () => {
+    const navigate = useNavigate();
     const {
         currentBusiness,
         ordersLoading,
@@ -195,7 +196,7 @@ const DashboardOverview: React.FC<{ setActiveTab: (tab: ActiveTab) => void }> = 
                     ].map(btn => (
                         <button
                             key={btn.tab}
-                            onClick={() => setActiveTab(btn.tab as any)}
+                            onClick={() => navigate(`/dashboard/${btn.tab}`)}
                             className="flex flex-col items-center gap-4 p-6 bg-gray-50/50 rounded-3xl hover:bg-primary/5 hover:scale-105 transition-all border border-gray-100 group"
                         >
                             <span className="text-3xl group-hover:scale-110 transition-transform">{btn.icon}</span>

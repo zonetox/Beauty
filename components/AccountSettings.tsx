@@ -24,8 +24,10 @@ const AccountSettings: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'profile' | 'account' | 'billing'>('profile');
     const [isInitializing, setIsInitializing] = useState(false);
 
-    // Auto-detect business user with missing business
-    const isBusinessUserWithoutBusiness = profile?.user_type === 'business' && !currentBusiness;
+    // Robust detection for business user status
+    const hasBusinessId = !!profile?.business_id;
+    const isBusinessRole = profile?.user_type === 'business';
+    const isBusinessUserWithoutBusiness = isBusinessRole && !hasBusinessId;
 
     const handleInitializeBusiness = async () => {
         if (!user || isInitializing) return;
@@ -110,8 +112,19 @@ const AccountSettings: React.FC = () => {
         );
     }
 
-    if (!currentBusiness) {
+    // If we have a business_id but currentBusiness isn't loaded yet, THEN show loading
+    if (hasBusinessId && !currentBusiness) {
         return <LoadingState message="Đang tải thông tin tài khoản..." />;
+    }
+
+    // Default fallback if business_id is null and user is business role (handled above)
+    // or if user is NOT business role but somehow access settings
+    if (!currentBusiness && !isBusinessUserWithoutBusiness) {
+        return (
+            <div className="p-12 text-center">
+                <p className="text-neutral-500 italic">Không tìm thấy thông tin doanh nghiệp.</p>
+            </div>
+        );
     }
 
     return (
