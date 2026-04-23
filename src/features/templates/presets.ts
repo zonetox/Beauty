@@ -315,7 +315,24 @@ export const DEMO_CONTENT: Record<string, Partial<Business>> = {
         socials: {
             facebook: 'https://facebook.com/lunaspa',
             instagram: 'https://instagram.com/lunaspa'
-        }
+        },
+        services: [
+            { id: 'S1', business_id: 0, name: 'Massage Thư Giãn Toàn Thân', price: '350.000đ', description: 'Liệu trình massage bằng tinh dầu thiên nhiên, giúp giảm căng thẳng và mệt mỏi.', image_url: 'https://images.unsplash.com/photo-1544161515-4af6b1d462c2?w=800', duration_minutes: 60, position: 1 },
+            { id: 'S2', business_id: 0, name: 'Chăm Sóc Da Mặt Chuyên Sâu', price: '450.000đ', description: 'Làm sạch sâu, cấp ẩm và phục hồi làn da với dưỡng chất từ tảo biển tươi.', image_url: 'https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?w=800', duration_minutes: 60, position: 2 },
+            { id: 'S3', business_id: 0, name: 'Gội Đầu Dưỡng Sinh', price: '150.000đ', description: 'Kỹ thuật gội kết hợp massage ấn huyệt cổ vai gáy, dùng thảo dược thiên nhiên.', image_url: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800', duration_minutes: 45, position: 3 }
+        ],
+        gallery: [
+            { id: 'G1', business_id: 0, url: 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=800', type: 'IMAGE' as any, category: 'Interior' as any, position: 1 },
+            { id: 'G2', business_id: 0, url: 'https://images.unsplash.com/photo-1544161515-4af6b1d462c2?w=800', type: 'IMAGE' as any, category: 'Interior' as any, position: 2 },
+            { id: 'G3', business_id: 0, url: 'https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?w=800', type: 'IMAGE' as any, category: 'Interior' as any, position: 3 }
+        ],
+        team: [
+            { id: 'T1', business_id: 0, name: 'Lê Ngọc', role: 'Chuyên viên Massage', image_url: 'https://api.dicebear.com/7.x/notionists/svg?seed=LN' },
+            { id: 'T2', business_id: 0, name: 'Trần Mai', role: 'Kỹ thuật viên Da liễu', image_url: 'https://api.dicebear.com/7.x/notionists/svg?seed=TM' }
+        ],
+        reviews: [
+            { id: 'R1', business_id: 0, user_name: 'Minh Thư', user_avatar_url: 'https://api.dicebear.com/7.x/notionists/svg?seed=MT', rating: 5, comment: 'Không gian ấm cúng, thư giãn hoàn toàn. Nhân viên rất nhẹ nhàng và chuyên nghiệp.', submitted_date: new Date().toISOString(), status: 'Visible' as any }
+        ]
     },
     'pink-nail': {
         name: 'Nailora Beauty & Care',
@@ -392,7 +409,15 @@ export const DEMO_CONTENT: Record<string, Partial<Business>> = {
         ],
         working_hours: {
             'Hàng ngày': '09:00 - 21:00'
-        }
+        },
+        services: [
+            { id: 'S1', business_id: 0, name: 'Cắt Tóc & Tạo Kiểu Cao Cấp', price: '300.000đ', description: 'Được phục vụ bởi các thợ chính và Master. Bao gồm gội massage nhẹ.', image_url: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800', duration_minutes: 45, position: 1 },
+            { id: 'S2', business_id: 0, name: 'Uốn/Duỗi Công Nghệ Nano', price: '1.200.000đ', description: 'Trải nghiệm công nghệ nano bảo vệ tóc tối đa, uốn chuẩn salon.', image_url: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=800', duration_minutes: 120, position: 2 }
+        ],
+        gallery: [
+            { id: 'G1', business_id: 0, url: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800', type: 'IMAGE' as any, category: 'Interior' as any, position: 1 },
+            { id: 'G2', business_id: 0, url: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=800', type: 'IMAGE' as any, category: 'Interior' as any, position: 2 }
+        ]
     },
     'q-clinic': {
         name: 'Q Clinic & Beauty',

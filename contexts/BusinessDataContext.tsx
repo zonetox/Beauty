@@ -139,6 +139,33 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       throw error;
     }
     if (data) {
+      const bId = data.id;
+      const tasks = [];
+      const stripId = (item: any) => { const { id, ...rest } = item; return rest; };
+      if (newBusiness.services?.length) {
+        tasks.push(supabase.from('services').insert(newBusiness.services.map((s, i) => ({ ...stripId(toSnakeCase(s)), business_id: bId, position: i }))));
+      }
+      if (newBusiness.gallery?.length) {
+        tasks.push(supabase.from('media_items').insert(newBusiness.gallery.map((g, i) => ({ ...stripId(toSnakeCase(g)), business_id: bId, position: i }))));
+      }
+      if (newBusiness.team?.length) {
+        tasks.push(supabase.from('team_members').insert(newBusiness.team.map(t => ({ ...stripId(toSnakeCase(t)), business_id: bId }))));
+      }
+      if (newBusiness.deals?.length) {
+        tasks.push(supabase.from('deals').insert(newBusiness.deals.map(d => ({ ...stripId(toSnakeCase(d)), business_id: bId }))));
+      }
+      if (newBusiness.reviews?.length) {
+        tasks.push(supabase.from('reviews').insert(newBusiness.reviews.map(r => ({ ...stripId(toSnakeCase(r)), business_id: bId }))));
+      }
+
+      if (tasks.length > 0) {
+        try {
+          await Promise.all(tasks);
+        } catch (e) {
+          console.error("Error inserting relational data:", e);
+        }
+      }
+
       await refetchAllPublicData();
       return data as Business;
     }
