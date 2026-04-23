@@ -98,6 +98,7 @@ const BusinessProfileEditor: React.FC = () => {
     const [isUploadingLogo, setIsUploadingLogo] = useState(false);
     const [isUploadingCover, setIsUploadingCover] = useState(false);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [landingSubTab, setLandingSubTab] = useState<'current' | 'drafts'>('current');
 
     const handleApplyDemo = (presetId: string) => {
         const demo = DEMO_CONTENT[presetId];
@@ -1032,28 +1033,137 @@ const BusinessProfileEditor: React.FC = () => {
 
                 {activeTab === 'landing' && (
                     <section>
-                        <div className="mb-6 flex justify-between items-center">
-                            <h3 className="text-lg font-semibold text-neutral-dark">Landing Page Builder</h3>
-                            <button
-                                type="button"
-                                onClick={() => setIsPreviewOpen(true)}
-                                className="px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary-dark transition-colors text-sm font-medium"
-                                disabled={!formData.landing_page_config}
-                            >
-                                Preview Landing Page
-                            </button>
+                        <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div className="flex bg-gray-100 p-1 rounded-lg">
+                                <button
+                                    type="button"
+                                    onClick={() => setLandingSubTab('current')}
+                                    className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${landingSubTab === 'current' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                >
+                                    Cấu hình công bố
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setLandingSubTab('drafts')}
+                                    className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${landingSubTab === 'drafts' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                >
+                                    Các bản nháp ({(formData.landing_page_drafts || []).length}/5)
+                                </button>
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const drafts = formData.landing_page_drafts || [];
+                                        if (drafts.length >= 5) {
+                                            toast.error('Bạn chỉ có thể lưu tối đa 5 bản nháp. Vui lòng xóa bớt.');
+                                            return;
+                                        }
+                                        const draftName = prompt('Nhập tên bản nháp:', `Bản nháp ${drafts.length + 1}`);
+                                        if (!draftName) return;
+
+                                        const newDraft = {
+                                            id: crypto.randomUUID(),
+                                            name: draftName,
+                                            template_id: formData.template_id || 'luxury-minimal',
+                                            config: formData.landing_page_config!,
+                                            updated_at: new Date().toISOString()
+                                        };
+                                        const updatedDrafts = [...drafts, newDraft];
+                                        setFormData(prev => prev ? { ...prev, landing_page_drafts: updatedDrafts } : null);
+                                        toast.success('Đã lưu bản nháp mới!');
+                                    }}
+                                    className="px-4 py-2 border border-primary text-primary rounded-md hover:bg-primary/5 transition-colors text-sm font-medium"
+                                >
+                                    Lưu bản nháp mới
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsPreviewOpen(true)}
+                                    className="px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary-dark transition-colors text-sm font-medium"
+                                    disabled={!formData.landing_page_config}
+                                >
+                                    Xem trước (Preview)
+                                </button>
+                            </div>
                         </div>
-                        {formData.landing_page_config ? (
-                            <LandingPageSectionEditor
-                                config={formData.landing_page_config}
-                                onChange={handlelanding_page_configChange}
-                                disabled={false}
-                            />
+
+                        {landingSubTab === 'current' ? (
+                            <>
+                                {formData.landing_page_config ? (
+                                    <LandingPageSectionEditor
+                                        config={formData.landing_page_config}
+                                        onChange={handlelanding_page_configChange}
+                                        disabled={false}
+                                    />
+                                ) : (
+                                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                        <p className="text-sm text-yellow-800">
+                                            Landing page configuration is being initialized...
+                                        </p>
+                                    </div>
+                                )}
+                            </>
                         ) : (
-                            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                <p className="text-sm text-yellow-800">
-                                    Landing page configuration is being initialized...
-                                </p>
+                            <div className="space-y-4">
+                                {(formData.landing_page_drafts || []).length === 0 ? (
+                                    <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed">
+                                        <p className="text-gray-500">Chưa có bản nháp nào được lưu.</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 gap-4">
+                                        {(formData.landing_page_drafts || []).map((draft) => (
+                                            <div key={draft.id} className="p-4 border rounded-xl bg-white shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                                <div>
+                                                    <h4 className="font-bold text-gray-900">{draft.name}</h4>
+                                                    <p className="text-xs text-gray-500">Mẫu: {draft.template_id} • Cập nhật: {new Date(draft.updated_at).toLocaleString('vi-VN')}</p>
+                                                </div>
+                                                <div className="flex gap-2 w-full md:w-auto">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const url = `${window.location.origin}/business/${currentBusiness?.slug}?draft=${draft.id}`;
+                                                            window.open(url, '_blank');
+                                                        }}
+                                                        className="flex-1 md:flex-none px-3 py-1.5 text-xs font-bold border rounded-lg hover:bg-gray-50"
+                                                    >
+                                                        Xem thực tế
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            if (confirm(`Bạn có chắc muốn Xuất bản bản nháp "${draft.name}" không? Bản thiết kế hiện tại sẽ bị ghi đè.`)) {
+                                                                setFormData(prev => prev ? {
+                                                                    ...prev,
+                                                                    template_id: draft.template_id,
+                                                                    landing_page_config: draft.config
+                                                                } : null);
+                                                                setLandingSubTab('current');
+                                                                toast.success('Đã áp dụng bản nháp! Hãy nhấn "Lưu tất cả thay đổi" để công bố.');
+                                                            }
+                                                        }}
+                                                        className="flex-1 md:flex-none px-3 py-1.5 text-xs font-bold bg-primary text-white rounded-lg hover:bg-primary-dark"
+                                                    >
+                                                        Xuất bản (Publish)
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const updatedDrafts = (formData.landing_page_drafts || []).filter(d => d.id !== draft.id);
+                                                            setFormData(prev => prev ? { ...prev, landing_page_drafts: updatedDrafts } : null);
+                                                            toast.success('Đã xóa bản nháp.');
+                                                        }}
+                                                        className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"
+                                                    >
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         )}
 

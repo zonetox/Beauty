@@ -5,6 +5,7 @@ import { useAuth } from '../providers/AuthProvider.tsx';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.ts';
 import { useTheme } from '../contexts/ThemeContext.tsx';
 import { useUserRole } from '../hooks/useUserRole.ts';
+import { useBusiness } from '../contexts/BusinessContext.tsx';
 
 
 const HamburgerIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -59,6 +60,7 @@ const Header: React.FC = () => {
 
   // Get user role from role resolution (based on actual database state)
   const { role, isAdmin, isLoading: roleLoading } = useUserRole();
+  const { currentBusiness } = useBusiness();
 
 
   const handleLogout = async () => {
@@ -223,6 +225,25 @@ const Header: React.FC = () => {
                           </div>
                         </Link>
 
+                        {(role === 'business' || !!currentBusiness) && currentBusiness?.slug && (
+                          <Link
+                            to={`/business/${currentBusiness.slug}`}
+                            className="block px-4 py-2 text-sm text-neutral-dark hover:bg-primary/10 transition-colors"
+                            onClick={() => {
+                              setIsMenuOpen(false);
+                              setIsDropdownOpen(false);
+                            }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                              <span>Xem trang công bố</span>
+                            </div>
+                          </Link>
+                        )}
+
                         <button
                           onClick={handleLogout}
                           className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
@@ -315,6 +336,20 @@ const Header: React.FC = () => {
                   </svg>
                   <span>Dashboard quản trị</span>
                 </NavLink>
+
+                {currentBusiness?.slug && (
+                  <NavLink
+                    to={`/business/${currentBusiness.slug}`}
+                    className={({ isActive }) => `${mobileNavLinkClass({ isActive })} flex items-center gap-3`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    <span>Xem trang công bố</span>
+                  </NavLink>
+                )}
 
                 <button onClick={handleLogout} className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50">
                   <div className="flex items-center gap-3">

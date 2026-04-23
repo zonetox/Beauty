@@ -17,13 +17,13 @@ const AuthRedirectHandler: React.FC = () => {
         if (!isDataLoaded || state === 'loading' || !user) return;
 
         // 2. Determine redirect destination from homepage
-        const isHomepage = location.pathname === '/';
-        if (isHomepage) {
-            if (role === 'business') {
-                console.log('[AuthRedirectHandler] Redirecting business owner to dashboard');
-                navigate('/dashboard', { replace: true });
-            }
-        }
+        // const isHomepage = location.pathname === '/';
+        // if (isHomepage) {
+        //     if (role === 'business') {
+        //         console.log('[AuthRedirectHandler] Redirecting business owner to dashboard');
+        //         navigate('/dashboard', { replace: true });
+        //     }
+        // }
     }, [user, state, role, isDataLoaded, location.pathname, navigate]);
 
     // This component doesn't render anything

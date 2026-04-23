@@ -64,6 +64,20 @@ export enum DealStatus {
   SCHEDULED = 'Scheduled',
 }
 
+export interface LandingPageConfig {
+  sections: Record<string, LandingPageSectionConfig>;
+  colors?: Record<string, string>;
+  fonts?: Record<string, string>;
+}
+
+export interface LandingPageDraft {
+  id: string; // uuid
+  name: string;
+  template_id: string;
+  config: LandingPageConfig;
+  updated_at: string;
+}
+
 export interface SEO {
   title?: string;
   description?: string;
@@ -261,20 +275,6 @@ export interface LandingPageSectionConfig {
   order: number;
 }
 
-export interface LandingPageConfig {
-  sections: {
-    hero: LandingPageSectionConfig;
-    trust: LandingPageSectionConfig;
-    services: LandingPageSectionConfig;
-    gallery: LandingPageSectionConfig;
-    team: LandingPageSectionConfig;
-    reviews: LandingPageSectionConfig;
-    cta: LandingPageSectionConfig;
-    contact: LandingPageSectionConfig;
-    products: LandingPageSectionConfig;
-  };
-}
-
 // Trust Indicator
 export interface TrustIndicator {
   type: 'badge' | 'certification' | 'award';
@@ -325,8 +325,9 @@ export interface Business {
   hero_slides?: HeroSlide[];
   hero_image_url?: string;
   landing_page_config?: LandingPageConfig;
+  landing_page_drafts?: LandingPageDraft[];
   trust_indicators?: TrustIndicator[];
-  landing_page_status?: 'Pending' | 'Approved' | 'Rejected' | 'Needs Review';
+  landing_page_status?: 'Draft' | 'Published' | 'Archived';
   owner_id?: string;
   template_id?: string;
   zalo_phone?: string;

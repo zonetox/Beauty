@@ -3,7 +3,7 @@
 // 100% hoàn thiện, không placeholder, chuẩn SEO cơ bản
 
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { useBusinessData } from '../contexts/BusinessDataContext.tsx';
 import { Business } from '../types.ts';
 import NotFoundPage from './NotFoundPage.tsx';
@@ -18,6 +18,7 @@ import { useAuth } from '../providers/AuthProvider.tsx';
 
 const BusinessDetailPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
+    const location = useLocation();
     const { fetchBusinessBySlug, incrementBusinessview_count, updateBusiness } = useBusinessData();
     const [business, setBusiness] = useState<Business | null>(null);
     const [loading, setLoading] = useState(true);
@@ -115,6 +116,26 @@ const BusinessDetailPage: React.FC = () => {
         };
     }, [slug, fetchBusinessBySlug]); // Add fetchBusinessBySlug to dependencies
 
+    // Handle draft preview
+    const queryParams = new URLSearchParams(location.search);
+    const draftId = queryParams.get('draft');
+
+    // Process business data for rendering (apply draft if needed)
+    const displayBusiness = React.useMemo(() => {
+        if (!business) return null;
+        if (draftId && isOwner) {
+            const draft = (business.landing_page_drafts || []).find(d => d.id === draftId);
+            if (draft) {
+                return {
+                    ...business,
+                    template_id: draft.template_id,
+                    landing_page_config: draft.config
+                };
+            }
+        }
+        return business;
+    }, [business, draftId, isOwner]);
+
     useEffect(() => {
         if (business) {
             // Increment view count, once per session to avoid loops/spam
@@ -187,50 +208,59 @@ const BusinessDetailPage: React.FC = () => {
             {/* CMS Owner Toolbar */}
             {isOwner && (
                 <div className="fixed top-24 right-4 z-50 flex flex-col gap-2">
-                    {!isEditing ? (
-                        <button
-                            onClick={() => setIsEditing(true)}
-                            className="bg-primary text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform flex items-center justify-center gap-2 group"
-                            title="Chỉnh sửa trang"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                            <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 font-bold whitespace-nowrap text-sm">Chỉnh sửa</span>
-                        </button>
-                    ) : (
-                        <div className="bg-white p-4 rounded-2xl shadow-premium border border-primary/20 flex flex-col gap-3 animate-slide-in-right max-w-[200px]">
-                            <div className="text-xs font-bold text-neutral-dark border-b pb-2 mb-1 flex items-center gap-2">
-                                <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
-                                Chế độ thiết kế
+                    {draftId ? (
+                        <div className="bg-amber-500 text-white p-4 rounded-2xl shadow-premium border border-amber-600 flex flex-col gap-1 animate-pulse">
+                            <div className="text-xs font-bold flex items-center gap-2">
+                                ⚠️ Đang xem bản nháp
                             </div>
-                            <p className="text-[10px] text-gray-500 italic">Nhấp vào tiêu đề hoặc ảnh để thay đổi nội dung trang của bạn.</p>
-                            <div className="flex flex-col gap-2">
-                                <button
-                                    onClick={handleSaveLandingPage}
-                                    className="bg-primary text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-primary-dark shadow-lg"
-                                >
-                                    Lưu trang
-                                </button>
-                                <button
-                                    onClick={() => { clearChanges(); setIsEditing(false); }}
-                                    className="bg-gray-100 text-gray-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-200"
-                                >
-                                    Hủy bỏ
-                                </button>
-                            </div>
+                            <p className="text-[10px] opacity-90 italic">Đây là giao diện chưa công bố. Chỉ bạn mới thấy trang này.</p>
                         </div>
+                    ) : (
+                        !isEditing ? (
+                            <button
+                                onClick={() => setIsEditing(true)}
+                                className="bg-primary text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform flex items-center justify-center gap-2 group"
+                                title="Chỉnh sửa trang"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 font-bold whitespace-nowrap text-sm">Chỉnh sửa</span>
+                            </button>
+                        ) : (
+                            <div className="bg-white p-4 rounded-2xl shadow-premium border border-primary/20 flex flex-col gap-3 animate-slide-in-right max-w-[200px]">
+                                <div className="text-xs font-bold text-neutral-dark border-b pb-2 mb-1 flex items-center gap-2">
+                                    <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+                                    Chế độ thiết kế
+                                </div>
+                                <p className="text-[10px] text-gray-500 italic">Nhấp vào tiêu đề hoặc ảnh để thay đổi nội dung trang của bạn.</p>
+                                <div className="flex flex-col gap-2">
+                                    <button
+                                        onClick={handleSaveLandingPage}
+                                        className="bg-primary text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-primary-dark shadow-lg"
+                                    >
+                                        Lưu trang
+                                    </button>
+                                    <button
+                                        onClick={() => { clearChanges(); setIsEditing(false); }}
+                                        className="bg-gray-100 text-gray-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-200"
+                                    >
+                                        Hủy bỏ
+                                    </button>
+                                </div>
+                            </div>
+                        )
                     )}
                 </div>
             )}
 
-            <TemplateEngine business={business} />
+            <TemplateEngine business={displayBusiness!} />
 
             {isBookingModalOpen && (
                 <BookingModal
                     isOpen={isBookingModalOpen}
                     onClose={() => setIsBookingModalOpen(false)}
-                    business={business}
+                    business={displayBusiness!}
                 />
             )}
         </div>
