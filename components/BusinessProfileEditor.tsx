@@ -12,12 +12,11 @@ import { supabase } from '../lib/supabaseClient.ts';
 import { Business, BusinessCategory, LandingPageConfig, HeroSlide, TrustIndicator } from '../types.ts';
 import { uploadFile } from '../lib/storage.ts';
 import LoadingState from './LoadingState.tsx';
-import EmptyState from './EmptyState.tsx';
 
 import LandingPageSectionEditor from './LandingPageSectionEditor.tsx';
 import LandingPagePreview from './LandingPagePreview.tsx';
 import TemplateSelector from './TemplateSelector.tsx';
-import { TEMPLATE_PRESETS, DEMO_CONTENT } from '../src/features/templates/presets.ts';
+import { DEMO_CONTENT } from '../src/features/templates/presets.ts';
 
 // Helper to convert blob to base64 (for team member images)
 // const blobToBase64 = (blob: Blob): Promise<string> => {
@@ -102,7 +101,7 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
     const [isUploadingLogo, setIsUploadingLogo] = useState(false);
     const [isUploadingCover, setIsUploadingCover] = useState(false);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-    const [landingSubTab, setLandingSubTab] = useState<'current' | 'drafts'>('current');
+    const [landingSubTab, setLandingSubTab] = useState<'current' | 'drafts' | 'library'>('library');
 
     const handleApplyDemo = (presetId: string) => {
         const demo = DEMO_CONTENT[presetId];
@@ -808,24 +807,6 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
                     </section>
                 )}
 
-                {activeTab === 'landing' && (
-                    <section className="space-y-8">
-                        {/* Template Chooser */}
-                        <TemplateSelector
-                            currentTemplateId={formData.template_id || 'luxury-minimal'}
-                            onChange={(id) => setFormData(prev => prev ? { ...prev, template_id: id } as any : null)}
-                        />
-                        <div className="border-t pt-8">
-                            <h3 className="text-lg font-semibold text-neutral-dark mb-4">Cấu hình các section</h3>
-                            {formData.landing_page_config && (
-                                <LandingPageSectionEditor
-                                    config={formData.landing_page_config}
-                                    onChange={handlelanding_page_configChange}
-                                />
-                            )}
-                        </div>
-                    </section>
-                )}
 
                 {activeTab === 'hours' && (
                     <section>
@@ -1017,7 +998,7 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
                                 onClick={() => {
                                     const newMember = {
                                         id: crypto.randomUUID(),
-                                        business_id: currentBusiness.id,
+                                        business_id: currentBusiness?.id || 0,
                                         name: '',
                                         role: '',
                                         image_url: ''
@@ -1037,33 +1018,41 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
 
                 {activeTab === 'landing' && (
                     <section>
-                        <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <div className="flex bg-gray-100 p-1 rounded-lg">
+                        <div className="mb-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+                            <div className="flex bg-neutral-100 p-1.5 rounded-2xl shadow-inner">
+                                <button
+                                    type="button"
+                                    onClick={() => setLandingSubTab('library')}
+                                    className={`px-6 py-2.5 text-[10px] uppercase tracking-widest font-bold rounded-xl transition-all duration-500 ${landingSubTab === 'library' ? 'bg-primary text-white shadow-lg' : 'text-neutral-500 hover:text-primary'}`}
+                                >
+                                    Thư viện mẫu
+                                </button>
                                 <button
                                     type="button"
                                     onClick={() => setLandingSubTab('current')}
-                                    className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${landingSubTab === 'current' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                    className={`px-6 py-2.5 text-[10px] uppercase tracking-widest font-bold rounded-xl transition-all duration-500 ${landingSubTab === 'current' ? 'bg-primary text-white shadow-lg' : 'text-neutral-500 hover:text-primary'}`}
                                 >
-                                    Đang hiển thị (Công bố)
+                                    Thiết kế trang
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setLandingSubTab('drafts')}
-                                    className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${landingSubTab === 'drafts' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                    className={`px-6 py-2.5 text-[10px] uppercase tracking-widest font-bold rounded-xl transition-all duration-500 ${landingSubTab === 'drafts' ? 'bg-primary text-white shadow-lg' : 'text-neutral-500 hover:text-primary'}`}
                                 >
-                                    Kho bản nháp ({(formData.landing_page_drafts || []).length}/5)
+                                    Kho bản nháp ({(formData.landing_page_drafts || []).length})
                                 </button>
                             </div>
-                            <div className="flex gap-2">
+
+                            <div className="flex gap-3">
                                 <button
                                     type="button"
                                     onClick={() => {
                                         const drafts = formData.landing_page_drafts || [];
                                         if (drafts.length >= 5) {
-                                            toast.error('Bạn chỉ có thể lưu tối đa 5 bản nháp. Vui lòng xóa bớt.');
+                                            toast.error('Kho bản nháp đã đầy (5/5).');
                                             return;
                                         }
-                                        const draftName = prompt('Nhập tên bản nháp:', `Bản nháp ${drafts.length + 1}`);
+                                        const draftName = prompt('Tên bản nháp:', `Bản nháp ${new Date().toLocaleDateString('vi-VN')}`);
                                         if (!draftName) return;
 
                                         const newDraft = {
@@ -1073,95 +1062,194 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
                                             config: formData.landing_page_config!,
                                             updated_at: new Date().toISOString()
                                         };
-                                        const updatedDrafts = [...drafts, newDraft];
-                                        setFormData(prev => prev ? { ...prev, landing_page_drafts: updatedDrafts } : null);
-                                        toast.success('Đã lưu bản nháp mới!');
+                                        setFormData(prev => prev ? { ...prev, landing_page_drafts: [...(prev.landing_page_drafts || []), newDraft] } : null);
+                                        toast.success('Đã lưu vào kho bản nháp!');
                                     }}
-                                    className="px-4 py-2 border border-primary text-primary rounded-md hover:bg-primary/5 transition-colors text-sm font-medium"
+                                    className="px-6 py-3 border border-primary text-primary rounded-full hover:bg-primary/5 transition-all text-[10px] font-bold uppercase tracking-widest"
                                 >
-                                    Lưu bản nháp mới
+                                    Lưu nháp
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setIsPreviewOpen(true)}
-                                    className="px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary-dark transition-colors text-sm font-medium"
-                                    disabled={!formData.landing_page_config}
+                                    className="px-6 py-3 bg-secondary text-white rounded-full hover:shadow-xl transition-all text-[10px] font-bold uppercase tracking-widest"
                                 >
                                     Xem trước (Preview)
                                 </button>
                             </div>
                         </div>
 
-                        {landingSubTab === 'current' ? (
-                            <>
-                                {formData.landing_page_config ? (
-                                    <LandingPageSectionEditor
-                                        config={formData.landing_page_config}
-                                        onChange={handlelanding_page_configChange}
-                                        disabled={false}
-                                    />
-                                ) : (
-                                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                        <p className="text-sm text-yellow-800">
-                                            Landing page configuration is being initialized...
-                                        </p>
+                        {landingSubTab === 'library' && (
+                            <div className="animate-fade-in">
+                                <TemplateSelector
+                                    currentTemplateId={formData.template_id}
+                                    onChange={(id) => {
+                                        setFormData(prev => prev ? { ...prev, template_id: id } : null);
+                                        setLandingSubTab('current');
+                                        toast.success('Đã chọn mẫu mới! Hãy bắt đầu chỉnh sửa nội dung.');
+                                    }}
+                                />
+                            </div>
+                        )}
+
+                        {landingSubTab === 'current' && (
+                            <div className="animate-fade-in space-y-12">
+                                <div className="p-8 glass-card border-none rounded-[2.5rem] bg-primary/5">
+                                    <div className="flex items-center justify-between mb-8">
+                                        <div>
+                                            <h3 className="text-2xl font-serif text-primary">Cấu hình Giao diện</h3>
+                                            <p className="text-neutral-500 font-light italic">Tùy chỉnh thứ tự và trạng thái hiển thị của các thành phần trên trang.</p>
+                                        </div>
+                                        <div className="bg-white px-4 py-2 rounded-full border border-primary/20 text-[10px] font-bold text-primary uppercase tracking-widest">
+                                            Mẫu: {formData.template_id}
+                                        </div>
                                     </div>
-                                )}
-                            </>
-                        ) : (
-                            <div className="space-y-4">
-                                {(formData.landing_page_drafts || []).length === 0 ? (
-                                    <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed">
-                                        <p className="text-gray-500">Chưa có bản nháp nào được lưu.</p>
-                                    </div>
-                                ) : (
-                                    <div className="grid grid-cols-1 gap-4">
-                                        {(formData.landing_page_drafts || []).map((draft) => (
-                                            <div key={draft.id} className="p-4 border rounded-xl bg-white shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                                                <div>
-                                                    <h4 className="font-bold text-gray-900">{draft.name}</h4>
-                                                    <p className="text-xs text-gray-500">Mẫu: {draft.template_id} • Cập nhật: {new Date(draft.updated_at).toLocaleString('vi-VN')}</p>
+
+                                    {formData.landing_page_config ? (
+                                        <LandingPageSectionEditor
+                                            config={formData.landing_page_config}
+                                            onChange={handlelanding_page_configChange}
+                                        />
+                                    ) : (
+                                        <div className="p-12 text-center text-neutral-400 font-light italic">
+                                            Đang khởi tạo cấu hình giao diện...
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Trust Indicators Integrations */}
+                                <div className="p-8 glass-card border-none rounded-[2.5rem]">
+                                    <h3 className="text-2xl font-serif text-primary mb-2">Chứng chỉ & Uy tín</h3>
+                                    <p className="text-neutral-500 font-light italic mb-8">Thêm các huy hiệu, chứng nhận hoặc giải thưởng để tăng độ tin cậy với khách hàng.</p>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {(formData.trust_indicators || []).map((indicator: TrustIndicator, index: number) => (
+                                            <div key={index} className="p-6 bg-neutral-50 rounded-2xl border border-neutral-100 group relative">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const updated = (formData.trust_indicators || []).filter((_, i) => i !== index);
+                                                        setFormData(prev => prev ? { ...prev, trust_indicators: updated } : null);
+                                                    }}
+                                                    className="absolute top-4 right-4 text-neutral-300 hover:text-red-500 transition-colors"
+                                                >
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                                </button>
+
+                                                <div className="space-y-4">
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label className="block text-[8px] uppercase tracking-widest font-bold text-neutral-400 mb-2">Loại</label>
+                                                            <select
+                                                                value={indicator.type}
+                                                                onChange={(e) => {
+                                                                    const updated = [...(formData.trust_indicators || [])];
+                                                                    updated[index] = { ...updated[index], type: e.target.value as any };
+                                                                    setFormData(prev => prev ? { ...prev, trust_indicators: updated } : null);
+                                                                }}
+                                                                className="w-full bg-white border border-neutral-200 rounded-xl px-4 py-2 text-xs font-medium focus:ring-2 ring-primary/10 transition-all"
+                                                            >
+                                                                <option value="badge">Huy hiệu</option>
+                                                                <option value="certification">Chứng nhận</option>
+                                                                <option value="award">Giải thưởng</option>
+                                                            </select>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[8px] uppercase tracking-widest font-bold text-neutral-400 mb-2">Tiêu đề</label>
+                                                            <input
+                                                                type="text"
+                                                                value={indicator.title}
+                                                                onChange={(e) => {
+                                                                    const updated = [...(formData.trust_indicators || [])];
+                                                                    updated[index] = { ...updated[index], title: e.target.value };
+                                                                    setFormData(prev => prev ? { ...prev, trust_indicators: updated } : null);
+                                                                }}
+                                                                className="w-full bg-white border border-neutral-200 rounded-xl px-4 py-2 text-xs font-medium focus:ring-2 ring-primary/10 transition-all"
+                                                            />
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="flex gap-2 w-full md:w-auto">
+                                            </div>
+                                        ))}
+
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const newIndicator: TrustIndicator = { type: 'badge', title: 'Chứng nhận mới' };
+                                                setFormData(prev => prev ? { ...prev, trust_indicators: [...(prev.trust_indicators || []), newIndicator] } : null);
+                                            }}
+                                            className="h-full min-h-[140px] border-2 border-dashed border-neutral-200 rounded-2xl flex flex-col items-center justify-center gap-3 text-neutral-400 hover:border-primary hover:text-primary transition-all group"
+                                        >
+                                            <div className="p-3 bg-neutral-50 rounded-full group-hover:bg-primary/5 transition-colors">
+                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                                            </div>
+                                            <span className="text-[10px] font-bold uppercase tracking-widest">Thêm chứng chỉ</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {landingSubTab === 'drafts' && (
+                            <div className="animate-fade-in space-y-8">
+                                <div className="text-center max-w-xl mx-auto mb-12">
+                                    <h3 className="text-3xl font-serif text-primary mb-3">Kho bản nháp</h3>
+                                    <p className="text-neutral-500 font-light italic">Lưu trữ các ý tưởng thiết kế khác nhau. Bạn có thể xem trước hoàn chỉnh trước khi quyết định "Công bố" ra công chúng.</p>
+                                </div>
+
+                                {(formData.landing_page_drafts || []).length === 0 ? (
+                                    <div className="p-20 text-center bg-neutral-50 rounded-[2.5rem] border-2 border-dashed border-neutral-200">
+                                        <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+                                            <svg className="w-8 h-8 text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                                        </div>
+                                        <p className="text-neutral-400 font-light italic">Chưa có bản nháp nào được lưu trong kho.</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 gap-6">
+                                        {(formData.landing_page_drafts || []).map((draft) => (
+                                            <div key={draft.id} className="p-8 bg-white border border-neutral-100 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col md:flex-row justify-between items-center gap-8">
+                                                <div className="flex items-center gap-6">
+                                                    <div className="w-16 h-16 bg-primary/5 rounded-2xl flex items-center justify-center text-primary">
+                                                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="text-xl font-serif text-primary mb-1">{draft.name}</h4>
+                                                        <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest italic">Mẫu: {draft.template_id} • {new Date(draft.updated_at).toLocaleString('vi-VN')}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-3 w-full md:w-auto">
                                                     <button
                                                         type="button"
                                                         onClick={() => {
-                                                            const url = `${window.location.origin}/business/${currentBusiness?.slug}?draft=${draft.id}`;
+                                                            const url = `${window.location.origin}/business/${currentBusiness?.slug || ''}?draft=${draft.id}`;
                                                             window.open(url, '_blank');
                                                         }}
-                                                        className="flex-1 md:flex-none px-3 py-1.5 text-xs font-bold border rounded-lg hover:bg-gray-50"
+                                                        className="flex-1 md:flex-none px-6 py-3 bg-neutral-50 text-neutral-600 rounded-full font-bold text-[10px] uppercase tracking-widest hover:bg-neutral-100 transition-all"
                                                     >
-                                                        Xem thực tế
+                                                        Xem trước (Preview)
                                                     </button>
                                                     <button
                                                         type="button"
                                                         onClick={() => {
-                                                            if (confirm(`Bạn có chắc muốn Xuất bản bản nháp "${draft.name}" không? Bản thiết kế hiện tại sẽ bị ghi đè.`)) {
-                                                                setFormData(prev => prev ? {
-                                                                    ...prev,
-                                                                    template_id: draft.template_id,
-                                                                    landing_page_config: draft.config
-                                                                } : null);
+                                                            if (confirm(`Bạn có chắc muốn "Công bố" bản nháp "${draft.name}" không? Trang hiện tại sẽ bị thay thế hoàn toàn.`)) {
+                                                                setFormData(prev => prev ? { ...prev, template_id: draft.template_id, landing_page_config: draft.config } : null);
                                                                 setLandingSubTab('current');
-                                                                toast.success('Đã áp dụng bản nháp! Hãy nhấn "Lưu tất cả thay đổi" để công bố.');
+                                                                toast.success('Đã áp dụng bản nháp! Nhấn "Lưu tất cả" để hoàn tất công bố.');
                                                             }
                                                         }}
-                                                        className="flex-1 md:flex-none px-3 py-1.5 text-xs font-bold bg-primary text-white rounded-lg hover:bg-primary-dark"
+                                                        className="flex-1 md:flex-none px-6 py-3 bg-primary text-white rounded-full font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-all"
                                                     >
-                                                        Xuất bản (Publish)
+                                                        Công bố (Publish)
                                                     </button>
                                                     <button
                                                         type="button"
                                                         onClick={() => {
-                                                            const updatedDrafts = (formData.landing_page_drafts || []).filter(d => d.id !== draft.id);
-                                                            setFormData(prev => prev ? { ...prev, landing_page_drafts: updatedDrafts } : null);
-                                                            toast.success('Đã xóa bản nháp.');
+                                                            const updated = (formData.landing_page_drafts || []).filter(d => d.id !== draft.id);
+                                                            setFormData(prev => prev ? { ...prev, landing_page_drafts: updated } : null);
                                                         }}
-                                                        className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"
+                                                        className="p-3 text-neutral-300 hover:text-red-500 transition-colors"
                                                     >
-                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                        </svg>
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                                     </button>
                                                 </div>
                                             </div>
@@ -1170,128 +1258,6 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
                                 )}
                             </div>
                         )}
-
-                        {/* Trust Indicators Editor */}
-                        <div className="mt-8 border-t pt-6">
-                            <h3 className="text-lg font-semibold text-neutral-dark mb-4">Trust Indicators</h3>
-                            <p className="text-sm text-gray-600 mb-4">Add badges, certifications, or awards to build trust with your customers.</p>
-
-                            <div className="space-y-4">
-                                {(formData.trust_indicators || []).map((indicator: TrustIndicator, index: number) => (
-                                    <div key={index} className="p-4 border border-gray-200 rounded-lg">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                                            <div>
-                                                <label htmlFor={`trust-indicator-type-${index}`} className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                                                <select
-                                                    id={`trust-indicator-type-${index}`}
-                                                    value={indicator.type}
-                                                    onChange={(e) => {
-                                                        const updated = [...(formData.trust_indicators || [])];
-                                                        updated[index] = { ...updated[index], type: e.target.value as TrustIndicator['type'] };
-                                                        setFormData((prev) => {
-                                                            if (!prev) return null;
-                                                            const updatedResult: Business = { ...prev, trust_indicators: updated };
-                                                            return updatedResult;
-                                                        });
-                                                    }}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                                                >
-                                                    <option value="badge">Badge</option>
-                                                    <option value="certification">Certification</option>
-                                                    <option value="award">Award</option>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                                                <input
-                                                    type="text"
-                                                    value={indicator.title}
-                                                    onChange={(e) => {
-                                                        const updated = [...(formData.trust_indicators || [])];
-                                                        updated[index] = { ...updated[index], title: e.target.value };
-                                                        setFormData((prev) => {
-                                                            if (!prev) return null;
-                                                            const updatedResult: Business = { ...prev, trust_indicators: updated };
-                                                            return updatedResult;
-                                                        });
-                                                    }}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                                                    placeholder="e.g., Verified Business"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="mb-3">
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Icon URL (optional)</label>
-                                            <input
-                                                type="text"
-                                                value={indicator.icon || ''}
-                                                onChange={(e) => {
-                                                    const updated = [...(formData.trust_indicators || [])];
-                                                    updated[index] = { ...updated[index], icon: e.target.value };
-                                                    setFormData((prev) => {
-                                                        if (!prev) return null;
-                                                        const updatedResult: Business = { ...prev, trust_indicators: updated };
-                                                        return updatedResult;
-                                                    });
-                                                }}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                                                placeholder="https://example.com/icon.png"
-                                            />
-                                        </div>
-                                        <div className="mb-3">
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Description (optional)</label>
-                                            <textarea
-                                                value={indicator.description || ''}
-                                                onChange={(e) => {
-                                                    const updated = [...(formData.trust_indicators || [])];
-                                                    updated[index] = { ...updated[index], description: e.target.value };
-                                                    setFormData((prev) => {
-                                                        if (!prev) return null;
-                                                        const updatedResult: Business = { ...prev, trust_indicators: updated };
-                                                        return updatedResult;
-                                                    });
-                                                }}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                                                rows={2}
-                                                placeholder="Brief description of this indicator"
-                                            />
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                const updated = (formData.trust_indicators || []).filter((_: TrustIndicator, i: number) => i !== index);
-                                                setFormData((prev) => {
-                                                    if (!prev) return null;
-                                                    const updatedResult: Business = { ...prev, trust_indicators: updated };
-                                                    return updatedResult;
-                                                });
-                                            }}
-                                            className="text-red-600 hover:text-red-800 text-sm font-medium"
-                                        >
-                                            Remove
-                                        </button>
-                                    </div>
-                                ))}
-
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        const newIndicator: TrustIndicator = { type: 'badge', title: '' };
-                                        setFormData((prev) => {
-                                            if (!prev) return null;
-                                            const updatedResult: Business = {
-                                                ...prev,
-                                                trust_indicators: [...(prev.trust_indicators || []), newIndicator]
-                                            };
-                                            return updatedResult;
-                                        });
-                                    }}
-                                    className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-primary hover:text-primary transition-colors"
-                                >
-                                    + Add Trust Indicator
-                                </button>
-                            </div>
-                        </div>
                     </section>
                 )}
             </div>

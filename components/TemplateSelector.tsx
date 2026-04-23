@@ -10,98 +10,99 @@ interface TemplateSelectorProps {
     disabled?: boolean;
 }
 
-const TEMPLATE_ICONS: Record<string, string> = {
-    'luxury-minimal': '👑',
-    'korean-clinic': '🏥',
-    'nature-spa': '🌿',
-    'dark-premium': '🌑',
-    'modern-beauty': '💄',
-    'luna-spa': '🪷',
-    'pink-nail': '💅',
-    'golden-ratio': '⚜️',
-    'luxury-hair': '💇‍♀️',
-    'q-clinic': '🏥',
-};
-
 const TemplateSelector: React.FC<TemplateSelectorProps> = ({
     currentTemplateId = 'luxury-minimal',
     onChange,
     disabled = false,
 }) => {
-    const presets = Object.values(TEMPLATE_PRESETS);
+    const presets = Object.values(TEMPLATE_PRESETS).slice(0, 8); // Focus on the top 8 premium ones
 
     return (
-        <div className="space-y-4">
-            <div className="mb-4">
-                <h3 className="text-lg font-semibold text-neutral-dark mb-1">Phong cách Landing Page</h3>
-                <p className="text-sm text-gray-500">
-                    Chọn một trong {presets.length} phong cách thiết kế. Bạn có thể thay đổi bất cứ lúc nào.
+        <div className="space-y-8">
+            <div className="text-center max-w-2xl mx-auto mb-12">
+                <h3 className="text-3xl font-serif text-primary mb-3">Kho giao diện Kiến trúc Tinh hoa</h3>
+                <p className="text-neutral-500 font-light italic">
+                    Chọn một phong cách thiết kế để khởi đầu hành trình định vị thương hiệu đẳng cấp của bạn.
+                    Mọi thành phần đều có thể tùy chỉnh sau khi chọn.
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {presets.map((preset) => {
                     const isSelected = currentTemplateId === preset.id;
                     const { colors } = preset.theme;
 
                     return (
-                        <button
+                        <div
                             key={preset.id}
-                            type="button"
-                            disabled={disabled}
-                            onClick={() => onChange(preset.id)}
-                            className={`relative text-left border-2 rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-lg ${isSelected
-                                ? 'border-primary shadow-lg shadow-primary/20 scale-[1.02]'
-                                : 'border-gray-200 hover:border-gray-300'
-                                } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                            className={`group relative bg-white rounded-[2rem] overflow-hidden border transition-all duration-700 hover:shadow-2xl hover:-translate-y-2 ${isSelected ? 'border-primary ring-1 ring-primary/20' : 'border-neutral-100'
+                                }`}
                         >
-                            {/* Preview color bar */}
-                            <div className="h-20 relative" style={{ backgroundColor: colors.background }}>
-                                {/* Color swatches */}
-                                <div className="absolute bottom-0 left-0 right-0 h-8 flex">
-                                    <div className="flex-1" style={{ backgroundColor: colors.primary }} />
-                                    <div className="flex-1" style={{ backgroundColor: colors.accent }} />
-                                    <div className="flex-1" style={{ backgroundColor: colors.secondary }} />
-                                    <div className="flex-1" style={{ backgroundColor: colors.primary_dark }} />
+                            {/* Visual Preview Area */}
+                            <div className="aspect-[16/10] relative overflow-hidden bg-neutral-50">
+                                {/* Simulated Page Layout */}
+                                <div className="absolute inset-0 p-6 flex flex-col gap-4">
+                                    <div className="h-4 w-24 rounded-full" style={{ backgroundColor: colors.primary }} />
+                                    <div className="space-y-2 mt-4">
+                                        <div className="h-8 w-3/4 rounded-lg" style={{ backgroundColor: colors.neutral_dark, opacity: 0.8 }} />
+                                        <div className="h-3 w-1/2 rounded-full" style={{ backgroundColor: colors.neutral_dark, opacity: 0.3 }} />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4 mt-auto">
+                                        <div className="aspect-video rounded-xl bg-neutral-200" />
+                                        <div className="aspect-video rounded-xl bg-neutral-200" />
+                                    </div>
                                 </div>
-                                {/* Icon */}
-                                <div className="absolute top-2 right-3 text-2xl">
-                                    {TEMPLATE_ICONS[preset.id] || '🎨'}
+
+                                {/* Color Swatches Overlay */}
+                                <div className="absolute bottom-4 right-4 flex gap-1 bg-white/80 backdrop-blur-md p-1.5 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                                    <div className="w-4 h-4 rounded-full shadow-inner" style={{ backgroundColor: colors.primary }} />
+                                    <div className="w-4 h-4 rounded-full shadow-inner" style={{ backgroundColor: colors.accent }} />
+                                    <div className="w-4 h-4 rounded-full shadow-inner" style={{ backgroundColor: colors.secondary }} />
                                 </div>
-                                {/* Font preview */}
-                                <div className="absolute top-2 left-3">
-                                    <span
-                                        className="text-xs font-bold uppercase tracking-widest"
-                                        style={{ color: colors.primary, fontFamily: preset.theme.fonts.serif }}
-                                    >
-                                        Aa
-                                    </span>
+
+                                {/* Font Preview */}
+                                <div className="absolute top-4 right-4 bg-white/80 backdrop-blur-md px-3 py-1 rounded-full shadow-lg">
+                                    <span style={{ fontFamily: preset.theme.fonts.serif, color: colors.primary }} className="text-xl italic font-serif">Aa</span>
                                 </div>
-                                {/* Selected overlay */}
+
+                                {/* Selection Overlay */}
                                 {isSelected && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-primary/10">
-                                        <div className="bg-primary text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest">
-                                            ✓ Đang dùng
+                                    <div className="absolute inset-0 bg-primary/10 backdrop-blur-[2px] flex items-center justify-center">
+                                        <div className="bg-primary text-white px-6 py-2 rounded-full font-bold uppercase tracking-widest text-[10px] shadow-xl animate-scale-in">
+                                            Đang sử dụng
                                         </div>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Name */}
-                            <div className="px-3 py-2 bg-white">
-                                <p className="text-sm font-semibold text-gray-800">{preset.name}</p>
-                                <p className="text-xs text-gray-400 mt-0.5">
-                                    {preset.theme.fonts.serif} · {preset.styles.cardStyle}
-                                </p>
+                            {/* Content Area */}
+                            <div className="p-8 flex items-center justify-between">
+                                <div>
+                                    <h4 className="text-xl font-serif text-primary mb-1">{preset.name}</h4>
+                                    <p className="text-xs text-neutral-400 font-light uppercase tracking-widest italic">
+                                        {preset.theme.fonts.serif} Design System
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    disabled={disabled}
+                                    onClick={() => onChange(preset.id)}
+                                    className={`px-8 py-3 rounded-full font-bold uppercase tracking-widest text-[10px] transition-all duration-500 ${isSelected
+                                        ? 'bg-primary text-white cursor-default'
+                                        : 'bg-neutral-50 text-neutral-600 hover:bg-primary hover:text-white border border-neutral-100'
+                                        }`}
+                                >
+                                    {isSelected ? 'Đã Chọn' : 'Sử Dụng'}
+                                </button>
                             </div>
-                        </button>
+                        </div>
                     );
                 })}
             </div>
 
-            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                <p className="text-sm text-amber-800">
-                    <strong>Lưu ý:</strong> Thay đổi phong cách sẽ áp dụng ngay trên trang landing page công khai sau khi lưu.
+            <div className="mt-16 p-8 glass-card border-none rounded-[2rem] bg-accent/5 text-center">
+                <p className="text-neutral-500 italic font-light">
+                    Bạn muốn tùy chỉnh sâu hơn? Sau khi chọn mẫu, hãy vào phần <strong className="text-primary">Chỉnh sửa nội dung</strong> để thay đổi từng chi tiết nhỏ.
                 </p>
             </div>
         </div>
