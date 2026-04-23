@@ -26,8 +26,22 @@ export function useAuth(): AuthContextType {
     };
 
     const logout = async () => {
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
+        try {
+            const { error } = await supabase.auth.signOut();
+            if (error) {
+                // If session is already missing, it's effectively a success
+                if (error.message?.includes('session_not_found') || error.message?.includes('Auth session missing')) {
+                    return;
+                }
+                throw error;
+            }
+        } catch (error: any) {
+            // Ignore session-related errors as the user is effectively signed out anyway
+            if (error?.message?.includes('session_not_found') || error?.message?.includes('Auth session missing')) {
+                return;
+            }
+            throw error;
+        }
     };
 
     const register = async (email: string, password: string, metadata?: Record<string, unknown>) => {
