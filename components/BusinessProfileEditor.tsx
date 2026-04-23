@@ -85,7 +85,11 @@ interface FormErrors {
     image_url?: string;
 }
 
-const BusinessProfileEditor: React.FC = () => {
+interface BusinessProfileEditorProps {
+    initialTab?: 'info' | 'media' | 'hours' | 'social' | 'landing' | 'team';
+}
+
+const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTab = 'info' }) => {
     const { currentBusiness } = useBusinessAuth();
     const { updateBusiness, addBusiness } = useBusinessData();
     const { user } = useAuth();
@@ -93,7 +97,7 @@ const BusinessProfileEditor: React.FC = () => {
 
     const [formData, setFormData] = useState<Business | null>(null);
     const [isSaving, setIsSaving] = useState(false);
-    const [activeTab, setActiveTab] = useState<'info' | 'media' | 'hours' | 'social' | 'landing' | 'team'>('info');
+    const [activeTab, setActiveTab] = useState(initialTab);
     const [errors, setErrors] = useState<FormErrors>({});
     const [isUploadingLogo, setIsUploadingLogo] = useState(false);
     const [isUploadingCover, setIsUploadingCover] = useState(false);
@@ -1040,14 +1044,14 @@ const BusinessProfileEditor: React.FC = () => {
                                     onClick={() => setLandingSubTab('current')}
                                     className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${landingSubTab === 'current' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                                 >
-                                    Cấu hình công bố
+                                    Đang hiển thị (Công bố)
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setLandingSubTab('drafts')}
                                     className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${landingSubTab === 'drafts' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                                 >
-                                    Các bản nháp ({(formData.landing_page_drafts || []).length}/5)
+                                    Kho bản nháp ({(formData.landing_page_drafts || []).length}/5)
                                 </button>
                             </div>
                             <div className="flex gap-2">

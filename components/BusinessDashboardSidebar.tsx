@@ -1,6 +1,6 @@
 import React from 'react';
 
-type ActiveTab = 'dashboard' | 'profile' | 'services' | 'billing' | 'blog' | 'gallery' | 'reviews' | 'stats' | 'settings' | 'bookings' | 'support' | 'deals';
+type ActiveTab = 'dashboard' | 'profile' | 'landing' | 'services' | 'billing' | 'blog' | 'gallery' | 'reviews' | 'stats' | 'settings' | 'bookings' | 'support' | 'deals';
 
 interface SidebarProps {
   activeTab: ActiveTab;
@@ -31,6 +31,10 @@ const BusinessDashboardSidebar: React.FC<SidebarProps> = ({ activeTab, setActive
         <span>Lịch hẹn</span>
       </NavLink>
       <NavLink active={activeTab === 'profile'} onClick={() => setActiveTab('profile')}>
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 112 0 1 1 0 01-2 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
+        <span>Thông tin chung</span>
+      </NavLink>
+      <NavLink active={activeTab === 'landing'} onClick={() => setActiveTab('landing')}>
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
         <span>Landing Page</span>
       </NavLink>

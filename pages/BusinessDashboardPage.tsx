@@ -17,7 +17,7 @@ import BookingsManager from '../components/BookingsManager.tsx';
 import BusinessSupportCenter from '../components/BusinessSupportCenter.tsx';
 import { useNavigate } from 'react-router-dom';
 
-export type ActiveTab = 'dashboard' | 'profile' | 'services' | 'billing' | 'blog' | 'gallery' | 'reviews' | 'stats' | 'settings' | 'bookings' | 'support' | 'deals';
+export type ActiveTab = 'dashboard' | 'profile' | 'landing' | 'services' | 'billing' | 'blog' | 'gallery' | 'reviews' | 'stats' | 'settings' | 'bookings' | 'support' | 'deals';
 
 const BusinessDashboardPage: React.FC = () => {
     const { currentBusiness } = useBusinessAuth();
@@ -59,7 +59,8 @@ const BusinessDashboardPage: React.FC = () => {
 
         switch (activeTab) {
             case 'dashboard': return <DashboardOverview setActiveTab={setActiveTab} />;
-            case 'profile': return <BusinessProfileEditor />;
+            case 'landing': return <BusinessProfileEditor initialTab="landing" />;
+            case 'profile': return <BusinessProfileEditor initialTab="info" />;
             case 'services': return <ServicesManager />;
             case 'deals': return <DealsManager />;
             case 'bookings': return <BookingsManager />;
