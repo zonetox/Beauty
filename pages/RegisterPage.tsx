@@ -10,6 +10,7 @@ import { useAuth } from '../providers/AuthProvider.tsx';
 import { useUserRole } from '../hooks/useUserRole.ts';
 import SEOHead from '../components/SEOHead.tsx';
 import { initializeUserProfile } from '../lib/postSignupInitialization';
+import { createBusinessWithTrial } from '../lib/businessUtils';
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -119,7 +120,18 @@ const RegisterPage: React.FC = () => {
         throw new Error(profileResult.error || 'Khởi tạo tài khoản thất bại. Vui lòng thử lại.');
       }
 
-      // 3. Redirection to Business Dashboard
+      // 3. MANDATORY for Business users: Create the business record if it doesn't exist
+      // This is a safety fallback in case the DB trigger handle_new_user() failed or was bypassed
+      await createBusinessWithTrial({
+        name: formData.business_name,
+        owner_id: newUser.id,
+        email: formData.email,
+        phone: "Chưa cập nhật",
+        address: "Chưa cập nhật",
+        categories: ['Spa & Massage']
+      });
+
+      // 4. Redirection to Business Dashboard
       // Removed polling loop for business_id as Dashboard now handles asynchronous linking gracefully.
       await refreshAuth();
       toast.success('Đăng ký thành công! Chào mừng đối tác đến với 1Beauty.asia.');
