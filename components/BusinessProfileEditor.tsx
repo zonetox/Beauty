@@ -515,7 +515,7 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
     return (
         <form onSubmit={handleSave} className="divide-y divide-gray-200">
             <div className="p-6 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-                <h2 className="text-2xl font-bold font-serif text-neutral-dark">Business Profile Editor</h2>
+                <h2 className="text-2xl font-bold font-serif text-neutral-dark">Biên tập hồ sơ doanh nghiệp</h2>
                 <div className="flex items-center gap-3">
                     {currentBusiness?.slug && (
                         <button
@@ -523,7 +523,7 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
                             onClick={() => navigate(`/business/${currentBusiness.slug}`)}
                             className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100"
                         >
-                            Preview Page
+                            Xem trang thực tế
                         </button>
                     )}
                     <button
@@ -534,7 +534,7 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
                             : 'bg-primary hover:bg-primary-dark'
                             }`}
                     >
-                        {isSaving ? <><Spinner /> Saving...</> : 'Save Changes'}
+                        {isSaving ? <><Spinner /> Đang lưu...</> : 'Lưu thay đổi'}
                     </button>
                 </div>
             </div>
@@ -576,22 +576,22 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
 
             <div className="border-b border-gray-200 overflow-x-auto">
                 <nav className="flex space-x-2 px-6">
-                    <TabButton active={activeTab === 'info'} onClick={() => setActiveTab('info')}>Basic Info</TabButton>
-                    <TabButton active={activeTab === 'media'} onClick={() => setActiveTab('media')}>Media & Content</TabButton>
-                    <TabButton active={activeTab === 'landing'} onClick={() => setActiveTab('landing')}>Landing Page</TabButton>
-                    <TabButton active={activeTab === 'team'} onClick={() => setActiveTab('team')}>Team Members</TabButton>
-                    <TabButton active={activeTab === 'hours'} onClick={() => setActiveTab('hours')}>Working Hours</TabButton>
-                    <TabButton active={activeTab === 'social'} onClick={() => setActiveTab('social')}>Social & SEO</TabButton>
+                    <TabButton active={activeTab === 'info'} onClick={() => setActiveTab('info')}>Thông tin cơ bản</TabButton>
+                    <TabButton active={activeTab === 'media'} onClick={() => setActiveTab('media')}>Hình ảnh & Nội dung</TabButton>
+                    <TabButton active={activeTab === 'landing'} onClick={() => setActiveTab('landing')}>Trang đích (Landing Page)</TabButton>
+                    <TabButton active={activeTab === 'team'} onClick={() => setActiveTab('team')}>Đội ngũ nhân sự</TabButton>
+                    <TabButton active={activeTab === 'hours'} onClick={() => setActiveTab('hours')}>Giờ hoạt động</TabButton>
+                    <TabButton active={activeTab === 'social'} onClick={() => setActiveTab('social')}>Mạng xã hội & SEO</TabButton>
                 </nav>
             </div>
 
             <div className="p-6 space-y-8">
                 {activeTab === 'info' && (
                     <section>
-                        <h3 className="text-lg font-semibold text-neutral-dark mb-4">Basic Information</h3>
+                        <h3 className="text-lg font-semibold text-neutral-dark mb-4">Thông tin thương hiệu</h3>
                         <div className="space-y-4">
                             <InputField
-                                label="Brand Name *"
+                                label="Tên thương hiệu *"
                                 name="name"
                                 value={formData.name || ''}
                                 onChange={handleChange}
@@ -599,7 +599,7 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
                                 error={errors.name}
                             />
                             <TextareaField
-                                label="Detailed Description *"
+                                label="Mô tả chi tiết *"
                                 name="description"
                                 value={formData.description || ''}
                                 onChange={handleChange}
@@ -609,7 +609,7 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
                             />
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Categories *</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Lĩnh vực kinh doanh *</label>
                                 {errors.categories && <p className="text-sm text-red-600 mb-2">{errors.categories}</p>}
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                     {Object.values(BusinessCategory).map(cat => (
@@ -628,10 +628,10 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
                             </div>
                         </div>
 
-                        <h3 className="text-lg font-semibold text-neutral-dark mt-8 mb-4">Contact & Location</h3>
+                        <h3 className="text-lg font-semibold text-neutral-dark mt-8 mb-4">Liên hệ & Vị trí</h3>
                         <div className="space-y-4">
                             <InputField
-                                label="Address *"
+                                label="Địa chỉ cụ thể *"
                                 name="address"
                                 value={formData.address || ''}
                                 onChange={handleChange}
@@ -640,7 +640,7 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
                             />
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <InputField
-                                    label="City *"
+                                    label="Thành phố *"
                                     name="city"
                                     value={formData.city || ''}
                                     onChange={handleChange}
@@ -648,7 +648,7 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
                                     error={errors.city}
                                 />
                                 <InputField
-                                    label="District *"
+                                    label="Quận/Huyện *"
                                     name="district"
                                     value={formData.district || ''}
                                     onChange={handleChange}
@@ -656,7 +656,7 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
                                     error={errors.district}
                                 />
                                 <InputField
-                                    label="Ward *"
+                                    label="Phường/Xã *"
                                     name="ward"
                                     value={formData.ward || ''}
                                     onChange={handleChange}
@@ -666,7 +666,7 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <InputField
-                                    label="Phone *"
+                                    label="Số điện thoại *"
                                     name="phone"
                                     type="tel"
                                     value={formData.phone || ''}
@@ -675,7 +675,7 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
                                     error={errors.phone}
                                 />
                                 <InputField
-                                    label="Email"
+                                    label="Email liên hệ"
                                     name="email"
                                     type="email"
                                     value={formData.email || ''}
@@ -719,11 +719,11 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
                 {activeTab === 'media' && (
                     <section className="space-y-8">
                         <div>
-                            <h3 className="text-lg font-semibold text-neutral-dark mb-4">Logo & Cover Images</h3>
+                            <h3 className="text-lg font-semibold text-neutral-dark mb-4">Logo & Ảnh bìa</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Logo Management */}
                                 <div className="space-y-3">
-                                    <label className="block text-sm font-medium text-gray-700">Logo</label>
+                                    <label className="block text-sm font-medium text-gray-700">Logo hiển thị</label>
                                     <div className="flex items-center gap-4">
                                         <img
                                             src={formData.logo_url || 'https://placehold.co/128x128/E6A4B4/FFFFFF?text=Logo'}
@@ -736,7 +736,7 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
                                                 className={`cursor-pointer bg-secondary text-white px-3 py-2 text-sm font-semibold rounded-md hover:opacity-90 inline-block ${isUploadingLogo ? 'opacity-50 cursor-not-allowed' : ''
                                                     }`}
                                             >
-                                                {isUploadingLogo ? <><Spinner /> Uploading...</> : 'Upload File'}
+                                                {isUploadingLogo ? <><Spinner /> Đang tải...</> : 'Tải ảnh lên'}
                                             </label>
                                             <input
                                                 id="logo-upload"
@@ -753,7 +753,7 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
 
                                 {/* Cover Image */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Cover Image *</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Ảnh bìa đại diện *</label>
                                     {errors.image_url && <p className="text-sm text-red-600 mb-2">{errors.image_url}</p>}
                                     <InputField
                                         label="Cover Image URL"
@@ -771,7 +771,7 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
                                             className={`cursor-pointer text-sm font-semibold text-secondary hover:underline ${isUploadingCover ? 'opacity-50 cursor-not-allowed' : ''
                                                 }`}
                                         >
-                                            {isUploadingCover ? 'Uploading...' : 'Upload from device'}
+                                            {isUploadingCover ? 'Đang tải...' : 'Tải lên từ thiết bị'}
                                         </label>
                                         <input
                                             id="cover-image-upload"
@@ -802,7 +802,7 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
                                 onChange={handleChange}
                                 placeholder="https://www.youtube.com/watch?v=..."
                             />
-                            <p className="text-xs text-gray-500 mt-1">This video will be featured on your landing page.</p>
+                            <p className="text-xs text-neutral-500 mt-1">Video này sẽ được hiển thị nổi bật trên trang đích của quý khách.</p>
                         </div>
                     </section>
                 )}
@@ -810,20 +810,20 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
 
                 {activeTab === 'hours' && (
                     <section>
-                        <h3 className="text-lg font-semibold text-neutral-dark mb-4">Working Hours</h3>
+                        <h3 className="text-lg font-semibold text-neutral-dark mb-4">Giờ hoạt động</h3>
                         <div className="space-y-3">
                             {working_hoursList.map((item, index) => (
                                 <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
                                     <input
                                         value={item.day}
                                         onChange={(e) => handleworking_hoursListChange(index, 'day', e.target.value)}
-                                        placeholder="Day(s) (e.g., Monday - Friday)"
+                                        placeholder="Ngày (Vd: Thứ 2 - Thứ 6)"
                                         className="w-1/3 px-3 py-2 border rounded-md"
                                     />
                                     <input
                                         value={item.time}
                                         onChange={(e) => handleworking_hoursListChange(index, 'time', e.target.value)}
-                                        placeholder="Time (e.g., 9:00 - 21:00)"
+                                        placeholder="Giờ (Vd: 9:00 - 21:00)"
                                         className="flex-grow px-3 py-2 border rounded-md"
                                     />
                                     <button
@@ -841,7 +841,7 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
                             onClick={addworking_hoursRow}
                             className="mt-3 text-sm text-secondary font-semibold hover:underline"
                         >
-                            + Add hours
+                            + Thêm khung giờ
                         </button>
                     </section>
                 )}
@@ -849,7 +849,7 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
                 {activeTab === 'social' && (
                     <section className="space-y-8">
                         <div>
-                            <h3 className="text-lg font-semibold text-neutral-dark mb-4">Social Media Links</h3>
+                            <h3 className="text-lg font-semibold text-neutral-dark mb-4">Liên kết mạng xã hội</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <InputField
                                     label="Facebook URL"
@@ -878,7 +878,7 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
                             </div>
                         </div>
                         <div className="pt-8 border-t">
-                            <h3 className="text-lg font-semibold text-neutral-dark mb-4">SEO Settings</h3>
+                            <h3 className="text-lg font-semibold text-neutral-dark mb-4">Cấu hình SEO</h3>
                             <div className="space-y-4">
                                 <InputField
                                     label="Meta Title"
@@ -909,10 +909,10 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
                 {activeTab === 'team' && (
                     <section>
                         <div className="mb-6">
-                            <h3 className="text-lg font-semibold text-neutral-dark">Team Members</h3>
-                            <p className="text-sm text-gray-600 mt-1">
-                                Add your team members to showcase them on your landing page.
-                                This is purely for marketing and does not grant them dashboard access.
+                            <h3 className="text-lg font-semibold text-neutral-dark">Đội ngũ nhân sự</h3>
+                            <p className="text-sm text-neutral-500 mt-1">
+                                Thêm các thành viên tiêu biểu để hiển thị trên trang đích.
+                                Đây là thông tin quảng bá và không cấp quyền truy cập vào dashboard.
                             </p>
                         </div>
 
@@ -1010,7 +1010,7 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                 </svg>
-                                Add Team Member
+                                Thêm nhân sự mới
                             </button>
                         </div>
                     </section>
@@ -1279,7 +1279,7 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
                         : 'bg-primary hover:bg-primary-dark'
                         }`}
                 >
-                    {isSaving ? <><Spinner /> Saving...</> : 'Save All Changes'}
+                    {isSaving ? <><Spinner /> Đang lưu...</> : 'Lưu tất cả thay đổi'}
                 </button>
             </div>
         </form>

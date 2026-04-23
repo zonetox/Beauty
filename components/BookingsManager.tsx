@@ -74,8 +74,8 @@ const BookingsManager: React.FC = () => {
         return (
             <div className="p-8">
                 <EmptyState
-                    title="No business found"
-                    message="Please select a business to manage appointments."
+                    title="Không tìm thấy doanh nghiệp"
+                    message="Vui lòng chọn doanh nghiệp để quản lý lịch hẹn."
                 />
             </div>
         );
@@ -86,12 +86,12 @@ const BookingsManager: React.FC = () => {
         try {
             await updateAppointmentStatus(appointmentId, status);
             const statusLabels: Record<AppointmentStatus, string> = {
-                [AppointmentStatus.PENDING]: 'pending',
-                [AppointmentStatus.CONFIRMED]: 'confirmed',
-                [AppointmentStatus.CANCELLED]: 'cancelled',
-                [AppointmentStatus.COMPLETED]: 'completed',
+                [AppointmentStatus.PENDING]: 'đang chờ',
+                [AppointmentStatus.CONFIRMED]: 'đã xác nhận',
+                [AppointmentStatus.CANCELLED]: 'đã hủy',
+                [AppointmentStatus.COMPLETED]: 'đã hoàn tất',
             };
-            toast.success(`Appointment ${statusLabels[status]} successfully!`);
+            toast.success(`Lịch hẹn đã được chuyển sang trạng thái ${statusLabels[status]}!`);
         } catch {
             // Error already handled in context with toast
         } finally {
@@ -102,7 +102,7 @@ const BookingsManager: React.FC = () => {
     if (loading) {
         return (
             <div className="p-8">
-                <LoadingState message="Loading appointments..." />
+                <LoadingState message="Đang tải lịch hẹn..." />
             </div>
         );
     }
@@ -115,11 +115,11 @@ const BookingsManager: React.FC = () => {
                     <table className="w-full text-sm text-left text-gray-500">
                         <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                             <tr>
-                                <th className="px-6 py-3">Customer</th>
-                                <th className="px-6 py-3">Service</th>
-                                <th className="px-6 py-3">Date & Time</th>
-                                <th className="px-6 py-3">Status</th>
-                                <th className="px-6 py-3">Actions</th>
+                                <th className="px-6 py-3">Khách hàng</th>
+                                <th className="px-6 py-3">Dịch vụ</th>
+                                <th className="px-6 py-3">Ngày & Giờ</th>
+                                <th className="px-6 py-3">Trạng thái</th>
+                                <th className="px-6 py-3">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -147,7 +147,7 @@ const BookingsManager: React.FC = () => {
                                         {updatingId === appt.id ? (
                                             <div className="flex items-center gap-2">
                                                 <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
-                                                <span className="text-xs text-gray-500">Updating...</span>
+                                                <span className="text-xs text-gray-500">Đang cập nhật...</span>
                                             </div>
                                         ) : (
                                             <>
@@ -158,21 +158,21 @@ const BookingsManager: React.FC = () => {
                                                             className="text-xs font-semibold text-white bg-green-600 px-2 py-1 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                                             disabled={updatingId !== null}
                                                         >
-                                                            Confirm
+                                                            Xác nhận
                                                         </button>
                                                         <button
                                                             onClick={() => handleUpdateStatus(appt.id, AppointmentStatus.CANCELLED)}
                                                             className="text-xs font-semibold text-white bg-red-600 px-2 py-1 rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                                             disabled={updatingId !== null}
                                                         >
-                                                            Cancel
+                                                            Hủy lịch
                                                         </button>
                                                         <button
                                                             onClick={() => setReplyingAppointment({ appointment: appt, context: 'confirm' })}
                                                             className="text-xs font-semibold text-blue-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                                                             disabled={updatingId !== null}
                                                         >
-                                                            Quick Reply
+                                                            Phản hồi nhanh
                                                         </button>
                                                     </div>
                                                 )}
@@ -183,14 +183,14 @@ const BookingsManager: React.FC = () => {
                                                             className="text-xs font-semibold text-white bg-blue-600 px-2 py-1 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                                             disabled={updatingId !== null}
                                                         >
-                                                            Complete
+                                                            Hoàn tất
                                                         </button>
                                                         <button
                                                             onClick={() => handleUpdateStatus(appt.id, AppointmentStatus.CANCELLED)}
                                                             className="text-xs font-semibold text-gray-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                                                             disabled={updatingId !== null}
                                                         >
-                                                            Cancel
+                                                            Hủy
                                                         </button>
                                                     </div>
                                                 )}
@@ -207,8 +207,8 @@ const BookingsManager: React.FC = () => {
                 </div>
             ) : (
                 <EmptyState
-                    title="No appointments"
-                    message={`No appointments found in this category.`}
+                    title="Không có lịch hẹn"
+                    message={`Không có dữ liệu lịch hẹn trong mục này.`}
                 />
             )}
         </div>
@@ -225,32 +225,32 @@ const BookingsManager: React.FC = () => {
                 />
             )}
             <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
-                <h2 className="text-2xl font-bold font-serif text-neutral-dark">Bookings Management</h2>
+                <h2 className="text-2xl font-bold font-serif text-neutral-dark">Quản lý lịch hẹn (Booking)</h2>
                 <div className="flex items-center gap-2 p-1 bg-gray-200 rounded-lg">
                     <button
                         onClick={() => setView('list')}
                         className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors ${view === 'list' ? 'bg-white shadow' : 'text-gray-600 hover:text-gray-800'
                             }`}
                     >
-                        List View
+                        Dạng danh sách
                     </button>
                     <button
                         onClick={() => setView('calendar')}
                         className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors ${view === 'calendar' ? 'bg-white shadow' : 'text-gray-600 hover:text-gray-800'
                             }`}
                     >
-                        Calendar View
+                        Dạng lịch
                     </button>
                 </div>
             </div>
 
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
-                <StatCard title="Pending" value={stats.pending} />
-                <StatCard title="Upcoming" value={stats.upcoming} />
-                <StatCard title="Today" value={stats.today} />
-                <StatCard title="Completed" value={stats.completed} />
-                <StatCard title="Cancelled" value={stats.cancelled} />
+                <StatCard title="Đang chờ" value={stats.pending} />
+                <StatCard title="Sắp tới" value={stats.upcoming} />
+                <StatCard title="Hôm nay" value={stats.today} />
+                <StatCard title="Đã hoàn tất" value={stats.completed} />
+                <StatCard title="Đã hủy" value={stats.cancelled} />
             </div>
 
             {/* Filters */}
@@ -274,13 +274,13 @@ const BookingsManager: React.FC = () => {
 
             {allAppointments.length === 0 ? (
                 <EmptyState
-                    title="No appointments yet"
-                    message="Appointments from customers will appear here. Share your booking link to get started!"
+                    title="Chưa có lịch hẹn nào"
+                    message="Các lịch hẹn từ khách hàng sẽ xuất hiện tại đây. Hãy chia sẻ link landing page để khách hàng bắt đầu đặt chỗ!"
                 />
             ) : view === 'list' ? (
                 <div className="space-y-10">
-                    <AppointmentTable title="Upcoming & Pending Appointments" data={upcomingAppointments} />
-                    <AppointmentTable title="Past Appointments" data={pastAppointments} />
+                    <AppointmentTable title="Lịch hẹn mới & Sắp đến" data={upcomingAppointments} />
+                    <AppointmentTable title="Lịch hẹn đã qua" data={pastAppointments} />
                 </div>
             ) : (
                 <BookingCalendarView
