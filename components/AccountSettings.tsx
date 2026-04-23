@@ -1,43 +1,70 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
-import { useBusiness } from '../contexts/BusinessContext.tsx';
 import { useAuth } from '../providers/AuthProvider.tsx';
 import BusinessProfileEditor from './BusinessProfileEditor.tsx';
 import MembershipAndBilling from './MembershipAndBilling.tsx';
-import LoadingState from './LoadingState.tsx';
 import { supabase } from '../lib/supabaseClient.ts';
+import { User, Shield, CreditCard, Bell, Building2, UserCircle } from 'lucide-react';
 
-const TabButton: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode }> = ({ active, onClick, children }) => (
+const TabButton: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode; icon: React.ReactNode }> = ({ active, onClick, children, icon }) => (
     <button
         onClick={onClick}
-        className={`px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] transition-all relative ${active ? 'text-primary' : 'text-neutral-400 hover:text-primary/70'
+        className={`flex items-center gap-3 px-8 py-5 text-[11px] font-bold uppercase tracking-[0.15em] transition-all relative border-b-2 ${active
+            ? 'text-primary border-primary bg-primary/5'
+            : 'text-neutral-400 border-transparent hover:text-primary/70 hover:bg-gray-50/50'
             }`}
     >
+        <span className={`${active ? 'text-primary' : 'text-neutral-300'}`}>{icon}</span>
         {children}
-        {active && <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary animate-fade-in" />}
     </button>
 );
 
 const AccountSettings: React.FC = () => {
-    const { currentBusiness } = useBusiness();
     const { user, profile, refreshAuth } = useAuth();
-    const [activeTab, setActiveTab] = useState<'profile' | 'account' | 'billing'>('profile');
+    const [activeTab, setActiveTab] = useState<'profile' | 'business' | 'security' | 'billing'>('profile');
     const [isInitializing, setIsInitializing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
-    // Robust detection for business user status
+    // Profile local state
+    const [fullName, setFullName] = useState(profile?.full_name || '');
+    const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || '');
+
     const hasBusinessId = !!profile?.business_id;
-    const isBusinessRole = profile?.user_type === 'business';
-    const isBusinessUserWithoutBusiness = isBusinessRole && !hasBusinessId;
+    const isBusinessRole = profile?.user_type === 'business' || !!profile?.business_id;
+
+    const handleUpdateProfile = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!user || isSaving) return;
+
+        setIsSaving(true);
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .update({
+                    full_name: fullName,
+                    avatar_url: avatarUrl,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', user.id);
+
+            if (error) throw error;
+            toast.success('Cập nhật hồ sơ cá nhân thành công!');
+            await refreshAuth();
+        } catch (error: any) {
+            toast.error('Lỗi cập nhật: ' + error.message);
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     const handleInitializeBusiness = async () => {
         if (!user || isInitializing) return;
 
         setIsInitializing(true);
-        const businessName = profile?.full_name || 'Doanh nghiệp mới';
+        const businessName = fullName || 'Doanh nghiệp mới';
         const slug = `${businessName.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${Math.floor(Math.random() * 1000)}`;
 
         try {
-            // 1. Create Business
             const { data: business, error: bError } = await supabase
                 .from('businesses')
                 .insert({
@@ -69,131 +96,182 @@ const AccountSettings: React.FC = () => {
 
             if (bError) throw bError;
 
-            // 2. Link back to Profile
             const { error: pError } = await supabase
                 .from('profiles')
-                .update({ business_id: business.id })
+                .update({ business_id: business.id, user_type: 'business' })
                 .eq('id', user.id);
 
             if (pError) throw pError;
 
             toast.success('Khởi tạo hồ sơ doanh nghiệp thành công!');
             await refreshAuth();
-            window.location.reload(); // Force context refresh
+            window.location.reload();
         } catch (error: any) {
-            console.error('Initialization error:', error);
             toast.error('Lỗi khi khởi tạo: ' + error.message);
         } finally {
             setIsInitializing(false);
         }
     };
 
-    if (isBusinessUserWithoutBusiness) {
-        return (
-            <div className="p-12 text-center flex flex-col items-center justify-center min-h-[500px]">
-                <div className="bg-primary/5 p-8 rounded-full mb-8">
-                    <svg className="w-16 h-16 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                    </svg>
-                </div>
-                <h2 className="text-3xl font-serif text-primary mb-4">Hoàn thiện hồ sơ đối tác</h2>
-                <p className="text-neutral-500 max-w-md mx-auto mb-10 font-light italic">
-                    Tài khoản của bạn đã được đăng ký là đối tác doanh nghiệp, nhưng hồ sơ chi tiết chưa được khởi tạo.
-                    Vui lòng nhấn nút bên dưới để bắt đầu thiết lập không gian riêng cho bạn.
-                </p>
-                <button
-                    onClick={handleInitializeBusiness}
-                    disabled={isInitializing}
-                    className="bg-primary text-white px-12 py-5 rounded-full font-bold uppercase tracking-[0.2em] text-xs shadow-xl shadow-primary/20 hover:scale-105 transition-all disabled:opacity-50"
-                >
-                    {isInitializing ? 'Đang khởi tạo...' : 'Khởi tạo hồ sơ ngay'}
-                </button>
-            </div>
-        );
-    }
-
-    // If we have a business_id but currentBusiness isn't loaded yet, THEN show loading
-    if (hasBusinessId && !currentBusiness) {
-        return <LoadingState message="Đang tải thông tin tài khoản..." />;
-    }
-
-    // Default fallback if business_id is null and user is business role (handled above)
-    // or if user is NOT business role but somehow access settings
-    if (!currentBusiness && !isBusinessUserWithoutBusiness) {
-        return (
-            <div className="p-12 text-center">
-                <p className="text-neutral-500 italic">Không tìm thấy thông tin doanh nghiệp.</p>
-            </div>
-        );
-    }
-
     return (
-        <div className="animate-fade-in">
-            <div className="p-8 md:p-12 border-b border-gray-100 bg-white">
-                <h1 className="text-4xl font-serif text-primary tracking-tight mb-2">Tài khoản doanh nghiệp</h1>
-                <p className="text-neutral-400 font-light italic text-sm">Trung tâm quản lý thông tin định danh và bảo mật</p>
+        <div className="animate-fade-in bg-[#fafafa] min-h-screen">
+            {/* Elegant Header */}
+            <div className="p-10 md:p-16 border-b border-gray-100 bg-white relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+                <div className="relative z-10">
+                    <h1 className="text-5xl font-serif text-primary tracking-tight mb-3">Cài đặt tài khoản</h1>
+                    <p className="text-neutral-400 font-light italic text-base max-w-2xl">Quản lý các thiết lập riêng tư, bảo mật và thông tin doanh nghiệp của bạn tại một nơi tập trung.</p>
+                </div>
             </div>
 
-            <div className="flex border-b border-gray-100 sticky top-0 bg-white/80 backdrop-blur-md z-10">
-                <TabButton active={activeTab === 'profile'} onClick={() => setActiveTab('profile')}>Hồ sơ</TabButton>
-                <TabButton active={activeTab === 'account'} onClick={() => setActiveTab('account')}>Tài khoản & Bảo mật</TabButton>
-                <TabButton active={activeTab === 'billing'} onClick={() => setActiveTab('billing')}>Gói hội viên</TabButton>
+            {/* Premium Navigation */}
+            <div className="flex flex-wrap border-b border-gray-100 sticky top-0 bg-white/90 backdrop-blur-xl z-20 shadow-sm transition-all overflow-x-auto no-scrollbar">
+                <TabButton active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} icon={<UserCircle size={18} />}>Cá nhân</TabButton>
+                {isBusinessRole && (
+                    <TabButton active={activeTab === 'business'} onClick={() => setActiveTab('business')} icon={<Building2 size={18} />}>Doanh nghiệp</TabButton>
+                )}
+                <TabButton active={activeTab === 'security'} onClick={() => setActiveTab('security')} icon={<Shield size={18} />}>Bảo mật</TabButton>
+                {isBusinessRole && hasBusinessId && (
+                    <TabButton active={activeTab === 'billing'} onClick={() => setActiveTab('billing')} icon={<CreditCard size={18} />}>Gói hội viên</TabButton>
+                )}
             </div>
 
-            <div className="p-0">
+            <div className="max-w-6xl mx-auto p-6 md:p-12 pb-32">
+                {/* Personal Profile Tab */}
                 {activeTab === 'profile' && (
+                    <div className="animate-fade-in-up space-y-10">
+                        <section className="glass-card p-10 rounded-[3rem] border border-gray-100 bg-white shadow-sm">
+                            <div className="flex items-center gap-4 mb-10 border-b border-gray-50 pb-6">
+                                <div className="p-3 bg-primary/5 rounded-2xl text-primary"><User size={24} /></div>
+                                <h2 className="text-2xl font-serif text-primary tracking-wide">Thông tin cá nhân</h2>
+                            </div>
+
+                            <form onSubmit={handleUpdateProfile} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] uppercase tracking-widest font-bold text-neutral-400 ml-1">Họ và tên</label>
+                                    <input
+                                        type="text"
+                                        value={fullName}
+                                        onChange={(e) => setFullName(e.target.value)}
+                                        className="w-full px-6 py-4 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-primary/30 transition-all outline-none"
+                                        placeholder="Nhập họ và tên của bạn"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] uppercase tracking-widest font-bold text-neutral-400 ml-1">Địa chỉ Email</label>
+                                    <input
+                                        type="email"
+                                        value={user?.email || ''}
+                                        disabled
+                                        className="w-full px-6 py-4 bg-gray-100 border border-transparent rounded-2xl text-neutral-500 cursor-not-allowed outline-none"
+                                    />
+                                </div>
+                                <div className="md:col-span-2 space-y-2">
+                                    <label className="text-[10px] uppercase tracking-widest font-bold text-neutral-400 ml-1">Ảnh đại diện (URL)</label>
+                                    <input
+                                        type="text"
+                                        value={avatarUrl}
+                                        onChange={(e) => setAvatarUrl(e.target.value)}
+                                        className="w-full px-6 py-4 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-primary/30 transition-all outline-none"
+                                        placeholder="Dán link ảnh đại diện tại đây"
+                                    />
+                                </div>
+                                <div className="md:col-span-2 pt-4">
+                                    <button
+                                        type="submit"
+                                        disabled={isSaving}
+                                        className="px-10 py-4 bg-primary text-white text-[11px] font-bold uppercase tracking-widest rounded-full shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+                                    >
+                                        {isSaving ? 'Đang lưu...' : 'Lưu cập nhật'}
+                                    </button>
+                                </div>
+                            </form>
+                        </section>
+
+                        {!hasBusinessId && isBusinessRole && (
+                            <section className="glass-card p-12 rounded-[3rem] border border-primary/10 bg-primary/5 text-center">
+                                <Building2 className="w-16 h-16 text-primary mx-auto mb-6 opacity-30" />
+                                <h3 className="text-2xl font-serif text-primary mb-4">Bạn chưa có hồ sơ doanh nghiệp?</h3>
+                                <p className="text-neutral-500 max-w-md mx-auto mb-10 font-light italic">Khởi tạo ngay để bắt đầu quảng bá thương hiệu của bạn trên 1Beauty.asia</p>
+                                <button
+                                    onClick={handleInitializeBusiness}
+                                    disabled={isInitializing}
+                                    className="px-10 py-5 bg-primary text-white text-[11px] font-bold uppercase tracking-widest rounded-full transition-all shadow-xl shadow-primary/30"
+                                >
+                                    {isInitializing ? 'Đang tạo...' : 'Khởi tạo ngay'}
+                                </button>
+                            </section>
+                        )}
+                    </div>
+                )}
+
+                {/* Business Details Tab */}
+                {activeTab === 'business' && (
                     <div className="animate-fade-in-up">
-                        <BusinessProfileEditor initialTab="info" />
+                        {hasBusinessId ? (
+                            <BusinessProfileEditor initialTab="info" />
+                        ) : (
+                            <div className="p-20 text-center glass-card rounded-[3rem] border border-dashed border-gray-200">
+                                <Building2 className="w-12 h-12 text-neutral-200 mx-auto mb-4" />
+                                <p className="text-neutral-400 italic">Vui lòng khởi tạo hồ sơ doanh nghiệp tại tab Cá nhân trước.</p>
+                            </div>
+                        )}
                     </div>
                 )}
 
-                {activeTab === 'billing' && (
-                    <div className="animate-fade-in-up p-8">
-                        <MembershipAndBilling />
-                    </div>
-                )}
-
-                {activeTab === 'account' && (
-                    <div className="animate-fade-in-up p-8 space-y-12">
-                        {/* Notification Settings */}
-                        <div className="glass-card p-10 rounded-[2.5rem] border border-gray-100">
-                            <h3 className="text-2xl font-serif text-primary mb-8 tracking-wide">Thiết lập thông báo</h3>
-                            <div className="space-y-6">
-                                <div className="flex items-center justify-between p-6 bg-gray-50/50 rounded-2xl">
+                {/* Security & Notifications Tab */}
+                {activeTab === 'security' && (
+                    <div className="animate-fade-in-up space-y-12">
+                        <section className="glass-card p-10 rounded-[3rem] shadow-sm border border-gray-100 bg-white">
+                            <div className="flex items-center gap-4 mb-8 border-b border-gray-50 pb-6">
+                                <div className="p-3 bg-primary/5 rounded-2xl text-primary"><Bell size={24} /></div>
+                                <h3 className="text-2xl font-serif text-primary tracking-wide">Thông báo</h3>
+                            </div>
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between p-6 bg-gray-50/50 rounded-2xl hover:bg-gray-50 transition-colors">
                                     <div>
                                         <p className="font-bold text-gray-700">Thông báo đặt lịch</p>
-                                        <p className="text-xs text-gray-400 mt-1 italic">Nhận email ngay khi có khách hàng đặt hẹn</p>
+                                        <p className="text-[11px] text-gray-400 mt-1 italic">Nhận email ngay khi có khách hàng đặt hẹn mới</p>
                                     </div>
-                                    <div className="w-12 h-6 bg-primary rounded-full relative">
+                                    <div className="w-12 h-6 bg-primary rounded-full relative cursor-pointer">
                                         <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div>
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-between p-6 bg-gray-50/50 rounded-2xl text-neutral-300">
+                                <div className="flex items-center justify-between p-6 bg-gray-50/50 rounded-2xl opacity-60">
                                     <div>
-                                        <p className="font-bold">Bản tin ưu đãi 1Beauty</p>
-                                        <p className="text-xs mt-1 italic">Cập nhật các chương trình hỗ trợ đối tác</p>
+                                        <p className="font-bold text-gray-700">Bản tin thị trường</p>
+                                        <p className="text-[11px] text-gray-400 mt-1 italic">Cập nhật xu hướng làm đẹp hàng tháng</p>
                                     </div>
-                                    <div className="w-12 h-6 bg-gray-200 rounded-full relative">
+                                    <div className="w-12 h-6 bg-gray-200 rounded-full relative cursor-not-allowed">
                                         <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full"></div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </section>
 
-                        {/* Security */}
-                        <div className="glass-card p-10 rounded-[2.5rem] border border-gray-100 bg-red-50/10">
-                            <h3 className="text-2xl font-serif text-red-800 mb-8 tracking-wide">Bảo mật</h3>
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between p-6 bg-white rounded-2xl border border-red-100">
-                                    <div>
-                                        <p className="font-bold text-red-800">Đổi mật khẩu</p>
-                                        <p className="text-xs text-red-400 mt-1 italic">Bạn nên đổi mật khẩu định kỳ 6 tháng một lần</p>
-                                    </div>
-                                    <button className="px-6 py-3 bg-red-800 text-white text-[10px] uppercase font-bold tracking-widest rounded-full hover:bg-red-900 transition-all">Thực hiện</button>
-                                </div>
-                                <p className="text-[10px] text-neutral-400 italic text-center">Để xóa tài khoản, vui lòng liên hệ bộ phận hỗ trợ đối tác</p>
+                        <section className="glass-card p-10 rounded-[3rem] border border-red-50 bg-red-50/10">
+                            <div className="flex items-center gap-4 mb-8 border-b border-red-100/50 pb-6">
+                                <div className="p-3 bg-red-100/50 rounded-2xl text-red-800"><Shield size={24} /></div>
+                                <h3 className="text-2xl font-serif text-red-800 tracking-wide">An toàn & Bảo mật</h3>
                             </div>
-                        </div>
+                            <div className="space-y-4">
+                                <button className="w-full flex items-center justify-between p-7 bg-white rounded-2xl border border-red-100 hover:border-red-200 transition-all group">
+                                    <div className="text-left">
+                                        <p className="font-bold text-red-800 group-hover:translate-x-1 transition-transform">Thay đổi mật khẩu</p>
+                                        <p className="text-[11px] text-red-400 mt-1 italic">Bảo vệ tài khoản bằng mật khẩu mạnh mẽ hơn</p>
+                                    </div>
+                                    <span className="text-red-300 group-hover:text-red-500 transition-colors">→</span>
+                                </button>
+                                <p className="text-[10px] text-neutral-400 italic text-center mt-6">Vì lý do bảo mật, để xóa tài khoản vĩnh viễn, vui lòng liên hệ trực tiếp tổng đài hỗ trợ đối tác 1Beauty.</p>
+                            </div>
+                        </section>
+                    </div>
+                )}
+
+                {/* Billing Tab */}
+                {activeTab === 'billing' && (
+                    <div className="animate-fade-in-up">
+                        <MembershipAndBilling />
                     </div>
                 )}
             </div>

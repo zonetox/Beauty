@@ -22,7 +22,7 @@ import { supabase } from './supabaseClient.ts';
 import { User } from '@supabase/supabase-js';
 import { Profile } from '../types.ts';
 
-export type UserRole = 'anonymous' | 'business' | 'admin';
+export type UserRole = 'anonymous' | 'user' | 'business' | 'admin';
 
 export interface RoleResolutionResult {
   role: UserRole;
@@ -98,10 +98,14 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
       };
     }
 
-    // Force map deprecated roles to business_owner
-    let resolvedRole = context.role as UserRole;
-    if (context.role === 'user' || context.role === 'business_staff' || context.role === 'business_owner') {
+    // Map roles correctly
+    let resolvedRole: UserRole = 'anonymous';
+    if (context.role === 'admin') {
+      resolvedRole = 'admin';
+    } else if (context.role === 'business_owner' || context.role === 'business_staff') {
       resolvedRole = 'business';
+    } else if (context.role === 'user') {
+      resolvedRole = 'user';
     }
 
     // Map RPC response to RoleResolutionResult
