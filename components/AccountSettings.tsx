@@ -177,12 +177,36 @@ const AccountSettings: React.FC = () => {
     };
 
     return (
-        <form onSubmit={handleSave} className="p-8 bg-gray-50/50 space-y-8">
-            <h2 className="text-2xl font-bold font-serif text-neutral-dark">Account Settings</h2>
+        <form onSubmit={handleSave} className="p-8 bg-gray-50/50 space-y-8 animate-fade-in-up">
+            <h2 className="text-3xl font-serif text-primary tracking-wide">Thiết lập tài khoản</h2>
+            <p className="text-neutral-400 text-sm font-light italic -mt-6">Quản lý thông tin định danh và bảo mật cho doanh nghiệp của quý khách</p>
 
-            <SectionCard title="Contact Information">
+            <SectionCard title="Ảnh đại diện">
+                <div className="flex items-center gap-8">
+                    <div className="relative group">
+                        <img
+                            src={formData.logo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${formData.name}`}
+                            alt={formData.name}
+                            className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-premium"
+                        />
+                        <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </div>
+                    </div>
+                    <div>
+                        <p className="text-xs text-gray-500 mb-2 uppercase tracking-widest font-bold">Logo doanh nghiệp</p>
+                        <p className="text-[10px] text-gray-400 italic mb-4">Định dạng khuyên dùng: PNG, JPG hoặc SVG (tối đa 2MB)</p>
+                        <div className="flex gap-3">
+                            <button type="button" className="px-4 py-2 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest rounded-full hover:bg-primary hover:text-white transition-all">Tải ảnh mới</button>
+                            <button type="button" className="px-4 py-2 bg-gray-100 text-gray-400 text-[10px] font-bold uppercase tracking-widest rounded-full hover:bg-red-50 hover:text-red-500 transition-all">Gỡ bỏ</button>
+                        </div>
+                    </div>
+                </div>
+            </SectionCard>
+
+            <SectionCard title="Thông tin liên hệ">
                 <InputField
-                    label="Business Name"
+                    label="Tên doanh nghiệp"
                     name="name"
                     value={formData.name}
                     onChange={handleOwnerInfoChange}
@@ -190,7 +214,7 @@ const AccountSettings: React.FC = () => {
                     required
                 />
                 <InputField
-                    label="Contact Email"
+                    label="Email liên hệ"
                     type="email"
                     name="email"
                     value={formData.email || ''}
@@ -199,7 +223,7 @@ const AccountSettings: React.FC = () => {
                     placeholder="business@example.com"
                 />
                 <InputField
-                    label="Contact Phone"
+                    label="Số điện thoại"
                     type="tel"
                     name="phone"
                     value={formData.phone || ''}
@@ -223,29 +247,48 @@ const AccountSettings: React.FC = () => {
                 </button>
             </SectionCard>
 
-            <SectionCard title="Notification Settings">
-                <p className="text-sm text-gray-600 mb-4">
-                    Choose which notifications you want to receive via email.
+            <SectionCard title="Thiết lập thông báo">
+                <p className="text-sm text-gray-500 mb-6 italic">
+                    Lựa chọn loại thông báo quý khách muốn nhận qua email.
                 </p>
-                <div className="space-y-4">
+                <div className="space-y-6">
                     <Toggle
-                        label="Email me about new reviews"
+                        label="Thông báo đánh giá mới"
                         enabled={formData.notification_settings?.review_alerts || false}
                         onChange={() => handleNotificationChange('review_alerts')}
-                        description="Get notified when customers leave new reviews"
+                        description="Nhận email khi có khách hàng để lại đánh giá về dịch vụ."
                     />
                     <Toggle
-                        label="Email me about new booking requests"
+                        label="Thông báo yêu cầu đặt chỗ"
                         enabled={formData.notification_settings?.booking_requests || false}
                         onChange={() => handleNotificationChange('booking_requests')}
-                        description="Get notified when customers request appointments"
+                        description="Nhận email ngay khi có khách hàng yêu cầu đặt lịch hẹn."
                     />
                     <Toggle
-                        label="Email me about platform news and updates"
+                        label="Tin tức & Cập nhật hệ thống"
                         enabled={formData.notification_settings?.platform_news || false}
                         onChange={() => handleNotificationChange('platform_news')}
-                        description="Receive updates about new features and platform announcements"
+                        description="Nhận thông tin về các tính năng mới và cập nhật từ 1Beauty.asia."
                     />
+                </div>
+            </SectionCard>
+
+            <SectionCard title="Bảo mật & Quyền riêng tư">
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                        <div>
+                            <p className="text-sm font-bold text-gray-700">Mật khẩu</p>
+                            <p className="text-xs text-gray-500 italic mt-1">Thay đổi mật khẩu đăng nhập của tài khoản.</p>
+                        </div>
+                        <button type="button" className="px-4 py-2 border border-primary/20 text-primary text-[10px] font-bold uppercase tracking-widest rounded-full hover:bg-primary hover:text-white transition-all">Đổi mật khẩu</button>
+                    </div>
+                    <div className="flex items-center justify-between p-4 bg-red-50/30 rounded-2xl border border-red-100">
+                        <div>
+                            <p className="text-sm font-bold text-red-700">Xóa tài khoản</p>
+                            <p className="text-xs text-red-500 italic mt-1">Dữ liệu doanh nghiệp sẽ bị xóa vĩnh viễn và không thể khôi phục.</p>
+                        </div>
+                        <button type="button" className="px-4 py-2 bg-white border border-red-200 text-red-500 text-[10px] font-bold uppercase tracking-widest rounded-full hover:bg-red-500 hover:text-white transition-all">Yêu cầu xóa</button>
+                    </div>
                 </div>
             </SectionCard>
 
@@ -261,10 +304,10 @@ const AccountSettings: React.FC = () => {
                     {isSaving ? (
                         <>
                             <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            Saving...
+                            Đang lưu...
                         </>
                     ) : (
-                        'Save All Settings'
+                        'Lưu tất cả thay đổi'
                     )}
                 </button>
             </div>
