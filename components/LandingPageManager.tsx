@@ -42,7 +42,17 @@ const LandingPageManager: React.FC = () => {
         }
     }, [currentBusiness]);
 
-    if (!currentBusiness || !formData) return <div className="p-20 text-center"><Spinner /></div>;
+    if (!currentBusiness) {
+        return (
+            <div className="p-20 text-center text-gray-500">
+                <Spinner />
+                <p className="mt-4">Đang tải cấu hình doanh nghiệp...</p>
+                <p className="text-sm mt-2">Nếu quá trình này quá lâu, vui lòng <a href="/dashboard/profile" className="text-secondary hover:underline">Cập nhật hồ sơ doanh nghiệp</a> trước.</p>
+            </div>
+        );
+    }
+
+    if (!formData) return <div className="p-20 text-center"><Spinner /></div>;
 
     const handleSave = async (silent = false) => {
         setIsSaving(true);
