@@ -62,6 +62,7 @@ const ReviewsManager = safeLazy(() => import('./components/ReviewsManager.tsx'))
 const AnalyticsDashboard = safeLazy(() => import('./components/AnalyticsDashboard.tsx'));
 const AccountSettings = safeLazy(() => import('./components/AccountSettings.tsx'));
 const BusinessSupportCenter = safeLazy(() => import('./components/BusinessSupportCenter.tsx'));
+const LandingPageManager = safeLazy(() => import('./components/LandingPageManager.tsx'));
 
 const NotFoundPage = safeLazy(() => import('./pages/NotFoundPage.tsx'));
 const LoginPage = safeLazy(() => import('./pages/LoginPage.tsx'));
@@ -145,7 +146,7 @@ const AppContent: React.FC = () => {
                                                         }>
                                                             <Route index element={<DashboardOverview />} />
                                                             <Route path="profile" element={<BusinessProfileEditor initialTab="info" />} />
-                                                            <Route path="landing" element={<BusinessProfileEditor initialTab="landing" />} />
+                                                            <Route path="landing" element={<LandingPageManager />} />
                                                             <Route path="services" element={<ServicesManager />} />
                                                             <Route path="deals" element={<DealsManager />} />
                                                             <Route path="bookings" element={<BookingsManager />} />
