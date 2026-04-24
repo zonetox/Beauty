@@ -222,48 +222,54 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
         const newErrors: FormErrors = {};
 
         if (!formData.name || formData.name.trim().length < 2) {
-            newErrors.name = 'Business name must be at least 2 characters.';
+            newErrors.name = 'Tên doanh nghiệp tối thiểu 2 ký tự.';
         }
 
         if (!formData.description || formData.description.trim().length < 10) {
-            newErrors.description = 'Description must be at least 10 characters.';
+            newErrors.description = 'Mô tả tối thiểu 10 ký tự.';
         }
 
         if (!formData.address || formData.address.trim().length < 5) {
-            newErrors.address = 'Address must be at least 5 characters.';
+            newErrors.address = 'Địa chỉ tối thiểu 5 ký tự.';
         }
 
         if (!formData.city || formData.city.trim().length < 2) {
-            newErrors.city = 'City is required.';
+            newErrors.city = 'Thành phố là bắt buộc.';
         }
 
         if (!formData.district || formData.district.trim().length < 2) {
-            newErrors.district = 'District is required.';
+            newErrors.district = 'Quận/Huyện là bắt buộc.';
         }
 
         if (!formData.ward || formData.ward.trim().length < 2) {
-            newErrors.ward = 'Ward is required.';
+            newErrors.ward = 'Phường/Xã là bắt buộc.';
         }
 
         if (!formData.phone || !/^[0-9+\-\s()]+$/.test(formData.phone)) {
-            newErrors.phone = 'Please enter a valid phone number.';
+            newErrors.phone = 'Số điện thoại không hợp lệ.';
         }
 
         if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-            newErrors.email = 'Please enter a valid email address.';
+            newErrors.email = 'Email không hợp lệ.';
         }
 
         if (!formData.categories || formData.categories.length === 0) {
-            newErrors.categories = 'Please select at least one category.';
+            newErrors.categories = 'Vui lòng chọn ít nhất một lĩnh vực.';
         }
 
+        // C3.2 FIX: Do not block save if image is missing, just warn and use placeholder
         if (!formData.image_url || formData.image_url.trim().length === 0) {
-            // image_url is required in schema
-            newErrors.image_url = 'Cover image is required.';
+            // Set a high-quality default if missing instead of failing validation
+            setFormData(prev => prev ? { ...prev, image_url: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=2074' } : null);
         }
 
         setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
+        const hasErrors = Object.keys(newErrors).length > 0;
+        if (hasErrors) {
+            console.warn('Validation failed:', newErrors);
+            toast.error('Vui lòng kiểm tra lại các trường thông tin còn thiếu.');
+        }
+        return !hasErrors;
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {

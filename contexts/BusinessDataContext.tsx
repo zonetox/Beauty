@@ -175,22 +175,61 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
   const updateBusiness = async (updatedBusiness: Business) => {
     if (!isSupabaseConfigured) { toast.error("Preview Mode: Cannot update business."); return; }
     const { id } = updatedBusiness;
+
+    // 1. Prepare core business data for update
     const businessToUpdate = { ...updatedBusiness } as Partial<Business & { business_blog_posts?: unknown }>;
     delete businessToUpdate.id;
-    delete businessToUpdate.services;
-    delete businessToUpdate.gallery;
-    delete businessToUpdate.team;
-    delete businessToUpdate.deals;
-    delete businessToUpdate.reviews;
-    delete businessToUpdate.business_blog_posts;
+    // We intentionally keep references for potential bulk updates if needed, 
+    // but the main table update should strip them.
+    const coreData = { ...businessToUpdate };
+    delete coreData.services;
+    delete coreData.gallery;
+    delete coreData.team;
+    delete coreData.deals;
+    delete coreData.reviews;
+    delete coreData.business_blog_posts;
 
-    const { error } = await supabase.from('businesses').update(toSnakeCase(businessToUpdate) as any).eq('id', id);
-    if (error) {
-      console.error('Error updating business:', error.message);
-      toast.error('Lỗi khi lưu thông tin: ' + error.message);
+    // 2. Perform updates in parallel
+    try {
+      const tasks = [];
+
+      // Update core business info
+      tasks.push(supabase.from('businesses').update(toSnakeCase(coreData) as any).eq('id', id));
+
+      // helper to strip IDs for upsert (or keep them if they exist)
+      const prepareForUpsert = (item: any) => {
+        const cleaned = toSnakeCase(item);
+        return { ...cleaned, business_id: id };
+      };
+
+      // Update related tables (Upsert pattern)
+      if (updatedBusiness.services) {
+        tasks.push(supabase.from('services').upsert(updatedBusiness.services.map((s, i) => ({ ...prepareForUpsert(s), position: s.position || i }))));
+      }
+      if (updatedBusiness.gallery) {
+        tasks.push(supabase.from('media_items').upsert(updatedBusiness.gallery.map((g, i) => ({ ...prepareForUpsert(g), position: g.position || i }))));
+      }
+      if (updatedBusiness.team) {
+        tasks.push(supabase.from('team_members').upsert(updatedBusiness.team.map(t => prepareForUpsert(t))));
+      }
+      if (updatedBusiness.deals) {
+        tasks.push(supabase.from('deals').upsert(updatedBusiness.deals.map(d => prepareForUpsert(d))));
+      }
+
+      const results = await Promise.all(tasks);
+      const errors = results.filter(r => r.error).map(r => r.error?.message);
+
+      if (errors.length > 0) {
+        console.error('Multiple update errors:', errors);
+        toast.error('Có lỗi xảy ra khi lưu một số thành phần: ' + errors.join(', '));
+      }
+
+      await refetchAllPublicData();
+    } catch (error: any) {
+      console.error('Relational update exception:', error);
+      toast.error('Lỗi hệ thống khi lưu: ' + error.message);
       throw error;
     }
-    await refetchAllPublicData();
   };
 
   const deleteBusiness = async (business_id: number): Promise<void> => {
