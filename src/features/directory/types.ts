@@ -1,4 +1,4 @@
-import { Business } from '../../../types';
+// src/features/directory/types.ts
 
 export interface DirectoryFilters {
     search?: string;

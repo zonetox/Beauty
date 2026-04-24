@@ -2,7 +2,6 @@ import React from 'react';
 import { AdminUser, AuthenticatedAdmin } from '../../types.ts';
 import { useAdminAuth } from '../../contexts/AdminContext.tsx';
 import UserManagementTable from '../UserManagementTable.tsx';
-import toast from 'react-hot-toast';
 
 interface AdminUserManagementTabProps {
     currentUser: AuthenticatedAdmin | null;
@@ -11,7 +10,6 @@ interface AdminUserManagementTabProps {
 }
 
 const AdminUserManagementTab: React.FC<AdminUserManagementTabProps> = ({
-    currentUser,
     onEdit,
     onDelete
 }) => {

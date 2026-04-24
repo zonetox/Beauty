@@ -5,6 +5,6 @@
  * It re-exports and wraps the new Auth feature to ensure existing pages don't break.
  */
 
-import React from 'react';
+// React handled by vite-plugin-react
 export { useAuth, AuthProvider } from '../src/features/auth';
 export type { AuthState, AuthContextType } from '../src/features/auth';

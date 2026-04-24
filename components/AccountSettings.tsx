@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../providers/AuthProvider.tsx';
+// src/types.ts imports handled below if needed
 import BusinessProfileEditor from './BusinessProfileEditor.tsx';
 import MembershipAndBilling from './MembershipAndBilling.tsx';
 import { supabase } from '../lib/supabaseClient.ts';
-import { User, Shield, CreditCard, Bell, Building2, UserCircle, Save, Lock, Mail, Camera, ChevronRight, Check } from 'lucide-react';
+import { Building2, Shield, CreditCard, User, UserCircle, Lock, Camera, Save, Bell } from 'lucide-react';
 
 const TabButton: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode; icon: React.ReactNode }> = ({ active, onClick, children, icon }) => (
     <button

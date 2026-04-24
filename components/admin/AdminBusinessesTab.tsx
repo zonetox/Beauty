@@ -20,7 +20,7 @@ const AdminBusinessesTab: React.FC<AdminBusinessesTabProps> = ({
     onDuplicate,
     onAddNew
 }) => {
-    const { businesses, loading: businessesLoading, updateBusiness } = useBusinessData();
+    const { businesses, businessLoading: businessesLoading, updateBusiness } = useBusinessData();
 
     const filteredBusinesses = useMemo(() => {
         const q = searchQuery.toLowerCase().trim();

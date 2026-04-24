@@ -371,12 +371,7 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
         });
     };
 
-    const handlelanding_page_configChange = (newConfig: LandingPageConfig) => {
-        setFormData((prev) => {
-            if (!prev) return null;
-            return { ...prev, landing_page_config: newConfig } as Business;
-        });
-    };
+    // handleLandingPageConfigChange removed - unused in current phase
 
     const handleSocialChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;

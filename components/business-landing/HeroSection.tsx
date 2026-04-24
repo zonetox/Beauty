@@ -1,10 +1,8 @@
-
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Business, ReviewStatus, HeroSlide } from '../../types.ts';
 import StarRating from '../StarRating.tsx';
 import { getOptimizedSupabaseUrl } from '../../lib/image.ts';
-import { useCMS } from '../../contexts/CMSContext.tsx';
+// CMS context unused in this view
 import Editable from '../Editable.tsx';
 
 interface HeroSectionProps {
@@ -13,7 +11,6 @@ interface HeroSectionProps {
 }
 
 const HeroSection: React.FC<HeroSectionProps> = ({ business, onBookNowClick }) => {
-    const { isEditing } = useCMS();
 
     const slides: HeroSlide[] = useMemo(() => {
         if (business.hero_slides && business.hero_slides.length > 0) {

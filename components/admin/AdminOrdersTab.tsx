@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { OrderStatus, Order } from '../../types.ts';
+import { OrderStatus } from '../../types.ts';
 import { useOrderData } from '../../contexts/BusinessBlogDataContext.tsx';
 import OrderManagementTable from '../OrderManagementTable.tsx';
 

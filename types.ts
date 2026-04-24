@@ -255,6 +255,14 @@ export interface MembershipPackage {
   is_active?: boolean;
 }
 
+export interface BusinessStaff {
+  id: string;
+  business_id: number;
+  user_id: string;
+  role: 'Admin' | 'Editor';
+  created_at?: string;
+}
+
 // Abuse Report
 export interface AbuseReport {
   id: string;

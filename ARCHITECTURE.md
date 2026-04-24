@@ -86,18 +86,12 @@ Tài liệu này định nghĩa các triết lý kiến trúc BẤT BIẾN của
 
 **Authentication:**
 - Source of Truth: `auth.users` (Supabase Auth)
-- Frontend đọc session từ Supabase Auth
+- Frontend đọc## 🔒 Security & Access Model (RLS-First)
 
-**Roles & Permissions:**
-- Source of Truth: `admin_users` table trong database
-- Frontend fetch từ database, không hardcode
-
-**User Profile:**
-- Source of Truth: `profiles` table trong database
-- Frontend fetch từ database
-
-**Business Data:**
-- Source of Truth: `businesses` table và related tables
+Access is strictly governed by Superbase **Row Level Security (RLS)**. 
+- **Drift Protection:** The Database Schema (`database/schema_v1.0_FINAL.sql`) is the **SINGLE SOURCE OF TRUTH**. All Frontend `types.ts` must exactly match the schema.
+- **Role Resolution:** Handled via a unified `public.get_user_context` RPC. This prevents inconsistent routing logic at the client level.
+- **Scalability:** All RLS policies are optimized with sub-queries `(SELECT auth.uid())` to ensure high-performance execution for 10,000+ users.
 - Frontend fetch từ database qua Supabase client
 
 **Permissions:**

@@ -224,6 +224,7 @@ CREATE TABLE public.profiles (
     full_name TEXT,
     avatar_url TEXT,
     email TEXT,
+    user_type TEXT DEFAULT 'user',
     business_id BIGINT REFERENCES public.businesses(id),
     favorites BIGINT []
 );
@@ -455,6 +456,7 @@ CREATE INDEX IF NOT EXISTS idx_businesses_is_active ON public.businesses(is_acti
 CREATE INDEX IF NOT EXISTS idx_businesses_membership_tier ON public.businesses(membership_tier);
 CREATE INDEX IF NOT EXISTS idx_blog_posts_slug ON public.blog_posts(slug);
 CREATE INDEX IF NOT EXISTS idx_registration_requests_status ON public.registration_requests(status);
+CREATE INDEX IF NOT EXISTS idx_businesses_owner_id ON public.businesses(owner_id);
 -- ============================================
 -- FUNCTIONS & TRIGGERS
 -- ============================================
