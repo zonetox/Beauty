@@ -5,8 +5,13 @@ import QuickInfoBar from '../sections/QuickInfoBar.tsx';
 import HeroSection from '../sections/HeroSection.tsx';
 import AboutSection from '../sections/AboutSection.tsx';
 import ServicesSection from '../sections/ServicesSection.tsx';
+import BenefitsSection from '../sections/BenefitsSection.tsx';
 import ProductsSection from '../sections/ProductsSection.tsx';
+import HoursSection from '../sections/HoursSection.tsx';
+import BookingFormSection from '../sections/BookingFormSection.tsx';
 import GallerySection from '../sections/GallerySection.tsx';
+import ReviewsSection from '../sections/ReviewsSection.tsx';
+import InstagramSection from '../sections/InstagramSection.tsx';
 import MapSection from '../sections/MapSection.tsx';
 import TemplateFooter from '../sections/TemplateFooter.tsx';
 import ZaloWidget from '../sections/ZaloWidget.tsx';
@@ -58,22 +63,37 @@ const LuxuryTemplateLayout: React.FC<LuxuryTemplateLayoutProps> = ({ business, p
             {/* 4. Services Section */}
             <ServicesSection business={business} />
 
-            {/* 5. Products/Packages Section */}
+            {/* 5. Benefits Section (Why Choose Us) */}
+            <BenefitsSection business={business} />
+
+            {/* 6. Products/Packages (Offers) Section */}
             <ProductsSection business={business} />
 
-            {/* 6. Gallery Section (Pinterest/Masonry) */}
+            {/* 7. Hours Section */}
+            <HoursSection business={business} />
+
+            {/* 8. Booking Form Section */}
+            <BookingFormSection business={business} />
+
+            {/* 9. Gallery Section */}
             <GallerySection
                 business={business}
                 layout={preset.styles.galleryLayout || 'masonry'}
             />
 
-            {/* 7. Contact + Styled Map */}
+            {/* 10. Reviews Section */}
+            <ReviewsSection business={business} />
+
+            {/* 11. Instagram Section */}
+            <InstagramSection business={business} />
+
+            {/* 12. Contact + Styled Map */}
             <MapSection
                 business={business}
                 mapFilter={preset.styles.mapFilter}
             />
 
-            {/* 8. Footer */}
+            {/* Footer */}
             <TemplateFooter business={business} />
 
             {/* Floating Zalo Widget */}

@@ -283,6 +283,33 @@ export const TEMPLATE_PRESETS: Record<string, TemplatePreset> = {
             galleryLayout: 'grid',
             buttonStyle: 'pill'
         }
+    },
+    'standard-2025': {
+        id: 'standard-2025',
+        name: 'Standard 2025 — Bản Chuẩn',
+        theme: {
+            logo_url: '/logo.svg',
+            favicon_url: '/favicon.svg',
+            colors: {
+                primary: '#c44569',    // Rose Pink (Naïlora)
+                primary_dark: '#a83458',
+                secondary: '#1e1e2a',
+                accent: '#e66767',
+                background: '#ffffff',
+                neutral_dark: '#1a1a1a',
+            },
+            fonts: {
+                sans: 'Inter',
+                serif: 'Inter',
+            },
+        },
+        styles: {
+            heroOverlay: 'rgba(0, 0, 0, 0.4)',
+            cardStyle: 'glass',
+            mapFilter: 'contrast(1.1) saturate(1.1)',
+            galleryLayout: 'grid',
+            buttonStyle: 'pill'
+        }
     }
 };
 
@@ -442,6 +469,51 @@ export const DEMO_CONTENT: Record<string, Partial<Business>> = {
         working_hours: {
             'Thứ 2 - Thứ 6': '08:30 - 19:30',
             'Thứ 7 - CN': '09:00 - 17:30'
+        }
+    },
+    'standard-2025': {
+        name: 'Naïlora Art & Care',
+        slogan: 'Nơi vẻ đẹp hội ngộ cùng sự tận tâm',
+        description: 'Naïlora mang đến trải nghiệm làm đẹp đẳng cấp với không gian sang trọng và đội ngũ chuyên gia tận tâm. Chúng tôi tin rằng mỗi khách hàng đều xứng đáng với những gì tốt đẹp nhất.',
+        address: '123 Lê Lợi, P.Bến Nghé, Quận 1',
+        city: 'Hồ Chí Minh',
+        district: 'Quận 1',
+        ward: 'Bến Nghé',
+        phone: '0909 123 456',
+        email: 'nailora@1beauty.asia',
+        categories: [BusinessCategory.NAIL, BusinessCategory.SPA],
+        image_url: 'https://images.unsplash.com/photo-1616394584738-6c2c24b0045c?w=1600&auto=format&fit=crop',
+        logo_url: 'https://api.dicebear.com/7.x/initials/svg?seed=NA&backgroundColor=c44569',
+        hero_slides: [
+            {
+                title: 'Nail nghệ thuật đỉnh cao',
+                subtitle: '200+ mẫu mới nhất - Phong cách Hàn Quốc',
+                image_url: 'https://images.unsplash.com/photo-1616394584738-6c2c24b0045c?w=1600'
+            },
+            {
+                title: 'Gội đầu dưỡng sinh',
+                subtitle: 'Thư giãn Nhật Bản - massage da đầu',
+                image_url: 'https://images.unsplash.com/photo-1621609764180-2ca554a9d6f2?w=1600'
+            },
+            {
+                title: 'Combo yêu thương',
+                subtitle: 'Nail + Gội đầu chỉ 499k - Tiết kiệm 30%',
+                image_url: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=1600'
+            }
+        ],
+        working_hours: {
+            'Thứ 2 - Thứ 6': '09:00 - 20:00',
+            'Thứ 7': '09:00 - 18:00',
+            'Chủ Nhật': '10:00 - 17:00'
+        },
+        services: [
+            { id: 'NK01', business_id: 175, name: 'Sơn Gel Cao Cấp', price: '199k', description: 'Độ bền 4 tuần, bảo hành 7 ngày.', image_url: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800', duration_minutes: 45, position: 1 },
+            { id: 'NK02', business_id: 175, name: 'Gội Đầu Dưỡng Sinh', price: '150k', description: 'Thư giãn massage da đầu với thảo dược.', image_url: 'https://images.unsplash.com/photo-1621609764180-2ca554a9d6f2?w=800', duration_minutes: 60, position: 2 },
+            { id: 'NK03', business_id: 175, name: 'Combo Nail & Gội', price: '499k', description: 'Tiết kiệm 30% khi trải nghiệm combo.', image_url: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=800', duration_minutes: 90, position: 3 }
+        ],
+        socials: {
+            facebook: 'https://facebook.com/nailora',
+            instagram: 'https://instagram.com/nailora'
         }
     }
 };
