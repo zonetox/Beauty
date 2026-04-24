@@ -507,9 +507,9 @@ export const DEMO_CONTENT: Record<string, Partial<Business>> = {
             'Chủ Nhật': '10:00 - 17:00'
         },
         services: [
-            { id: 'NK01', business_id: 175, name: 'Sơn Gel Cao Cấp', price: '199k', description: 'Độ bền 4 tuần, bảo hành 7 ngày.', image_url: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800', duration_minutes: 45, position: 1 },
-            { id: 'NK02', business_id: 175, name: 'Gội Đầu Dưỡng Sinh', price: '150k', description: 'Thư giãn massage da đầu với thảo dược.', image_url: 'https://images.unsplash.com/photo-1621609764180-2ca554a9d6f2?w=800', duration_minutes: 60, position: 2 },
-            { id: 'NK03', business_id: 175, name: 'Combo Nail & Gội', price: '499k', description: 'Tiết kiệm 30% khi trải nghiệm combo.', image_url: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=800', duration_minutes: 90, position: 3 }
+            { id: 'NK01', business_id: 0, name: 'Sơn Gel Cao Cấp', price: '199k', description: 'Độ bền 4 tuần, bảo hành 7 ngày.', image_url: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800', duration_minutes: 45, position: 1 },
+            { id: 'NK02', business_id: 0, name: 'Gội Đầu Dưỡng Sinh', price: '150k', description: 'Thư giãn massage da đầu với thảo dược.', image_url: 'https://images.unsplash.com/photo-1621609764180-2ca554a9d6f2?w=800', duration_minutes: 60, position: 2 },
+            { id: 'NK03', business_id: 0, name: 'Combo Nail & Gội', price: '499k', description: 'Tiết kiệm 30% khi trải nghiệm combo.', image_url: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=800', duration_minutes: 90, position: 3 }
         ],
         socials: {
             facebook: 'https://facebook.com/nailora',

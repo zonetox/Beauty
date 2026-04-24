@@ -16,6 +16,7 @@ import LoadingState from './LoadingState.tsx';
 import LandingPageSectionEditor from './LandingPageSectionEditor.tsx';
 import LandingPagePreview from './LandingPagePreview.tsx';
 import TemplateSelector from './TemplateSelector.tsx';
+import HeroSlideEditor from './HeroSlideEditor.tsx';
 import { DEMO_CONTENT } from '../src/features/templates/presets.ts';
 
 // Helper to convert blob to base64 (for team member images)
@@ -551,11 +552,10 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
                         </div>
                         <div className="flex flex-wrap gap-2">
                             {[
+                                { id: 'standard-2025', name: 'Naïlora (Chuẩn)', color: '#C44569', emoji: '✨' },
                                 { id: 'luna-spa', name: 'Luna Spa', color: '#6B8C6B', emoji: '🌿' },
-                                { id: 'pink-nail', name: 'Nailora', color: '#D4748C', emoji: '💅' },
+                                { id: 'pink-nail', name: 'Pink Nail', color: '#D4748C', emoji: '💅' },
                                 { id: 'golden-ratio', name: 'Golden Ratio', color: '#B2A59B', emoji: '📐' },
-                                { id: 'luxury-hair', name: 'Luxury Hair', color: '#8D4949', emoji: '💇‍♀️' },
-                                { id: 'q-clinic', name: 'Q Clinic', color: '#B01B4D', emoji: '🏥' }
                             ].map(opt => (
                                 <button
                                     key={opt.id}
@@ -1023,23 +1023,26 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
                                 <button
                                     type="button"
                                     onClick={() => setLandingSubTab('library')}
-                                    className={`px-6 py-2.5 text-[10px] uppercase tracking-widest font-bold rounded-xl transition-all duration-500 ${landingSubTab === 'library' ? 'bg-primary text-white shadow-lg' : 'text-neutral-500 hover:text-primary'}`}
+                                    className={`px-8 py-3 text-[11px] uppercase tracking-widest font-bold rounded-xl transition-all duration-500 flex items-center gap-2 ${landingSubTab === 'library' ? 'bg-primary text-white shadow-lg' : 'text-neutral-500 hover:text-primary'}`}
                                 >
+                                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${landingSubTab === 'library' ? 'bg-white text-primary' : 'bg-neutral-200 text-neutral-400'}`}>1</span>
                                     Thư viện mẫu
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setLandingSubTab('current')}
-                                    className={`px-6 py-2.5 text-[10px] uppercase tracking-widest font-bold rounded-xl transition-all duration-500 ${landingSubTab === 'current' ? 'bg-primary text-white shadow-lg' : 'text-neutral-500 hover:text-primary'}`}
+                                    className={`px-8 py-3 text-[11px] uppercase tracking-widest font-bold rounded-xl transition-all duration-500 flex items-center gap-2 ${landingSubTab === 'current' ? 'bg-primary text-white shadow-lg' : 'text-neutral-500 hover:text-primary'}`}
                                 >
-                                    Thiết kế trang
+                                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${landingSubTab === 'current' ? 'bg-white text-primary' : 'bg-neutral-200 text-neutral-400'}`}>2</span>
+                                    Thiết kế nội dung
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setLandingSubTab('drafts')}
-                                    className={`px-6 py-2.5 text-[10px] uppercase tracking-widest font-bold rounded-xl transition-all duration-500 ${landingSubTab === 'drafts' ? 'bg-primary text-white shadow-lg' : 'text-neutral-500 hover:text-primary'}`}
+                                    className={`px-8 py-3 text-[11px] uppercase tracking-widest font-bold rounded-xl transition-all duration-500 flex items-center gap-2 ${landingSubTab === 'drafts' ? 'bg-primary text-white shadow-lg' : 'text-neutral-500 hover:text-primary'}`}
                                 >
-                                    Kho bản nháp ({(formData.landing_page_drafts || []).length})
+                                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${landingSubTab === 'drafts' ? 'bg-white text-primary' : 'bg-neutral-200 text-neutral-400'}`}>3</span>
+                                    Bản nháp ({(formData.landing_page_drafts || []).length})
                                 </button>
                             </div>
 
@@ -1094,11 +1097,20 @@ const BusinessProfileEditor: React.FC<BusinessProfileEditorProps> = ({ initialTa
 
                         {landingSubTab === 'current' && (
                             <div className="animate-fade-in space-y-12">
+                                {/* Hero Slides Editor Integration */}
+                                <div className="p-8 glass-card border-none rounded-[2.5rem] bg-white shadow-premium">
+                                    <HeroSlideEditor
+                                        slides={formData.hero_slides || []}
+                                        onChange={(newSlides) => setFormData(prev => prev ? { ...prev, hero_slides: newSlides } : null)}
+                                        businessId={currentBusiness?.id || 0}
+                                    />
+                                </div>
+
                                 <div className="p-8 glass-card border-none rounded-[2.5rem] bg-primary/5">
                                     <div className="flex items-center justify-between mb-8">
                                         <div>
-                                            <h3 className="text-2xl font-serif text-primary">Cấu hình Giao diện</h3>
-                                            <p className="text-neutral-500 font-light italic">Tùy chỉnh thứ tự và trạng thái hiển thị của các thành phần trên trang.</p>
+                                            <h3 className="text-2xl font-serif text-primary">Cấu trúc Trang đích</h3>
+                                            <p className="text-neutral-500 font-light italic">Tùy chỉnh bật/tắt và thứ tự hiển thị của 12 section tiêu chuẩn.</p>
                                         </div>
                                         <div className="bg-white px-4 py-2 rounded-full border border-primary/20 text-[10px] font-bold text-primary uppercase tracking-widest">
                                             Mẫu: {formData.template_id}
