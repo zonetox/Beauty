@@ -483,6 +483,7 @@ export interface Profile {
   user_type?: string;
   business_id?: number | null;
   favorites?: number[];
+  notification_settings?: NotificationSettings;
 }
 
 export type AdminPageTab = 'dashboard' | 'analytics' | 'businesses' | 'registrations' | 'orders' | 'blog' | 'users' | 'packages' | 'content' | 'homepage' | 'settings' | 'tools' | 'activity' | 'notifications' | 'announcements' | 'support' | 'theme' | 'abuse-reports' | 'landing-page-moderation';
