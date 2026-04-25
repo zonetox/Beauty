@@ -371,6 +371,8 @@ export interface Business {
   team?: TeamMember[];
   reviews?: Review[];
   business_blog_posts?: BusinessBlogPost[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface BlogCategory {

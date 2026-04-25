@@ -5,13 +5,18 @@ import { DEFAULT_UNIFIED_CONFIG } from '../src/features/landing-pages/constants.
 import { useCMS } from '../contexts/CMSContext.tsx';
 import LandingPageSectionEditor from './LandingPageSectionEditor.tsx';
 import TemplateSelector from './TemplateSelector.tsx';
-import { Spinner } from './Spinner.tsx';
+import LandingPagePreview from './LandingPagePreview.tsx';
 import { useBusiness } from '../contexts/BusinessContext.tsx';
 import { useState, useEffect } from 'react';
 
+// Unified Spinner component
+const Spinner = () => (
+    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+);
+
 const LandingPageManager: React.FC = () => {
     const { currentBusiness, updateBusiness } = useBusiness();
-    const { isEditing, setIsEditing, stagedChanges, clearChanges, saveChanges } = useCMS();
+    const { isEditing, setIsEditing, stagedChanges, clearChanges } = useCMS();
     const [isSaving, setIsSaving] = useState(false);
     const [config, setConfig] = useState<LandingPageConfig>(DEFAULT_UNIFIED_CONFIG);
     const [isLibraryOpen, setIsLibraryOpen] = useState(false);
@@ -164,7 +169,7 @@ const LandingPageManager: React.FC = () => {
                     config={config}
                     onClose={() => { }}
                     isEditing={isEditing}
-                    onUpdateContent={(sectionKey, content) => {
+                    onUpdateContent={(_sectionKey: string, _content: any) => {
                         // This will be called if the "EDIT SECTION" button is clicked in Preview
                         // But we primarily use stagedChanges from Editable components
                     }}
