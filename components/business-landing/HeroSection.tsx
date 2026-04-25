@@ -8,20 +8,34 @@ import Editable from '../Editable.tsx';
 interface HeroSectionProps {
     business: Business;
     onBookNowClick: () => void;
+    content?: any;
+    isEditing?: boolean;
 }
 
-const HeroSection: React.FC<HeroSectionProps> = ({ business, onBookNowClick }) => {
+const HeroSection: React.FC<HeroSectionProps> = ({ business, onBookNowClick, content, isEditing }) => {
 
     const slides: HeroSlide[] = useMemo(() => {
+        // Priority 1: Use specific content from CMS if provided
+        if (content && (content.title || content.image_url)) {
+            return [{
+                title: content.title || business.name,
+                subtitle: content.subtitle || business.slogan || '',
+                image_url: content.image_url || business.hero_image_url || business.image_url,
+            }];
+        }
+
+        // Priority 2: Use business hero slides
         if (business.hero_slides && business.hero_slides.length > 0) {
             return business.hero_slides;
         }
+
+        // Priority 3: Fallback to basic business info
         return [{
             title: business.name,
             subtitle: business.slogan || business.categories.join(', '),
             image_url: business.hero_image_url || business.image_url,
         }];
-    }, [business]);
+    }, [business, content]);
 
     const [currentSlide, setCurrentSlide] = useState(0);
 

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Business, Service } from '../../types.ts';
 import { getOptimizedSupabaseUrl } from '../../lib/image.ts';
+import Editable from '../Editable.tsx';
 
 // --- Modal Component for viewing all services ---
 const AllServicesModal: React.FC<{ services: Service[]; onClose: () => void }> = ({ services, onClose }) => (
@@ -37,7 +38,14 @@ const AllServicesModal: React.FC<{ services: Service[]; onClose: () => void }> =
 );
 
 
-const ServicesSection: React.FC<{ business: Business }> = ({ business }) => {
+const ServicesSection: React.FC<{
+    business: Business;
+    content?: any;
+    isEditing?: boolean;
+}> = ({ business, content, isEditing }) => {
+    const displayTitle = content?.title || 'Dịch vụ nổi bật của chúng tôi';
+    const displaySubtitle = content?.subtitle || 'Dịch vụ';
+    const displayServices = content?.items || business.services || [];
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [servicesPerPage, setServicesPerPage] = useState(3);
@@ -55,11 +63,11 @@ const ServicesSection: React.FC<{ business: Business }> = ({ business }) => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    if (!business.services || business.services.length === 0) {
+    if (displayServices.length === 0) {
         return null;
     }
 
-    const totalPages = Math.ceil(business.services.length / servicesPerPage);
+    const totalPages = Math.ceil(displayServices.length / servicesPerPage);
     const canGoNext = currentIndex < totalPages - 1;
     const canGoPrev = currentIndex > 0;
 
@@ -72,13 +80,19 @@ const ServicesSection: React.FC<{ business: Business }> = ({ business }) => {
 
     return (
         <section id="services" className="py-20 lg:py-28 bg-background rounded-lg -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
-            {isModalOpen && <AllServicesModal services={business.services} onClose={() => setIsModalOpen(false)} />}
+            {isModalOpen && <AllServicesModal services={displayServices} onClose={() => setIsModalOpen(false)} />}
 
             <div className="flex flex-col sm:flex-row justify-between sm:items-center text-center sm:text-left">
                 <div>
-                    <p className="text-sm font-semibold uppercase text-primary tracking-widest">Dịch vụ</p>
+                    <p className="text-sm font-semibold uppercase text-primary tracking-widest">
+                        <Editable id="services_subtitle" type="text" value={displaySubtitle}>
+                            {displaySubtitle}
+                        </Editable>
+                    </p>
                     <h2 className="mt-2 text-3xl lg:text-4xl font-bold font-serif text-neutral-dark">
-                        Dịch vụ nổi bật của chúng tôi
+                        <Editable id="services_title" type="text" value={displayTitle}>
+                            {displayTitle}
+                        </Editable>
                     </h2>
                 </div>
                 <button
@@ -96,11 +110,10 @@ const ServicesSection: React.FC<{ business: Business }> = ({ business }) => {
                         className="flex transition-transform duration-500 ease-in-out"
                         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
                     >
-                        {business.services.map(service => (
+                        {displayServices.map((service: any) => (
                             <div key={service.id} className="px-3" style={{ flex: `0 0 ${100 / servicesPerPage}%` }}>
                                 <div className="bg-white rounded-lg shadow-lg overflow-hidden group h-full flex flex-col">
                                     <div className="relative h-56">
-                                        {/* FIX: Changed 'image_url' to 'image_url' to match the Service type. */}
                                         <img src={getOptimizedSupabaseUrl(service.image_url, { width: 500, quality: 75 })} alt={service.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                                     </div>
                                     <div className="p-6 text-center flex-grow flex flex-col">

@@ -9,11 +9,17 @@ import { useAuth } from '../../providers/AuthProvider.tsx';
 import ReviewForm from '../ReviewForm.tsx';
 import ReportAbuseModal from '../ReportAbuseModal.tsx';
 
+import Editable from '../Editable.tsx';
+
 interface ReviewsSectionProps {
     business: Business;
+    content?: any;
+    isEditing?: boolean;
 }
 
-const ReviewsSection: React.FC<ReviewsSectionProps> = ({ business }) => {
+const ReviewsSection: React.FC<ReviewsSectionProps> = ({ business, content, isEditing }) => {
+    const displayTitle = content?.title || 'Khách hàng nói gì về chúng tôi';
+    const displaySubtitle = content?.subtitle || 'Đánh giá';
     const { getReviewsBybusiness_id, addReview } = useReviewsData();
     const { user: currentUser, profile } = useAuth();
 
@@ -50,9 +56,15 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ business }) => {
     return (
         <section id="reviews" className="py-20 lg:py-28">
             <div className="text-center">
-                <p className="text-sm font-semibold uppercase text-primary tracking-widest">Đánh giá</p>
+                <p className="text-sm font-semibold uppercase text-primary tracking-widest">
+                    <Editable id="reviews_subtitle" type="text" value={displaySubtitle}>
+                        {displaySubtitle}
+                    </Editable>
+                </p>
                 <h2 className="mt-2 text-3xl lg:text-4xl font-bold font-serif text-neutral-dark">
-                    Khách hàng nói gì về chúng tôi
+                    <Editable id="reviews_title" type="text" value={displayTitle}>
+                        {displayTitle}
+                    </Editable>
                 </h2>
             </div>
 

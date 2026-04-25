@@ -278,9 +278,29 @@ export interface AbuseReport {
 }
 
 // Landing Page Configuration
+export interface LandingPageSectionContent {
+  title?: string;
+  subtitle?: string;
+  description?: string;
+  image_url?: string;
+  video_url?: string;
+  cta_text?: string;
+  cta_link?: string;
+  items?: any[]; // For services, team, gallery items, etc.
+  style?: Record<string, any>; // Section-specific styling overrides
+}
+
 export interface LandingPageSectionConfig {
   enabled: boolean;
   order: number;
+  content?: LandingPageSectionContent;
+}
+
+export interface LandingPageConfig {
+  sections: Record<string, LandingPageSectionConfig>;
+  colors?: Record<string, string>;
+  fonts?: Record<string, string>;
+  theme_id?: string; // Links to TEMPLATE_PRESETS
 }
 
 // Trust Indicator

@@ -4,12 +4,18 @@
 import React from 'react';
 import { Business, TrustIndicator } from '../../types.ts';
 
-interface trust_indicatorsSectionProps {
+import Editable from '../Editable.tsx';
+
+interface TrustIndicatorsSectionProps {
     business: Business;
+    content?: any;
+    isEditing?: boolean;
 }
 
-const trust_indicatorsSection: React.FC<trust_indicatorsSectionProps> = ({ business }) => {
-    const trust_indicators: TrustIndicator[] = business.trust_indicators || [];
+const TrustIndicatorsSection: React.FC<TrustIndicatorsSectionProps> = ({ business, content, isEditing }) => {
+    const displayTitle = content?.title || 'Chứng Nhận & Giải Thưởng';
+    const displaySubtitle = content?.subtitle || 'Những thành tựu và chứng nhận mà chúng tôi đã đạt được';
+    const trust_indicators: TrustIndicator[] = content?.items || business.trust_indicators || [];
 
     if (trust_indicators.length === 0) {
         return null;
@@ -62,10 +68,14 @@ const trust_indicatorsSection: React.FC<trust_indicatorsSectionProps> = ({ busin
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-12">
                     <h2 className="text-3xl lg:text-4xl font-bold font-serif text-neutral-dark mb-4">
-                        Chứng Nhận & Giải Thưởng
+                        <Editable id="trust_title" type="text" value={displayTitle}>
+                            {displayTitle}
+                        </Editable>
                     </h2>
                     <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                        Những thành tựu và chứng nhận mà chúng tôi đã đạt được
+                        <Editable id="trust_subtitle" type="text" value={displaySubtitle}>
+                            {displaySubtitle}
+                        </Editable>
                     </p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -76,8 +86,8 @@ const trust_indicatorsSection: React.FC<trust_indicatorsSectionProps> = ({ busin
                         >
                             <div className="mb-4">
                                 {indicator.icon ? (
-                                    <img 
-                                        src={indicator.icon} 
+                                    <img
+                                        src={indicator.icon}
                                         alt={indicator.title}
                                         className="h-16 w-16 object-contain mx-auto"
                                     />
@@ -99,4 +109,4 @@ const trust_indicatorsSection: React.FC<trust_indicatorsSectionProps> = ({ busin
     );
 };
 
-export default trust_indicatorsSection;
+export default TrustIndicatorsSection;

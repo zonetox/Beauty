@@ -2,8 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Business, MediaType } from '../../types.ts';
 import { getOptimizedSupabaseUrl } from '../../lib/image.ts';
 
+import Editable from '../Editable.tsx';
+
 interface GallerySectionProps {
     business: Business;
+    content?: any;
+    isEditing?: boolean;
 }
 
 const PlayIcon: React.FC = () => (
@@ -13,7 +17,10 @@ const PlayIcon: React.FC = () => (
 );
 
 
-const GallerySection: React.FC<GallerySectionProps> = ({ business }) => {
+const GallerySection: React.FC<GallerySectionProps> = ({ business, content, isEditing }) => {
+    const displayTitle = content?.title || 'Không gian & Tác phẩm';
+    const displaySubtitle = content?.subtitle || 'Thư viện';
+    const displayItems = content?.items || business.gallery || [];
     const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
     const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({});
 
@@ -35,10 +42,10 @@ const GallerySection: React.FC<GallerySectionProps> = ({ business }) => {
     }, [playingVideoId]);
 
 
-    if (!business.gallery || business.gallery.length === 0) {
+    if (displayItems.length === 0) {
         return null;
     }
-    
+
     const handleVideoClick = (id: string) => {
         setPlayingVideoId(prevId => (prevId === id ? null : id));
     };
@@ -46,15 +53,21 @@ const GallerySection: React.FC<GallerySectionProps> = ({ business }) => {
     return (
         <section id="gallery" className="py-20 lg:py-28">
             <div className="text-center">
-                <p className="text-sm font-semibold uppercase text-primary tracking-widest">Thư viện</p>
+                <p className="text-sm font-semibold uppercase text-primary tracking-widest">
+                    <Editable id="gallery_subtitle" type="text" value={displaySubtitle}>
+                        {displaySubtitle}
+                    </Editable>
+                </p>
                 <h2 className="mt-2 text-3xl lg:text-4xl font-bold font-serif text-neutral-dark">
-                    Không gian & Tác phẩm
+                    <Editable id="gallery_title" type="text" value={displayTitle}>
+                        {displayTitle}
+                    </Editable>
                 </h2>
             </div>
             <div className="mt-16 columns-2 md:columns-3 lg:columns-4 gap-4">
-                {business.gallery.map(item => (
+                {displayItems.map((item: any) => (
                     <div key={item.id} className="mb-4 break-inside-avoid rounded-lg overflow-hidden shadow-lg group relative">
-                         {item.type === MediaType.IMAGE ? (
+                        {item.type === MediaType.IMAGE ? (
                             <>
                                 <img src={getOptimizedSupabaseUrl(item.url, { width: 600, quality: 80 })} alt={item.title || 'Gallery image'} className="w-full h-auto" />
                                 {item.title && (
@@ -63,11 +76,11 @@ const GallerySection: React.FC<GallerySectionProps> = ({ business }) => {
                                     </div>
                                 )}
                             </>
-                         ) : (
-                             <div className="relative cursor-pointer" onClick={() => handleVideoClick(item.id)}>
-                                <video 
+                        ) : (
+                            <div className="relative cursor-pointer" onClick={() => handleVideoClick(item.id)}>
+                                <video
                                     ref={el => { videoRefs.current[item.id] = el; }}
-                                    src={item.url} 
+                                    src={item.url}
                                     className="w-full h-auto bg-black"
                                     controls={playingVideoId === item.id}
                                     playsInline
@@ -78,8 +91,8 @@ const GallerySection: React.FC<GallerySectionProps> = ({ business }) => {
                                         <PlayIcon />
                                     </div>
                                 )}
-                             </div>
-                         )}
+                            </div>
+                        )}
                     </div>
                 ))}
             </div>

@@ -7,12 +7,28 @@ const InstagramIcon = () => <svg className="w-6 h-6" fill="currentColor" viewBox
 const ZaloIcon = () => <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12.001.001C5.373.001 0 5.374 0 12.001c0 4.254 2.215 7.994 5.567 10.033l-1.42 4.823 5.09-2.616c.91.173 1.847.26 2.764.26 6.628 0 12.001-5.373 12.001-12.001C24.001 5.374 18.628.001 12.001.001zM8.5 14.5c-1.381 0-2.5-1.119-2.5-2.5s1.119-2.5 2.5-2.5 2.5 1.119 2.5 2.5-1.119 2.5-2.5 2.5zm7 0c-1.381 0-2.5-1.119-2.5-2.5s1.119-2.5 2.5-2.5 2.5 1.119 2.5 2.5-1.119 2.5-2.5 2.5z" /></svg>;
 const TikTokIcon = () => <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 448 512"><path d="M448,209.91a210.06,210.06,0,0,1-122.77-39.25V349.38A162.55,162.55,0,1,1,185,188.31V278.2a74.62,74.62,0,1,0,52.23,71.18V0l88,0a121.18,121.18,0,0,0,1.86,22.17h0A122.18,122.18,0,0,0,381,102.39a121.43,121.43,0,0,0,67,20.14Z" /></svg>;
 
-const BusinessFooter: React.FC<{ business: Business }> = ({ business }) => {
+import Editable from '../Editable.tsx';
+
+const BusinessFooter: React.FC<{
+    business: Business;
+    content?: any;
+    isEditing?: boolean;
+}> = ({ business, content, isEditing }) => {
+    const displayName = content?.name || business.name;
+    const displayAddress = content?.address || `${business.address}, ${business.city}`;
     return (
         <section className="bg-neutral-dark text-white">
             <div className="container mx-auto py-12 px-4 sm:px-6 lg:px-8 text-center">
-                <h3 className="text-2xl font-bold font-serif text-primary mb-2">{business.name}</h3>
-                <p className="text-gray-300">{business.address}, {business.city}</p>
+                <h3 className="text-2xl font-bold font-serif text-primary mb-2">
+                    <Editable id="footer_name" type="text" value={displayName}>
+                        {displayName}
+                    </Editable>
+                </h3>
+                <p className="text-gray-300">
+                    <Editable id="footer_address" type="text" value={displayAddress}>
+                        {displayAddress}
+                    </Editable>
+                </p>
                 <p className="text-gray-300">
                     <a
                         href={`tel:${business.phone}`}

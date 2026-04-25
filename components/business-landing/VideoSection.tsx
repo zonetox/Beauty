@@ -1,8 +1,12 @@
 import React from 'react';
 import { Business } from '../../types';
 
+import Editable from '../Editable.tsx';
+
 interface VideoSectionProps {
     business: Business;
+    content?: any;
+    isEditing?: boolean;
 }
 
 const getYoutubeEmbedUrl = (url?: string): string | null => {
@@ -24,8 +28,10 @@ const getYoutubeEmbedUrl = (url?: string): string | null => {
     return null;
 };
 
-const VideoSection: React.FC<VideoSectionProps> = ({ business }) => {
-    const embedUrl = getYoutubeEmbedUrl(business.youtube_url);
+const VideoSection: React.FC<VideoSectionProps> = ({ business, content, isEditing }) => {
+    const displayTitle = content?.title || 'Khám phá không gian của chúng tôi';
+    const displaySubtitle = content?.subtitle || 'Video';
+    const embedUrl = getYoutubeEmbedUrl(content?.video_url || business.youtube_url);
 
     if (!embedUrl) {
         return null;
@@ -34,9 +40,15 @@ const VideoSection: React.FC<VideoSectionProps> = ({ business }) => {
     return (
         <section id="video" className="py-20 lg:py-28 bg-background rounded-lg -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
             <div className="text-center">
-                <p className="text-sm font-semibold uppercase text-primary tracking-widest">Video</p>
+                <p className="text-sm font-semibold uppercase text-primary tracking-widest">
+                    <Editable id="video_subtitle" type="text" value={displaySubtitle}>
+                        {displaySubtitle}
+                    </Editable>
+                </p>
                 <h2 className="mt-2 text-3xl lg:text-4xl font-bold font-serif text-neutral-dark">
-                    Khám phá không gian của chúng tôi
+                    <Editable id="video_title" type="text" value={displayTitle}>
+                        {displayTitle}
+                    </Editable>
                 </h2>
             </div>
             <div className="mt-16 max-w-4xl mx-auto aspect-video">

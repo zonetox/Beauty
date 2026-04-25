@@ -5,13 +5,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { useBusinessData } from '../contexts/BusinessDataContext.tsx';
-import { Business } from '../types.ts';
+import { Business, LandingPageConfig } from '../types.ts';
+import toast from 'react-hot-toast';
 import NotFoundPage from './NotFoundPage.tsx';
 import LoadingState from '../components/LoadingState.tsx';
 import SEOHead from '../components/SEOHead.tsx';
 import { getOptimizedSupabaseUrl } from '../lib/image.ts';
 
-import TemplateEngine from '../src/features/templates/TemplateEngine.tsx';
+import UnifiedLandingPageRenderer from '../src/features/landing-pages/UnifiedLandingPageRenderer.tsx';
+import { DEFAULT_UNIFIED_CONFIG } from '../src/features/landing-pages/constants.ts';
 import BookingModal from '../components/business-landing/BookingModal.tsx';
 import { useCMS } from '../contexts/CMSContext.tsx';
 import { useAuth } from '../providers/AuthProvider.tsx';
@@ -35,23 +37,30 @@ const BusinessDetailPage: React.FC = () => {
 
         await saveChanges(async (changes) => {
             const updatedBusiness = { ...business };
+            const currentConfig = (updatedBusiness.landing_page_config as LandingPageConfig) || DEFAULT_UNIFIED_CONFIG;
 
-            // Apply hero slide changes
-            if (updatedBusiness.hero_slides && updatedBusiness.hero_slides.length > 0) {
-                updatedBusiness.hero_slides = updatedBusiness.hero_slides.map((slide, index) => ({
-                    ...slide,
-                    title: changes[`landing_hero_title_${index}`] !== undefined ? changes[`landing_hero_title_${index}`] : (slide.title || ''),
-                    subtitle: changes[`landing_hero_subtitle_${index}`] !== undefined ? changes[`landing_hero_subtitle_${index}`] : (slide.subtitle || ''),
-                    image_url: changes[`landing_hero_image_${index}`] !== undefined ? changes[`landing_hero_image_${index}`] : (slide.image_url || ''),
-                }));
-            } else {
-                // Handle case where it uses business names as default
-                updatedBusiness.name = changes[`landing_hero_title_0`] !== undefined ? changes[`landing_hero_title_0`] : (updatedBusiness.name || '');
-                updatedBusiness.slogan = changes[`landing_hero_subtitle_0`] !== undefined ? changes[`landing_hero_subtitle_0`] : (updatedBusiness.slogan || '');
-            }
+            // Map changes to config
+            Object.entries(changes).forEach(([id, value]) => {
+                const parts = id.split('_');
+                if (parts.length >= 2) {
+                    const sectionKey = parts[0];
+                    const fieldKey = parts.slice(1).join('_');
+                    if (currentConfig.sections[sectionKey]) {
+                        if (!currentConfig.sections[sectionKey].content) {
+                            currentConfig.sections[sectionKey].content = {};
+                        }
+                        (currentConfig.sections[sectionKey].content as any)[fieldKey] = value;
+                    }
+                }
+            });
+
+            updatedBusiness.landing_page_config = currentConfig;
 
             await updateBusiness(updatedBusiness);
             setBusiness(updatedBusiness);
+            clearChanges();
+            setIsEditing(false);
+            toast.success('Đã lưu thay đổi trang Landing Page!');
         });
     };
 
@@ -254,7 +263,12 @@ const BusinessDetailPage: React.FC = () => {
                 </div>
             )}
 
-            <TemplateEngine business={displayBusiness!} />
+            <UnifiedLandingPageRenderer
+                business={displayBusiness!}
+                config={(displayBusiness?.landing_page_config as LandingPageConfig) || DEFAULT_UNIFIED_CONFIG}
+                isEditing={isEditing}
+                onBookNowClick={() => setIsBookingModalOpen(true)}
+            />
 
             {isBookingModalOpen && (
                 <BookingModal
