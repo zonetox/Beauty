@@ -61,7 +61,6 @@ const featureRows = [
     { key: 'permissions.featured_level', label: 'Featured Level' },
 ];
 
-// --- Icons for comparison table ---
 const CheckIcon: React.FC<{ className?: string }> = ({ className = '' }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 ${className}`} viewBox="0 0 20 20" fill="currentColor">
         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -96,7 +95,6 @@ const MembershipAndBilling: React.FC = () => {
         );
     }, [orders, currentBusinessId]);
 
-    // Find the latest order awaiting confirmation (for payment proof upload)
     const latestPendingOrder = useMemo(() => {
         return businessOrders.find(o =>
             o.status === OrderStatus.AWAITING_CONFIRMATION || o.status === OrderStatus.PENDING
@@ -116,12 +114,6 @@ const MembershipAndBilling: React.FC = () => {
         return Math.ceil(diff / (1000 * 60 * 60 * 24));
     }, [currentBusiness?.membership_expiry_date]);
 
-    /**
-     * Renders a permission value with appropriate formatting
-     * @param value - The permission value to render
-     * @param key - The permission key
-     * @returns React element representing the permission
-     */
     const renderPermission = React.useCallback((value: unknown, key: string): React.ReactNode => {
         if (key.endsWith('featured_level')) {
             return <span className="font-semibold">{formatfeatured_level(value as number)}</span>;
@@ -141,7 +133,6 @@ const MembershipAndBilling: React.FC = () => {
             toast.error('This is already your current plan');
             return;
         }
-
         setConfirmUpgrade({ isOpen: true, package: pkg });
     };
 
@@ -163,7 +154,7 @@ const MembershipAndBilling: React.FC = () => {
                 submitted_at: new Date().toISOString(),
             };
             await addOrder(newOrder);
-            toast.success('Request submitted! Please complete payment. An admin will activate your plan upon confirmation.');
+            toast.success('Yêu cầu đã được gửi! Vui lòng hoàn tất thanh toán.');
             setSelectedPackageForPayment(pkg);
             setShowPaymentInfo(true);
         } catch (error) {
@@ -180,290 +171,216 @@ const MembershipAndBilling: React.FC = () => {
 
     const handlePaymentProofUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || !e.target.files[0] || !latestPendingOrder) return;
-
         const file = e.target.files[0];
-
-        // Validate file type
-        if (!file.type.startsWith('image/')) {
-            toast.error('Please upload an image file');
-            return;
-        }
-
-        // Validate file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            toast.error('Image size must be less than 5MB');
-            return;
-        }
-
+        if (!file.type.startsWith('image/')) { toast.error('Please upload an image file'); return; }
+        if (file.size > 5 * 1024 * 1024) { toast.error('Image size must be less than 5MB'); return; }
         setIsUploadingProof(true);
         setUploadProgress(0);
-
         try {
-            // Upload to Supabase Storage
             const folder = `orders/${latestPendingOrder.id}`;
             const image_url = await uploadFile('business-gallery', file, folder);
             setUploadProgress(100);
-
-            // Update order with payment proof URL
-            const { error } = await supabase
-                .from('orders')
-                .update({ payment_proof_url: image_url })
-                .eq('id', latestPendingOrder.id);
-
-            if (error) {
-                throw error;
-            }
-
-            toast.success('Payment proof uploaded successfully!');
-
-            // Refresh orders
-            window.location.reload(); // Simple refresh - could be improved with context update
+            const { error } = await supabase.from('orders').update({ payment_proof_url: image_url }).eq('id', latestPendingOrder.id);
+            if (error) throw error;
+            toast.success('Tải minh chứng thành công!');
+            window.location.reload();
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Failed to upload payment proof';
             toast.error(message);
         } finally {
             setIsUploadingProof(false);
             setUploadProgress(0);
-            // Reset file input
             e.target.value = '';
         }
     };
 
     if (!currentBusiness) {
-        return (
-            <div className="p-8">
-                <EmptyState
-                    title="No business found"
-                    message="Please select a business to manage membership and billing."
-                />
-            </div>
-        );
+        return <div className="p-8"><EmptyState title="No business found" message="Please select a business to manage membership and billing." /></div>;
     }
 
     if (ordersLoading) {
-        return (
-            <div className="p-8">
-                <LoadingState message="Loading membership and billing information..." />
-            </div>
-        );
+        return <div className="p-8"><LoadingState message="Loading membership and billing information..." /></div>;
     }
 
     return (
         <div className="p-8 space-y-8">
-            <h2 className="text-2xl font-bold font-serif text-neutral-dark">Membership & Billing</h2>
+            <h2 className="text-2xl font-bold font-serif text-neutral-dark">Hội viên & Gói dịch vụ</h2>
 
             {showPaymentInfo && selectedPackageForPayment && settings?.bank_details && (
-                <div className="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg">
-                    <div className="flex justify-between items-start">
+                <div className="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg shadow-sm">
+                    <div className="flex justify-between items-start mb-4">
                         <div>
-                            <h3 className="font-bold text-blue-800">Complete Your Payment</h3>
-                            <p className="text-sm text-blue-700 mt-1">To activate your <strong>{selectedPackageForPayment.name}</strong> plan, please make a bank transfer with the following details:</p>
+                            <h3 className="font-bold text-blue-800 text-lg">Hoàn tất thanh toán</h3>
+                            <p className="text-sm text-blue-700 mt-1">
+                                Để kích hoạt gói <strong>{selectedPackageForPayment.name}</strong>, vui lòng chuyển khoản theo thông tin bên dưới hoặc quét mã QR:
+                            </p>
                         </div>
-                        <button
-                            onClick={() => setShowPaymentInfo(false)}
-                            className="text-blue-500 hover:text-blue-700 font-bold text-xl leading-none"
-                            disabled={isSubmitting}
-                        >
-                            &times;
-                        </button>
-                    </div>
-                    <div className="mt-4 p-4 bg-white rounded border border-blue-200 text-sm space-y-2">
-                        <p><strong>Bank:</strong> {settings.bank_details.bank_name}</p>
-                        <p><strong>Account Name:</strong> {settings.bank_details.account_name}</p>
-                        <p><strong>Account Number:</strong> {settings.bank_details.account_number}</p>
-                        <p><strong>Amount:</strong> <strong className="text-primary">{formatPrice(selectedPackageForPayment.price)}</strong></p>
-                        <p><strong>Transfer Note:</strong> {settings.bank_details.transfer_note.replace('[Tên doanh nghiệp]', currentBusiness.name).replace('[Mã đơn hàng]', 'UPGRADE')}</p>
+                        <button onClick={() => setShowPaymentInfo(false)} className="text-blue-500 hover:text-blue-700 font-bold text-xl">&times;</button>
                     </div>
 
-                    {/* Payment Proof Upload */}
-                    {latestPendingOrder && (
-                        <div className="mt-4 p-4 bg-white rounded border border-blue-200">
-                            <p className="text-sm font-semibold text-blue-800 mb-2">Upload Payment Proof</p>
-                            <p className="text-xs text-blue-600 mb-3">After completing the bank transfer, please upload a screenshot or photo of the transfer confirmation.</p>
-                            {latestPendingOrder.payment_proof_url ? (
-                                <div className="flex items-center gap-2 text-sm text-green-700">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                    </svg>
-                                    <span>Payment proof uploaded. Waiting for admin confirmation.</span>
+                    <div className="flex flex-col md:flex-row gap-8 items-start">
+                        {/* QR Code Section */}
+                        <div className="bg-white p-4 rounded-lg border border-blue-200 shadow-sm flex-shrink-0 w-full md:w-auto flex flex-col items-center">
+                            <div className="bg-gray-50 p-2 rounded border mb-3">
+                                <img
+                                    src={`https://qr.sepay.vn/img?acc=${settings.bank_details.account_number}&bank=${settings.bank_details.bank_name}&amount=${selectedPackageForPayment.price}&des=SEPAY ${latestPendingOrder?.id.substring(0, 8).toUpperCase()}&template=${settings.sepay_config?.qr_template || 'compact'}`}
+                                    alt="VietQR Payment"
+                                    className="w-64 h-64 object-contain"
+                                />
+                            </div>
+                            <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Mã QR VietQR (Quét để thanh toán)</p>
+                        </div>
+
+                        {/* Text Info Section */}
+                        <div className="flex-1 space-y-4 w-full">
+                            <div className="p-4 bg-white rounded border border-blue-200 text-sm space-y-3">
+                                <div className="flex justify-between border-b pb-2">
+                                    <span className="text-gray-500">Ngân hàng:</span>
+                                    <span className="font-bold text-neutral-dark">{settings.bank_details.bank_name}</span>
                                 </div>
-                            ) : (
-                                <div>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handlePaymentProofUpload}
-                                        disabled={isUploadingProof}
-                                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark file:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                                    />
-                                    {isUploadingProof && (
-                                        <div className="mt-2">
-                                            <div className="w-full bg-gray-200 rounded-full h-2">
-                                                <div
-                                                    className="bg-primary h-2 rounded-full transition-all duration-300"
-                                                    style={{ width: `${uploadProgress}%` }}
-                                                ></div>
-                                            </div>
-                                            <p className="text-xs text-gray-600 mt-1">Uploading... {uploadProgress}%</p>
+                                <div className="flex justify-between border-b pb-2">
+                                    <span className="text-gray-500">Số tài khoản:</span>
+                                    <span className="font-mono font-bold text-neutral-dark">{settings.bank_details.account_number}</span>
+                                </div>
+                                <div className="flex justify-between border-b pb-2">
+                                    <span className="text-gray-500">Chủ tài khoản:</span>
+                                    <span className="font-bold text-neutral-dark">{settings.bank_details.account_name}</span>
+                                </div>
+                                <div className="flex justify-between border-b pb-2">
+                                    <span className="text-gray-500">Số tiền:</span>
+                                    <span className="font-bold text-primary text-lg">{formatPrice(selectedPackageForPayment.price)}</span>
+                                </div>
+                                <div className="p-3 bg-yellow-50 rounded border border-yellow-100">
+                                    <span className="text-xs text-yellow-700 block mb-1">Nội dung chuyển khoản (Bắt buộc giữ nguyên):</span>
+                                    <span className="font-mono font-bold text-neutral-dark text-base">SEPAY {latestPendingOrder?.id.substring(0, 8).toUpperCase()}</span>
+                                </div>
+                            </div>
+
+                            {latestPendingOrder && (
+                                <div className="p-4 bg-white rounded border border-blue-200">
+                                    <p className="text-sm font-semibold text-blue-800 mb-2">Đã chuyển khoản xong?</p>
+                                    <p className="text-xs text-blue-600 mb-3">Hệ thống sẽ tự động kích hoạt sau vài phút. Nếu cần, bạn có thể tải ảnh minh chứng tại đây.</p>
+                                    {latestPendingOrder.payment_proof_url ? (
+                                        <div className="flex items-center gap-2 text-sm text-green-700 font-medium">
+                                            <CheckIcon className="h-5 w-5" />
+                                            <span>Đã tải lên minh chứng. Đang chờ đối soát.</span>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <input type="file" accept="image/*" onChange={handlePaymentProofUpload} disabled={isUploadingProof} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 cursor-pointer disabled:opacity-50" />
+                                            {isUploadingProof && (
+                                                <div className="mt-2 text-[10px] text-gray-500 uppercase tracking-widest">
+                                                    Đang tải lên... {uploadProgress}%
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
                             )}
                         </div>
-                    )}
-
-                    <p className="text-xs text-blue-600 mt-2">Your plan will be activated once our team confirms the payment.</p>
+                    </div>
                 </div>
             )}
 
-            <div>
-                <div className={`p-6 rounded-lg border ${isExpired ? 'bg-red-50 border-red-200' : 'bg-primary/10 border-primary/20'}`}>
-                    <h3 className="text-xl font-bold text-neutral-dark mb-4">Current Plan</h3>
-                    {currentPackage ? (
-                        <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-6">
-                            <div>
-                                <p className="text-2xl font-bold font-serif text-primary">{currentPackage.name}</p>
-                                <p className="text-gray-600 max-w-lg">{currentPackage.description}</p>
-                                {currentBusiness.membership_expiry_date && (
-                                    <div className="mt-2">
-                                        <p className={`text-sm font-semibold ${isExpired ? 'text-red-600' : daysUntilExpiry !== null && daysUntilExpiry <= 30 ? 'text-yellow-600' : 'text-gray-700'}`}>
-                                            {isExpired ? (
-                                                <>Expired on: {formatDate(currentBusiness.membership_expiry_date)}</>
-                                            ) : (
-                                                <>
-                                                    Expires on: {formatDate(currentBusiness.membership_expiry_date)}
-                                                    {daysUntilExpiry !== null && daysUntilExpiry <= 30 && (
-                                                        <span className="ml-2">({daysUntilExpiry} days remaining)</span>
-                                                    )}
-                                                </>
-                                            )}
-                                        </p>
-                                        {isExpired && (
-                                            <p className="text-xs text-red-600 mt-1">Please renew your membership to continue using premium features.</p>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                            <button
-                                onClick={handleScrollToCompare}
-                                className="bg-primary text-white px-6 py-3 rounded-md font-semibold hover:bg-primary-dark transition-colors self-start sm:self-center flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                                disabled={isSubmitting}
-                            >
-                                {isExpired ? 'Renew Plan' : 'Renew / Upgrade Plan'}
-                            </button>
+            <div className={`p-6 rounded-lg border ${isExpired ? 'bg-red-50 border-red-200' : 'bg-primary/10 border-primary/20'}`}>
+                <h3 className="text-xl font-bold text-neutral-dark mb-4">Gói dịch vụ hiện tại</h3>
+                {currentPackage ? (
+                    <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-6">
+                        <div>
+                            <p className="text-2xl font-bold font-serif text-primary">{currentPackage.name}</p>
+                            <p className="text-gray-600 max-w-lg mt-1">{currentPackage.description}</p>
+                            {currentBusiness.membership_expiry_date && (
+                                <div className="mt-3">
+                                    <p className={`text-sm font-semibold ${isExpired ? 'text-red-600' : (daysUntilExpiry ?? 31) <= 30 ? 'text-yellow-600' : 'text-gray-700'}`}>
+                                        {isExpired ? `Đã hết hạn vào: ${formatDate(currentBusiness.membership_expiry_date)}` : `Hạn dùng đến: ${formatDate(currentBusiness.membership_expiry_date)} ${daysUntilExpiry !== null && daysUntilExpiry <= 30 ? `(${daysUntilExpiry} ngày nữa)` : ''}`}
+                                    </p>
+                                    {isExpired && <p className="text-xs text-red-600 mt-1">Vui lòng gia hạn để tiếp tục sử dụng các tính năng cao cấp.</p>}
+                                </div>
+                            )}
                         </div>
-                    ) : (
-                        <p className="text-gray-500">Could not load your current plan details.</p>
-                    )}
-                </div>
-
-                <div id="compare-plans-section" className="pt-8">
-                    <h3 className="text-xl font-bold text-neutral-dark mb-4">Compare Plans</h3>
-                    {packages.length === 0 ? (
-                        <EmptyState
-                            title="No membership packages available"
-                            message="Membership packages are not configured. Please contact support."
-                        />
-                    ) : (
-                        <div className="overflow-x-auto border rounded-lg bg-white">
-                            <table className="w-full text-sm">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="p-4 text-left font-semibold text-neutral-dark min-w-[200px]">Feature</th>
-                                        {packages.map(pkg => (
-                                            <th key={pkg.id} className={`p-4 text-center font-bold min-w-[150px] ${pkg.id === currentPackage?.id ? 'text-primary' : 'text-neutral-dark'}`}>
-                                                {pkg.name}
-                                                {pkg.is_popular && <span className="block text-xs font-normal text-secondary mt-1">Most Popular</span>}
-                                            </th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr className="border-t">
-                                        <td className="p-4 font-semibold">Price</td>
-                                        {packages.map(pkg => (
-                                            <td key={pkg.id} className="p-4 text-center">
-                                                <div className="text-lg font-bold text-neutral-dark">{formatPrice(pkg.price)}</div>
-                                                <div className="text-xs text-gray-500">/ {pkg.duration_months} months</div>
-                                            </td>
-                                        ))}
-                                    </tr>
-                                    <tr className="border-t bg-gray-50/50">
-                                        <td colSpan={packages.length + 1} className="p-3 font-semibold text-neutral-dark">Core Features</td>
-                                    </tr>
-                                    {featureRows.map(({ key, label }) => (
-                                        <tr key={key} className="border-t">
-                                            <td className="p-4">{label}</td>
-                                            {packages.map(pkg => (
-                                                <td key={pkg.id} className="p-4 text-center">{renderPermission(getNestedValue(pkg, key), key)}</td>
-                                            ))}
-                                        </tr>
-                                    ))}
-                                    <tr className="border-t">
-                                        <td className="p-4"></td>
-                                        {packages.map(pkg => (
-                                            <td key={pkg.id} className="p-4 text-center">
-                                                {pkg.id === currentPackage?.id ? (
-                                                    <span className="inline-block px-4 py-2 text-sm font-semibold text-white bg-primary rounded-md cursor-default">
-                                                        Current Plan
-                                                    </span>
-                                                ) : (
-                                                    <button
-                                                        onClick={() => handleUpgradeRequest(pkg)}
-                                                        disabled={isSubmitting}
-                                                        className="px-4 py-2 text-sm font-semibold text-white bg-secondary rounded-md hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto"
-                                                    >
-                                                        {isSubmitting ? (
-                                                            <>
-                                                                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                                                Submitting...
-                                                            </>
-                                                        ) : (
-                                                            pkg.price > (currentPackage?.price || 0) ? 'Upgrade' : 'Change Plan'
-                                                        )}
-                                                    </button>
-                                                )}
-                                            </td>
-                                        ))}
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
+                        <button onClick={handleScrollToCompare} className="bg-primary text-white px-6 py-3 rounded-md font-semibold hover:bg-primary-dark transition-colors shrink-0 disabled:opacity-50" disabled={isSubmitting}>
+                            {isExpired ? 'Gia hạn gói' : 'Nâng cấp / Gia hạn'}
+                        </button>
+                    </div>
+                ) : <p className="text-gray-500">Không thể tải thông tin gói dịch vụ hiện tại.</p>}
             </div>
 
-            {/* Order History */}
+            <div id="compare-plans-section" className="pt-4">
+                <h3 className="text-xl font-bold text-neutral-dark mb-4">So sánh các gói</h3>
+                {packages.length === 0 ? <EmptyState title="Không có gói dịch vụ" message="Hệ thống chưa cấu hình gói dịch vụ." /> : (
+                    <div className="overflow-x-auto border rounded-lg bg-white shadow-sm">
+                        <table className="w-full text-sm">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="p-4 text-left font-semibold text-neutral-dark min-w-[180px]">Tính năng</th>
+                                    {packages.map(pkg => (
+                                        <th key={pkg.id} className={`p-4 text-center font-bold min-w-[140px] ${pkg.id === currentPackage?.id ? 'text-primary' : 'text-neutral-dark'}`}>
+                                            {pkg.name}
+                                            {pkg.is_popular && <span className="block text-xs font-normal text-secondary mt-1">Phổ biến nhất</span>}
+                                        </th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr className="border-t">
+                                    <td className="p-4 font-semibold text-gray-700">Giá dịch vụ</td>
+                                    {packages.map(pkg => (
+                                        <td key={pkg.id} className="p-4 text-center">
+                                            <div className="text-lg font-bold text-neutral-dark">{formatPrice(pkg.price)}</div>
+                                            <div className="text-xs text-gray-500">/ {pkg.duration_months} tháng</div>
+                                        </td>
+                                    ))}
+                                </tr>
+                                <tr className="border-t bg-gray-50/30"><td colSpan={packages.length + 1} className="p-3 text-xs font-bold uppercase tracking-wider text-gray-400">Chi tiết tính năng</td></tr>
+                                {featureRows.map(({ key, label }) => (
+                                    <tr key={key} className="border-t hover:bg-gray-50/50">
+                                        <td className="p-4 text-gray-600">{label}</td>
+                                        {packages.map(pkg => <td key={pkg.id} className="p-4 text-center">{renderPermission(getNestedValue(pkg, key), key)}</td>)}
+                                    </tr>
+                                ))}
+                                <tr className="border-t">
+                                    <td className="p-4"></td>
+                                    {packages.map(pkg => (
+                                        <td key={pkg.id} className="p-4 text-center">
+                                            {pkg.id === currentPackage?.id ? (
+                                                <span className="inline-block px-4 py-2 text-xs font-bold uppercase text-primary bg-primary/10 rounded-full border border-primary/20">Gói hiện tại</span>
+                                            ) : (
+                                                <button onClick={() => handleUpgradeRequest(pkg)} disabled={isSubmitting} className="px-4 py-2 text-sm font-semibold text-white bg-secondary rounded-md hover:opacity-90 disabled:opacity-50">
+                                                    {pkg.price > (currentPackage?.price || 0) ? 'Nâng cấp' : 'Đổi gói'}
+                                                </button>
+                                            )}
+                                        </td>
+                                    ))}
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+
             <div>
-                <h3 className="text-xl font-bold text-neutral-dark mb-4">Order History</h3>
-                {businessOrders.length === 0 ? (
-                    <EmptyState
-                        title="No orders found"
-                        message="Your order history will appear here once you submit a membership upgrade or renewal request."
-                    />
-                ) : (
-                    <div className="overflow-x-auto border rounded-lg bg-white">
+                <h3 className="text-xl font-bold text-neutral-dark mb-4">Lịch sử giao dịch</h3>
+                {businessOrders.length === 0 ? <EmptyState title="Chưa có giao dịch" message="Lịch sử giao dịch sẽ hiển thị sau khi bạn gửi yêu cầu nâng cấp gói." /> : (
+                    <div className="overflow-x-auto border rounded-lg bg-white shadow-sm">
                         <table className="w-full text-sm text-left text-gray-500">
                             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                                 <tr>
-                                    <th scope="col" className="px-6 py-3">Order ID</th>
-                                    <th scope="col" className="px-6 py-3">Package</th>
-                                    <th scope="col" className="px-6 py-3">Amount</th>
-                                    <th scope="col" className="px-6 py-3">Date</th>
-                                    <th scope="col" className="px-6 py-3">Status</th>
+                                    <th className="px-6 py-3">Mã đơn</th>
+                                    <th className="px-6 py-3">Gói</th>
+                                    <th className="px-6 py-3">Số tiền</th>
+                                    <th className="px-6 py-3">Ngày gửi</th>
+                                    <th className="px-6 py-3">Trạng thái</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {businessOrders.map(order => (
-                                    <tr key={order.id} className="bg-white border-b last:border-b-0 hover:bg-gray-50">
-                                        <td className="px-6 py-4 font-mono text-xs">{order.id.substring(0, 8)}...</td>
+                                    <tr key={order.id} className="bg-white border-b hover:bg-gray-50">
+                                        <td className="px-6 py-4 font-mono text-xs text-gray-400">{order.id.substring(0, 8).toUpperCase()}</td>
                                         <td className="px-6 py-4 font-medium text-neutral-dark">{order.package_name}</td>
                                         <td className="px-6 py-4">{formatPrice(order.amount)}</td>
                                         <td className="px-6 py-4">{formatDate(order.submitted_at)}</td>
                                         <td className="px-6 py-4">
-                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusStyles[order.status]}`}>
-                                                {order.status}
-                                            </span>
+                                            <span className={`px-2 py-1 text-[10px] font-bold uppercase rounded-full ${statusStyles[order.status]}`}>{order.status}</span>
                                         </td>
                                     </tr>
                                 ))}
@@ -472,12 +389,13 @@ const MembershipAndBilling: React.FC = () => {
                     </div>
                 )}
             </div>
+
             <ConfirmDialog
                 isOpen={confirmUpgrade.isOpen}
-                title="Request Package Change"
-                message={confirmUpgrade.package ? `Are you sure you want to request ${confirmUpgrade.package.price > (currentPackage?.price || 0) ? 'an upgrade' : 'a change'} to the ${confirmUpgrade.package.name} package?` : ''}
-                confirmText="Confirm"
-                cancelText="Cancel"
+                title="Thay đổi gói dịch vụ"
+                message={confirmUpgrade.package ? `Bạn có chắc chắn muốn ${confirmUpgrade.package.price > (currentPackage?.price || 0) ? 'nâng cấp' : 'thay đổi'} lên gói ${confirmUpgrade.package.name}?` : ''}
+                confirmText="Xác nhận"
+                cancelText="Hủy"
                 variant="info"
                 onConfirm={confirmUpgradeRequest}
                 onCancel={() => setConfirmUpgrade({ isOpen: false, package: null })}

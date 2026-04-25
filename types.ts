@@ -593,6 +593,12 @@ export interface AppSettings {
     reply_to?: string;
   };
   bank_details: bank_details;
+  sepay_config?: {
+    api_key?: string;
+    webhook_secret?: string;
+    qr_template?: string;
+    is_enabled?: boolean;
+  };
 }
 
 export interface LayoutItem {
