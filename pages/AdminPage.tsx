@@ -366,7 +366,7 @@ const AdminPage: React.FC = () => {
           <SystemSettings />
         </PermissionGuard>
       );
-      case 'tools': return currentUser.permissions.can_use_admin_tools ? (
+      case 'tools': return currentUser.permissions?.can_use_admin_tools ? (
         <div className="space-y-6">
           <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-xl font-semibold mb-4">Bulk Import Businesses</h2>
@@ -378,15 +378,15 @@ const AdminPage: React.FC = () => {
           </div>
         </div>
       ) : <AccessDenied requiredRole="Use Admin Tools" />;
-      case 'content': return currentUser.permissions.can_manage_site_content ? <div className="bg-white p-6 rounded-lg shadow"><h2 className="text-xl font-semibold mb-4">Page Content Management</h2><PageContentEditor /></div> : <AccessDenied requiredRole="Manage Site Content" />;
-      case 'homepage': return currentUser.permissions.can_manage_site_content ? <HomepageEditor /> : <AccessDenied requiredRole="Manage Site Content" />;
-      case 'theme': return currentUser.permissions.can_manage_system_settings ? <ThemeEditor /> : <AccessDenied requiredRole="Manage System Settings" />;
-      case 'activity': return currentUser.permissions.can_view_activity_log ? <AdminActivityLog /> : <AccessDenied requiredRole="View Activity Log" />;
-      case 'notifications': return currentUser.permissions.can_view_email_log ? <AdminNotificationLog /> : <AccessDenied requiredRole="View Email Log" />;
-      case 'announcements': return currentUser.permissions.can_manage_announcements ? <AdminAnnouncementsManager /> : <AccessDenied requiredRole="Manage Announcements" />;
-      case 'support': return currentUser.permissions.can_manage_support_tickets ? <AdminSupportTickets /> : <AccessDenied requiredRole="Manage Support Tickets" />;
-      case 'abuse-reports': return currentUser.permissions.can_manage_users ? <AdminAbuseReports /> : <AccessDenied requiredRole="Manage Users" />;
-      case 'landing-page-moderation': return currentUser.permissions.can_manage_businesses ? <AdminLandingPageModeration /> : <AccessDenied requiredRole="Manage Businesses" />;
+      case 'content': return currentUser.permissions?.can_manage_site_content ? <div className="bg-white p-6 rounded-lg shadow"><h2 className="text-xl font-semibold mb-4">Page Content Management</h2><PageContentEditor /></div> : <AccessDenied requiredRole="Manage Site Content" />;
+      case 'homepage': return currentUser.permissions?.can_manage_site_content ? <HomepageEditor /> : <AccessDenied requiredRole="Manage Site Content" />;
+      case 'theme': return currentUser.permissions?.can_manage_system_settings ? <ThemeEditor /> : <AccessDenied requiredRole="Manage System Settings" />;
+      case 'activity': return currentUser.permissions?.can_view_activity_log ? <AdminActivityLog /> : <AccessDenied requiredRole="View Activity Log" />;
+      case 'notifications': return currentUser.permissions?.can_view_email_log ? <AdminNotificationLog /> : <AccessDenied requiredRole="View Email Log" />;
+      case 'announcements': return currentUser.permissions?.can_manage_announcements ? <AdminAnnouncementsManager /> : <AccessDenied requiredRole="Manage Announcements" />;
+      case 'support': return currentUser.permissions?.can_manage_support_tickets ? <AdminSupportTickets /> : <AccessDenied requiredRole="Manage Support Tickets" />;
+      case 'abuse-reports': return currentUser.permissions?.can_manage_users ? <AdminAbuseReports /> : <AccessDenied requiredRole="Manage Users" />;
+      case 'landing-page-moderation': return currentUser.permissions?.can_manage_businesses ? <AdminLandingPageModeration /> : <AccessDenied requiredRole="Manage Businesses" />;
       default: return <p>Select a section.</p>;
     }
   };
@@ -405,30 +405,30 @@ const AdminPage: React.FC = () => {
         <nav className="flex-grow px-6 space-y-2 pb-10">
           <div className="text-[9px] font-bold text-white/20 uppercase tracking-[0.3em] mb-4 px-4">Tổng quan hệ thống</div>
           <NavLink tabId="dashboard" label="Bảng điều khiển" icon={ICONS.dashboard} permission={true} />
-          <NavLink tabId="analytics" label="Phân tích dữ liệu" icon={ICONS.analytics} permission={currentUser.permissions.can_view_analytics} />
+          <NavLink tabId="analytics" label="Phân tích dữ liệu" icon={ICONS.analytics} permission={currentUser.permissions?.can_view_analytics ?? false} />
 
           <div className="mt-12 text-[9px] font-bold text-white/20 uppercase tracking-[0.3em] mb-4 px-4">Quản lý đối tác</div>
-          <NavLink tabId="businesses" label="Doanh nghiệp" icon={ICONS.businesses} permission={currentUser.permissions.can_manage_businesses} />
-          <NavLink tabId="registrations" label="Đang chờ duyệt" icon={ICONS.registrations} permission={currentUser.permissions.can_manage_registrations} />
-          <NavLink tabId="orders" label="Gói thành viên" icon={ICONS.orders} permission={currentUser.permissions.can_manage_orders} />
-          <NavLink tabId="blog" label="Tạp chí Beauty" icon={ICONS.blog} permission={currentUser.permissions.can_manage_platform_blog} />
-          <NavLink tabId="users" label="Quản trị viên" icon={ICONS.users} permission={currentUser.permissions.can_manage_users} />
-          <NavLink tabId="packages" label="Cấu hình gói" icon={ICONS.packages} permission={currentUser.permissions.can_manage_packages} />
+          <NavLink tabId="businesses" label="Doanh nghiệp" icon={ICONS.businesses} permission={currentUser.permissions?.can_manage_businesses ?? false} />
+          <NavLink tabId="registrations" label="Đang chờ duyệt" icon={ICONS.registrations} permission={currentUser.permissions?.can_manage_registrations ?? false} />
+          <NavLink tabId="orders" label="Gói thành viên" icon={ICONS.orders} permission={currentUser.permissions?.can_manage_orders ?? false} />
+          <NavLink tabId="blog" label="Tạp chí Beauty" icon={ICONS.blog} permission={currentUser.permissions?.can_manage_platform_blog ?? false} />
+          <NavLink tabId="users" label="Quản trị viên" icon={ICONS.users} permission={currentUser.permissions?.can_manage_users ?? false} />
+          <NavLink tabId="packages" label="Cấu hình gói" icon={ICONS.packages} permission={currentUser.permissions?.can_manage_packages ?? false} />
 
           <div className="mt-12 text-[9px] font-bold text-white/20 uppercase tracking-[0.3em] mb-4 px-4">Hệ thống & Cài đặt</div>
-          <NavLink tabId="tools" label="Công cụ Admin" icon={ICONS.tools} permission={currentUser.permissions.can_use_admin_tools} />
-          <NavLink tabId="content" label="Nội dung trang" icon={ICONS.settings} permission={currentUser.permissions.can_manage_site_content} />
+          <NavLink tabId="tools" label="Công cụ Admin" icon={ICONS.tools} permission={currentUser.permissions?.can_use_admin_tools ?? false} />
+          <NavLink tabId="content" label="Nội dung trang" icon={ICONS.settings} permission={currentUser.permissions?.can_manage_site_content ?? false} />
           <NavLink tabId="homepage" label="Biên tập Home" icon={ICONS.settings} permission={true} />
           <NavLink tabId="theme" label="Giao diện (Theme)" icon={ICONS.settings} permission={true} />
-          <NavLink tabId="settings" label="Cài đặt hệ thống" icon={ICONS.settings} permission={currentUser.permissions.can_manage_system_settings} />
+          <NavLink tabId="settings" label="Cài đặt hệ thống" icon={ICONS.settings} permission={currentUser.permissions?.can_manage_system_settings ?? false} />
 
           <div className="mt-12 text-[9px] font-bold text-white/20 uppercase tracking-[0.3em] mb-4 px-4">Nhật ký & Giám sát</div>
-          <NavLink tabId="activity" label="Nhật ký hoạt động" icon={ICONS.activity} permission={currentUser.permissions.can_view_activity_log} />
-          <NavLink tabId="notifications" label="Lịch sử thông báo" icon={ICONS.notifications} permission={currentUser.permissions.can_view_email_log} />
-          <NavLink tabId="announcements" label="Thông báo hệ thống" icon={ICONS.announcements} permission={currentUser.permissions.can_manage_announcements} />
-          <NavLink tabId="support" label="Hỗ trợ & Ticket" icon={ICONS.support} permission={currentUser.permissions.can_manage_support_tickets} />
-          <NavLink tabId="abuse-reports" label="Báo cáo vi phạm" icon={ICONS.support} permission={currentUser.permissions.can_manage_users} />
-          <NavLink tabId="landing-page-moderation" label="Kiểm duyệt LP" icon={ICONS.businesses} permission={currentUser.permissions.can_manage_businesses} />
+          <NavLink tabId="activity" label="Nhật ký hoạt động" icon={ICONS.activity} permission={currentUser.permissions?.can_view_activity_log ?? false} />
+          <NavLink tabId="notifications" label="Lịch sự thông báo" icon={ICONS.notifications} permission={currentUser.permissions?.can_view_email_log ?? false} />
+          <NavLink tabId="announcements" label="Thông báo hệ thống" icon={ICONS.announcements} permission={currentUser.permissions?.can_manage_announcements ?? false} />
+          <NavLink tabId="support" label="Hỗ trợ & Ticket" icon={ICONS.support} permission={currentUser.permissions?.can_manage_support_tickets ?? false} />
+          <NavLink tabId="abuse-reports" label="Báo cáo vi phạm" icon={ICONS.support} permission={currentUser.permissions?.can_manage_users ?? false} />
+          <NavLink tabId="landing-page-moderation" label="Kiểm duyệt LP" icon={ICONS.businesses} permission={currentUser.permissions?.can_manage_businesses ?? false} />
         </nav>
 
         <div className="p-8 border-t border-white/5 bg-black/20">

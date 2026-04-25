@@ -135,7 +135,7 @@ const DirectoryPage: React.FC = () => {
     const [selectedbusiness_id, setSelectedbusiness_id] = useState<number | null>(null);
     const [mapBounds, setMapBounds] = useState<{ contains: (point: [number, number]) => boolean } | null>(null);
     const [filterByMap, setFilterByMap] = useState(true);
-    const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
+    const [viewMode, setViewMode] = useState<'map' | 'list'>('list');
 
     const location = useLocation();
     const navigate = useNavigate();
@@ -352,8 +352,8 @@ const DirectoryPage: React.FC = () => {
             </div>
 
             <div>
-                {/* Map View */}
-                {viewMode === 'map' && (
+                {/* Map View - Temporarily Disabled */}
+                {/* {viewMode === 'map' && (
                     <div className="w-full h-[70vh] relative min-h-[400px]">
                         <DirectoryMap
                             businesses={filteredMarkers as Business[]}
@@ -368,7 +368,7 @@ const DirectoryPage: React.FC = () => {
                             centerCoords={mapCenterCoords}
                         />
                     </div>
-                )}
+                )} */}
 
                 <div className="container mx-auto px-4 py-12">
                     <SearchBar
@@ -380,8 +380,8 @@ const DirectoryPage: React.FC = () => {
                         showTitle
                     />
 
-                    {/* View Mode Toggle */}
-                    <div className="mt-8 flex justify-end">
+                    {/* View Mode Toggle - Temporarily Hidden */}
+                    {/* <div className="mt-8 flex justify-end">
                         <div className="flex items-center gap-1 bg-white/50 backdrop-blur-sm border border-luxury-border rounded-full p-1.5 shadow-sm">
                             <button
                                 onClick={() => setViewMode('map')}
@@ -402,7 +402,7 @@ const DirectoryPage: React.FC = () => {
                                 Danh sách
                             </button>
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* List View */}
                     {viewMode === 'list' && (

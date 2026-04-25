@@ -107,7 +107,26 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     if (role === 'admin' && user && adminUsers.length > 0) {
       const adminProfile = adminUsers.find(au => au.email === user.email);
       if (adminProfile && !adminProfile.is_locked) {
-        return { ...adminProfile, authUser: user } as AuthenticatedAdmin;
+        return {
+          ...adminProfile,
+          authUser: user,
+          // Ensure permissions is never null to prevent runtime crashes
+          permissions: adminProfile.permissions || {
+            can_view_analytics: false,
+            can_manage_businesses: false,
+            can_manage_registrations: false,
+            can_manage_orders: false,
+            can_manage_platform_blog: false,
+            can_manage_users: false,
+            can_manage_packages: false,
+            can_manage_announcements: false,
+            can_manage_support_tickets: false,
+            can_manage_site_content: false,
+            can_use_admin_tools: false,
+            can_view_activity_log: false,
+            can_view_email_log: false
+          }
+        } as AuthenticatedAdmin;
       }
     }
     return null;
@@ -450,5 +469,9 @@ export const useSettings = () => {
 
 export const usePageContent = () => {
   const { getPageContent, updatePageContent } = useAdmin();
-  return { getPageContent, updatePageContent };
+  return {
+    getPageContent,
+    updatePageContent,
+    loading: false // Page content is already loaded in the admin query
+  };
 };

@@ -112,7 +112,7 @@ export async function resolveUserRole(user: User | null): Promise<RoleResolution
     return {
       role: resolvedRole,
       profileId: context.profile?.id || null,
-      business_id: context.business_id,
+      business_id: context.business_id || (context as any).businessId,
       isAdmin: resolvedRole === 'admin',
       is_business: resolvedRole === 'business',
       profile: context.profile || null
