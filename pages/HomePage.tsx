@@ -319,39 +319,54 @@ const HomePage: React.FC = () => {
         );
       case 'exploreByLocation':
         return (
-          <section key={section.id} className="py-24 bg-background">
-            <div className="container mx-auto px-4">
-              <div className="text-center mb-16">
-                <h2 className="text-4xl md:text-5xl font-bold font-serif text-primary mb-4 tracking-wide">Khám phá theo địa điểm</h2>
-                <div className="w-24 h-0.5 bg-primary/30 mx-auto mb-6"></div>
-                <p className="text-neutral-500 max-w-2xl mx-auto font-light tracking-wide">{section.subtitle}</p>
+          <section key={section.id} className="py-24 bg-background relative overflow-hidden">
+            {/* Background Decorative Element */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+
+            <div className="container mx-auto px-4 relative z-10">
+              <div className="max-w-3xl mb-16">
+                <p className="text-primary text-xs font-bold uppercase tracking-[0.3em] mb-4">Destinations</p>
+                <h2 className="text-4xl md:text-6xl font-bold font-serif text-primary mb-6 tracking-tight">Khám phá theo địa điểm</h2>
+                <div className="w-20 h-1 bg-primary/20 mb-8 rounded-full"></div>
+                <p className="text-neutral-500 text-lg font-light tracking-wide leading-relaxed">{section.subtitle}</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-6 h-auto md:h-[600px]">
-                {FEATURED_LOCATIONS.map((location, index) => {
-                  const bentoClasses = [
-                    "md:col-span-2 md:row-span-2", // Tràng Tiền / TP.HCM (Large)
-                    "md:col-span-1 md:row-span-1", // Standard
-                    "md:col-span-1 md:row-span-1", // Standard
-                    "md:col-span-2 md:row-span-1", // Wide
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-auto md:h-[700px]">
+                {FEATURED_LOCATIONS.slice(0, 4).map((location, index) => {
+                  const gridClasses = [
+                    "md:col-span-8 md:row-span-2", // Large Feature
+                    "md:col-span-4 md:row-span-1", // Small
+                    "md:col-span-4 md:row-span-1", // Small
+                    "md:col-span-12 md:row-span-1", // Wide bottom
                   ];
                   return (
                     <Link
                       key={location.name}
                       to={`/directory?location=${encodeURIComponent(location.name)}`}
-                      className={`group relative rounded-3xl overflow-hidden shadow-premium transition-all duration-700 ${bentoClasses[index % 4] || "md:col-span-1"}`}
+                      className={`group relative rounded-[2.5rem] overflow-hidden shadow-premium transition-all duration-1000 ${gridClasses[index]}`}
                     >
                       <img
                         src={location.image_url}
                         alt={`Khám phá ${location.name}`}
-                        className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                        className="w-full h-full object-cover transition-transform duration-[2000ms] group-hover:scale-110"
                         loading="lazy"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-neutral-dark/90 via-neutral-dark/20 to-transparent transition-opacity duration-500 opacity-80 group-hover:opacity-100"></div>
-                      <div className="absolute bottom-6 left-6 right-6 transform transition-transform duration-500 group-hover:-translate-y-2">
-                        <p className="text-primary text-xs font-bold uppercase tracking-widest mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500">Discover</p>
-                        <h3 className="text-white text-2xl font-bold font-outfit">{location.name}</h3>
-                        <div className="w-0 group-hover:w-12 h-1 bg-primary transition-all duration-500 mt-2 rounded-full"></div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-neutral-dark/95 via-neutral-dark/30 to-transparent transition-opacity duration-700 opacity-70 group-hover:opacity-90"></div>
+
+                      <div className="absolute inset-0 border border-white/10 group-hover:border-primary/30 transition-colors duration-700 rounded-[2.5rem] pointer-events-none"></div>
+
+                      <div className="absolute bottom-8 left-8 right-8">
+                        <div className="flex items-end justify-between">
+                          <div>
+                            <p className="text-primary text-[10px] font-bold uppercase tracking-[0.4em] mb-3 opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-700">Explore</p>
+                            <h3 className="text-white text-3xl font-bold font-serif tracking-wide">{location.name}</h3>
+                          </div>
+                          <div className="bg-white/10 backdrop-blur-xl w-14 h-14 rounded-full flex items-center justify-center border border-white/20 -translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                            </svg>
+                          </div>
+                        </div>
                       </div>
                     </Link>
                   );
@@ -441,9 +456,9 @@ const HomePage: React.FC = () => {
       )}
 
       <div>
-        {/* Hero Section - Dynamic Slider with Left Alignment */}
-        <section className="relative min-h-[700px] flex items-center overflow-hidden bg-neutral-dark">
-          {/* Background Slider Layer */}
+        {/* Hero Section - Luxury High-Performance Design */}
+        <section className="relative min-h-[85vh] flex items-center overflow-hidden bg-neutral-dark">
+          {/* Background Layer with Parallax-ready images */}
           {hero_slides.map((slide, index) => (
             <div
               key={index}
@@ -452,24 +467,21 @@ const HomePage: React.FC = () => {
               <img
                 src={slide.image_url || "/premium_beauty_hero.png"}
                 alt={slide.title}
-                className={`w-full h-full object-cover ${index === currentSlide ? 'animate-ken-burns' : ''}`}
+                className={`w-full h-full object-cover scale-105 ${index === currentSlide ? 'animate-ken-burns' : ''}`}
                 loading={index === 0 ? "eager" : "lazy"}
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-neutral-dark/90 via-neutral-dark/40 to-transparent"></div>
+              <div className="absolute inset-0 bg-gradient-to-b from-neutral-dark/80 via-neutral-dark/40 to-background"></div>
             </div>
           ))}
 
-          <div className="relative z-10 container mx-auto px-4 py-20 text-center flex flex-col items-center">
-            <div className="max-w-4xl w-full">
-              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-primary/20 backdrop-blur-md border border-primary/30 text-primary text-xs font-bold uppercase tracking-wider mb-6 animate-fade-in-up">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                </span>
-                <span>Khám phá vẻ đẹp đích thực</span>
+          <div className="relative z-10 container mx-auto px-4 py-24">
+            <div className="max-w-5xl mx-auto text-center">
+              <div className="inline-flex items-center space-x-3 px-4 py-2 rounded-full bg-primary/15 backdrop-blur-xl border border-primary/20 text-primary text-[10px] font-bold uppercase tracking-[0.4em] mb-10 animate-fade-in-up">
+                <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
+                <span>The Pinnacle of Beauty Excellence</span>
               </div>
 
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold font-serif text-white mb-8 tracking-tight animate-fade-in-up delay-100 uppercase">
+              <h1 className="text-6xl md:text-8xl lg:text-9xl font-bold font-serif text-white mb-10 tracking-tightest leading-[0.9] animate-fade-in-up delay-100 uppercase">
                 {hero_slides.length > 0 ? (
                   <Editable
                     id={`hero_title_${currentSlide}`}
@@ -479,9 +491,9 @@ const HomePage: React.FC = () => {
                     {(hero_slides[currentSlide]?.title || '').split(' ').map((word: string, i: number) => (
                       <React.Fragment key={i}>
                         {word === 'Nhan' || word === 'sắc' || word === 'Cảm' || word === 'xúc' ? (
-                          <span className="text-gradient">{word} </span>
+                          <span className="text-gradient drop-shadow-sm">{word} </span>
                         ) : (
-                          <>{word} </>
+                          <span className="relative inline-block">{word} </span>
                         )}
                         {i === 2 && <br className="hidden md:block" />}
                       </React.Fragment>
@@ -495,53 +507,48 @@ const HomePage: React.FC = () => {
                 )}
               </h1>
 
-              <div className="text-base md:text-xl text-gray-200 mb-10 max-w-2xl mx-auto leading-relaxed animate-fade-in-up delay-200">
+              <div className="text-sm md:text-lg text-gray-400 mb-12 max-w-2xl mx-auto leading-relaxed animate-fade-in-up delay-200 tracking-[0.2em] uppercase font-light">
                 <Editable
                   id={`hero_subtitle_${currentSlide}`}
                   type="textarea"
                   value={hero_slides.length > 0 ? hero_slides[currentSlide].subtitle : ''}
                 >
-                  <p className="font-light tracking-widest uppercase opacity-90">{hero_slides.length > 0 ? hero_slides[currentSlide].subtitle : 'Trải nghiệm dịch vụ làm đẹp đẳng cấp và tinh tế'}</p>
+                  <p className="opacity-80 line-clamp-2">{hero_slides.length > 0 ? hero_slides[currentSlide].subtitle : 'Trải nghiệm dịch vụ làm đẹp đẳng cấp và tinh tế'}</p>
                 </Editable>
               </div>
 
-              <div className="bg-white/95 backdrop-blur-xl p-3 md:p-6 rounded-full shadow-2xl animate-fade-in-up delay-300 max-w-5xl mx-auto border border-white/20">
-                <SearchBar onSearch={handleSearch} categories={CATEGORIES} locations={CITIES} />
-              </div>
-
-              <div className="mt-10 flex flex-wrap justify-center gap-6 text-white/80 text-sm animate-fade-in-up delay-400">
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm">
-                    <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-                  </div>
-                  <span>1000+ Đối tác uy tín</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm">
-                    <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                  </div>
-                  <span>Đặt lịch 24/7</span>
+              {/* High-Performance Premium Search Bar */}
+              <div className="relative max-w-4xl mx-auto animate-fade-in-up delay-300">
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 to-accent/30 rounded-full blur-xl opacity-50 group-hover:opacity-100 transition duration-1000"></div>
+                <div className="relative bg-white/95 backdrop-blur-2xl p-4 md:p-6 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-white/20">
+                  <SearchBar onSearch={handleSearch} categories={CATEGORIES} locations={CITIES} />
                 </div>
               </div>
 
-              {/* Slider Controls */}
-              {hero_slides.length > 1 && (
-                <div className="mt-12 flex items-center justify-center space-x-3 animate-fade-in-up delay-500">
-                  {hero_slides.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentSlide(index)}
-                      className={`h-1.5 rounded-full transition-all duration-500 ${index === currentSlide ? 'w-12 bg-primary' : 'w-4 bg-white/30 hover:bg-white/50'}`}
-                      aria-label={`Go to slide ${index + 1}`}
-                    />
-                  ))}
+              {/* Social Proof & Metrics */}
+              <div className="mt-16 flex flex-wrap justify-center gap-10 text-white/60 text-[10px] font-bold uppercase tracking-[0.3em] animate-fade-in-up delay-400">
+                <div className="flex flex-col items-center gap-2 group cursor-default">
+                  <span className="text-2xl text-primary font-serif mb-1 group-hover:scale-110 transition-transform">10K+</span>
+                  <span className="group-hover:text-primary transition-colors">Users Global</span>
                 </div>
-              )}
+                <div className="w-px h-10 bg-white/10 hidden md:block"></div>
+                <div className="flex flex-col items-center gap-2 group cursor-default">
+                  <span className="text-2xl text-primary font-serif mb-1 group-hover:scale-110 transition-transform">1K+</span>
+                  <span className="group-hover:text-primary transition-colors">Elite Partners</span>
+                </div>
+                <div className="w-px h-10 bg-white/10 hidden md:block"></div>
+                <div className="flex flex-col items-center gap-2 group cursor-default">
+                  <span className="text-2xl text-primary font-serif mb-1 group-hover:scale-110 transition-transform">24/7</span>
+                  <span className="group-hover:text-primary transition-colors">Concierge Support</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Bottom curve decoration */}
-          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent z-10"></div>
+          {/* Luxury scroll prompt */}
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 animate-bounce opacity-40">
+            <div className="w-px h-12 bg-gradient-to-b from-primary to-transparent"></div>
+          </div>
         </section>
 
         {/* Recently Viewed Section */}

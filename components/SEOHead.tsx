@@ -1,8 +1,5 @@
-// C2.5 - SEO Head Component (Enhanced)
-// Tuân thủ ARCHITECTURE.md, chuẩn SEO cơ bản
-// 100% hoàn thiện, không placeholder
-
-import { useEffect } from 'react';
+// C2.5 - SEO Head Component (Enhanced for AEO)
+import React, { useEffect } from 'react';
 
 type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonObject | JsonValue[];
@@ -87,17 +84,27 @@ interface OrganizationSchema {
   };
 }
 
+interface ItemListSchema {
+  name: string;
+  itemListElement: Array<{
+    position: number;
+    url: string;
+    name?: string;
+  }>;
+}
+
 interface SEOHeadProps {
   title?: string;
   description?: string;
   keywords?: string;
   image?: string;
   url?: string;
-  type?: 'website' | 'article' | 'business';
+  type?: 'website' | 'article' | 'business' | 'itemlist';
   articleSchema?: ArticleSchema;
   businessSchema?: LocalBusinessSchema;
   reviewSchema?: ReviewSchema[];
   organizationSchema?: OrganizationSchema;
+  itemListSchema?: ItemListSchema;
 }
 
 const SEOHead: React.FC<SEOHeadProps> = ({
@@ -111,6 +118,7 @@ const SEOHead: React.FC<SEOHeadProps> = ({
   businessSchema,
   reviewSchema,
   organizationSchema,
+  itemListSchema,
 }) => {
   useEffect(() => {
     // Update document title
@@ -119,7 +127,7 @@ const SEOHead: React.FC<SEOHeadProps> = ({
     // Update or create meta tags
     const updateMetaTag = (name: string, content: string, isProperty = false) => {
       const attribute = isProperty ? 'property' : 'name';
-      let meta = document.querySelector(`meta[${attribute}="${name}"]`);
+      let meta = document.head.querySelector(`meta[${attribute}="${name}"]`);
       if (!meta) {
         meta = document.createElement('meta');
         meta.setAttribute(attribute, name);
@@ -139,21 +147,15 @@ const SEOHead: React.FC<SEOHeadProps> = ({
     updateMetaTag('og:description', description, true);
     updateMetaTag('og:image', image, true);
     updateMetaTag('og:url', url, true);
-    updateMetaTag('og:type', type === 'article' ? 'article' : type === 'business' ? 'website' : 'website', true);
+    updateMetaTag('og:type', type === 'article' ? 'article' : 'website', true);
     updateMetaTag('og:site_name', '1Beauty.asia', true);
     updateMetaTag('og:locale', 'vi_VN', true);
 
     // Additional OG tags for articles
     if (type === 'article' && articleSchema) {
-      if (articleSchema.datePublished) {
-        updateMetaTag('og:published_time', articleSchema.datePublished, true);
-      }
-      if (articleSchema.dateModified) {
-        updateMetaTag('og:modified_time', articleSchema.dateModified, true);
-      }
-      if (articleSchema.author?.name) {
-        updateMetaTag('article:author', articleSchema.author.name, true);
-      }
+      if (articleSchema.datePublished) updateMetaTag('og:published_time', articleSchema.datePublished, true);
+      if (articleSchema.dateModified) updateMetaTag('og:modified_time', articleSchema.dateModified, true);
+      if (articleSchema.author?.name) updateMetaTag('article:author', articleSchema.author.name, true);
     }
 
     // Twitter Card tags
@@ -163,7 +165,7 @@ const SEOHead: React.FC<SEOHeadProps> = ({
     updateMetaTag('twitter:image', image);
 
     // Canonical URL
-    let canonical = document.querySelector('link[rel="canonical"]');
+    let canonical = document.head.querySelector('link[rel="canonical"]');
     if (!canonical) {
       canonical = document.createElement('link');
       canonical.setAttribute('rel', 'canonical');
@@ -172,139 +174,105 @@ const SEOHead: React.FC<SEOHeadProps> = ({
     canonical.setAttribute('href', url);
 
     // Schema.org JSON-LD
-    // Remove all existing schema scripts
-    const existingSchemaScripts = document.querySelectorAll('script[id^="schema-org-json"]');
+    const existingSchemaScripts = document.head.querySelectorAll('script[id^="schema-org-json"]');
     existingSchemaScripts.forEach(script => script.remove());
 
-    // Build array of schemas (can have multiple)
-    const schemas: JsonObject[] = [];
+    const schemas: any[] = []; // Using any for schema array to simplify complex nested types
 
     // Main schema based on type
     if (type === 'website') {
-      const websiteSchema: JsonObject = {
+      schemas.push({
         '@context': 'https://schema.org',
         '@type': 'WebSite',
         name: '1Beauty.asia',
-        description: description,
-        url: url,
+        description,
+        url,
         potentialAction: {
           '@type': 'SearchAction',
           target: {
             '@type': 'EntryPoint',
-            urlTemplate: typeof window !== 'undefined' 
+            urlTemplate: typeof window !== 'undefined'
               ? `${window.location.origin}/directory?keyword={search_term_string}`
               : `${url.split('/')[0]}//${url.split('/')[2]}/directory?keyword={search_term_string}`,
           },
           'query-input': 'required name=search_term_string',
         },
-      };
-      schemas.push(websiteSchema);
+      });
     } else if (type === 'article' && articleSchema) {
-      const articleSchemaObj: JsonObject = {
+      const articleObj: any = {
         '@context': 'https://schema.org',
         '@type': 'Article',
         headline: articleSchema.headline || title,
-        description: description,
+        description,
         image: articleSchema.image || [image],
-        url: url,
+        url,
         publisher: articleSchema.publisher || {
           '@type': 'Organization',
           name: '1Beauty.asia',
-          logo: {
-            '@type': 'ImageObject',
-            url: typeof window !== 'undefined' 
-              ? `${window.location.origin}/favicon.svg`
-              : '',
-          },
+          logo: { '@type': 'ImageObject', url: typeof window !== 'undefined' ? `${window.location.origin}/favicon.svg` : '' }
         },
       };
-      if (articleSchema.author) {
-        articleSchemaObj.author = {
-          '@type': 'Person',
-          name: articleSchema.author.name,
-          ...(articleSchema.author.url && { url: articleSchema.author.url }),
-        };
-      }
-      if (articleSchema.datePublished) {
-        articleSchemaObj.datePublished = articleSchema.datePublished;
-      }
-      if (articleSchema.dateModified) {
-        articleSchemaObj.dateModified = articleSchema.dateModified;
-      }
-      schemas.push(articleSchemaObj);
+      if (articleSchema.author) articleObj.author = { '@type': 'Person', name: articleSchema.author.name, url: articleSchema.author.url };
+      if (articleSchema.datePublished) articleObj.datePublished = articleSchema.datePublished;
+      if (articleSchema.dateModified) articleObj.dateModified = articleSchema.dateModified;
+      schemas.push(articleObj);
     } else if (type === 'business' && businessSchema) {
-      const businessSchemaObj: JsonObject = {
+      const bizObj: any = {
         '@context': 'https://schema.org',
         '@type': 'LocalBusiness',
         name: businessSchema.name || title,
-        description: description,
+        description,
         image: businessSchema.image || [image],
-        url: url,
+        url,
       };
-      if (businessSchema.address) {
-        businessSchemaObj.address = {
-          '@type': 'PostalAddress',
-          ...businessSchema.address,
-        };
-      }
-      if (businessSchema.geo) {
-        businessSchemaObj.geo = {
-          '@type': 'GeoCoordinates',
-          ...businessSchema.geo,
-        };
-      }
-      if (businessSchema.telephone) {
-        businessSchemaObj.telephone = businessSchema.telephone;
-      }
-      if (businessSchema.priceRange) {
-        businessSchemaObj.priceRange = businessSchema.priceRange;
-      }
-      if (businessSchema.aggregateRating) {
-        businessSchemaObj.aggregateRating = {
-          '@type': 'AggregateRating',
-          ...businessSchema.aggregateRating,
-        };
-      }
-      if (businessSchema.openingHoursSpecification && businessSchema.openingHoursSpecification.length > 0) {
-        businessSchemaObj.openingHoursSpecification = businessSchema.openingHoursSpecification.map(oh => ({
-          '@type': 'OpeningHoursSpecification',
-          ...oh,
-        }));
-      }
-      schemas.push(businessSchemaObj);
-    }
-
-    // Add Organization schema if provided
-    if (organizationSchema) {
-      const orgSchema: JsonObject = {
+      if (businessSchema.address) bizObj.address = { '@type': 'PostalAddress', ...businessSchema.address };
+      if (businessSchema.geo) bizObj.geo = { '@type': 'GeoCoordinates', ...businessSchema.geo };
+      if (businessSchema.telephone) bizObj.telephone = businessSchema.telephone;
+      if (businessSchema.priceRange) bizObj.priceRange = businessSchema.priceRange;
+      if (businessSchema.aggregateRating) bizObj.aggregateRating = { '@type': 'AggregateRating', ...businessSchema.aggregateRating };
+      if (businessSchema.openingHoursSpecification) bizObj.openingHoursSpecification = businessSchema.openingHoursSpecification.map(oh => ({ '@type': 'OpeningHoursSpecification', ...oh }));
+      schemas.push(bizObj);
+    } else if (type === 'itemlist' && itemListSchema) {
+      schemas.push({
         '@context': 'https://schema.org',
-        '@type': 'Organization',
-        name: organizationSchema.name || '1Beauty.asia',
-        ...(organizationSchema.url && { url: organizationSchema.url }),
-        ...(organizationSchema.logo && { logo: organizationSchema.logo }),
-        ...(organizationSchema.sameAs && { sameAs: organizationSchema.sameAs }),
-        ...(organizationSchema.contactPoint && { contactPoint: organizationSchema.contactPoint }),
-      };
-      schemas.push(orgSchema);
-    }
-
-    // Add Review schemas if provided
-    if (reviewSchema && reviewSchema.length > 0) {
-      reviewSchema.forEach(review => {
-        const reviewSchemaObj: JsonObject = {
-          '@context': 'https://schema.org',
-          '@type': 'Review',
-          ...(review.author && { author: review.author }),
-          ...(review.datePublished && { datePublished: review.datePublished }),
-          ...(review.reviewBody && { reviewBody: review.reviewBody }),
-          ...(review.reviewRating && { reviewRating: review.reviewRating }),
-          ...(review.itemReviewed && { itemReviewed: review.itemReviewed }),
-        };
-        schemas.push(reviewSchemaObj);
+        '@type': 'ItemList',
+        name: itemListSchema.name,
+        description,
+        itemListElement: itemListSchema.itemListElement.map(item => ({
+          '@type': 'ListItem',
+          position: item.position,
+          url: item.url,
+          name: item.name
+        }))
       });
     }
 
-    // Render all schemas
+    if (organizationSchema) {
+      schemas.push({
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: organizationSchema.name || '1Beauty.asia',
+        url: organizationSchema.url,
+        logo: organizationSchema.logo,
+        sameAs: organizationSchema.sameAs,
+        contactPoint: organizationSchema.contactPoint
+      });
+    }
+
+    if (reviewSchema) {
+      reviewSchema.forEach((review) => {
+        schemas.push({
+          '@context': 'https://schema.org',
+          '@type': 'Review',
+          author: review.author,
+          datePublished: review.datePublished,
+          reviewBody: review.reviewBody,
+          reviewRating: review.reviewRating,
+          itemReviewed: review.itemReviewed
+        });
+      });
+    }
+
     schemas.forEach((schema, index) => {
       const script = document.createElement('script');
       script.id = `schema-org-json-${index}`;
@@ -312,10 +280,9 @@ const SEOHead: React.FC<SEOHeadProps> = ({
       script.textContent = JSON.stringify(schema);
       document.head.appendChild(script);
     });
-  }, [title, description, keywords, image, url, type, articleSchema, businessSchema, reviewSchema, organizationSchema]);
+  }, [title, description, keywords, image, url, type, articleSchema, businessSchema, reviewSchema, organizationSchema, itemListSchema]);
 
   return null;
 };
 
 export default SEOHead;
-
