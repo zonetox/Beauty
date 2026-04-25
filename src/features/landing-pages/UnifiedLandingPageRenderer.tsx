@@ -1,19 +1,19 @@
 import React from 'react';
 import { Business, LandingPageConfig } from '../../../types.ts';
-import BusinessHeader from '../../business-landing/BusinessHeader.tsx';
-import HeroSection from '../../business-landing/HeroSection.tsx';
-import AboutSection from '../../business-landing/AboutSection.tsx';
-import ServicesSection from '../../business-landing/ServicesSection.tsx';
-import GallerySection from '../../business-landing/GallerySection.tsx';
-import TeamSection from '../../business-landing/TeamSection.tsx';
-import VideoSection from '../../business-landing/VideoSection.tsx';
-import DealsSection from '../../business-landing/DealsSection.tsx';
-import BookingCtaSection from '../../business-landing/BookingCtaSection.tsx';
-import LocationSection from '../../business-landing/LocationSection.tsx';
-import BusinessFooter from '../../business-landing/BusinessFooter.tsx';
-import BusinessBlogSection from '../../business-landing/BusinessBlogSection.tsx';
-import ReviewsSection from '../../business-landing/ReviewsSection.tsx';
-import TrustIndicatorsSection from '../../business-landing/TrustIndicatorsSection.tsx';
+import BusinessHeader from '@/components/business-landing/BusinessHeader.tsx';
+import HeroSection from '@/components/business-landing/HeroSection.tsx';
+import AboutSection from '@/components/business-landing/AboutSection.tsx';
+import ServicesSection from '@/components/business-landing/ServicesSection.tsx';
+import GallerySection from '@/components/business-landing/GallerySection.tsx';
+import TeamSection from '@/components/business-landing/TeamSection.tsx';
+import VideoSection from '@/components/business-landing/VideoSection.tsx';
+import DealsSection from '@/components/business-landing/DealsSection.tsx';
+import BookingCtaSection from '@/components/business-landing/BookingCtaSection.tsx';
+import LocationSection from '@/components/business-landing/LocationSection.tsx';
+import BusinessFooter from '@/components/business-landing/BusinessFooter.tsx';
+import BusinessBlogSection from '@/components/business-landing/BusinessBlogSection.tsx';
+import ReviewsSection from '@/components/business-landing/ReviewsSection.tsx';
+import TrustIndicatorsSection from '@/components/business-landing/TrustIndicatorsSection.tsx';
 
 interface UnifiedLandingPageRendererProps {
     business: Business;
