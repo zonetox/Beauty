@@ -1,5 +1,5 @@
 const url = "https://fdklazlcbxaiapsnnbqq.supabase.co/rest/v1/businesses";
-const apiKey = "sb_publishable_4pjxJvJw48bjVJ0WPScWHQ_j3dPX2Fb"; // ANON KEY
+const apiKey = process.env.SUPABASE_ANON_KEY || ""; // READ FROM ENV
 
 const demoData = {
     name: 'Luna Spa & Massage',

@@ -17,7 +17,7 @@ interface ReviewsSectionProps {
     isEditing?: boolean;
 }
 
-const ReviewsSection: React.FC<ReviewsSectionProps> = ({ business, content, isEditing }) => {
+const ReviewsSection: React.FC<ReviewsSectionProps> = ({ business, content }) => {
     const displayTitle = content?.title || 'Khách hàng nói gì về chúng tôi';
     const displaySubtitle = content?.subtitle || 'Đánh giá';
     const { getReviewsBybusiness_id, addReview } = useReviewsData();

@@ -10,7 +10,7 @@ interface BookingCtaSectionProps {
     isEditing?: boolean;
 }
 
-const BookingCtaSection: React.FC<BookingCtaSectionProps> = ({ onBookNowClick, business_id, content, isEditing }) => {
+const BookingCtaSection: React.FC<BookingCtaSectionProps> = ({ onBookNowClick, business_id, content }) => {
     const displayTitle = content?.title || 'Sẵn sàng trải nghiệm dịch vụ đẳng cấp?';
     const displaySubtitle = content?.subtitle || 'Đặt lịch hẹn ngay hôm nay để tận hưởng những phút giây thư giãn và làm đẹp tuyệt vời nhất.';
     const displayCtaText = content?.cta_text || 'Đặt lịch ngay';

@@ -6,11 +6,10 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom';
 import SearchBar from '../components/SearchBar.tsx';
 import BusinessCard from '../components/BusinessCard.tsx';
-import DirectoryMap from '../components/DirectoryMap.tsx';
 import SEOHead from '../components/SEOHead.tsx';
 import EmptyState from '../components/EmptyState.tsx';
-import { CATEGORIES, CITIES, LOCATIONS_HIERARCHY, LOCATION_COORDINATES } from '../constants.ts';
-import { Business, WorkingHours } from '../types.ts';
+import { CATEGORIES, CITIES, LOCATIONS_HIERARCHY } from '../constants.ts';
+import { WorkingHours } from '../types.ts';
 import { useDirectoryData } from '../src/features/directory';
 import FilterTag from '../components/FilterTag.tsx';
 import Pagination from '../components/Pagination.tsx';
@@ -126,16 +125,16 @@ const checkIfOpen = (working_hours: WorkingHours | null | undefined): boolean =>
 
 const DirectoryPage: React.FC = () => {
     const {
-        businesses, businessMarkers, totalBusinesses,
+        businesses, totalBusinesses,
         loading: businessLoading, fetchBusinesses
     } = useDirectoryData();
 
     // const [mapVisibleBusinesses, setMapVisibleBusinesses] = useState<Business[]>([]); // Refactored to useMemo below
     const [highlightedbusiness_id, setHighlightedbusiness_id] = useState<number | null>(null);
-    const [selectedbusiness_id, setSelectedbusiness_id] = useState<number | null>(null);
-    const [mapBounds, setMapBounds] = useState<{ contains: (point: [number, number]) => boolean } | null>(null);
+    const [selectedbusiness_id, _setSelectedbusiness_id] = useState<number | null>(null);
+    const [mapBounds, _setMapBounds] = useState<{ contains: (point: [number, number]) => boolean } | null>(null);
     const [filterByMap, setFilterByMap] = useState(true);
-    const [viewMode, setViewMode] = useState<'map' | 'list'>('list');
+    const [viewMode, _setViewMode] = useState<'map' | 'list'>('list');
 
     const location = useLocation();
     const navigate = useNavigate();
@@ -172,10 +171,6 @@ const DirectoryPage: React.FC = () => {
     }, [location.search, fetchBusinesses, getFiltersFromUrl]);
 
     // Fast marker filtering for Map (uses the lightweight markers state)
-    const filteredMarkers = useMemo(() => {
-        return businessMarkers.filter(m => m.is_active);
-    }, [businessMarkers]);
-
     // Apply client-side filters (deals, verified, open now, sort)
     // IMPORTANT: If search text exists, results are already ranked by database
     // Only apply client-side sorting if no search text (user browsing, not searching)
@@ -316,16 +311,6 @@ const DirectoryPage: React.FC = () => {
     const seoDescription = hasSearchQuery
         ? `Tìm thấy ${totalBusinesses} doanh nghiệp phù hợp với tiêu chí của bạn.`
         : `Khám phá hàng ngàn spa, salon, và clinic uy tín tại ${activeFilters.location || 'Việt Nam'}. Tìm kiếm theo danh mục, địa điểm và nhiều tiêu chí khác.`;
-
-    const mapCenterCoords = useMemo(() => {
-        if (activeFilters.district && LOCATION_COORDINATES[activeFilters.district]) {
-            return LOCATION_COORDINATES[activeFilters.district];
-        }
-        if (activeFilters.location && LOCATION_COORDINATES[activeFilters.location]) {
-            return LOCATION_COORDINATES[activeFilters.location];
-        }
-        return null;
-    }, [activeFilters.location, activeFilters.district]);
 
     // ItemList schema elements
     const itemListElement = paginatedBusinesses.map((b, index) => ({
@@ -478,24 +463,24 @@ const DirectoryPage: React.FC = () => {
                                 </div>
                             )}
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8">
-                                <h2 className="text-xl font-bold font-serif text-primary flex-shrink-0 tracking-wide uppercase">
+                                <h2 className="text-xl md:text-2xl font-semibold font-serif text-primary flex-shrink-0 tracking-wide uppercase italic">
                                     {businessLoading ? 'Đang tìm kiếm...' : (
                                         <span>
                                             {filterByMap && businesses.length > 0
-                                                ? <>Hiển thị <span className="text-accent">{mapVisibleBusinesses.length}</span> cơ sở (tổng {totalBusinesses})</>
-                                                : <>Tìm thấy <span className="text-accent">{totalBusinesses}</span> cơ sở làm đẹp</>
+                                                ? <>Hiển thị <span className="text-primary-dark">{mapVisibleBusinesses.length}</span> cơ sở <span className="text-neutral-300 font-light mx-2">/</span> {totalBusinesses}</>
+                                                : <>Tìm thấy <span className="text-primary-dark">{totalBusinesses}</span> cơ sở làm đẹp</>
                                             }
                                         </span>
                                     )}
                                 </h2>
                                 <div className="flex items-center gap-x-6 gap-y-3 flex-wrap">
                                     <div className="flex items-center gap-3 text-sm">
-                                        <label htmlFor="sort-by" className="font-medium text-neutral-500 uppercase tracking-widest text-[10px]">Sắp xếp:</label>
+                                        <label htmlFor="sort-by" className="font-medium text-neutral-400 uppercase tracking-[0.2em] text-[9px] font-sans">Sắp xếp:</label>
                                         <select
                                             id="sort-by"
                                             value={activeFilters.sort}
                                             onChange={(e) => handleFilterChange({ sort: e.target.value })}
-                                            className="bg-white border border-luxury-border text-xs rounded-full focus:ring-1 focus:ring-accent p-2 outline-none appearance-none px-4 shadow-sm"
+                                            className="bg-white border border-luxury-border text-xs rounded-full focus:ring-1 focus:ring-primary p-2 outline-none appearance-none px-6 shadow-sm font-sans tracking-wide"
                                         >
                                             <option value="default">Mặc định</option>
                                             <option value="rating">Đánh giá cao</option>
@@ -503,36 +488,36 @@ const DirectoryPage: React.FC = () => {
                                             <option value="name">Tên (A-Z)</option>
                                         </select>
                                     </div>
-                                    <div className="flex items-center gap-x-6 gap-y-2 flex-wrap text-[10px] uppercase tracking-widest font-bold text-neutral-600">
+                                    <div className="flex items-center gap-x-6 gap-y-2 flex-wrap text-[9px] uppercase tracking-[0.2em] font-bold text-neutral-500 font-sans">
                                         <label className="flex items-center gap-2 cursor-pointer group">
                                             <input
                                                 type="checkbox"
                                                 checked={activeFilters.hasDeals}
                                                 onChange={(e) => handleFilterChange({ hasDeals: e.target.checked })}
-                                                className="h-3.5 w-3.5 text-accent focus:ring-accent border-luxury-border rounded-full transition-all"
+                                                className="h-3.5 w-3.5 text-primary focus:ring-primary border-luxury-border rounded-full transition-all"
                                             />
-                                            <span className="group-hover:text-accent transition-colors">Có ưu đãi</span>
+                                            <span className="group-hover:text-primary transition-colors">Có ưu đãi</span>
                                         </label>
                                         <label className="flex items-center gap-2 cursor-pointer group">
                                             <input
                                                 type="checkbox"
                                                 checked={activeFilters.is_verified}
                                                 onChange={(e) => handleFilterChange({ is_verified: e.target.checked })}
-                                                className="h-3.5 w-3.5 text-accent focus:ring-accent border-luxury-border rounded-full transition-all"
+                                                className="h-3.5 w-3.5 text-primary focus:ring-primary border-luxury-border rounded-full transition-all"
                                             />
-                                            <span className="group-hover:text-accent transition-colors">Đã xác thực</span>
+                                            <span className="group-hover:text-primary transition-colors">Đã xác thực</span>
                                         </label>
                                         <label className="flex items-center gap-2 cursor-pointer group">
                                             <input
                                                 type="checkbox"
                                                 checked={activeFilters.isOpenNow}
                                                 onChange={(e) => handleFilterChange({ isOpenNow: e.target.checked })}
-                                                className="h-3.5 w-3.5 text-accent focus:ring-accent border-luxury-border rounded-full transition-all"
+                                                className="h-3.5 w-3.5 text-primary focus:ring-primary border-luxury-border rounded-full transition-all"
                                             />
-                                            <span className="group-hover:text-accent transition-colors">Đang mở cửa</span>
+                                            <span className="group-hover:text-primary transition-colors">Đang mở cửa</span>
                                         </label>
                                     </div>
-                                    <label className="flex items-center gap-3 text-[10px] uppercase tracking-widest font-bold text-neutral-600 cursor-pointer select-none group">
+                                    <label className="flex items-center gap-3 text-[9px] uppercase tracking-[0.2em] font-bold text-neutral-500 cursor-pointer select-none group font-sans">
                                         <div className="relative">
                                             <input
                                                 type="checkbox"
@@ -540,10 +525,10 @@ const DirectoryPage: React.FC = () => {
                                                 checked={filterByMap}
                                                 onChange={() => setFilterByMap(prev => !prev)}
                                             />
-                                            <div className={`block w-10 h-5 rounded-full transition-colors ${filterByMap ? 'bg-accent' : 'bg-neutral-200'}`}></div>
+                                            <div className={`block w-10 h-5 rounded-full transition-colors ${filterByMap ? 'bg-primary' : 'bg-neutral-200'}`}></div>
                                             <div className={`dot absolute left-1 top-1 bg-white w-3 h-3 rounded-full transition-transform ${filterByMap ? 'translate-x-5' : ''}`}></div>
                                         </div>
-                                        <span className="group-hover:text-accent transition-colors">Lọc theo bản đồ</span>
+                                        <span className="group-hover:text-primary transition-colors">Lọc theo bản đồ</span>
                                     </label>
                                 </div>
                             </div>

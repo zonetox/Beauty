@@ -97,13 +97,13 @@ const Header: React.FC = () => {
   }, [isDropdownOpen]);
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 tracking-wide ${isActive
-      ? 'bg-primary/5 text-primary'
-      : 'text-neutral-600 hover:text-primary hover:bg-white/40'
+    `px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 tracking-wider font-sans ${isActive
+      ? 'bg-primary/10 text-primary'
+      : 'text-neutral-500 hover:text-primary hover:bg-white/50'
     }`;
 
   const mobileNavLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `block px-3 py-2 rounded-md text-base font-medium ${isActive ? 'bg-primary text-white' : 'text-neutral-dark hover:bg-primary/10'
+    `block px-3 py-2 rounded-xl text-base font-medium font-sans ${isActive ? 'bg-primary text-white' : 'text-neutral-dark hover:bg-primary/10'
     }`;
 
   const handleHealthCheck = async () => {
@@ -129,7 +129,7 @@ const Header: React.FC = () => {
 
   return (
     <header className="glass-header sticky top-0 z-50">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-12">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <div className="flex-shrink-0">
@@ -138,15 +138,15 @@ const Header: React.FC = () => {
                 <img
                   src={theme.logo_url}
                   alt="1Beauty Asia Logo"
-                  style={{ height: `${theme.logo_height || 48}px` }}
-                  className="w-auto object-contain"
+                  style={{ height: `${theme.logo_height || 42}px` }}
+                  className="w-auto object-contain transition-transform group-hover:scale-105 duration-500"
                   onError={() => {
                     console.warn("Branding logo failed to load, falling back to text.");
                     setLogoError(true);
                   }}
                 />
               ) : (
-                <span className="text-2xl font-bold font-serif tracking-widest text-primary uppercase">
+                <span className="text-2xl font-semibold font-serif tracking-[0.2em] text-primary uppercase">
                   1Beauty.asia
                 </span>
               )}
@@ -154,7 +154,7 @@ const Header: React.FC = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-1">
+          <nav className="hidden md:flex items-center space-x-2">
             <NavLinks
               isAdmin={isAdmin}
               onLinkClick={() => setIsMenuOpen(false)}

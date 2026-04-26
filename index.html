@@ -24,20 +24,20 @@
 
   <style id="theme-variables">
     :root {
-      --color-primary: #D4AF37;
-      /* Metallic Gold */
-      --color-primary-dark: #B8860B;
-      --color-secondary: #1A1A1A;
-      /* Deep Charcoal */
-      --color-accent: #A65E5E;
-      /* Muted Luxury Rose */
-      --color-background: #F9F5F1;
-      /* Premium Cream */
-      --color-neutral-dark: #121212;
-      --color-border: #EBE5DF;
-      --glass-bg: rgba(255, 255, 255, 0.75);
-      --glass-border: rgba(255, 255, 255, 0.2);
-      --glass-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.04);
+      --color-primary: #C18B7D;
+      /* Blush Rose - High-end Aesthetics */
+      --color-primary-dark: #A66B5E;
+      --color-secondary: #4A4A4A;
+      /* Soft Charcoal for Text */
+      --color-accent: #F7E7E2;
+      /* Delicate Peach for Sections */
+      --color-background: #FCFBF7;
+      /* Pearl White / Alabaster */
+      --color-neutral-dark: #2D2D2D;
+      --color-border: #F0E6E1;
+      --glass-bg: rgba(255, 255, 255, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.4);
+      --glass-shadow: 0 8px 32px 0 rgba(193, 139, 125, 0.08);
     }
   </style>
 
@@ -56,16 +56,19 @@
             'luxury-border': 'var(--color-border)',
           },
           fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            serif: ['Cormorant Garamond', 'serif'],
+            sans: ['"Instrument Sans"', 'Inter', 'sans-serif'],
+            serif: ['"Playfair Display"', 'Cormorant Garamond', 'serif'],
             outfit: ['Outfit', 'sans-serif'],
           },
           backdropBlur: {
             xs: '2px',
           },
           boxShadow: {
-            'premium': '0 20px 50px rgba(0, 0, 0, 0.03)',
+            'premium': '0 20px 50px rgba(193, 139, 125, 0.05)',
             'glass': 'var(--glass-shadow)',
+          },
+          borderRadius: {
+            'luxury': '2rem',
           }
         }
       }
@@ -76,13 +79,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
   <link rel="dns-prefetch" href="https://cdn.quilljs.com">
-  <!-- Fonts with display=swap for better performance -->
+  <!-- Modern Serif & Minimalist Sans Fonts -->
   <link id="initial-fonts"
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Outfit:wght@400;500;600;700&display=swap"
     rel="stylesheet" media="print" onload="this.media='all'">
   <noscript>
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Outfit:wght@400;500;600;700&display=swap"
       rel="stylesheet">
   </noscript>
 
@@ -95,33 +98,33 @@
   <style>
     @layer utilities {
       .glass-card {
-        background: rgba(255, 255, 255, 0.6);
+        background: rgba(255, 255, 255, 0.65);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        box-shadow: 0 8px 30px 0 rgba(193, 139, 125, 0.05);
       }
 
       .glass-card-dark {
-        background: rgba(26, 26, 26, 0.8);
+        background: rgba(45, 45, 45, 0.85);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
       }
 
       .glass-header {
-        background: rgba(255, 255, 255, 0.75);
+        background: rgba(252, 251, 247, 0.8);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid rgba(193, 139, 125, 0.05);
       }
 
       .bento-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        grid-auto-rows: minmax(160px, auto);
-        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        grid-auto-rows: minmax(180px, auto);
+        gap: 2rem;
       }
 
       .text-gradient {
@@ -130,16 +133,22 @@
         background-clip: text;
         -webkit-text-fill-color: transparent;
       }
+
+      .luxury-border-thin {
+        border: 1px solid var(--color-border);
+      }
     }
 
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: 'Instrument Sans', 'Inter', sans-serif;
+      background-color: var(--color-background);
+      color: var(--color-neutral-dark);
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
 
     .font-serif {
-      font-family: 'Cormorant Garamond', serif !important;
+      font-family: 'Playfair Display', serif !important;
     }
 
     .font-outfit {

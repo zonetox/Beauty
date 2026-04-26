@@ -10,7 +10,7 @@ interface AboutSectionProps {
     isEditing?: boolean;
 }
 
-const AboutSection: React.FC<AboutSectionProps> = ({ business, content, isEditing }) => {
+const AboutSection: React.FC<AboutSectionProps> = ({ business, content }) => {
     const displayTitle = content?.title || `Chào mừng đến với ${business.name}`;
     const displaySubtitle = content?.subtitle || 'Giới thiệu';
     const displayDescription = content?.description || business.description;

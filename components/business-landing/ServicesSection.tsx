@@ -42,7 +42,7 @@ const ServicesSection: React.FC<{
     business: Business;
     content?: any;
     isEditing?: boolean;
-}> = ({ business, content, isEditing }) => {
+}> = ({ business, content }) => {
     const displayTitle = content?.title || 'Dịch vụ nổi bật của chúng tôi';
     const displaySubtitle = content?.subtitle || 'Dịch vụ';
     const displayServices = content?.items || business.services || [];

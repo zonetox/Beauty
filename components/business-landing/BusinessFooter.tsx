@@ -13,7 +13,7 @@ const BusinessFooter: React.FC<{
     business: Business;
     content?: any;
     isEditing?: boolean;
-}> = ({ business, content, isEditing }) => {
+}> = ({ business, content }) => {
     const displayName = content?.name || business.name;
     const displayAddress = content?.address || `${business.address}, ${business.city}`;
     return (

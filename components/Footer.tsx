@@ -18,7 +18,7 @@ const Footer: React.FC = () => {
   };
 
   return (
-    <footer className="bg-background border-t border-luxury-border/50 text-neutral-800">
+    <footer className="bg-accent/30 border-t border-luxury-border text-neutral-800">
       <div className="container mx-auto py-16 px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
           {/* Column 1: Info */}
@@ -33,10 +33,10 @@ const Footer: React.FC = () => {
                   onError={() => setLogoError(true)}
                 />
               ) : (
-                <h3 className="text-2xl font-bold font-serif tracking-widest text-primary uppercase">1Beauty.asia</h3>
+                <h3 className="text-2xl font-semibold font-serif tracking-[0.2em] text-primary uppercase">1Beauty.asia</h3>
               )}
             </Link>
-            <p className="text-neutral-500 text-sm leading-relaxed max-w-xs font-light">
+            <p className="text-neutral-500 text-sm leading-relaxed max-w-xs font-sans font-light tracking-wide">
               Nền tảng danh bạ làm đẹp hàng đầu Châu Á, nơi kết nối sự tinh tế và vẻ đẹp đích thực.
             </p>
             <div className="mt-8 flex space-x-5">
@@ -60,35 +60,35 @@ const Footer: React.FC = () => {
 
           {/* Column 2: Explore */}
           <div className="md:col-span-2">
-            <h4 className="font-serif font-bold text-lg mb-6 tracking-wide text-primary">Khám phá</h4>
-            <ul className="space-y-4 text-sm">
-              <li><Link to="/directory" className="text-gray-400 hover:text-primary transition-colors">Danh bạ Spa</Link></li>
-              <li><Link to="/directory" className="text-gray-400 hover:text-primary transition-colors">Danh bạ Salon</Link></li>
-              <li><Link to="/directory" className="text-gray-400 hover:text-primary transition-colors">Danh bạ Nha khoa</Link></li>
-              <li><Link to="/blog" className="text-gray-400 hover:text-primary transition-colors">Cảm hứng</Link></li>
+            <h4 className="font-serif font-semibold text-base mb-6 tracking-widest text-primary uppercase">Khám phá</h4>
+            <ul className="space-y-4 text-sm font-sans">
+              <li><Link to="/directory" className="text-neutral-500 hover:text-primary transition-colors">Danh bạ Spa</Link></li>
+              <li><Link to="/directory" className="text-neutral-500 hover:text-primary transition-colors">Danh bạ Salon</Link></li>
+              <li><Link to="/directory" className="text-neutral-500 hover:text-primary transition-colors">Danh bạ Nha khoa</Link></li>
+              <li><Link to="/blog" className="text-neutral-500 hover:text-primary transition-colors">Cảm hứng</Link></li>
             </ul>
           </div>
 
           {/* Column 3: Policy */}
           <div className="md:col-span-3">
-            <h4 className="font-serif font-bold text-lg mb-6 tracking-wide text-primary">Chính sách</h4>
-            <ul className="space-y-4 text-sm">
-              <li><Link to="/about" className="text-gray-400 hover:text-primary transition-colors">Về chúng tôi</Link></li>
-              <li><Link to="/contact" className="text-gray-400 hover:text-primary transition-colors">Liên hệ</Link></li>
-              <li><Link to="#" className="text-gray-400 hover:text-primary transition-colors">Điều khoản dịch vụ</Link></li>
-              <li><Link to="#" className="text-gray-400 hover:text-primary transition-colors">Bảo mật thông tin</Link></li>
+            <h4 className="font-serif font-semibold text-base mb-6 tracking-widest text-primary uppercase">Chính sách</h4>
+            <ul className="space-y-4 text-sm font-sans">
+              <li><Link to="/about" className="text-neutral-500 hover:text-primary transition-colors">Về chúng tôi</Link></li>
+              <li><Link to="/contact" className="text-neutral-500 hover:text-primary transition-colors">Liên hệ</Link></li>
+              <li><Link to="#" className="text-neutral-500 hover:text-primary transition-colors">Điều khoản dịch vụ</Link></li>
+              <li><Link to="#" className="text-neutral-500 hover:text-primary transition-colors">Bảo mật thông tin</Link></li>
             </ul>
           </div>
 
           {/* Column 4: Join Us */}
           <div className="md:col-span-3">
-            <h4 className="font-serif font-bold text-lg mb-6 tracking-wide text-primary">Dành cho đối tác</h4>
-            <p className="text-gray-400 text-sm mb-6">
+            <h4 className="font-serif font-semibold text-base mb-6 tracking-widest text-primary uppercase">Dành cho đối tác</h4>
+            <p className="text-neutral-500 text-sm mb-6 font-sans">
               Bạn là chủ doanh nghiệp làm đẹp? Hãy đồng hành cùng chúng tôi.
             </p>
             <Link
               to="/for-business"
-              className="inline-block px-8 py-3 rounded-full bg-accent text-white font-medium text-sm transition-all duration-300 hover:opacity-90 hover:scale-105 tracking-wide shadow-sm"
+              className="inline-block px-10 py-3.5 rounded-full bg-primary text-white font-medium text-sm transition-all duration-300 hover:bg-primary-dark hover:scale-105 tracking-widest shadow-xl uppercase"
             >
               Đăng ký ngay
             </Link>

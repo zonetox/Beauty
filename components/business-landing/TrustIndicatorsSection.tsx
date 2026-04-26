@@ -12,7 +12,7 @@ interface TrustIndicatorsSectionProps {
     isEditing?: boolean;
 }
 
-const TrustIndicatorsSection: React.FC<TrustIndicatorsSectionProps> = ({ business, content, isEditing }) => {
+const TrustIndicatorsSection: React.FC<TrustIndicatorsSectionProps> = ({ business, content }) => {
     const displayTitle = content?.title || 'Chứng Nhận & Giải Thưởng';
     const displaySubtitle = content?.subtitle || 'Những thành tựu và chứng nhận mà chúng tôi đã đạt được';
     const trust_indicators: TrustIndicator[] = content?.items || business.trust_indicators || [];

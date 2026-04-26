@@ -230,13 +230,13 @@ const HomePage: React.FC = () => {
     switch (section.type) {
       case 'featuredBusinesses':
         return (
-          <section key={section.id} className="py-16 bg-background">
-            <div className="container mx-auto px-4">
+          <section key={section.id} className="py-24 bg-background">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-12">
               <Editable id={`section_title_${section.id}`} type="text" value={section.title}>
-                <h2 className="text-4xl font-bold text-center font-serif text-primary mb-4 tracking-wide">{section.title}</h2>
+                <h2 className="text-4xl md:text-5xl font-bold text-center font-serif text-primary mb-6 tracking-wide">{section.title}</h2>
               </Editable>
               <Editable id={`section_subtitle_${section.id}`} type="textarea" value={section.subtitle}>
-                <p className="text-center text-neutral-500 mb-12 font-light tracking-wide max-w-2xl mx-auto">{section.subtitle}</p>
+                <p className="text-center text-neutral-400 mb-16 font-sans font-light tracking-[0.1em] max-w-2xl mx-auto uppercase text-sm leading-relaxed">{section.subtitle}</p>
               </Editable>
               {businessLoading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -476,12 +476,12 @@ const HomePage: React.FC = () => {
 
           <div className="relative z-10 container mx-auto px-4 py-24">
             <div className="max-w-5xl mx-auto text-center">
-              <div className="inline-flex items-center space-x-3 px-4 py-2 rounded-full bg-primary/15 backdrop-blur-xl border border-primary/20 text-primary text-[10px] font-bold uppercase tracking-[0.4em] mb-10 animate-fade-in-up">
-                <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
-                <span>The Pinnacle of Beauty Excellence</span>
+              <div className="inline-flex items-center space-x-3 px-6 py-2.5 rounded-full bg-white/10 backdrop-blur-2xl border border-white/20 text-white text-[11px] font-medium uppercase tracking-[0.4em] mb-12 animate-fade-in-up">
+                <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+                <span>The Art of Timeless Beauty</span>
               </div>
 
-              <h1 className="text-6xl md:text-8xl lg:text-9xl font-bold font-serif text-white mb-10 tracking-tightest leading-[0.9] animate-fade-in-up delay-100 uppercase">
+              <h1 className="text-6xl md:text-8xl lg:text-[10rem] font-bold font-serif text-white mb-12 tracking-tightest leading-[0.85] animate-fade-in-up delay-100 uppercase italic">
                 {hero_slides.length > 0 ? (
                   <Editable
                     id={`hero_title_${currentSlide}`}
@@ -491,9 +491,9 @@ const HomePage: React.FC = () => {
                     {(hero_slides[currentSlide]?.title || '').split(' ').map((word: string, i: number) => (
                       <React.Fragment key={i}>
                         {word === 'Nhan' || word === 'sắc' || word === 'Cảm' || word === 'xúc' ? (
-                          <span className="text-gradient drop-shadow-sm">{word} </span>
+                          <span className="text-gradient italic drop-shadow-sm">{word} </span>
                         ) : (
-                          <span className="relative inline-block">{word} </span>
+                          <span className="relative inline-block font-serif font-semibold">{word} </span>
                         )}
                         {i === 2 && <br className="hidden md:block" />}
                       </React.Fragment>
@@ -519,26 +519,26 @@ const HomePage: React.FC = () => {
 
               {/* High-Performance Premium Search Bar */}
               <div className="relative max-w-4xl mx-auto animate-fade-in-up delay-300">
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 to-accent/30 rounded-full blur-xl opacity-50 group-hover:opacity-100 transition duration-1000"></div>
-                <div className="relative bg-white/95 backdrop-blur-2xl p-4 md:p-6 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-white/20">
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary/40 to-accent/40 rounded-[3rem] blur-2xl opacity-40 group-hover:opacity-100 transition duration-1000"></div>
+                <div className="relative bg-white p-4 md:p-5 rounded-full shadow-[0_30px_60px_rgba(0,0,0,0.25)] border border-white/40">
                   <SearchBar onSearch={handleSearch} categories={CATEGORIES} locations={CITIES} />
                 </div>
               </div>
 
               {/* Social Proof & Metrics */}
-              <div className="mt-16 flex flex-wrap justify-center gap-10 text-white/60 text-[10px] font-bold uppercase tracking-[0.3em] animate-fade-in-up delay-400">
-                <div className="flex flex-col items-center gap-2 group cursor-default">
-                  <span className="text-2xl text-primary font-serif mb-1 group-hover:scale-110 transition-transform">10K+</span>
+              <div className="mt-20 flex flex-wrap justify-center gap-12 text-white/50 text-[10px] font-medium uppercase tracking-[0.4em] animate-fade-in-up delay-400">
+                <div className="flex flex-col items-center gap-3 group cursor-default">
+                  <span className="text-3xl text-primary font-serif font-light mb-1 group-hover:scale-110 transition-transform">10K+</span>
                   <span className="group-hover:text-primary transition-colors">Users Global</span>
                 </div>
-                <div className="w-px h-10 bg-white/10 hidden md:block"></div>
-                <div className="flex flex-col items-center gap-2 group cursor-default">
-                  <span className="text-2xl text-primary font-serif mb-1 group-hover:scale-110 transition-transform">1K+</span>
+                <div className="w-px h-12 bg-white/10 hidden md:block"></div>
+                <div className="flex flex-col items-center gap-3 group cursor-default">
+                  <span className="text-3xl text-primary font-serif font-light mb-1 group-hover:scale-110 transition-transform">1K+</span>
                   <span className="group-hover:text-primary transition-colors">Elite Partners</span>
                 </div>
-                <div className="w-px h-10 bg-white/10 hidden md:block"></div>
-                <div className="flex flex-col items-center gap-2 group cursor-default">
-                  <span className="text-2xl text-primary font-serif mb-1 group-hover:scale-110 transition-transform">24/7</span>
+                <div className="w-px h-12 bg-white/10 hidden md:block"></div>
+                <div className="flex flex-col items-center gap-3 group cursor-default">
+                  <span className="text-3xl text-primary font-serif font-light mb-1 group-hover:scale-110 transition-transform">24/7</span>
                   <span className="group-hover:text-primary transition-colors">Concierge Support</span>
                 </div>
               </div>

@@ -17,7 +17,7 @@ const PlayIcon: React.FC = () => (
 );
 
 
-const GallerySection: React.FC<GallerySectionProps> = ({ business, content, isEditing }) => {
+const GallerySection: React.FC<GallerySectionProps> = ({ business, content }) => {
     const displayTitle = content?.title || 'Không gian & Tác phẩm';
     const displaySubtitle = content?.subtitle || 'Thư viện';
     const displayItems = content?.items || business.gallery || [];

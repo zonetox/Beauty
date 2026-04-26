@@ -28,7 +28,7 @@ const getYoutubeEmbedUrl = (url?: string): string | null => {
     return null;
 };
 
-const VideoSection: React.FC<VideoSectionProps> = ({ business, content, isEditing }) => {
+const VideoSection: React.FC<VideoSectionProps> = ({ business, content }) => {
     const displayTitle = content?.title || 'Khám phá không gian của chúng tôi';
     const displaySubtitle = content?.subtitle || 'Video';
     const embedUrl = getYoutubeEmbedUrl(content?.video_url || business.youtube_url);

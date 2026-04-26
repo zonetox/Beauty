@@ -40,11 +40,15 @@ const BusinessHeader: React.FC<BusinessHeaderProps> = ({ business, onBookNowClic
         { id: 'location', label: 'Liên hệ' },
     ];
 
-    const headerClasses = `fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-white shadow-md' : 'bg-transparent'
+    const headerClasses = `fixed top-0 left-0 w-full z-50 transition-all duration-700 ${isScrolled
+        ? 'bg-white/80 backdrop-blur-xl shadow-premium border-b border-primary/10'
+        : 'bg-transparent'
         }`;
-    const navLinkClasses = `py-2 text-sm font-semibold transition-colors ${isScrolled ? 'text-neutral-dark hover:text-primary' : 'text-white hover:text-white/80'
+    const navLinkClasses = `py-2 text-[11px] font-medium uppercase tracking-[0.3em] transition-all duration-300 ${isScrolled
+        ? 'text-neutral-dark hover:text-primary'
+        : 'text-white hover:text-white/70'
         }`;
-    const mobileNavLinkClasses = `block w-full py-3 px-4 text-lg text-neutral-dark font-semibold hover:bg-primary/10`;
+    const mobileNavLinkClasses = `block w-full py-4 px-6 text-sm uppercase tracking-widest text-neutral-dark font-medium hover:bg-primary/5 transition-colors`;
 
     return (
         <header className={headerClasses}>

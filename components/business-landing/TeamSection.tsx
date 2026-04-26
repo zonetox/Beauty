@@ -10,7 +10,7 @@ interface TeamSectionProps {
     isEditing?: boolean;
 }
 
-const TeamSection: React.FC<TeamSectionProps> = ({ business, content, isEditing }) => {
+const TeamSection: React.FC<TeamSectionProps> = ({ business, content }) => {
     const displayTitle = content?.title || 'Gặp gỡ chuyên gia của chúng tôi';
     const displaySubtitle = content?.subtitle || 'Đội ngũ';
     const displayMembers = content?.items || business.team || [];

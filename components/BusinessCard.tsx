@@ -13,15 +13,15 @@ interface BusinessCardProps {
 }
 
 const tierStyles = {
-  [MembershipTier.VIP]: 'border border-primary shadow-xl ring-1 ring-primary/20',
-  [MembershipTier.PREMIUM]: 'border border-primary/50 shadow-md',
-  [MembershipTier.FREE]: 'border border-luxury-border shadow-sm',
+  [MembershipTier.VIP]: 'luxury-border-thin shadow-[0_15px_40px_rgba(193,139,125,0.15)] ring-1 ring-primary/10',
+  [MembershipTier.PREMIUM]: 'luxury-border-thin shadow-[0_10px_30px_rgba(0,0,0,0.03)]',
+  [MembershipTier.FREE]: 'border border-gray-100 shadow-sm',
 };
 
 const tierBadge: Record<MembershipTier, { text: string; bg: string; text_color: string }> = {
-  [MembershipTier.VIP]: { text: 'VIP', bg: 'bg-accent', text_color: 'text-neutral-dark' },
-  [MembershipTier.PREMIUM]: { text: 'Premium', bg: 'bg-primary', text_color: 'text-white' },
-  [MembershipTier.FREE]: { text: 'Free', bg: 'bg-gray-100', text_color: 'text-gray-700' },
+  [MembershipTier.VIP]: { text: 'VIP', bg: 'bg-primary', text_color: 'text-white' },
+  [MembershipTier.PREMIUM]: { text: 'Premium', bg: 'bg-accent', text_color: 'text-primary-dark' },
+  [MembershipTier.FREE]: { text: 'Free', bg: 'bg-gray-100', text_color: 'text-gray-500' },
 };
 
 const EyeIcon: React.FC<{ className?: string }> = ({ className = '' }) => (
@@ -45,7 +45,7 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, highlighted = fal
   return (
     <div
       id={`business-card-${business.id}`}
-      className={`business-card bg-white rounded-2xl overflow-hidden transition-all duration-500 transform hover:-translate-y-2 cursor-pointer ${tierStyles[membership_tier]} ${highlightClass}`}
+      className={`business-card glass-card rounded-luxury overflow-hidden transition-all duration-700 transform hover:-translate-y-3 cursor-pointer ${tierStyles[membership_tier]} ${highlightClass}`}
       onClick={() => window.location.href = `/business/${slug}`}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -66,9 +66,9 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, highlighted = fal
         )}
       </div>
       <div className="p-4 flex flex-col flex-grow">
-        <p className="text-[10px] text-primary font-bold uppercase tracking-widest mb-1">{categories[0]}</p>
+        <p className="text-[10px] text-primary font-medium uppercase tracking-[0.2em] mb-2 font-sans">{categories[0]}</p>
         <div className="flex items-center gap-2 mt-1">
-          <h3 className="text-xl font-bold font-serif text-neutral-dark truncate tracking-wide">{name}</h3>
+          <h3 className="text-xl font-semibold font-serif text-neutral-dark truncate tracking-wide leading-tight group-hover:text-primary transition-colors">{name}</h3>
           {is_verified && <VerifiedBadge />}
         </div>
         {slogan && (
@@ -106,10 +106,10 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ business, highlighted = fal
             </div>
           )}
         </div>
-        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-3 pt-3 border-t border-gray-100">
+        <div className="flex items-center flex-wrap gap-x-4 gap-y-1 mt-auto pt-4 border-t border-gray-100/50">
           <div className="flex items-center">
             <StarRating rating={rating} />
-            <span className="text-xs text-gray-500 ml-1">({review_count})</span>
+            <span className="text-[10px] text-neutral-400 ml-1.5 font-sans">({review_count})</span>
           </div>
           <div className="flex items-center text-xs text-gray-500">
             <EyeIcon />

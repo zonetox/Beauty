@@ -10,7 +10,7 @@ interface DealsSectionProps {
     isEditing?: boolean;
 }
 
-const DealsSection: React.FC<DealsSectionProps> = ({ business, content, isEditing }) => {
+const DealsSection: React.FC<DealsSectionProps> = ({ business, content }) => {
     const displayTitle = content?.title || 'Ưu đãi đặc biệt chỉ dành cho bạn';
     const displaySubtitle = content?.subtitle || 'Ưu đãi';
     const displayDeals = content?.items || business.deals?.filter(d => d.status === DealStatus.ACTIVE) || [];

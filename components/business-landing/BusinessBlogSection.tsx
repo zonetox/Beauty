@@ -11,7 +11,7 @@ interface BusinessBlogSectionProps {
     isEditing?: boolean;
 }
 
-const BusinessBlogSection: React.FC<BusinessBlogSectionProps> = ({ business, content, isEditing }) => {
+const BusinessBlogSection: React.FC<BusinessBlogSectionProps> = ({ business, content }) => {
     const displayTitle = content?.title || 'Tin tức & Cập nhật';
     const displaySubtitle = content?.subtitle || 'Blog';
     const { getPostsBybusiness_id } = useBusinessBlogData();

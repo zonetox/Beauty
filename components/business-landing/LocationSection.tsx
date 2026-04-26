@@ -14,7 +14,7 @@ const LocationSection: React.FC<{
     business: Business;
     content?: any;
     isEditing?: boolean;
-}> = ({ business, content, isEditing }) => {
+}> = ({ business, content }) => {
     const displayTitle = content?.title || 'Ghé thăm chúng tôi';
     const displaySubtitle = content?.subtitle || 'Liên hệ';
 
