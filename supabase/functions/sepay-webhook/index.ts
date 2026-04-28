@@ -36,6 +36,18 @@ Deno.serve(async (req: Request) => {
         const payload = await req.json();
         console.log('SePay Webhook Received:', JSON.stringify(payload));
 
+        // 3. IP Validation (Security - Optional but recommended for Production)
+        const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0].trim();
+        const allowedIps = [
+            '172.236.138.20', '172.233.83.68', '171.244.35.2',
+            '151.158.108.68', '151.158.109.79', '103.255.238.139'
+        ];
+
+        if (clientIp && !allowedIps.includes(clientIp)) {
+            console.warn(`Webhook received from untrusted IP: ${clientIp}`);
+            // Note: In development/ngrok, we might skip this. For now, we log it.
+        }
+
         const { content, transferAmount, transferType } = payload;
 
         // Only process incoming transfers

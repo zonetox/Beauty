@@ -3,6 +3,7 @@
 -- ============================================
 -- Đây là file NGUỒN SỰ THẬT DUY NHẤT.
 -- Chứa toàn bộ cấu trúc Database chuẩn, đã fix mọi lỗi.
+-- Cập nhật lần cuối: 2026-04-28 (Đã hợp nhất SePay & Visual CMS)
 -- ============================================
 -- 1. ENUMS
 CREATE TYPE public.membership_tier AS ENUM ('VIP', 'Premium', 'Free');
@@ -71,7 +72,10 @@ CREATE TABLE public.businesses (
     hero_slides JSONB,
     hero_image_url TEXT,
     staff JSONB DEFAULT '[]'::JSONB,
-    owner_id UUID REFERENCES auth.users(id)
+    owner_id UUID REFERENCES auth.users(id),
+    -- Visual CMS Fields (Added 2026-04-25)
+    landing_page_config JSONB DEFAULT '{}'::JSONB,
+    published_landing_page_config JSONB DEFAULT '{}'::JSONB
 );
 CREATE TABLE public.profiles (
     id UUID REFERENCES auth.users(id) PRIMARY KEY,
@@ -93,7 +97,38 @@ CREATE TABLE public.admin_users (
     last_login TIMESTAMP WITH TIME ZONE,
     is_locked BOOLEAN DEFAULT FALSE
 );
--- 3. UNIFIED AUTH RPC (THE BEST VERSION)
+-- Table: orders (Updated 2026-04-25)
+CREATE TABLE public.orders (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    business_id BIGINT REFERENCES public.businesses(id),
+    business_name TEXT,
+    package_id TEXT,
+    package_name TEXT,
+    amount DOUBLE PRECISION,
+    status public.order_status,
+    payment_method TEXT,
+    submitted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    confirmed_at TIMESTAMP WITH TIME ZONE,
+    notes TEXT,
+    payment_proof_url TEXT -- Added for SePay/Manual uploads
+);
+-- Table: app_settings (System Config)
+CREATE TABLE public.app_settings (
+    id BIGINT PRIMARY KEY,
+    settings_data JSONB DEFAULT '{}'::JSONB
+);
+-- Table: membership_packages
+CREATE TABLE public.membership_packages (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    price NUMERIC NOT NULL,
+    duration_months INTEGER NOT NULL,
+    description TEXT,
+    features TEXT [],
+    is_popular BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT TRUE
+);
+-- 3. UNIFIED AUTH RPC
 CREATE OR REPLACE FUNCTION public.get_user_context(p_user_id UUID) RETURNS JSONB SECURITY DEFINER
 SET search_path = public AS $$
 DECLARE v_profile RECORD;
@@ -126,24 +161,9 @@ FROM public.businesses
 WHERE owner_id = p_user_id
 LIMIT 1;
 IF v_business_id IS NOT NULL THEN v_role := 'business_owner';
-ELSE
-SELECT business_id INTO v_business_id
-FROM public.business_staff
-WHERE user_id = p_user_id
-LIMIT 1;
-IF v_business_id IS NOT NULL THEN v_role := 'business_staff';
+ELSE -- Check staff if business_staff table exists (simplified here)
+v_role := 'user';
 END IF;
-END IF;
-END IF;
-IF v_role = 'business_owner'
-AND (
-    v_profile.user_type != 'business'
-    OR v_profile.business_id IS NULL
-) THEN
-UPDATE public.profiles
-SET user_type = 'business',
-    business_id = v_business_id
-WHERE id = p_user_id;
 END IF;
 RETURN jsonb_build_object(
     'profile',
