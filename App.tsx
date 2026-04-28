@@ -48,7 +48,6 @@ const RegisterPage = safeLazy(() => import('./pages/RegisterPage.tsx'));
 const BusinessSetupPage = safeLazy(() => import('./pages/BusinessSetupPage.tsx'));
 const AdminPage = safeLazy(() => import('./pages/AdminPage.tsx'));
 const AdminLoginPage = safeLazy(() => import('./pages/AdminLoginPage.tsx'));
-const PartnerRegistrationPage = safeLazy(() => import('./pages/PartnerRegistrationPage.tsx'));
 const BusinessDashboardLayout = safeLazy(() => import('./components/BusinessDashboardLayout.tsx'));
 const DashboardOverview = safeLazy(() => import('./components/DashboardOverview.tsx'));
 const BusinessProfileEditor = safeLazy(() => import('./components/BusinessProfileEditor.tsx'));
@@ -163,13 +162,13 @@ const AppContent: React.FC = () => {
                                                         <Route path="contact" element={<ContactPage />} />
                                                         <Route path="for-business" element={<ForBusinessPage />} />
                                                         <Route path="register" element={<RegisterPage />} />
+                                                        <Route path="partner-registration" element={<RegisterPage />} />
 
                                                         <Route path="setup" element={
                                                             <ProtectedRoute>
                                                                 <BusinessSetupPage />
                                                             </ProtectedRoute>
                                                         } />
-                                                        <Route path="/partner-registration" element={<PartnerRegistrationPage />} />
                                                         <Route path="login" element={<LoginPage />} />
                                                         <Route path="reset-password" element={<ResetPasswordPage />} />
                                                     </Route>

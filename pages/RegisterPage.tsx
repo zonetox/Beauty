@@ -11,9 +11,12 @@ import { useUserRole } from '../hooks/useUserRole.ts';
 import SEOHead from '../components/SEOHead.tsx';
 import { initializeUserProfile } from '../lib/postSignupInitialization';
 import { createBusinessWithTrial } from '../lib/businessUtils';
+import { useQueryClient } from '@tanstack/react-query';
+import { keys } from '../lib/queryKeys';
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { register, refreshAuth, user, state } = useAuth();
   const { role, is_business, isLoading: roleLoading } = useUserRole();
   const [formData, setFormData] = useState({
@@ -133,6 +136,7 @@ const RegisterPage: React.FC = () => {
 
       // 4. Redirection to Business Dashboard
       // Removed polling loop for business_id as Dashboard now handles asynchronous linking gracefully.
+      await queryClient.invalidateQueries({ queryKey: keys.auth.role(newUser.id) });
       await refreshAuth();
       toast.success('Đăng ký thành công! Chào mừng đối tác đến với 1Beauty.asia.');
       navigate('/dashboard', { replace: true });

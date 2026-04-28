@@ -77,10 +77,14 @@ const AdminDashboardOverview: React.FC<DashboardOverviewProps> = ({ businesses, 
             .reduce((sum, o) => sum + o.amount, 0);
 
         const pendingOrders = orders.filter(o => o.status === OrderStatus.PENDING || o.status === OrderStatus.AWAITING_CONFIRMATION).length;
-        const pendingRegistrations = registrationRequests.filter(r => r.status === 'Pending').length;
+
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const newBusinessesCount = businesses.filter(b => b.joined_date && new Date(b.joined_date) >= sevenDaysAgo).length;
+
         const activeBusinesses = businesses.filter(b => b.is_active).length;
 
-        return { revenueThisMonth, pendingOrders, pendingRegistrations, activeBusinesses };
+        return { revenueThisMonth, pendingOrders, newBusinessesCount, activeBusinesses };
     }, [businesses, orders, registrationRequests]);
 
     const recentActivities = useMemo(() => {
@@ -90,17 +94,12 @@ const AdminDashboardOverview: React.FC<DashboardOverviewProps> = ({ businesses, 
             data: o,
             id: `order-${o.id}`
         }));
-        const regActivities = registrationRequests.map(r => ({
-            type: 'registration',
-            date: new Date(r.submitted_at),
-            data: r,
-            id: `reg-${r.id}`
-        }));
+        // Note: registration activities are hidden as the flow is now automated
 
-        return [...orderActivities, ...regActivities]
+        return [...orderActivities]
             .sort((a, b) => b.date.getTime() - a.date.getTime())
             .slice(0, 5);
-    }, [orders, registrationRequests]);
+    }, [orders]);
 
     const chartData = useMemo(() => {
         const data: { [key: string]: { value: number; label: string } } = {};
@@ -136,9 +135,9 @@ const AdminDashboardOverview: React.FC<DashboardOverviewProps> = ({ businesses, 
         <div className="space-y-12 animate-fade-in-up">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <AdminStatCard title="Doanh thu tháng này" value={new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(stats.revenueThisMonth)} icon={<RevenueIcon />} />
-                <AdminStatCard title="Đơn hàng chờ duyệt" value={stats.pendingOrders} icon={<OrderIcon />} />
-                <AdminStatCard title="Đăng ký mới" value={stats.pendingRegistrations} icon={<UserIcon />} />
-                <AdminStatCard title="Đối tác đang hoạt động" value={stats.activeBusinesses} icon={<BusinessIcon />} />
+                <AdminStatCard title="Giao dịch chờ duyệt" value={stats.pendingOrders} icon={<OrderIcon />} />
+                <AdminStatCard title="Đối tác mới (7 ngày)" value={stats.newBusinessesCount} icon={<UserIcon />} />
+                <AdminStatCard title="Tổng đối tác hoạt động" value={stats.activeBusinesses} icon={<BusinessIcon />} />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
@@ -151,11 +150,7 @@ const AdminDashboardOverview: React.FC<DashboardOverviewProps> = ({ businesses, 
                         {recentActivities.map(activity => {
                             if (activity.type === 'order') {
                                 const order = activity.data as Order;
-                                return <ActivityItem key={activity.id} icon={<OrderIcon />} text={<>Đơn hàng mới từ đối tác <strong className="text-primary font-bold">{order.business_name}</strong>.</>} time={timeSince(activity.date)} onClick={() => onNavigate('orders')} />
-                            }
-                            if (activity.type === 'registration') {
-                                const req = activity.data as RegistrationRequest;
-                                return <ActivityItem key={activity.id} icon={<UserIcon />} text={<>Yêu cầu đăng ký mới từ <strong className="text-primary font-bold">{req.business_name}</strong>.</>} time={timeSince(activity.date)} onClick={() => onNavigate('registrations')} />
+                                return <ActivityItem key={activity.id} icon={<OrderIcon />} text={<>Giao dịch mới từ đối tác <strong className="text-primary font-bold">{order.business_name}</strong>.</>} time={timeSince(activity.date)} onClick={() => onNavigate('orders')} />
                             }
                             return null;
                         })}

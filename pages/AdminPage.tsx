@@ -409,11 +409,10 @@ const AdminPage: React.FC = () => {
 
           <div className="mt-12 text-[9px] font-bold text-white/20 uppercase tracking-[0.3em] mb-4 px-4">Quản lý đối tác</div>
           <NavLink tabId="businesses" label="Doanh nghiệp" icon={ICONS.businesses} permission={currentUser.permissions?.can_manage_businesses ?? false} />
-          <NavLink tabId="registrations" label="Đang chờ duyệt" icon={ICONS.registrations} permission={currentUser.permissions?.can_manage_registrations ?? false} />
-          <NavLink tabId="orders" label="Gói thành viên" icon={ICONS.orders} permission={currentUser.permissions?.can_manage_orders ?? false} />
+          <NavLink tabId="orders" label="Giao dịch gói (SePay)" icon={ICONS.orders} permission={currentUser.permissions?.can_manage_orders ?? false} />
+          <NavLink tabId="packages" label="Cấu hình gói hội viên" icon={ICONS.packages} permission={currentUser.permissions?.can_manage_packages ?? false} />
           <NavLink tabId="blog" label="Tạp chí Beauty" icon={ICONS.blog} permission={currentUser.permissions?.can_manage_platform_blog ?? false} />
           <NavLink tabId="users" label="Quản trị viên" icon={ICONS.users} permission={currentUser.permissions?.can_manage_users ?? false} />
-          <NavLink tabId="packages" label="Cấu hình gói" icon={ICONS.packages} permission={currentUser.permissions?.can_manage_packages ?? false} />
 
           <div className="mt-12 text-[9px] font-bold text-white/20 uppercase tracking-[0.3em] mb-4 px-4">Hệ thống & Cài đặt</div>
           <NavLink tabId="tools" label="Công cụ Admin" icon={ICONS.tools} permission={currentUser.permissions?.can_use_admin_tools ?? false} />

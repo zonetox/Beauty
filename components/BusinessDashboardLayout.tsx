@@ -22,10 +22,18 @@ const BusinessDashboardLayout: React.FC = () => {
     }, [currentBusiness?.id]);
 
     useEffect(() => {
-        if (!isDataLoaded) return;
-        if (!isBusiness) {
-            navigate('/login', { replace: true });
+        // Only redirect if auth is fully loaded AND we are sure the user is not a business
+        // This avoids race conditions where the role query is still pending but session is loaded
+        if (isDataLoaded && !isBusiness) {
+            // A short delay helps avoid flickering redirects during fast role resolution
+            const timer = setTimeout(() => {
+                if (!isBusiness) {
+                    navigate('/login', { replace: true });
+                }
+            }, 1000);
+            return () => clearTimeout(timer);
         }
+        return;
     }, [isBusiness, isDataLoaded, navigate]);
 
     if (!isDataLoaded) {
@@ -83,8 +91,34 @@ const BusinessDashboardLayout: React.FC = () => {
                             <BusinessDashboardSidebar />
                         </div>
                     </aside>
-                    <main className="md:col-span-9 glass-card rounded-[2.5rem] shadow-premium min-h-[900px] overflow-hidden animate-fade-in-up delay-300 border border-white/40">
-                        <div className="p-6 md:p-12">
+                    <main className="md:col-span-9 glass-card rounded-[2.5rem] shadow-premium min-h-[900px] overflow-hidden animate-fade-in-up delay-300 border border-white/40 relative">
+                        {/* Membership Blur Overlay */}
+                        {currentBusiness?.membership_tier === 'Free' && (
+                            <div className="absolute inset-0 z-50 backdrop-blur-md bg-white/30 flex flex-col items-center justify-center p-12 text-center">
+                                <div className="max-w-md bg-white p-12 rounded-[3rem] shadow-2xl border border-primary/10 animate-fade-in-up">
+                                    <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center text-primary mx-auto mb-8">
+                                        <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                        </svg>
+                                    </div>
+                                    <h3 className="text-3xl font-serif text-primary mb-6">Thời gian trải nghiệm đã kết thúc</h3>
+                                    <p className="text-neutral-500 font-light italic text-lg leading-relaxed mb-10">
+                                        Gói dùng thử Premium 30 ngày của bạn đã hết hạn. Để tiếp tục quản trị và công bố các dịch vụ, hãy nâng cấp tài khoản ngay hôm nay.
+                                    </p>
+                                    <button
+                                        onClick={() => navigate('/dashboard/billing')}
+                                        className="w-full bg-primary text-white py-5 rounded-full font-bold uppercase tracking-[0.2em] text-xs transition-all hover:scale-105 shadow-xl shadow-primary/20"
+                                    >
+                                        Nâng cấp qua SePay ngay <span className="ml-2">&rarr;</span>
+                                    </button>
+                                    <p className="mt-6 text-[10px] text-neutral-400 font-bold uppercase tracking-widest leading-relaxed">
+                                        Dữ liệu của bạn được bảo toàn tuyệt đối.<br />Nâng cấp để khai mở lại toàn bộ tính năng.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className={`p-6 md:p-12 ${currentBusiness?.membership_tier === 'Free' ? 'pointer-events-none select-none overflow-hidden h-[900px]' : ''}`}>
                             <Outlet />
                         </div>
                     </main>
