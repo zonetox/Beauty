@@ -50,56 +50,50 @@ const TrustIndicatorsSection: React.FC<TrustIndicatorsSectionProps> = ({ busines
         }
     };
 
-    const getColorForType = (type: TrustIndicator['type']) => {
-        switch (type) {
-            case 'badge':
-                return 'bg-blue-100 text-blue-600';
-            case 'certification':
-                return 'bg-green-100 text-green-600';
-            case 'award':
-                return 'bg-yellow-100 text-yellow-600';
-            default:
-                return 'bg-gray-100 text-gray-600';
-        }
-    };
 
     return (
-        <section id="trust-indicators" className="py-16 bg-gray-50">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-12">
-                    <h2 className="text-3xl lg:text-4xl font-bold font-serif text-neutral-dark mb-4">
+        <section id="trust-indicators" className="py-32 lg:py-48 bg-secondary">
+            <div className="container mx-auto px-6 lg:px-12">
+                <div className="text-center mb-24 animate-fade-in-up">
+                    <div className="flex items-center justify-center gap-4 mb-6">
+                        <div className="w-12 h-px bg-primary"></div>
+                        <p className="text-xs font-bold uppercase text-primary tracking-[0.5em]">TÍN NHIỆM & CHẤT LƯỢNG</p>
+                        <div className="w-12 h-px bg-primary"></div>
+                    </div>
+                    <h2 className="mt-2 text-5xl lg:text-7xl font-bold font-serif text-accent italic leading-tight">
                         <Editable id="trust_title" type="text" value={displayTitle}>
                             {displayTitle}
                         </Editable>
                     </h2>
-                    <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                    <p className="mt-8 text-accent/50 text-lg font-light max-w-2xl mx-auto italic font-sans leading-relaxed">
                         <Editable id="trust_subtitle" type="text" value={displaySubtitle}>
                             {displaySubtitle}
                         </Editable>
                     </p>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
                     {trust_indicators.map((indicator, index) => (
                         <div
                             key={index}
-                            className={`${getColorForType(indicator.type)} p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow flex flex-col items-center text-center`}
+                            className="bg-white p-12 rounded-luxury luxury-border-thin shadow-premium hover:shadow-2xl transition-all duration-700 hover:-translate-y-2 text-center group"
                         >
-                            <div className="mb-4">
+                            <div className="mb-8 flex justify-center transform transition-transform duration-700 group-hover:scale-110">
                                 {indicator.icon ? (
                                     <img
                                         src={indicator.icon}
                                         alt={indicator.title}
-                                        className="h-16 w-16 object-contain mx-auto"
+                                        className="h-24 w-24 object-contain grayscale group-hover:grayscale-0 transition-all duration-1000"
                                     />
                                 ) : (
-                                    <div className="flex justify-center">
+                                    <div className="w-24 h-24 bg-secondary rounded-full flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-accent transition-colors duration-700 shadow-inner">
                                         {getIconForType(indicator.type)}
                                     </div>
                                 )}
                             </div>
-                            <h3 className="text-xl font-bold mb-2">{indicator.title}</h3>
+                            <h3 className="text-2xl font-serif italic text-accent mb-4 group-hover:text-primary transition-colors">{indicator.title}</h3>
                             {indicator.description && (
-                                <p className="text-sm opacity-90">{indicator.description}</p>
+                                <p className="text-sm text-accent/40 font-light leading-relaxed font-sans">{indicator.description}</p>
                             )}
                         </div>
                     ))}

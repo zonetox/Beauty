@@ -30,113 +30,140 @@ const LocationSection: React.FC<{
     const hasSocials = business.socials && Object.values(business.socials).some(link => link);
 
     return (
-        <section id="location" className="py-20 lg:py-28">
-            <div className="text-center">
-                <p className="text-sm font-semibold uppercase text-primary tracking-widest">
-                    <Editable id="contact_subtitle" type="text" value={displaySubtitle}>
-                        {displaySubtitle}
-                    </Editable>
-                </p>
-                <h2 className="mt-2 text-3xl lg:text-4xl font-bold font-serif text-neutral-dark">
-                    <Editable id="contact_title" type="text" value={displayTitle}>
-                        {displayTitle}
-                    </Editable>
-                </h2>
-            </div>
-            <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-12">
-                {/* Info Column */}
-                <div className="space-y-8">
-                    <div>
-                        <h4 className="font-bold text-xl text-neutral-dark mb-2">Địa chỉ</h4>
-                        <p className="text-gray-600">{[business.address, business.ward, business.district, business.city].filter(Boolean).join(', ')}</p>
-                    </div>
-                    <div>
-                        <h4 className="font-bold text-xl text-neutral-dark mb-2">Giờ hoạt động</h4>
-                        <ul className="text-gray-600 space-y-1">
-                            {business.working_hours && Object.entries(business.working_hours).map(([day, time]) => {
-                                // Handle both old string format and new object format
-                                let timeDisplay: string;
-                                if (typeof time === 'string') {
-                                    timeDisplay = time;
-                                } else if (typeof time === 'object' && time !== null && 'open' in time && 'close' in time) {
-                                    // New format: {open, close, isOpen}
-                                    if (time.isOpen === false) {
-                                        timeDisplay = 'Đóng cửa';
-                                    } else {
-                                        timeDisplay = `${time.open} - ${time.close}`;
-                                    }
-                                } else {
-                                    timeDisplay = 'N/A';
-                                }
-
-                                return (
-                                    <li key={day}><span className="font-semibold">{day}:</span> {timeDisplay}</li>
-                                );
-                            })}
-                        </ul>
-                    </div>
-                    <div>
-                        <h4 className="font-bold text-xl text-neutral-dark mb-2">Liên hệ</h4>
-                        <p className="text-gray-600">
-                            <strong>Điện thoại:</strong> <a
-                                href={`tel:${business.phone}`}
-                                className="text-primary hover:underline"
-                                onClick={() => trackConversion('call', business.id)}
-                            >{business.phone}</a>
+        <section id="location" className="py-32 lg:py-48 bg-secondary">
+            <div className="container mx-auto px-6 lg:px-12">
+                <div className="text-center mb-24 animate-fade-in-up">
+                    <div className="flex items-center justify-center gap-4 mb-6">
+                        <div className="w-12 h-px bg-primary"></div>
+                        <p className="text-xs font-bold uppercase text-primary tracking-[0.5em]">
+                            <Editable id="contact_subtitle" type="text" value={displaySubtitle}>
+                                {displaySubtitle}
+                            </Editable>
                         </p>
-                        {business.email && <p className="text-gray-600">
-                            <strong>Email:</strong> <a href={`mailto:${business.email}`} className="text-primary hover:underline">{business.email}</a>
-                        </p>}
-                        {business.website && <p className="text-gray-600">
-                            <strong>Website:</strong> <a href={business.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{business.website}</a>
-                        </p>}
+                        <div className="w-12 h-px bg-primary"></div>
                     </div>
-                    {hasSocials && (
+                    <h2 className="mt-2 text-5xl lg:text-7xl font-bold font-serif text-accent italic leading-tight">
+                        <Editable id="contact_title" type="text" value={displayTitle}>
+                            {displayTitle}
+                        </Editable>
+                    </h2>
+                </div>
+
+                <div className="grid lg:grid-cols-12 gap-16 lg:gap-24 items-start">
+                    {/* Info Column */}
+                    <div className="lg:col-span-4 space-y-16">
+                        <div className="group">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-8 h-px bg-primary"></div>
+                                <h4 className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary">ĐỊA CHỈ</h4>
+                            </div>
+                            <p className="text-2xl font-serif italic text-accent group-hover:text-primary transition-colors leading-relaxed">
+                                {[business.address, business.ward, business.district, business.city].filter(Boolean).join(', ')}
+                            </p>
+                        </div>
+
                         <div>
-                            <h4 className="font-bold text-xl text-neutral-dark mb-2">Theo dõi chúng tôi</h4>
-                            <div className="flex items-center space-x-4">
-                                {business.socials?.facebook && (
-                                    <a href={business.socials.facebook} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-primary transition-colors" aria-label="Facebook">
-                                        <FacebookIcon />
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="w-8 h-px bg-primary"></div>
+                                <h4 className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary">GIỜ LÀM VIỆC</h4>
+                            </div>
+                            <ul className="space-y-4">
+                                {business.working_hours && Object.entries(business.working_hours).map(([day, time]) => {
+                                    let timeDisplay: string;
+                                    if (typeof time === 'string') timeDisplay = time;
+                                    else if (typeof time === 'object' && time !== null && 'open' in time && 'close' in time) {
+                                        timeDisplay = time.isOpen === false ? 'Đóng cửa' : `${time.open} - ${time.close}`;
+                                    } else timeDisplay = 'N/A';
+
+                                    return (
+                                        <li key={day} className="flex justify-between items-center border-b border-primary/10 pb-3">
+                                            <span className="text-[10px] uppercase tracking-widest text-accent font-bold">{day}</span>
+                                            <span className="text-accent/50 italic font-light font-sans">{timeDisplay}</span>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        </div>
+
+                        <div>
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="w-8 h-px bg-primary"></div>
+                                <h4 className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary">LIÊN HỆ TRỰC TIẾP</h4>
+                            </div>
+                            <div className="space-y-6">
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] uppercase tracking-widest text-accent/30 font-bold mb-2">HOTLINE NHẬN TƯ VẤN</span>
+                                    <a
+                                        href={`tel:${business.phone}`}
+                                        onClick={() => trackConversion('call', business.id)}
+                                        className="text-3xl font-serif text-primary hover:text-accent transition-colors italic underline decoration-primary/20 underline-offset-8"
+                                    >
+                                        {business.phone}
                                     </a>
-                                )}
-                                {business.socials?.instagram && (
-                                    <a href={business.socials.instagram} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-primary transition-colors" aria-label="Instagram">
-                                        <InstagramIcon />
-                                    </a>
-                                )}
-                                {business.socials?.zalo && (
-                                    <a href={business.socials.zalo} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-primary transition-colors" aria-label="Zalo">
-                                        <ZaloIcon />
-                                    </a>
-                                )}
-                                {business.socials?.tiktok && (
-                                    <a href={business.socials.tiktok} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-primary transition-colors" aria-label="TikTok">
-                                        <TikTokIcon />
-                                    </a>
+                                </div>
+                                {business.email && (
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] uppercase tracking-widest text-accent/30 font-bold mb-2">EMAIL QUẢN TRỊ</span>
+                                        <a href={`mailto:${business.email}`} className="text-accent/60 hover:text-primary transition-colors italic text-lg">{business.email}</a>
+                                    </div>
                                 )}
                             </div>
                         </div>
-                    )}
-                </div>
-                {/* Map Column */}
-                <div>
-                    {mapEmbedUrl ? (
-                        <iframe
-                            src={mapEmbedUrl}
-                            width="100%"
-                            height="450"
-                            style={{ border: 0 }}
-                            allowFullScreen={false}
-                            loading="lazy"
-                            referrerPolicy="no-referrer-when-downgrade"
-                            className="rounded-lg shadow-lg"
-                        ></iframe>
-                    ) : (
-                        <div className="w-full h-[450px] bg-gray-200 rounded-lg flex items-center justify-center text-gray-500">
-                            Bản đồ không có sẵn
+
+                        {hasSocials && (
+                            <div>
+                                <div className="flex items-center gap-3 mb-8">
+                                    <div className="w-8 h-px bg-primary"></div>
+                                    <h4 className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary">MẠNG XA HỘI</h4>
+                                </div>
+                                <div className="flex items-center gap-8">
+                                    {business.socials?.facebook && (
+                                        <a href={business.socials.facebook} target="_blank" rel="noopener noreferrer" className="text-accent/30 hover:text-primary transition-all transform hover:scale-125" aria-label="Facebook">
+                                            <FacebookIcon />
+                                        </a>
+                                    )}
+                                    {business.socials?.instagram && (
+                                        <a href={business.socials.instagram} target="_blank" rel="noopener noreferrer" className="text-accent/30 hover:text-primary transition-all transform hover:scale-125" aria-label="Instagram">
+                                            <InstagramIcon />
+                                        </a>
+                                    )}
+                                    {business.socials?.zalo && (
+                                        <a href={business.socials.zalo} target="_blank" rel="noopener noreferrer" className="text-accent/30 hover:text-primary transition-all transform hover:scale-125" aria-label="Zalo">
+                                            <ZaloIcon />
+                                        </a>
+                                    )}
+                                    {business.socials?.tiktok && (
+                                        <a href={business.socials.tiktok} target="_blank" rel="noopener noreferrer" className="text-accent/30 hover:text-primary transition-all transform hover:scale-125" aria-label="TikTok">
+                                            <TikTokIcon />
+                                        </a>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Map Column */}
+                    <div className="lg:col-span-8 relative">
+                        <div className="absolute -inset-4 border border-primary/20 rounded-luxury z-0"></div>
+                        <div className="relative z-10 bg-white p-3 rounded-luxury luxury-border-thin shadow-premium overflow-hidden h-[700px]">
+                            {mapEmbedUrl ? (
+                                <iframe
+                                    src={mapEmbedUrl}
+                                    width="100%"
+                                    height="100%"
+                                    style={{ border: 0, filter: 'grayscale(0.3) contrast(1.1) brightness(1.1) sepia(0.1)' }}
+                                    allowFullScreen={false}
+                                    loading="lazy"
+                                    referrerPolicy="no-referrer-when-downgrade"
+                                    className="rounded-[1.8rem]"
+                                ></iframe>
+                            ) : (
+                                <div className="w-full h-full bg-secondary flex items-center justify-center text-primary font-serif italic text-xl">
+                                    Bản đồ đang được cập nhật...
+                                </div>
+                            )}
                         </div>
-                    )}
+                    </div>
                 </div>
             </div>
         </section>

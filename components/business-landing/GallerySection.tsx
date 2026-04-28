@@ -51,50 +51,62 @@ const GallerySection: React.FC<GallerySectionProps> = ({ business, content }) =>
     };
 
     return (
-        <section id="gallery" className="py-20 lg:py-28">
-            <div className="text-center">
-                <p className="text-sm font-semibold uppercase text-primary tracking-widest">
-                    <Editable id="gallery_subtitle" type="text" value={displaySubtitle}>
-                        {displaySubtitle}
-                    </Editable>
-                </p>
-                <h2 className="mt-2 text-3xl lg:text-4xl font-bold font-serif text-neutral-dark">
-                    <Editable id="gallery_title" type="text" value={displayTitle}>
-                        {displayTitle}
-                    </Editable>
-                </h2>
-            </div>
-            <div className="mt-16 columns-2 md:columns-3 lg:columns-4 gap-4">
-                {displayItems.map((item: any) => (
-                    <div key={item.id} className="mb-4 break-inside-avoid rounded-lg overflow-hidden shadow-lg group relative">
-                        {item.type === MediaType.IMAGE ? (
-                            <>
-                                <img src={getOptimizedSupabaseUrl(item.url, { width: 600, quality: 80 })} alt={item.title || 'Gallery image'} className="w-full h-auto" />
-                                {item.title && (
-                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4 pointer-events-none">
-                                        <p className="text-white font-semibold text-sm">{item.title}</p>
-                                    </div>
-                                )}
-                            </>
-                        ) : (
-                            <div className="relative cursor-pointer" onClick={() => handleVideoClick(item.id)}>
-                                <video
-                                    ref={el => { videoRefs.current[item.id] = el; }}
-                                    src={item.url}
-                                    className="w-full h-auto bg-black"
-                                    controls={playingVideoId === item.id}
-                                    playsInline
-                                    onPause={() => setPlayingVideoId(null)}
-                                />
-                                {playingVideoId !== item.id && (
-                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center pointer-events-none">
-                                        <PlayIcon />
-                                    </div>
-                                )}
-                            </div>
-                        )}
+        <section id="gallery" className="py-32 lg:py-48 bg-secondary">
+            <div className="container mx-auto px-6 lg:px-12">
+                <div className="text-center mb-24">
+                    <div className="flex items-center justify-center gap-4 mb-6">
+                        <div className="w-12 h-px bg-primary"></div>
+                        <p className="text-xs font-bold uppercase text-primary tracking-[0.5em]">
+                            <Editable id="gallery_subtitle" type="text" value={displaySubtitle}>
+                                {displaySubtitle}
+                            </Editable>
+                        </p>
+                        <div className="w-12 h-px bg-primary"></div>
                     </div>
-                ))}
+                    <h2 className="mt-2 text-5xl lg:text-7xl font-bold font-serif text-accent italic">
+                        <Editable id="gallery_title" type="text" value={displayTitle}>
+                            {displayTitle}
+                        </Editable>
+                    </h2>
+                </div>
+
+                <div className="columns-1 md:columns-2 lg:columns-3 gap-8">
+                    {displayItems.map((item: any) => (
+                        <div key={item.id} className="mb-8 break-inside-avoid rounded-luxury overflow-hidden luxury-border-thin group relative bg-white p-2 shadow-premium hover:shadow-2xl transition-all duration-700 hover:-translate-y-2">
+                            {item.type === MediaType.IMAGE ? (
+                                <div className="relative overflow-hidden rounded-[1.8rem]">
+                                    <img
+                                        src={getOptimizedSupabaseUrl(item.url, { width: 800, quality: 85 })}
+                                        alt={item.title || 'Gallery image'}
+                                        className="w-full h-auto grayscale group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-accent/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-8">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-px bg-primary"></div>
+                                            <p className="text-white font-serif italic text-lg">{item.title || 'Pure Beauty'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="relative cursor-pointer overflow-hidden rounded-[1.8rem]" onClick={() => handleVideoClick(item.id)}>
+                                    <video
+                                        ref={el => { videoRefs.current[item.id] = el; }}
+                                        src={item.url}
+                                        className="w-full h-auto bg-accent grayscale group-hover:grayscale-0 transition-all duration-1000"
+                                        controls={playingVideoId === item.id}
+                                        playsInline
+                                        onPause={() => setPlayingVideoId(null)}
+                                    />
+                                    {playingVideoId !== item.id && (
+                                        <div className="absolute inset-0 bg-accent/30 flex items-center justify-center pointer-events-none group-hover:bg-accent/10 transition-colors">
+                                            <PlayIcon />
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
             </div>
         </section>
     );

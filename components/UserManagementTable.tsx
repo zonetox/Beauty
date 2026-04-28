@@ -36,7 +36,7 @@ const UserManagementTable: React.FC<UserManagementTableProps> = ({ users, onUpda
                 </thead>
                 <tbody>
                     {users.map(user => (
-                        <tr key={user.id} className={`bg-white border-b hover:bg-gray-50 ${user.is_locked ? 'bg-red-50' : ''}`}>
+                        <tr key={user.id} className={`bg-white border-b hover:bg-gray-50 ${user.is_locked ? 'bg-secondary' : ''}`}>
                             <td className="px-6 py-4 font-medium text-neutral-dark whitespace-nowrap">
                                 {user.admin_username}
                                 <div className="text-xs text-gray-500">{user.email}</div>
@@ -47,7 +47,7 @@ const UserManagementTable: React.FC<UserManagementTableProps> = ({ users, onUpda
                                 </span>
                             </td>
                             <td className="px-6 py-4">
-                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${!user.is_locked ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${!user.is_locked ? 'bg-primary/10 text-primary' : 'bg-accent/10 text-accent'}`}>
                                     {user.is_locked ? 'Locked' : 'Active'}
                                 </span>
                             </td>
@@ -67,14 +67,14 @@ const UserManagementTable: React.FC<UserManagementTableProps> = ({ users, onUpda
                                 <button onClick={() => onEditUser(user)} className="font-medium text-secondary hover:underline">Edit</button>
                                 <button
                                     onClick={() => handleToggleLock(user)}
-                                    className={`font-medium ${user.is_locked ? 'text-green-600 hover:text-green-800' : 'text-yellow-600 hover:text-yellow-800'} disabled:text-gray-400 disabled:cursor-not-allowed`}
+                                    className={`font-medium ${user.is_locked ? 'text-primary hover:text-primary-dark' : 'text-accent hover:text-neutral-dark'} disabled:text-gray-400 disabled:cursor-not-allowed`}
                                     disabled={user.id === currentUser?.id}
                                 >
                                     {user.is_locked ? 'Unlock' : 'Lock'}
                                 </button>
                                 <button
                                     onClick={() => onDeleteUser(user.id)}
-                                    className="font-medium text-red-600 hover:underline disabled:text-gray-400 disabled:cursor-not-allowed"
+                                    className="font-medium text-accent hover:underline disabled:text-gray-400 disabled:cursor-not-allowed"
                                     disabled={user.id === currentUser?.id}
                                 >
                                     Delete

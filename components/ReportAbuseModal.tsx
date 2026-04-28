@@ -175,7 +175,7 @@ const ReportAbuseModal: React.FC<ReportAbuseModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting || !selectedReason}
-              className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm font-medium text-white bg-accent rounded-md hover:bg-neutral-dark shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? 'Submitting...' : 'Submit Report'}
             </button>

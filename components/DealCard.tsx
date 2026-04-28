@@ -29,7 +29,7 @@ const DealCard: React.FC<DealCardProps> = ({ deal, business_name, businessSlug }
             alt={deal.title}
           />
           {deal.discount_percentage && (
-            <span className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+            <span className="absolute top-2 right-2 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
               -{deal.discount_percentage}%
             </span>
           )}
@@ -39,7 +39,7 @@ const DealCard: React.FC<DealCardProps> = ({ deal, business_name, businessSlug }
         <h3 className="text-lg font-bold font-serif text-neutral-dark flex-grow">
           <Link to={`/business/${businessSlug}#deals`} className="hover:text-primary transition-colors">{deal.title}</Link>
         </h3>
-        <p className="text-sm text-gray-500 mt-2 line-clamp-2">{deal.description}</p>
+        <p className="text-sm text-gray-500 mt-2 line-clamp-2 italic">{deal.description}</p>
 
         {hasPricing && (
           <div className="flex items-baseline gap-2 mt-3">
@@ -51,7 +51,7 @@ const DealCard: React.FC<DealCardProps> = ({ deal, business_name, businessSlug }
       <div className="bg-gray-50 p-3 border-t border-gray-100 text-xs text-gray-500">
         <p className="truncate">
           <span className="font-semibold">Áp dụng tại:</span>{' '}
-          <Link to={`/business/${businessSlug}`} className="text-secondary hover:underline">{business_name}</Link>
+          <Link to={`/business/${businessSlug}`} className="text-primary hover:underline">{business_name}</Link>
         </p>
         {deal.end_date && (
           <p className="mt-1"><span className="font-semibold">Hạn cuối:</span> {new Date(deal.end_date).toLocaleDateString('vi-VN')}</p>

@@ -51,26 +51,34 @@ const HeroSection: React.FC<HeroSectionProps> = ({ business, onBookNowClick, con
     const currentSlideData = slides[currentSlide];
 
     return (
-        <section className="relative h-[80vh] min-h-[600px] lg:h-[85vh] text-white pt-24 overflow-hidden">
+        <section className="relative h-[90vh] min-h-[700px] text-accent pt-24 overflow-hidden bg-secondary">
             {slides.map((slide, index) => (
                 <div
                     key={index}
-                    className="absolute inset-0 z-0 transition-opacity duration-1000 ease-in-out"
+                    className="absolute inset-0 z-0 transition-opacity duration-1500 ease-in-out"
                     style={{ opacity: index === currentSlide ? 1 : 0 }}
                 >
                     <img
                         src={getOptimizedSupabaseUrl(slide?.image_url ?? '', { width: 1920, quality: 85 })}
                         alt={slide?.title}
-                        className={`w-full h-full object-cover scale-105 ${index === currentSlide ? 'animate-ken-burns' : ''}`}
+                        className={`w-full h-full object-cover scale-100 ${index === currentSlide ? 'animate-ken-burns' : ''}`}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-neutral-dark/90 via-neutral-dark/30 to-transparent"></div>
+                    {/* Royal Champagne Soft Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-secondary/40 via-secondary/10 to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-secondary/80 via-transparent to-secondary/20"></div>
                 </div>
             ))}
 
-            <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col justify-end pb-16 lg:pb-24">
-                <div className="max-w-4xl">
-                    <p className="text-[11px] font-medium uppercase tracking-[0.4em] text-primary mb-6 animate-fade-in-up">{business.categories.join(' / ')}</p>
-                    <h1 className="mt-2 text-6xl md:text-8xl lg:text-9xl font-bold font-serif leading-[0.9] tracking-tight animate-fade-in-up delay-100 italic uppercase">
+            <div className="relative container mx-auto px-6 lg:px-12 h-full flex flex-col justify-center pb-20">
+                <div className="max-w-5xl">
+                    <div className="flex items-center gap-4 mb-8 animate-fade-in-up">
+                        <div className="w-12 h-px bg-primary"></div>
+                        <p className="text-xs font-bold uppercase tracking-[0.6em] text-primary">
+                            {business.categories.join(' / ')}
+                        </p>
+                    </div>
+
+                    <h1 className="mt-2 text-7xl md:text-9xl lg:text-[10rem] font-bold font-serif leading-[0.85] tracking-tighter animate-fade-in-up delay-100 italic text-accent drop-shadow-sm">
                         <Editable
                             id={`landing_hero_title_${currentSlide}`}
                             type="text"
@@ -79,38 +87,58 @@ const HeroSection: React.FC<HeroSectionProps> = ({ business, onBookNowClick, con
                             {currentSlideData?.title}
                         </Editable>
                     </h1>
-                    <div className="mt-8 text-base md:text-lg max-w-2xl text-white/80 font-sans font-light tracking-[0.1em] leading-relaxed animate-fade-in-up delay-200">
+
+                    <div className="mt-10 max-w-2xl animate-fade-in-up delay-200">
                         <Editable
                             id={`landing_hero_subtitle_${currentSlide}`}
                             type="textarea"
                             value={currentSlideData?.subtitle || ''}
                         >
-                            <p className="line-clamp-2 uppercase">{currentSlideData?.subtitle}</p>
+                            <p className="text-xl md:text-2xl text-accent/80 font-sans font-light tracking-wide leading-relaxed italic border-l-2 border-primary/30 pl-8">
+                                {currentSlideData?.subtitle}
+                            </p>
                         </Editable>
                     </div>
-                    <div className="mt-10 flex flex-wrap items-center gap-8 animate-fade-in-up delay-300">
-                        <div className="flex items-center gap-3">
-                            <StarRating rating={business.rating} />
-                            <span className="font-serif italic text-xl">{business.rating.toFixed(1)}</span>
-                            <span className="text-white/40 text-[10px] uppercase tracking-widest">({visibleReviews.length} reviews)</span>
+
+                    <div className="mt-12 flex flex-wrap items-center gap-10 animate-fade-in-up delay-300">
+                        <div className="flex items-center gap-4">
+                            <span className="font-serif italic text-4xl text-primary">{business.rating.toFixed(1)}</span>
+                            <div className="flex flex-col">
+                                <StarRating rating={business.rating} />
+                                <span className="text-accent/40 text-[10px] uppercase tracking-[0.3em] font-bold mt-1">({visibleReviews.length} LƯỢT ĐÁNH GIÁ)</span>
+                            </div>
                         </div>
-                        <div className="w-px h-8 bg-white/10 hidden sm:block"></div>
-                        <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] font-medium text-white/60">
+
+                        <div className="w-px h-12 bg-accent/10 hidden sm:block"></div>
+
+                        <div className="flex items-center gap-3 text-xs uppercase tracking-[0.3em] font-medium text-accent/70 bg-white/40 backdrop-blur-md px-6 py-3 rounded-full border border-primary/10">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-primary" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                             </svg>
                             <span>{business.district}, {business.city}</span>
                         </div>
                     </div>
-                    <div className="mt-12 animate-fade-in-up delay-400">
+
+                    <div className="mt-16 flex items-center gap-8 animate-fade-in-up delay-400">
                         <button
                             onClick={onBookNowClick}
-                            className="bg-primary text-white px-12 py-5 rounded-full font-medium text-sm tracking-[0.2em] uppercase hover:bg-primary-dark transition-all transform hover:scale-105 shadow-2xl"
+                            className="group relative overflow-hidden bg-primary text-white px-14 py-6 rounded-full font-bold text-xs tracking-[0.3em] uppercase transition-all shadow-premium hover:shadow-glass hover:-translate-y-1"
                         >
-                            Đăng ký tư vấn
+                            <span className="relative z-10 transition-colors duration-500">Đăng ký tư vấn ngay</span>
+                            <div className="absolute inset-x-0 bottom-0 h-0 bg-accent transition-all duration-500 group-hover:h-full z-0"></div>
                         </button>
+
+                        <a href="#services" className="text-accent/60 hover:text-primary transition-colors text-xs font-bold tracking-[0.3em] uppercase border-b border-accent/10 pb-1">
+                            Khám phá dịch vụ
+                        </a>
                     </div>
                 </div>
+            </div>
+
+            {/* Scroll Indicator */}
+            <div className="absolute bottom-10 right-12 hidden lg:flex flex-col items-center gap-4 animate-bounce">
+                <span className="text-[10px] uppercase tracking-[0.5em] origin-right rotate-90 translate-y-12 text-accent/30 font-bold whitespace-nowrap">Cuộn để khám phá</span>
+                <div className="w-px h-24 bg-gradient-to-t from-primary to-transparent"></div>
             </div>
 
             {slides.length > 1 && (

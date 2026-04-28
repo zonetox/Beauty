@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 
 interface ReviewFormProps {
-  onSubmit: (data: { rating: number; comment: string }) => void;
-  onCancel: () => void;
+    onSubmit: (data: { rating: number; comment: string }) => void;
+    onCancel: () => void;
 }
 
 const StarInput: React.FC<{ rating: number; onRate: (rating: number) => void }> = ({ rating, onRate }) => {
@@ -21,9 +21,8 @@ const StarInput: React.FC<{ rating: number; onRate: (rating: number) => void }> 
                     aria-label={`Rate ${star} stars`}
                 >
                     <svg
-                        className={`w-10 h-10 transition-colors ${
-                            (hoverRating || rating) >= star ? 'text-primary' : 'text-gray-300'
-                        }`}
+                        className={`w-10 h-10 transition-colors ${(hoverRating || rating) >= star ? 'text-primary' : 'text-gray-300'
+                            }`}
                         fill="currentColor"
                         viewBox="0 0 20 20"
                     >
@@ -56,8 +55,8 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ onSubmit, onCancel }) => {
     return (
         <form onSubmit={handleSubmit} className="p-6 bg-gray-50 rounded-lg border space-y-4">
             <h4 className="text-xl font-semibold text-neutral-dark text-center">How was your experience?</h4>
-            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-            
+            {error && <p className="text-accent text-sm text-center font-bold">{error}</p>}
+
             <StarInput rating={rating} onRate={(r) => { setRating(r); setError(''); }} />
 
             <div>

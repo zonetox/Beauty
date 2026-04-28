@@ -92,8 +92,8 @@ const ContactForm: React.FC = () => {
     <div className="bg-white p-10 rounded-2xl border border-luxury-border shadow-soft">
       {isMessageSent ? (
         <div role="alert" className="flex flex-col items-center justify-center h-full text-center min-h-[300px]">
-          <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mb-6">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
           </div>
@@ -106,7 +106,7 @@ const ContactForm: React.FC = () => {
         <form onSubmit={handleContactSubmit} className="space-y-6">
           <h2 className="text-2xl md:text-3xl font-bold font-serif text-primary mb-8 tracking-wide">Gửi tin nhắn</h2>
           {error && (
-            <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-full text-sm font-light text-center">
+            <div className="bg-accent/5 border border-accent/10 text-accent px-4 py-3 rounded-full text-sm font-semibold tracking-wide text-center">
               {error}
             </div>
           )}
