@@ -141,27 +141,27 @@ const AccountSettings: React.FC = () => {
     const handleInitializeBusiness = async () => {
         if (!user || isInitializing) return;
         setIsInitializing(true);
+        try {
+            await createBusinessWithTrial({
+                name: fullName || "Doanh nghiệp mới",
+                owner_id: user.id,
+                email: user.email || '',
+                phone: "Chưa cập nhật",
+                address: "Chưa cập nhật",
+                categories: ['Spa & Massage']
+            });
 
-        await createBusinessWithTrial({
-            name: bName,
-            owner_id: user.id,
-            email: user.email || '',
-            phone: "Chưa cập nhật",
-            address: "Chưa cập nhật",
-            categories: ['Spa & Massage']
-        });
-
-        // Invalidate query to ensure immediate role detection
-        await queryClient.invalidateQueries({ queryKey: keys.auth.role(user.id) });
-        toast.success('Đã khởi tạo doanh nghiệp!');
-        await refreshAuth();
-        window.location.reload();
-    } catch (error: any) {
-        toast.error('Lỗi: ' + error.message);
-    } finally {
-        setIsInitializing(false);
-    }
-};
+            // Invalidate query to ensure immediate role detection
+            await queryClient.invalidateQueries({ queryKey: keys.auth.role(user.id) });
+            toast.success('Đã khởi tạo doanh nghiệp!');
+            await refreshAuth();
+            window.location.reload();
+        } catch (error: any) {
+            toast.error('Lỗi: ' + error.message);
+        } finally {
+            setIsInitializing(false);
+        }
+    };
 
 return (
     <div className="animate-fade-in bg-background/50 min-h-screen">

@@ -1,24 +1,16 @@
-# Fix MCP Supabase Connection - Lỗi "No MCP resources"
+# Sửa lỗi kết nối MCP Supabase - "No MCP resources" hoặc "serverURL or command must be specified"
 
 ## 🔍 Vấn Đề Phát Hiện
 
-**File cấu hình hiện tại:** `c:\Users\Dell\.cursor\mcp.json`
-```json
-{
-  "mcpServers": {
-    "supabase": {
-      "url": "https://mcp.supabase.com/mcp?project_ref=fdklazlcbxaiapsnnbqq",
-      "headers": {}  // ❌ HEADERS TRỐNG!
-    }
-  }
-}
-```
+**1. Lỗi thiếu Token:**
+Headers trống hoặc sai token dẫn đến lỗi xác thực.
 
-**Vấn đề:** Headers đang trống, trong khi MCP Supabase server cần **Personal Access Token (PAT)** để authenticate!
+**2. Lỗi tên trường cấu hình (Field Name):**
+Lỗi `supabase: serverURL or command must be specified` xảy ra do Cursor hoặc các công cụ MCP mới yêu cầu tên trường là `serverURL` thay vì `url` cho các kết nối SSE.
 
 ---
 
-## ✅ Giải Pháp: Thêm Access Token vào Headers
+## ✅ Giải Pháp: Cấu Hình Đúng Chuẩn
 
 ### Bước 1: Lấy Personal Access Token từ Supabase
 
@@ -30,19 +22,15 @@
    - Đặt tên (ví dụ: "Cursor MCP")
    - **Copy token ngay** (chỉ hiển thị 1 lần!)
 
-### Bước 2: Cập nhật `mcp.json`
+### Bước 2: Cập nhật cấu hình MCP
 
-**Cập nhật file:** `c:\Users\Dell\.cursor\mcp.json`
+Mở cài đặt MCP trong ứng dụng của bạn (ví dụ Cursor Settings > MCP) và sử dụng cấu hình sau:
 
 ```json
 {
   "mcpServers": {
-    "Vercel": {
-      "url": "https://mcp.vercel.com",
-      "headers": {}
-    },
     "supabase": {
-      "url": "https://mcp.supabase.com/mcp?project_ref=fdklazlcbxaiapsnnbqq",
+      "serverURL": "https://mcp.supabase.com/mcp?project_ref=fdklazlcbxaiapsnnbqq",
       "headers": {
         "Authorization": "Bearer YOUR_PERSONAL_ACCESS_TOKEN_HERE"
       }
@@ -51,96 +39,69 @@
 }
 ```
 
-**Thay thế:** `YOUR_PERSONAL_ACCESS_TOKEN_HERE` bằng token bạn vừa copy.
+**Lưu ý quan trọng:**
+- Phải dùng **`serverURL`** thay cho `url`.
+- Thay `YOUR_PERSONAL_ACCESS_TOKEN_HERE` bằng token bạn vừa copy.
 
-### Bước 3: Restart Cursor
+### Bước 3: Khởi động lại ứng dụng
 
-1. **Đóng hoàn toàn Cursor**
-2. **Mở lại Cursor**
-3. **Kiểm tra kết nối MCP**
+1. **Đóng hoàn toàn Cursor/Claude Desktop.**
+2. **Mở lại ứng dụng.**
+3. **Kiểm tra trạng thái kết nối (Status: Connected).**
 
 ---
 
-## 🔧 Giải Pháp Thay Thế: Dùng Environment Variable (AN TOÀN HƠN)
+## 🔧 Giải Pháp Thay Thế: Dùng lệnh (stdio)
 
-### Bước 1: Set Environment Variable
+Nếu kết nối URL gặp vấn đề, bạn có thể thử dùng lệnh npx:
 
-**Windows PowerShell:**
-```powershell
-# Set cho session hiện tại
-$env:SUPABASE_ACCESS_TOKEN = "your_token_here"
-
-# Hoặc set permanently (User-level)
-[System.Environment]::SetEnvironmentVariable("SUPABASE_ACCESS_TOKEN", "your_token_here", "User")
+```json
+{
+  "mcpServers": {
+    "supabase": {
+      "command": "npx",
+      "args": ["-y", "@supabase/mcp-server-supabase"],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "your_token_here"
+      }
+    }
+  }
+}
 ```
-
-### Bước 2: Cập nhật `mcp.json` để dùng env variable
-
-**Lưu ý:** Cursor MCP có thể không tự động expand environment variables trong JSON. Cần kiểm tra documentation Cursor về cách dùng env vars trong MCP config.
-
-**Hoặc:** Nếu không hỗ trợ env vars trong JSON, phải hardcode token (nhưng nhớ giữ bí mật!).
 
 ---
 
 ## 📋 Kiểm Tra Kết Nối
 
-Sau khi cập nhật và restart Cursor:
+Sau khi cập nhật và khởi động lại:
 
-1. **Kiểm tra trong Cursor Settings:**
-   - Mở Cursor Settings
-   - Tìm "MCP Servers"
-   - Kiểm tra Supabase server có status "Connected" không
-
-2. **Thử gọi MCP tools:**
-   - Yêu cầu AI: "List tables in Supabase database"
-   - Hoặc: "Execute SQL: SELECT COUNT(*) FROM businesses"
-
-3. **Kiểm tra logs:**
-   - Nếu vẫn lỗi, xem Cursor logs để biết chi tiết
+1. **Kiểm tra trong Cài đặt:**
+   - Đảm bảo server Supabase hiển thị trạng thái "Connected".
+2. **Thử gọi công cụ:**
+   - Hỏi AI: "Liệt kê các bảng trong database Supabase".
+3. **Kiểm tra Logs:**
+   - Nếu vẫn lỗi, hãy xem log để biết chi tiết.
 
 ---
 
-## 🔐 Security Notes
+## 🔐 Lưu Ý Bảo Mật
 
-**QUAN TRỌNG:**
-
-1. ✅ **KHÔNG commit `mcp.json` có token vào git**
-2. ✅ **Giữ token bí mật** - không share public
-3. ✅ **Rotate token** nếu nghi ngờ bị lộ
-4. ✅ **Xóa token cũ** nếu không dùng nữa
-
-**Best Practice:**
-- Nên dùng `.gitignore` cho `mcp.json` nếu chứa token
-- Hoặc tạo `mcp.json.example` không có token, commit file đó
-- Token chỉ set trong local `mcp.json` (không commit)
+1. ✅ **KHÔNG** chia sẻ Personal Access Token.
+2. ✅ **KHÔNG** commit file cấu hình có chứa token vào Git.
+3. ✅ Nếu nghi ngờ bị lộ, hãy thu hồi (revoke) token cũ trên Supabase Dashboard và tạo cái mới.
 
 ---
 
-## 🐛 Troubleshooting
+## 🐛 Troubleshooting (Xử lý sự cố)
 
-### Lỗi: "Unauthorized" hoặc "Invalid token"
-- ✅ Kiểm tra token có đúng không (copy lại)
-- ✅ Kiểm tra token chưa hết hạn
-- ✅ Kiểm tra token có quyền truy cập project `fdklazlcbxaiapsnnbqq` không
+### Lỗi: "serverURL or command must be specified"
+- **Nguyên nhân:** Bạn đang dùng trường `url`.
+- **Khắc phục:** Đổi tên trường thành `serverURL`.
+
+### Lỗi: "Unauthorized"
+- **Nguyên nhân:** Token sai hoặc hết hạn.
+- **Khắc phục:** Tạo token mới và cập nhật vào headers.
 
 ### Lỗi: "Project not found"
-- ✅ Kiểm tra `project_ref=fdklazlcbxaiapsnnbqq` có đúng không
-- ✅ Kiểm tra account có quyền truy cập project không
-
-### Lỗi: MCP server không kết nối
-- ✅ Restart Cursor
-- ✅ Kiểm tra internet connection
-- ✅ Kiểm tra MCP URL có đúng không: `https://mcp.supabase.com/mcp`
-
----
-
-## 📝 Tóm Tắt
-
-**Vấn đề gốc:** MCP Supabase config thiếu `Authorization` header với Personal Access Token.
-
-**Giải pháp:** 
-1. Lấy token từ Dashboard
-2. Thêm vào `headers.Authorization` trong `mcp.json`
-3. Restart Cursor
-
-**Expected result:** MCP Supabase kết nối thành công, có thể gọi `execute_sql` và các tools khác.
+- **Nguyên nhân:** Sai `project_ref`.
+- **Khắc phục:** Kiểm tra mã dự án (trong trường hợp này là `fdklazlcbxaiapsnnbqq`).
