@@ -563,20 +563,21 @@ const HomePage: React.FC = () => {
         {/* Dynamically Rendered Sections */}
         {sections.map(section => renderSection(section))}
 
-        {/* For Business CTA Section */}
-        <section className="py-20 bg-accent/50">
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold font-serif text-neutral-dark mb-4">
-              Đưa doanh nghiệp của bạn lên một tầm cao mới
+        {/* For Business CTA Section - Royal Black & Gold */}
+        <section className="py-24 bg-secondary relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
+          <div className="container mx-auto px-4 text-center relative z-10">
+            <h2 className="text-4xl md:text-5xl font-bold font-serif text-primary mb-6 tracking-tight">
+              Đưa doanh nghiệp của bạn lên tầm cao mới
             </h2>
-            <p className="mt-4 max-w-3xl mx-auto text-gray-600 leading-relaxed">
-              Tham gia BeautyDir ngay hôm nay để kết nối với hàng triệu khách hàng tiềm năng, xây dựng một trang landing page chuyên nghiệp, và quản lý hoạt động kinh doanh của bạn một cách dễ dàng, tất cả ở cùng một nơi.
+            <p className="mt-4 max-w-2xl mx-auto text-gray-400 leading-relaxed font-light tracking-wide text-lg">
+              Tham gia 1Beauty.asia ngay hôm nay để kết nối với hàng triệu khách hàng, xây dựng thương hiệu đẳng cấp và quản lý kinh doanh chuyên nghiệp.
             </p>
             <Link
               to="/for-business"
-              className="mt-10 inline-block bg-accent text-white px-12 py-4 rounded-full font-medium text-lg hover:opacity-90 transition-all transform hover:scale-105 shadow-xl tracking-wide"
+              className="mt-12 inline-block bg-primary text-secondary px-14 py-5 rounded-full font-bold text-lg hover:bg-primary-dark transition-all transform hover:scale-105 shadow-2xl tracking-[0.2em] uppercase"
             >
-              Đăng ký cho Doanh nghiệp
+              Đăng ký đối tác ngay
             </Link>
           </div>
         </section>
@@ -616,7 +617,7 @@ const HomePage: React.FC = () => {
                   <button
                     type="submit"
                     disabled={isSubmittingNewsletter}
-                    className="px-8 py-3 bg-accent text-white font-medium rounded-full hover:opacity-90 transition-all flex-shrink-0 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 tracking-wide"
+                    className="px-8 py-3 bg-primary text-white font-bold rounded-full hover:bg-primary-dark transition-all flex-shrink-0 shadow-premium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 tracking-[0.1em] uppercase text-xs"
                   >
                     {isSubmittingNewsletter ? (
                       <>

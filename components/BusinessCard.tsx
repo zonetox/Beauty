@@ -13,14 +13,14 @@ interface BusinessCardProps {
 }
 
 const tierStyles = {
-  [MembershipTier.VIP]: 'luxury-border-thin shadow-[0_15px_40px_rgba(193,139,125,0.15)] ring-1 ring-primary/10',
-  [MembershipTier.PREMIUM]: 'luxury-border-thin shadow-[0_10px_30px_rgba(0,0,0,0.03)]',
+  [MembershipTier.VIP]: 'luxury-border-thin shadow-[0_15px_40px_rgba(212,175,55,0.15)] ring-1 ring-primary/20',
+  [MembershipTier.PREMIUM]: 'luxury-border-thin shadow-[0_10px_30px_rgba(0,0,0,0.05)]',
   [MembershipTier.FREE]: 'border border-gray-100 shadow-sm',
 };
 
 const tierBadge: Record<MembershipTier, { text: string; bg: string; text_color: string }> = {
   [MembershipTier.VIP]: { text: 'VIP', bg: 'bg-primary', text_color: 'text-white' },
-  [MembershipTier.PREMIUM]: { text: 'Premium', bg: 'bg-accent', text_color: 'text-primary-dark' },
+  [MembershipTier.PREMIUM]: { text: 'Premium', bg: 'bg-secondary', text_color: 'text-primary' },
   [MembershipTier.FREE]: { text: 'Free', bg: 'bg-gray-100', text_color: 'text-gray-500' },
 };
 

@@ -267,7 +267,7 @@ const Header: React.FC = () => {
                   Đăng nhập
                 </NavLink>
                 {role === 'anonymous' && (
-                  <Link to="/register" className="ml-4 px-6 py-2.5 rounded-full shadow-sm text-sm font-medium text-white bg-accent hover:opacity-90 transition-all transform hover:scale-105 tracking-wide">
+                  <Link to="/register" className="ml-4 px-6 py-2.5 rounded-full shadow-premium text-sm font-bold text-white bg-primary hover:bg-primary-dark transition-all transform hover:scale-105 tracking-widest uppercase">
                     Đăng ký đối tác
                   </Link>
                 )}

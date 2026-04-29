@@ -205,7 +205,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, categories, locations, 
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full md:col-span-2 lg:col-span-4 bg-accent text-white px-10 py-4 rounded-full font-medium hover:opacity-90 transition-all flex items-center justify-center shadow-lg disabled:opacity-50 disabled:cursor-not-allowed tracking-widest uppercase text-sm"
+          className="w-full md:col-span-2 lg:col-span-4 bg-primary text-white px-10 py-4 rounded-full font-bold hover:bg-primary-dark transition-all flex items-center justify-center shadow-premium disabled:opacity-50 disabled:cursor-not-allowed tracking-[0.2em] uppercase text-xs"
         >
           {isLoading ? (
             <>
